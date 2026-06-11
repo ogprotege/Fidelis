@@ -106,6 +106,17 @@ export default function Reader() {
     }
   }, [focusVerse, data]);
 
+  // P1-8: book.chapters is the cross-translation maximum, so a chapter that
+  // exists in one translation may not exist in another (imported RSV-2CE/
+  // NABRE versification differs). Once the target text is loaded, clamp to
+  // its real chapter count instead of waiting forever on a chapter that
+  // isn't there.
+  useEffect(() => {
+    if (data && data.chapters.length > 0 && chapter > data.chapters.length) {
+      navigate(`/read/${translation}/${bookSlug}/${data.chapters.length}`, { replace: true });
+    }
+  }, [data, chapter, translation, bookSlug, navigate]);
+
   if (!book) {
     return <p className="notice">Unknown book. <Link to="/read">Browse the books</Link>.</p>;
   }
@@ -274,7 +285,13 @@ export default function Reader() {
           )}
         </div>
       )}
-      {!error && !verses && <p className="loading">Loading the sacred text…</p>}
+      {!error && !data && <p className="loading">Loading the sacred text…</p>}
+      {!error && data && !verses && (
+        <p className="notice">
+          Chapter {chapter} is not present in {trans?.name ?? translation}
+          {chapterCount > 0 ? ` — this book has ${chapterCount} chapter${chapterCount === 1 ? "" : "s"} there` : ""}.
+        </p>
+      )}
 
       {chapterEmpty && (
         <p className="notice">
