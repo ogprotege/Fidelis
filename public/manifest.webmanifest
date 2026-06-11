@@ -1,0 +1,17 @@
+{
+  "name": "Fidelis — Catholic Bible",
+  "short_name": "Fidelis",
+  "description": "The unaltered Word: Douay-Rheims, CPDV, and the Clementine Latin Vulgate, with the full 73-book Catholic canon.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6efe1",
+  "theme_color": "#8a1f2d",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+import { useEffect, useState } from "react";
+import { Route, Routes, useLocation } from "react-router-dom";
+import Header from "./components/Header";
+import Home from "./pages/Home";
+import BookList from "./pages/BookList";
+import Reader from "./pages/Reader";
+import Search from "./pages/Search";
+import Library from "./pages/Library";
+import Translations from "./pages/Translations";
+import About from "./pages/About";
+import WidgetVotd from "./pages/WidgetVotd";
+import { getSettings, saveSettings } from "./lib/storage";
+
+export default function App() {
+  const [theme, setTheme] = useState(getSettings().theme);
+  const location = useLocation();
+  const widgetMode = location.pathname.startsWith("/widget/");
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.body.classList.toggle("widget-mode", widgetMode);
+  }, [theme, widgetMode]);
+
+  const toggleTheme = () => {
+    const next = theme === "parchment" ? "night" : "parchment";
+    setTheme(next);
+    saveSettings({ theme: next });
+  };
+
+  if (widgetMode) {
+    return (
+      <Routes>
+        <Route path="/widget/votd" element={<WidgetVotd />} />
+      </Routes>
+    );
+  }
+
+  return (
+    <div className="app">
+      <Header theme={theme} onToggleTheme={toggleTheme} />
+      <main className="page">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/read" element={<BookList />} />
+          <Route path="/read/:translation/:book/:chapter" element={<Reader />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/library" element={<Library />} />
+          <Route path="/translations" element={<Translations />} />
+          <Route path="/about" element={<About />} />
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </main>
+      <footer className="footer">
+        <div className="motto">Verbum Domini manet in æternum.</div>
+        <div>The Word of the Lord endures for ever. — 1 Peter 1:25</div>
+      </footer>
+    </div>
+  );
+}
