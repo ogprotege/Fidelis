@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import Home from "./pages/Home";
 import BookList from "./pages/BookList";
 import Reader from "./pages/Reader";
+import Readings from "./pages/Readings";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
 import Translations from "./pages/Translations";
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/read" element={<BookList />} />
           <Route path="/read/:translation/:book/:chapter" element={<Reader />} />
+          <Route path="/readings" element={<Readings />} />
           <Route path="/search" element={<Search />} />
           <Route path="/library" element={<Library />} />
           <Route path="/translations" element={<Translations />} />

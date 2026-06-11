@@ -82,7 +82,17 @@ export default function About() {
         </a>{" "}
         project (DRC, CPDV, VulgClementine) and reproduced without alteration. The
         liturgical calendar follows the General Roman Calendar; movable feasts are
-        computed from the date of Easter.
+        computed from the date of Easter. Daily Mass reading citations follow the
+        Roman Lectionary cycles (Sundays A/B/C, weekdays I/II), derived from the
+        public-domain tables of{" "}
+        <a
+          href="https://github.com/jayarathina/Tamil-Catholic-Lectionary"
+          target="_blank"
+          rel="noreferrer"
+        >
+          jayarathina/Tamil-Catholic-Lectionary
+        </a>
+        .
       </p>
     </div>
   );
