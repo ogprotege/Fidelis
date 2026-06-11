@@ -17,12 +17,24 @@ paraphrasing, no softening of hard sayings, no silent "updates."
 - **RSV-2CE and NABRE support** — these are copyrighted (Ignatius Press / CCD),
   so their text is *not* shipped; instead you can import a licensed copy you own
   on the Translations page (stored only in your browser via IndexedDB).
+- **Daily Mass readings** following the lectionary cycles — Sunday Years A/B/C
+  and weekday Years I/II, with seasonal propers (Advent's December ferias, the
+  Easter Vigil's seven readings, the Triduum), solemnities and feasts with
+  correct Sunday precedence, and the full text of every reading shown in your
+  chosen translation. Citation data derives from the public-domain Roman
+  lectionary tables of
+  [jayarathina/Tamil-Catholic-Lectionary](https://github.com/jayarathina/Tamil-Catholic-Lectionary)
+  (`npm run lectionary` rebuilds it).
 - **Widgets** on the Today page:
   - ✠ **Verse of the Day** — a fixed, curated cycle; deterministic by date
+  - **Daily Mass Readings** — today's citations at a glance
   - **Liturgical Day** — season, week, liturgical color, and celebrations of the
     General Roman Calendar, with movable feasts computed from the Easter computus
   - **The Holy Rosary** — the day's mysteries with Scripture links
   - **Continue Reading** — picks up where you left off
+- **iOS app** via Capacitor, including a native WidgetKit **home-screen
+  widget** (Verse of the Day, small/medium/large, offline). See
+  [docs/IOS.md](docs/IOS.md).
 - **Embeddable Verse-of-the-Day widget** for any website:
   `<iframe src="https://your-domain/#/widget/votd">` (options: `?t=vulgate&theme=night`)
 - **Reader**: translation switcher, parallel view (e.g. Douay side-by-side with the
@@ -54,7 +66,11 @@ npm run dev       # local dev server
 npm run build     # type-check + production build to dist/
 npm run preview   # serve the production build
 npm run data      # re-fetch and rebuild public/data/ from upstream sources
+npm run lectionary # re-fetch and rebuild the lectionary citation tables
 ```
+
+For iOS: `npm run build && npx cap sync ios && npx cap open ios` (macOS +
+Xcode required; see [docs/IOS.md](docs/IOS.md)).
 
 The app is a fully static site (Vite + React + TypeScript, hash routing) — deploy
 `dist/` to any static host (GitHub Pages, Netlify, etc.).

@@ -27,6 +27,8 @@ export interface LiturgicalDay {
   season: Season;
   /** e.g. "Third Sunday of Advent", "Friday of the 4th Week of Lent" */
   seasonLabel: string;
+  /** Week within the season (0 = days after Ash Wednesday; OT weeks 1–34). */
+  week: number;
   color: LiturgicalColor;
   celebrations: Celebration[];
 }
@@ -83,7 +85,7 @@ export function adventStart(year: number): Date {
 }
 
 /** Sunday after Jan 6 (Baptism of the Lord; ends Christmastide). */
-function baptismOfTheLord(year: number): Date {
+export function baptismOfTheLord(year: number): Date {
   const epiphany = ymd(year, 1, 6);
   const dow = epiphany.getDay();
   return addDays(epiphany, dow === 0 ? 7 : 7 - dow);
@@ -251,10 +253,12 @@ export function liturgicalDay(date: Date = new Date()): LiturgicalDay {
   let season: Season;
   let seasonLabel: string;
   let color: LiturgicalColor;
+  let weekNum = 0;
 
   if (daysBetween(advent1, date) >= 0 && daysBetween(date, christmas) > 0) {
     season = "Advent";
     const week = Math.floor(daysBetween(advent1, date) / 7) + 1;
+    weekNum = week;
     seasonLabel =
       dow === 0 ? `${ORDINALS[week - 1]} Sunday of Advent` : `${weekday} of the ${ORDINALS[week - 1]} Week of Advent`;
     color = dow === 0 && week === 3 ? "rose" : "violet";
@@ -271,6 +275,7 @@ export function liturgicalDay(date: Date = new Date()): LiturgicalDay {
     season = "Lent";
     const lent1 = addDays(ashWednesday, 4); // First Sunday of Lent
     const week = Math.floor(daysBetween(lent1, date) / 7) + 1;
+    weekNum = daysBetween(ashWednesday, date) < 4 ? 0 : week;
     if (daysBetween(ashWednesday, date) === 0) {
       seasonLabel = "Ash Wednesday";
     } else if (daysBetween(ashWednesday, date) < 4) {
@@ -289,6 +294,7 @@ export function liturgicalDay(date: Date = new Date()): LiturgicalDay {
   } else if (daysBetween(easter, date) >= 0 && daysBetween(date, pentecost) >= 0) {
     season = "Eastertide";
     const week = Math.floor(daysBetween(easter, date) / 7) + 1;
+    weekNum = week;
     if (daysBetween(easter, date) === 0) seasonLabel = "Easter Sunday";
     else if (daysBetween(date, pentecost) === 0) seasonLabel = "Pentecost Sunday";
     else if (daysBetween(easter, date) < 7) seasonLabel = `${weekday} within the Octave of Easter`;
@@ -308,6 +314,7 @@ export function liturgicalDay(date: Date = new Date()): LiturgicalDay {
       week = 34 - Math.floor(daysBetween(date, addDays(christKing, 6)) / 7);
     }
     week = Math.min(Math.max(week, 1), 34);
+    weekNum = week;
     seasonLabel =
       dow === 0
         ? `${ORDINALS[week - 1]} Sunday in Ordinary Time`
@@ -330,7 +337,7 @@ export function liturgicalDay(date: Date = new Date()): LiturgicalDay {
     color = top.color;
   }
 
-  return { date, season, seasonLabel, color, celebrations };
+  return { date, season, seasonLabel, week: weekNum, color, celebrations };
 }
 
 export const COLOR_HEX: Record<LiturgicalColor, string> = {

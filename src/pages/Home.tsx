@@ -1,6 +1,15 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import VerseQuote from "../components/VerseQuote";
 import { getBook, bookDisplayName } from "../lib/canon";
+import {
+  DayReadings,
+  READING_LABELS,
+  formatCitation,
+  readingsForDate,
+  sundayCycle,
+  weekdayCycle
+} from "../lib/lectionary";
 import { liturgicalDay, COLOR_HEX } from "../lib/liturgical";
 import { mysteriesForDate } from "../lib/rosary";
 import { getLastRead, getSettings } from "../lib/storage";
@@ -14,6 +23,10 @@ export default function Home() {
   const rosary = mysteriesForDate(today);
   const lastRead = getLastRead();
   const translation = getSettings().translation;
+  const [mass, setMass] = useState<DayReadings | null>(null);
+  useEffect(() => {
+    readingsForDate(new Date()).then(setMass).catch(() => setMass(null));
+  }, []);
   const dateLabel = today.toLocaleDateString(undefined, {
     weekday: "long",
     year: "numeric",
@@ -66,6 +79,38 @@ export default function Home() {
               {c.name}
             </div>
           ))}
+        </div>
+
+        <div className="card">
+          <h2>Daily Mass Readings</h2>
+          <div className="muted small sans" style={{ marginBottom: "0.4rem" }}>
+            Sunday Cycle {sundayCycle(today)} · Weekday Year{" "}
+            {weekdayCycle(today) === "1" ? "I" : "II"}
+          </div>
+          {!mass && <p className="muted small">…</p>}
+          {mass && (
+            <ul className="mass-list">
+              {Object.entries(
+                mass.rows.reduce<Record<number, typeof mass.rows>>((acc, row) => {
+                  (acc[Math.floor(row.t)] ??= []).push(row);
+                  return acc;
+                }, {})
+              ).map(([g, rows]) => {
+                const row = rows[0];
+                const book = getBook(row.b);
+                if (!book) return null;
+                return (
+                  <li key={g}>
+                    <span className="mass-label">{READING_LABELS[Number(g)] ?? "Reading"}</span>{" "}
+                    {formatCitation(row, bookDisplayName(book, translation))}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <Link className="continue-cta" to="/readings">
+            Read at Mass →
+          </Link>
         </div>
 
         <div className="card">

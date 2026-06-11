@@ -16,6 +16,7 @@ export default function Header({ theme, onToggleTheme }: Props) {
         </NavLink>
         <nav className="nav">
           <NavLink to="/" end>Today</NavLink>
+          <NavLink to="/readings">Mass</NavLink>
           <NavLink to="/read">Read</NavLink>
           <NavLink to="/search">Search</NavLink>
           <NavLink to="/library">Library</NavLink>
