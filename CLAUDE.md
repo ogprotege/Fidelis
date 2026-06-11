@@ -15,11 +15,11 @@ npx tsx scripts/test-data.ts           # committed-data harness (bundles, psalm 
 
 ## Open review items
 
-### P0 — worship-facing accuracy (fix before anyone else uses this)
+### P0 — worship-facing accuracy (all fixed)
 
-- **P0-1:** The liturgical engine (`src/lib/liturgical.ts`) has no precedence or transfer logic — impeded solemnities vanish instead of transferring, conflicting celebrations both display, and Good Friday can render white under the Annunciation.
-- **P0-2:** The lectionary resolver (`src/lib/lectionary.ts`) applies no season gate on weekdays, so solemnity propers defeat Holy Week and the Triduum — the Annunciation Mass would display instead of the Passion on Good Friday 2016.
-- **P0-3:** Responsorial Psalms render the wrong verses on most days because Hebrew lectionary verse numbers are applied chapter-only to Vulgate-versified text — Ash Wednesday shows the Miserere's superscription instead of "Have mercy on me, O God."
+- **P0-1:** Fixed (3993dc9) — rank engine with precedence and transfer in `src/lib/liturgical.ts`.
+- **P0-2:** Fixed (3993dc9) — day codes derive from the calendar engine's resolved governing celebration.
+- **P0-3:** Fixed — `hebrewSpanToVulgate()` in `src/lib/lectionary.ts` maps lectionary psalm spans (modern chapters, English-style verses) onto the Vulgate-versified bundle grid: per-psalm title offsets, the 9/10, 113/114-115, 114-115/116 and 146-147/147 split cases, and nine mid-psalm join/split irregulars. Verse alignment is asserted by incipit in `scripts/test-data.ts`.
 
 ### P1 — correctness and integrity (fix before TestFlight)
 

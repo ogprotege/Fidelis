@@ -17,8 +17,9 @@ export interface LectionaryRow {
   /** canonical book slug */
   b: string;
   /** verse spans [chapter, fromVerse, toVerse]; toVerse 999 = end of chapter.
-   *  Psalm chapters are cited in modern (Hebrew) numbering — convert with
-   *  hebrewToVulgatePsalm() before loading text from the bundled texts. */
+   *  Psalms are cited in modern numbering (chapters Hebrew, verses
+   *  English-style with superscriptions unnumbered) — convert with
+   *  hebrewSpanToVulgate() before loading text from the bundled texts. */
   s: [number, number, number][];
   /** true when the source citation had sub-verse detail we cannot split */
   partial?: boolean;
@@ -298,14 +299,83 @@ export async function readingsForDate(date: Date): Promise<DayReadings | null> {
   return best;
 }
 
-/** Modern (Hebrew) psalm number -> Vulgate/Septuagint chapter in our texts. */
-export function hebrewToVulgatePsalm(n: number): number {
-  if (n <= 8 || n >= 148) return n;
-  if (n === 9 || n === 10) return 9;
-  if (n === 114 || n === 115) return 113;
-  if (n === 116) return 114;
-  if (n === 147) return 146;
-  return n - 1;
+/**
+ * Verses the bundled Vulgate-versified text spends on each psalm's
+ * superscription before the body begins (0, +1 or +2), indexed by the modern
+ * (lectionary) psalm number: bundle verse = cited verse + offset. Anchored at
+ * the head of the psalm — where the Vulgate also splits or joins verses
+ * mid-psalm (sub-verse drift the shared grid cannot express), early verses
+ * stay exact and late ones may sit one slot off. Split/joined psalms
+ * (9/10, 114/115, 116, 147) carry 0 here and are handled in code.
+ */
+// prettier-ignore
+const PSALM_TITLE_VERSES = [0,
+  0, 0, 1, 1, 1, 1, 1, 1, 0, 0, //   1-10
+  1, 1, 0, 0, 0, 0, 0, 1, 1, 1, //  11-20
+  1, 1, 0, 0, 0, 0, 0, 0, 0, 1, //  21-30
+  1, 0, 0, 1, 0, 1, 0, 1, 1, 1, //  31-40
+  1, 1, 0, 1, 1, 1, 1, 1, 1, 0, //  41-50
+  2, 2, 0, 2, 1, 1, 1, 1, 1, 2, //  51-60
+  1, 1, 1, 1, 1, 0, 1, 1, 1, 1, //  61-70
+  0, 1, 0, 0, 1, 1, 1, 0, 0, 1, //  71-80
+  1, 0, 1, 1, 1, 0, 0, 1, 1, 0, //  81-90
+  0, 1, 0, 0, 0, 0, 0, 0, 0, 1, //  91-100
+  0, 1, 0, 0, 0, 0, 0, 1, 1, 0, // 101-110
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 111-120
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 121-130
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, // 131-140
+  0, 1, 0, 0, 0, 1, 0, 0, 0, 0  // 141-150
+];
+
+/**
+ * Psalms where the shared grid splits or joins English verses mid-psalm, so a
+ * flat title offset cannot track the whole psalm. `after: [pivot, offset]` —
+ * verses >= pivot use this offset instead of the title offset. `wide` — an
+ * English verse whose text spans two slots, so a span ending there reaches
+ * one slot further.
+ */
+const IRREGULAR: Record<number, { after?: [number, number]; wide?: number }> = {
+  2: { wide: 12 }, // Vulg 2:12-13 = Ps 2:12 (tail split)
+  4: { wide: 8 }, // Vulg 4:9-10 = Ps 4:8 (tail split)
+  43: { wide: 4 }, // Vulg 42:4-5 = Ps 43:4 in DRC (the harp clause is slot 5, which also opens v5; better whole than halved)
+  44: { after: [22, 0] }, // Vulg 43:22 = Ps 44:21-22
+  53: { after: [2, 1], wide: 1 }, // Vulg 52:1-2 = title + Ps 53:1
+  56: { after: [11, 0] }, // Vulg 55:11 = Ps 56:10-11
+  72: { after: [2, 0] }, // Vulg 71:2 = Ps 72:1-2
+  100: { after: [2, 0] }, // Vulg 99:2 = Ps 100:1-2
+  109: { after: [2, 0] }, // Vulg 108:2-3 = Ps 109:1-3 (drift), exact from v4
+  126: { wide: 6 }, // Vulg 125:6-7 = Ps 126:6 in DRC/CPDV (tail split)
+  146: { after: [2, 0] } // Vulg 145:2 = Ps 146:1-2
+};
+
+/**
+ * Modern (lectionary) psalm citation span -> span(s) in the bundled
+ * Vulgate-versified text, as [chapter, fromVerse, toVerse][]. The lectionary
+ * counts verses English-style (superscriptions unnumbered); the bundles are
+ * Vulgate-versified, with split chapters renumbered from 1. toVerse 999
+ * (= end of the cited psalm) is preserved or resolved as the split requires.
+ */
+export function hebrewSpanToVulgate(ch: number, v1: number, v2: number): [number, number, number][] {
+  // Joined: two modern psalms share one Vulgate chapter.
+  if (ch === 9) return [[9, v1 + 1, v2 === 999 ? 21 : v2 + 1]]; // Vulg 9:1 title, 9:2-21 = Ps 9
+  if (ch === 10) return [[9, v1 + 21, v2 === 999 ? 999 : v2 + 21]]; // Vulg 9:22-39 = Ps 10
+  if (ch === 114) return [[113, v1, v2 === 999 ? 8 : v2]]; // Vulg 113:1-8 = Ps 114
+  if (ch === 115) return [[113, v1 + 8, v2 === 999 ? 999 : v2 + 8]]; // Vulg 113:9-26 = Ps 115
+  // Split: one modern psalm spans two Vulgate chapters (renumbered from 1).
+  if (ch === 116 || ch === 147) {
+    const cut = ch === 116 ? 9 : 11; // verses of the first Vulgate chapter
+    const lo = ch === 116 ? 114 : 146;
+    const out: [number, number, number][] = [];
+    if (v1 <= cut) out.push([lo, v1, v2 !== 999 && v2 <= cut ? v2 : cut]);
+    if (v2 === 999 || v2 > cut) out.push([lo + 1, Math.max(v1 - cut, 1), v2 === 999 ? 999 : v2 - cut]);
+    return out;
+  }
+  const vulg = ch <= 8 || ch >= 148 ? ch : ch - 1;
+  const off = PSALM_TITLE_VERSES[ch] ?? 0;
+  const irr = IRREGULAR[ch];
+  const at = (v: number) => v + (irr?.after && v >= irr.after[0] ? irr.after[1] : off);
+  if (v2 === 999) return [[vulg, at(v1), 999]];
+  return [[vulg, at(v1), at(v2) + (irr?.wide === v2 ? 1 : 0)]];
 }
 
 export const READING_LABELS: Record<number, string> = {
@@ -315,20 +385,41 @@ export const READING_LABELS: Record<number, string> = {
   6: "Gospel"
 };
 
-/** Human citation like "1 Kings 18:41-46" or "Psalm 65(64):9-12". */
+/** Human citation like "1 Kings 18:41-46" or "Psalm 51(50):3-4,5-6". Psalms
+ *  show the modern chapter with the Vulgate chapter in parentheses (when they
+ *  differ), and the Vulgate-grid verse numbers that match the rendered text. */
 export function formatCitation(row: LectionaryRow, bookName: string): string {
   const isPsalm = row.b === "psalms";
-  const parts: string[] = [];
-  let curCh = 0;
-  for (const [ch, v1, v2] of row.s) {
-    const vv = v2 === 999 ? `${v1}ff` : v1 === v2 ? `${v1}` : `${v1}-${v2}`;
-    if (ch !== curCh) {
-      const chLabel = isPsalm ? `${ch}(${hebrewToVulgatePsalm(ch)})` : `${ch}`;
-      parts.push(`${chLabel}:${vv}`);
-      curCh = ch;
+  const groups: { label: string; ranges: [number, number][] }[] = [];
+  const push = (label: string, v1: number, v2: number) => {
+    const g = groups[groups.length - 1];
+    if (g?.label === label) {
+      const last = g.ranges[g.ranges.length - 1];
+      // grid joins can land consecutive stanzas on overlapping slots
+      if (v1 <= last[1]) {
+        last[0] = Math.min(last[0], v1);
+        last[1] = Math.max(last[1], v2);
+      } else {
+        g.ranges.push([v1, v2]);
+      }
     } else {
-      parts[parts.length - 1] += `,${vv}`;
+      groups.push({ label, ranges: [[v1, v2]] });
+    }
+  };
+  for (const [ch, v1, v2] of row.s) {
+    if (isPsalm) {
+      for (const [vc, mv1, mv2] of hebrewSpanToVulgate(ch, v1, v2)) {
+        push(vc === ch ? `${ch}` : `${ch}(${vc})`, mv1, mv2);
+      }
+    } else {
+      push(`${ch}`, v1, v2);
     }
   }
+  const parts = groups.map(
+    ({ label, ranges }) =>
+      `${label}:${ranges
+        .map(([a, b]) => (b === 999 ? `${a}ff` : a === b ? `${a}` : `${a}-${b}`))
+        .join(",")}`
+  );
   return `${bookName} ${parts.join("; ")}`;
 }

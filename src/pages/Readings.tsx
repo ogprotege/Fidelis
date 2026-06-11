@@ -147,8 +147,9 @@ export default function Readings() {
       {readings !== "loading" && readings && (
         <p className="muted small sans">
           Lectionary day: <code>{readings.code}</code>. Citations follow the Roman
-          Lectionary; psalms are shown with both modern and Vulgate numbers, e.g.
-          Psalm 23(22). Where the lectionary subdivides verses (e.g. “12b”), whole
+          Lectionary; psalms are shown with both modern and Vulgate chapter numbers,
+          e.g. Psalm 23(22), with verse numbers following the Vulgate text as
+          rendered. Where the lectionary subdivides verses (e.g. “12b”), whole
           verses are shown — the text itself is never altered.
         </p>
       )}
