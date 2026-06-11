@@ -216,6 +216,31 @@ check(
   heartCollision.code.startsWith("OW10-6Sat") && !heartCollision.secondary,
   heartCollision.code
 );
+check(
+  "memorial promotion labels the proper set",
+  barnabas.primaryLabel === "Proper of the Memorial",
+  barnabas.primaryLabel ?? "no label"
+);
+
+// 3c. Holy Thursday Chrism Mass (P2-7) and the partial flag (P2-4)
+const chrism = res(2026, 4, 2)!;
+check(
+  "Holy Thursday offers the Chrism Mass alongside the Lord's Supper",
+  chrism.secondary?.code === "LW06-4Thu~Chrism" &&
+    chrism.primaryLabel === "Mass of the Lord's Supper (evening)" &&
+    chrism.secondary.rows.some((r) => Math.floor(r.t) === 6),
+  chrism.code
+);
+const goodFriday = res(2026, 4, 3)!;
+check("Good Friday carries a single set", !goodFriday.secondary, goodFriday.code);
+check(
+  "partial flag covers letter-suffix citations (P2-4)",
+  partial >= 500 &&
+    (lect["Saint Barnabas the Apostle"] ?? []).some(
+      (r) => Math.floor(r.t) === 1 && r.partial === true
+    ),
+  `${partial} rows flagged`
+);
 
 const mmc = { code: "OW00-MaryMotherofChurch", rows: lect["OW00-MaryMotherofChurch"] ?? [] };
 const mmcFirst = displayReadings(mmc)

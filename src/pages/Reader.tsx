@@ -30,7 +30,8 @@ export default function Reader() {
   const focusVerse = parseInt(searchParams.get("v") ?? "", 10) || null;
 
   const book = getBook(bookSlug);
-  const settings = getSettings();
+  // Read settings once per mount, not per render (P2-8).
+  const [settings] = useState(getSettings);
   const [parallel, setParallel] = useState<string | null>(settings.parallel);
   const [fontSize, setFontSize] = useState(settings.fontSize);
   const [data, setData] = useState<BookData | null>(null);

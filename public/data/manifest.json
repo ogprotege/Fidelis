@@ -11,7 +11,7 @@
   }
  },
  "fileCount": 238,
- "rootHash": "f9d5bad741381dbe837f234469e66f81326459f9874c9734fa6eeb38e4beaacb",
+ "rootHash": "75d410281c09e636580f67dea040e5af8f0da126a38c78c9df461842681d967f",
  "files": {
   "cpdv/1-chronicles.json": "dad2bf8f81ef910afbf748d2b4ae9b6758b6f8b39af90485d035b29f87995285",
   "cpdv/1-corinthians.json": "f1f890bc593b7c7882838663c9ba1f2470e83c80111b687de128e9d685fea8cf",
@@ -171,7 +171,7 @@
   "drc/wisdom.json": "4ac711fc8e2c81cc29db672f01d002995aac024f6bdc3eca2fab648b7ad26158",
   "drc/zechariah.json": "3fb2357158bd648b90616cff44008be97c01679bd61e178f90223e7aac7eaa9d",
   "drc/zephaniah.json": "5a3a6c934af946afcd2dd311a77261f5a3f2d1347f4fb98271cd8061658d1cdf",
-  "lectionary.json": "4a16323ad62aa9a1601e89dac1f9f6d4e6d0c803b88b0fbca753b9354eb35fee",
+  "lectionary.json": "6f7cd44d64ab72780aab09b132e24eefa98732f8df1e3d93b3c1e68e82b65973",
   "vulgate/1-chronicles.json": "f3c7176cfc7106cb67a356c1a585a25dd6df9abb666a8a437e47ccc9f22b7365",
   "vulgate/1-corinthians.json": "2175d17bb8e55449b280fe0667a665bc73a90d3ee38d22f8988264b39cf3ec2e",
   "vulgate/1-john.json": "47ef9489308fc9e5784fd9c2a08f509812f9fe5b062dace16ced51f73ec4a1b3",

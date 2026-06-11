@@ -38,8 +38,12 @@ export interface DayReadings {
   /** the lectionary day code(s) the readings came from */
   code: string;
   rows: LectionaryRow[];
-  /** P1-6: when a memorial's prescribed propers take the day, the ferial
-   *  readings of the day remain available here. */
+  /** Heading shown over the primary set when a secondary set exists
+   *  (e.g. "Proper of the Memorial", "Mass of the Lord's Supper (evening)"). */
+  primaryLabel?: string;
+  /** An alternative set of readings for the same day: the ferial cycle
+   *  behind a memorial's prescribed propers (P1-6), or the Chrism Mass on
+   *  Holy Thursday morning (P2-7). */
   secondary?: { label: string; code: string; rows: LectionaryRow[] };
 }
 
@@ -374,11 +378,27 @@ export function resolveReadings(
       return {
         code: memorial.code,
         rows: memorial.rows,
+        primaryLabel: "Proper of the Memorial",
         secondary: { label: "Ferial readings of the day", code: best.code, rows: best.rows }
       };
     }
   }
   supplement(best);
+
+  // P2-7: Holy Thursday carries two Masses — the evening Mass of the Lord's
+  // Supper governs the day; the morning Chrism Mass is offered alongside.
+  if (best.group.codes.includes("LW06-4Thu") && data["LW06-4Thu~Chrism"]?.length) {
+    return {
+      code: best.code,
+      rows: best.rows,
+      primaryLabel: "Mass of the Lord's Supper (evening)",
+      secondary: {
+        label: "Chrism Mass (morning)",
+        code: "LW06-4Thu~Chrism",
+        rows: data["LW06-4Thu~Chrism"]
+      }
+    };
+  }
   return { code: best.code, rows: best.rows };
 }
 

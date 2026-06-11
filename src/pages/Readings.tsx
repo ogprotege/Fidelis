@@ -138,8 +138,8 @@ export default function Readings() {
           reader directly.
         </p>
       )}
-      {readings !== "loading" && readings && readings.secondary && (
-        <h2 className="testament-title">Proper of the Memorial</h2>
+      {readings !== "loading" && readings && readings.primaryLabel && (
+        <h2 className="testament-title">{readings.primaryLabel}</h2>
       )}
       {readings !== "loading" &&
         readings &&
@@ -179,7 +179,7 @@ export default function Readings() {
           {readings.secondary && (
             <>
               {" "}
-              · ferial: <code>{readings.secondary.code}</code>
+              · {readings.secondary.label}: <code>{readings.secondary.code}</code>
             </>
           )}
           . Citations follow the Roman
