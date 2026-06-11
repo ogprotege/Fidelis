@@ -1,0 +1,35 @@
+lectionary.json: 1140 day codes, 3013 rows
+rows flagged partial: 2
+NAMED targets checked: 85, missing: 0
+2024: days without resolvable gospel: 0
+2025: days without resolvable gospel: 0
+2026: days without resolvable gospel: 0
+
+Easter Vigil (LW06-6Sat / + A):
+  LW06-6Sat: t values = 1.1, 1.11, 1.2, 1.21, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 2.1, 2.11, 2.2, 2.3, 2.4, 2.5, 2.6, 2.71, 2.72, 2.8
+  LW06-6Sat A: t values = 6
+key "LW06-4Thu": present
+key "LW06-4Thu A": MISSING
+key "LW00-3Wed": present
+key "LW00-4Thu": present
+key "LW00-5Fri": present
+key "LW00-6Sat": present
+
+Ash Wednesday psalm row: {"t":2,"b":"psalms","s":[[51,1,2],[51,3,4],[51,10,11],[51,12,12],[51,15,15]]}
+DRC Psalm 50(51) has 21 verses.
+  v1: Unto the end, a psalm of David,
+  v2: When Nathan the prophet came to him, after he had sinned with Bethsabee.
+  v3: Have mercy on me, O God, according to thy great mercy. And according to the multitude of thy tender mercies blot out my iniquity.
+Lectionary cites Hebrew 51:1-2, 51:3-4, 51:10-11, 51:12-12, 51:15-15
+App will render Vulgate 50:1-2 -> starts with: "Unto the end, a psalm of David,"
+Correct first verse of the responsorial ("Have mercy...") is DRC 50:3: "Have mercy on me, O God, according to thy great mercy. And a"
+
+psalm-split damage: Ps116 spans past Vulgate 114's end: 31; Ps147:12+ spans: 24; Ps10 rows: 4
+
+VOTD cycle: 172 entries
+  drc: 0 invalid refs
+  cpdv: 0 invalid refs
+  vulgate: 0 invalid refs
+drc: 78 books, 37255 verses, 1450 empty
+cpdv: 78 books, 37255 verses, 1443 empty
+vulgate: 78 books, 37255 verses, 1446 empty
