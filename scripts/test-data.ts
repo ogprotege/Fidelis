@@ -6,7 +6,8 @@ import {
   dayCodeCandidates,
   displayReadings,
   formatCitation,
-  hebrewSpanToVulgate
+  hebrewSpanToVulgate,
+  resolveReadings
 } from "../src/lib/lectionary";
 import { dayOfYear } from "../src/lib/votd";
 
@@ -135,6 +136,87 @@ check(
   JSON.stringify(lent1Second) === JSON.stringify(["Second Reading", "or (shorter form)"]),
   `got ${JSON.stringify(lent1Second)}`
 );
+// 3b. Memorial propers (P1-6): the source's thousandths marker promotes the
+//     memorial's prescribed formulary; unmarked memorials stay behind the
+//     ferial, and governing feasts/solemnities are untouched.
+console.log("");
+const res = (y: number, m: number, d: number) =>
+  resolveReadings(lect, new Date(y, m - 1, d), "universal");
+const barnabas = res(2026, 6, 11)!;
+check(
+  "St. Barnabas propers take Jun 11 2026",
+  barnabas.code.startsWith("Saint Barnabas the Apostle"),
+  barnabas.code
+);
+check(
+  "Barnabas primary carries the marked proper first reading (Acts 11, t=1.001)",
+  barnabas.rows.some((r) => r.b === "acts" && Math.abs(r.t - 1.001) < 1e-9),
+  barnabas.rows.map((r) => `${r.t} ${r.b}`).join(" | ")
+);
+check(
+  "Barnabas ferial readings offered alongside",
+  barnabas.secondary?.code.startsWith("OW10-4Thu") === true,
+  barnabas.secondary?.code ?? "no secondary"
+);
+const beheading = res(2026, 8, 29)!;
+check(
+  "Passion of John the Baptist propers Aug 29 2026 (marked gospel)",
+  beheading.code.startsWith("The Beheading of Saint John the Baptist") &&
+    beheading.rows.some((r) => r.b === "mark" && Math.abs(r.t - 6.001) < 1e-9),
+  beheading.code
+);
+const angels = res(2026, 10, 2)!;
+check("Guardian Angels propers Oct 2 2026", angels.code.startsWith("Guardian Angels"), angels.code);
+const mmcRes = res(2026, 5, 25)!;
+check(
+  "Mary, Mother of the Church propers on the Monday after Pentecost 2026",
+  mmcRes.code.startsWith("OW00-MaryMotherofChurch") && !!mmcRes.secondary,
+  mmcRes.code
+);
+const timtit = res(2026, 1, 26)!;
+check(
+  "Sts. Timothy and Titus propers Jan 26 2026 (marked first-reading options)",
+  timtit.code.startsWith("Saints Timothy and Titus"),
+  timtit.code
+);
+const sorrows = res(2026, 9, 15)!;
+check(
+  "Our Lady of Sorrows propers Sep 15 2026 with both gospel options",
+  sorrows.code.startsWith("Our Lady of Sorrows") &&
+    displayReadings(sorrows).flat().filter((x) => Math.floor(x.row.t) === 6).length === 2,
+  sorrows.code
+);
+const agnes = res(2026, 1, 21)!;
+check(
+  "St. Agnes (no prescribed propers) keeps the ferial, no secondary set",
+  agnes.code.startsWith("OW02-3Wed") && !agnes.secondary,
+  agnes.code
+);
+const natJtB = res(2026, 6, 24)!;
+check(
+  "A governing solemnity is untouched (Nativity of John the Baptist)",
+  natJtB.code.startsWith("Birth of Saint John the Baptist") && !natJtB.secondary,
+  natJtB.code
+);
+const josephWorker = res(2026, 5, 1)!;
+check(
+  "St. Joseph the Worker (optional memorial) never displaces the Easter ferial",
+  josephWorker.code.startsWith("EW04-5Fri") && !josephWorker.secondary,
+  josephWorker.code
+);
+const immaculateHeart = res(2024, 6, 8)!;
+check(
+  "Immaculate Heart propers on its Saturday (clear year 2024)",
+  immaculateHeart.code.startsWith("OW00-ImmaculateHeart") && !!immaculateHeart.secondary,
+  immaculateHeart.code
+);
+const heartCollision = res(2026, 6, 13)!;
+check(
+  "Immaculate Heart collision year 2026: demoted, ferial keeps the day",
+  heartCollision.code.startsWith("OW10-6Sat") && !heartCollision.secondary,
+  heartCollision.code
+);
+
 const mmc = { code: "OW00-MaryMotherofChurch", rows: lect["OW00-MaryMotherofChurch"] ?? [] };
 const mmcFirst = displayReadings(mmc)
   .flat()

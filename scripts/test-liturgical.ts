@@ -127,7 +127,9 @@ expect("Christmas Day 2022 lists the Nativity", has(d(2022, 12, 25), "Nativity o
 expect("All Souls governs Sunday 2025-11-02", has(d(2025, 11, 2), "All Souls"));
 expect("Pentecost 2026 proper readings first", cand(d(2026, 5, 24)).startsWith('[["EW08-Pentecost'));
 expect("St. Barnabas memorial listed on 2026-06-11", has(d(2026, 6, 11), "Barnabas"));
-expect("Ferial readings still first on memorial days", cand(d(2026, 6, 11)).startsWith('[["OW10-4Thu'));
+// (candidate ORDER only — resolveReadings promotes marked, obligatory
+// memorial propers at the data layer; see test-data.ts section 3b)
+expect("Candidates keep the ferial group before memorials", cand(d(2026, 6, 11)).startsWith('[["OW10-4Thu'));
 
 // 5. P1-5 acceptance — calendar region (Universal / United States)
 const namesR = (x: Date, r: CalendarRegion) => liturgicalDay(x, r).celebrations.map((c) => c.name);

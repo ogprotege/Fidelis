@@ -58,6 +58,14 @@ export default function Readings() {
     () => (readings === "loading" || !readings ? [] : displayReadings(readings)),
     [readings]
   );
+  // P1-6: ferial readings offered alongside a memorial's prescribed propers.
+  const secondarySections = useMemo(
+    () =>
+      readings !== "loading" && readings?.secondary
+        ? displayReadings({ code: readings.secondary.code, rows: readings.secondary.rows })
+        : [],
+    [readings]
+  );
 
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
@@ -130,6 +138,9 @@ export default function Readings() {
           reader directly.
         </p>
       )}
+      {readings !== "loading" && readings && readings.secondary && (
+        <h2 className="testament-title">Proper of the Memorial</h2>
+      )}
       {readings !== "loading" &&
         readings &&
         sections.map((sec, si) => (
@@ -144,10 +155,34 @@ export default function Readings() {
             ))}
           </section>
         ))}
+      {readings !== "loading" && readings && readings.secondary && (
+        <>
+          <h2 className="testament-title">{readings.secondary.label}</h2>
+          {secondarySections.map((sec, si) => (
+            <section key={`f-${si}`} className="reading-group">
+              {sec.map(({ label, row }, i) => (
+                <ReadingText
+                  key={`f-${row.t}-${row.b}-${i}`}
+                  row={row}
+                  translation={translation}
+                  label={label}
+                />
+              ))}
+            </section>
+          ))}
+        </>
+      )}
 
       {readings !== "loading" && readings && (
         <p className="muted small sans">
-          Lectionary day: <code>{readings.code}</code>. Citations follow the Roman
+          Lectionary day: <code>{readings.code}</code>
+          {readings.secondary && (
+            <>
+              {" "}
+              · ferial: <code>{readings.secondary.code}</code>
+            </>
+          )}
+          . Citations follow the Roman
           Lectionary; psalms are shown with both modern and Vulgate chapter numbers,
           e.g. Psalm 23(22), with verse numbers following the Vulgate text as
           rendered. Where the lectionary subdivides verses (e.g. “12b”), whole

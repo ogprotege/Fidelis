@@ -52,6 +52,9 @@ export interface Celebration {
   precedence?: number;
   /** ISO date of the nominal day, set when the celebration was transferred. */
   transferredFrom?: string;
+  /** Optional memorial (memoria ad libitum) — its readings never displace
+   *  the ferial cycle. */
+  optional?: boolean;
 }
 
 export interface LiturgicalDay {
@@ -147,16 +150,20 @@ const WEEKDAYS = [
 // A representative selection: all solemnities/feasts plus well-loved memorials.
 // `p` overrides the default precedence of the rank (feasts of the Lord rank 5,
 // and Christmas/Epiphany sit among the rank-2 privileged days).
-const FIXED: { m: number; d: number; name: string; rank: Rank; color?: LiturgicalColor; p?: number }[] = [
+// `opt` marks optional memorials (memoria ad libitum): kept at Memorial
+// precedence for occurrence (pre-existing model), but their formularies are
+// never promoted over the ferial readings (P1-6).
+const FIXED: { m: number; d: number; name: string; rank: Rank; color?: LiturgicalColor; p?: number; opt?: boolean }[] = [
   { m: 1, d: 1, name: "Mary, the Holy Mother of God", rank: "Solemnity", color: "white" },
   // The Epiphany is region-movable and is added in movableDefs().
   { m: 1, d: 2, name: "Sts. Basil the Great and Gregory Nazianzen, Doctors", rank: "Memorial", color: "white" },
   { m: 1, d: 21, name: "St. Agnes, Virgin and Martyr", rank: "Memorial", color: "red" },
   { m: 1, d: 25, name: "The Conversion of St. Paul, Apostle", rank: "Feast", color: "white" },
+  { m: 1, d: 26, name: "Sts. Timothy and Titus, Bishops", rank: "Memorial", color: "white" },
   { m: 1, d: 28, name: "St. Thomas Aquinas, Priest and Doctor", rank: "Memorial", color: "white" },
   { m: 1, d: 31, name: "St. John Bosco, Priest", rank: "Memorial", color: "white" },
   { m: 2, d: 2, name: "The Presentation of the Lord (Candlemas)", rank: "Feast", color: "white", p: 5 },
-  { m: 2, d: 11, name: "Our Lady of Lourdes", rank: "Memorial", color: "white" },
+  { m: 2, d: 11, name: "Our Lady of Lourdes", rank: "Memorial", color: "white", opt: true },
   { m: 2, d: 14, name: "Sts. Cyril and Methodius", rank: "Memorial", color: "white" },
   { m: 2, d: 22, name: "The Chair of St. Peter, Apostle", rank: "Feast", color: "white" },
   { m: 3, d: 17, name: "St. Patrick, Bishop", rank: "Memorial", color: "white" },
@@ -164,9 +171,9 @@ const FIXED: { m: number; d: number; name: string; rank: Rank; color?: Liturgica
   { m: 3, d: 25, name: "The Annunciation of the Lord", rank: "Solemnity", color: "white" },
   { m: 4, d: 25, name: "St. Mark, Evangelist", rank: "Feast", color: "red" },
   { m: 4, d: 29, name: "St. Catherine of Siena, Virgin and Doctor", rank: "Memorial", color: "white" },
-  { m: 5, d: 1, name: "St. Joseph the Worker", rank: "Memorial", color: "white" },
+  { m: 5, d: 1, name: "St. Joseph the Worker", rank: "Memorial", color: "white", opt: true },
   { m: 5, d: 3, name: "Sts. Philip and James, Apostles", rank: "Feast", color: "red" },
-  { m: 5, d: 13, name: "Our Lady of Fatima", rank: "Memorial", color: "white" },
+  { m: 5, d: 13, name: "Our Lady of Fatima", rank: "Memorial", color: "white", opt: true },
   { m: 5, d: 14, name: "St. Matthias, Apostle", rank: "Feast", color: "red" },
   { m: 5, d: 31, name: "The Visitation of the Blessed Virgin Mary", rank: "Feast", color: "white" },
   { m: 5, d: 2, name: "St. Athanasius, Bishop and Doctor", rank: "Memorial", color: "white" },
@@ -178,7 +185,7 @@ const FIXED: { m: number; d: number; name: string; rank: Rank; color?: Liturgica
   { m: 6, d: 29, name: "Sts. Peter and Paul, Apostles", rank: "Solemnity", color: "red" },
   { m: 7, d: 3, name: "St. Thomas, Apostle", rank: "Feast", color: "red" },
   { m: 7, d: 11, name: "St. Benedict, Abbot", rank: "Memorial", color: "white" },
-  { m: 7, d: 16, name: "Our Lady of Mount Carmel", rank: "Memorial", color: "white" },
+  { m: 7, d: 16, name: "Our Lady of Mount Carmel", rank: "Memorial", color: "white", opt: true },
   { m: 7, d: 22, name: "St. Mary Magdalene", rank: "Feast", color: "white" },
   { m: 7, d: 25, name: "St. James, Apostle", rank: "Feast", color: "red" },
   { m: 7, d: 26, name: "Sts. Joachim and Anne, Parents of the BVM", rank: "Memorial", color: "white" },
@@ -211,7 +218,7 @@ const FIXED: { m: number; d: number; name: string; rank: Rank; color?: Liturgica
   { m: 10, d: 15, name: "St. Teresa of Jesus (Ávila), Virgin and Doctor", rank: "Memorial", color: "white" },
   { m: 10, d: 17, name: "St. Ignatius of Antioch, Bishop and Martyr", rank: "Memorial", color: "red" },
   { m: 10, d: 18, name: "St. Luke, Evangelist", rank: "Feast", color: "red" },
-  { m: 10, d: 22, name: "St. John Paul II, Pope", rank: "Memorial", color: "white" },
+  { m: 10, d: 22, name: "St. John Paul II, Pope", rank: "Memorial", color: "white", opt: true },
   { m: 10, d: 28, name: "Sts. Simon and Jude, Apostles", rank: "Feast", color: "red" },
   { m: 11, d: 1, name: "All Saints", rank: "Solemnity", color: "white" },
   { m: 11, d: 2, name: "The Commemoration of All the Faithful Departed (All Souls)", rank: "Solemnity", color: "violet" },
@@ -259,6 +266,7 @@ interface CelebrationDef {
   color?: LiturgicalColor;
   precedence: number;
   transferredFrom?: string;
+  optional?: boolean;
 }
 
 /** The year's movable celebrations with their Table precedence. */
@@ -365,8 +373,14 @@ function resolveYear(year: number, region: CalendarRegion): Map<string, Celebrat
   };
   for (const [date, def] of movableDefs(year, region)) addDef(date, def);
   const fixed = region === "usa" ? [...FIXED, ...USA_FIXED] : FIXED;
-  for (const { m, d, name, rank, color, p } of fixed) {
-    addDef(ymd(year, m, d), { name, rank, color, precedence: p ?? RANK_PRECEDENCE[rank] });
+  for (const { m, d, name, rank, color, p, opt } of fixed) {
+    addDef(ymd(year, m, d), {
+      name,
+      rank,
+      color,
+      precedence: p ?? RANK_PRECEDENCE[rank],
+      ...(opt ? { optional: true } : {})
+    });
   }
 
   // Transfer pass, in date order: a solemnity (rank 3) impeded by a rank-1/2

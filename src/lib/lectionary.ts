@@ -38,6 +38,9 @@ export interface DayReadings {
   /** the lectionary day code(s) the readings came from */
   code: string;
   rows: LectionaryRow[];
+  /** P1-6: when a memorial's prescribed propers take the day, the ferial
+   *  readings of the day remain available here. */
+  secondary?: { label: string; code: string; rows: LectionaryRow[] };
 }
 
 let cache: Promise<LectionaryData> | null = null;
@@ -71,6 +74,7 @@ const NAMED: Record<string, string> = {
     "Saints Basil the Great and Gregory Nazianzen, bishops and doctors",
   "St. Agnes, Virgin and Martyr": "Saint Agnes, virgin and martyr",
   "The Conversion of St. Paul, Apostle": "The Conversion of Saint Paul, apostle",
+  "Sts. Timothy and Titus, Bishops": "Saints Timothy and Titus, bishops",
   "St. Thomas Aquinas, Priest and Doctor": "Saint Thomas Aquinas, priest and doctor",
   "St. John Bosco, Priest": "Saint John Bosco, priest",
   "The Presentation of the Lord (Candlemas)": "Presentation of the Lord",
@@ -166,31 +170,47 @@ const NAMED: Record<string, string> = {
 
 const ww = (n: number) => String(n).padStart(2, "0");
 
+export interface CandidateGroup {
+  codes: string[];
+  /** proper = governing solemnity/feast Mass · seasonal = the ferial cycle
+   *  · memorial = an observed memorial's own formulary */
+  kind: "proper" | "seasonal" | "memorial";
+  /** celebration name for sanctoral groups */
+  name?: string;
+  /** optional memorial: its formulary stays behind the ferial readings */
+  optional?: boolean;
+}
+
 /**
- * Ordered candidate groups of day codes for a date. Within one group the
- * codes complement each other (e.g. "OW10-4Thu 2" supplies the Year II first
- * reading and psalm, "OW10-4Thu" the gospel shared by both years).
+ * Ordered candidate groups of day codes for a date, tagged with provenance.
+ * Within one group the codes complement each other (e.g. "OW10-4Thu 2"
+ * supplies the Year II first reading and psalm, "OW10-4Thu" the gospel
+ * shared by both years).
  */
-export function dayCodeCandidates(
+export function dayCodeGroups(
   date: Date,
   region: CalendarRegion = currentRegion()
-): string[][] {
+): CandidateGroup[] {
   const lit = liturgicalDay(date, region);
   const dow = date.getDay();
   const cyc = sundayCycle(date);
   const wd = weekdayCycle(date);
-  const groups: string[][] = [];
+  const groups: CandidateGroup[] = [];
+  const seasonal = (...lists: string[][]) => {
+    for (const codes of lists) groups.push({ codes, kind: "seasonal" });
+  };
 
   // The calendar engine resolves precedence, transfer and suppression, so
   // lit.celebrations holds only what is observed today, the governing
   // celebration first. Day codes are a consequence of that resolution, not
   // a parallel reimplementation of it: a governing solemnity or feast brings
   // its proper Mass, the seasonal cycle follows as fallback, and memorial
-  // propers stay behind the ferial readings (see below).
+  // formularies trail the ferial readings (resolveReadings promotes the
+  // marked, prescribed ones — see below).
   const governing = lit.celebrations[0];
   if (governing && (governing.rank === "Solemnity" || governing.rank === "Feast")) {
     const id = NAMED[governing.name];
-    if (id) groups.push([`${id} ${cyc}`, id]);
+    if (id) groups.push({ codes: [`${id} ${cyc}`, id], kind: "proper", name: governing.name });
   }
 
   const day = DAY_CODE[dow];
@@ -201,61 +221,61 @@ export function dayCodeCandidates(
   switch (lit.season) {
     case "Advent":
       if (m === 12 && d >= 17 && d <= 24 && dow !== 0) {
-        groups.push([`AW05-Dec${d}`]);
+        seasonal([`AW05-Dec${d}`]);
       } else if (dow === 0) {
-        groups.push([`AW${ww(lit.week)}-0Sun ${cyc}`, `AW${ww(lit.week)}-0Sun`]);
+        seasonal([`AW${ww(lit.week)}-0Sun ${cyc}`, `AW${ww(lit.week)}-0Sun`]);
       } else {
-        groups.push([`AW${ww(lit.week)}-${day}`]);
+        seasonal([`AW${ww(lit.week)}-${day}`]);
       }
       break;
     case "Christmastide": {
       if (m === 12) {
         if (d === 25)
-          groups.push(
+          seasonal(
             ["Nativity of the Lord 4"],
             ["Nativity of the Lord 2"],
             ["Nativity of the Lord 1"]
           );
-        else if (d >= 29) groups.push([`CW01-Dec${d}`]);
+        else if (d >= 29) seasonal([`CW01-Dec${d}`]);
         // Dec 26–28 are covered by the named feast map above
       } else {
         // Epiphany is region-movable (Jan 6, or USA the Sunday of Jan 2–8);
         // "CW03-DayN" weekday readings count from it wherever it falls.
         const epiphany = epiphanyDate(y, region);
         const n = Math.round((date.getTime() - epiphany.getTime()) / 86_400_000);
-        if (n === 0) groups.push(["CW03-Epiphany"]);
-        else if (dow === 0 && n < 0) groups.push(["CW02-0Sun"]);
-        else if (n < 0) groups.push([`CW02-Jan${d}`]);
-        else groups.push([`CW03-Day${n}`, `CW02-Jan${d}`]);
+        if (n === 0) seasonal(["CW03-Epiphany"]);
+        else if (dow === 0 && n < 0) seasonal(["CW02-0Sun"]);
+        else if (n < 0) seasonal([`CW02-Jan${d}`]);
+        else seasonal([`CW03-Day${n}`, `CW02-Jan${d}`]);
       }
       break;
     }
     case "Lent":
       if (dow === 0) {
-        groups.push([`LW${ww(lit.week)}-0Sun ${cyc}`, `LW${ww(lit.week)}-0Sun`]);
+        seasonal([`LW${ww(lit.week)}-0Sun ${cyc}`, `LW${ww(lit.week)}-0Sun`]);
       } else {
-        groups.push([`LW${ww(lit.week)}-${day} ${cyc}`, `LW${ww(lit.week)}-${day}`]);
+        seasonal([`LW${ww(lit.week)}-${day} ${cyc}`, `LW${ww(lit.week)}-${day}`]);
       }
       break;
     case "Sacred Triduum": {
       const easter = easterDate(y);
       const off = 3 - Math.round((easter.getTime() - date.getTime()) / 86_400_000); // 0 Thu,1 Fri,2 Sat
       const code = ["LW06-4Thu", "LW06-5Fri", "LW06-6Sat"][off];
-      groups.push([`${code} ${cyc}`, code]);
+      seasonal([`${code} ${cyc}`, code]);
       break;
     }
     case "Eastertide":
       if (dow === 0) {
-        groups.push([`EW${ww(lit.week)}-0Sun ${cyc}`, `EW${ww(lit.week)}-0Sun`]);
+        seasonal([`EW${ww(lit.week)}-0Sun ${cyc}`, `EW${ww(lit.week)}-0Sun`]);
       } else {
-        groups.push([`EW${ww(lit.week)}-${day} ${cyc}`, `EW${ww(lit.week)}-${day}`]);
+        seasonal([`EW${ww(lit.week)}-${day} ${cyc}`, `EW${ww(lit.week)}-${day}`]);
       }
       break;
     case "Ordinary Time":
       if (dow === 0) {
-        groups.push([`OW${ww(lit.week)}-0Sun ${cyc}`, `OW${ww(lit.week)}-0Sun`]);
+        seasonal([`OW${ww(lit.week)}-0Sun ${cyc}`, `OW${ww(lit.week)}-0Sun`]);
       } else {
-        groups.push([`OW${ww(lit.week)}-${day} ${wd}`, `OW${ww(lit.week)}-${day}`]);
+        seasonal([`OW${ww(lit.week)}-${day} ${wd}`, `OW${ww(lit.week)}-${day}`]);
       }
       break;
   }
@@ -265,12 +285,26 @@ export function dayCodeCandidates(
   for (const c of lit.celebrations) {
     if (c.rank !== "Memorial") continue;
     const id = NAMED[c.name];
-    if (id) groups.push([`${id} ${cyc}`, id]);
+    if (id)
+      groups.push({
+        codes: [`${id} ${cyc}`, id],
+        kind: "memorial",
+        name: c.name,
+        optional: c.optional
+      });
   }
   // Sanity net: the Baptism of the Lord is computed as a celebration; if some
   // edge date produced nothing, fall back to nearest OT week 1 weekday.
-  if (!groups.length) groups.push([`OW01-${day} ${wd}`, `OW01-${day}`]);
+  if (!groups.length) seasonal([`OW01-${day} ${wd}`, `OW01-${day}`]);
   return groups;
+}
+
+/** The candidate groups as bare code lists (provenance dropped). */
+export function dayCodeCandidates(
+  date: Date,
+  region: CalendarRegion = currentRegion()
+): string[][] {
+  return dayCodeGroups(date, region).map((g) => g.codes);
 }
 
 function mergeGroup(data: LectionaryData, codes: string[]): { code: string; rows: LectionaryRow[] } {
@@ -291,26 +325,65 @@ function mergeGroup(data: LectionaryData, codes: string[]): { code: string; rows
 }
 
 /** Resolve the Mass readings for a date. */
-export async function readingsForDate(date: Date): Promise<DayReadings | null> {
-  const data = await loadLectionary();
-  const groups = dayCodeCandidates(date);
-  const merged = groups.map((g) => mergeGroup(data, g));
+/**
+ * The source tables mark prescribed memorial propers with a thousandths
+ * suffix on t (Barnabas 1.001, Guardian Angels 6.001, Martha 6.101/6.201,
+ * Mary Mother of the Church 1.109/6.009): the celebration's own formulary
+ * is appointed for the day, not merely suggested from the commons.
+ */
+const hasProperMarker = (r: LectionaryRow) => Math.round(r.t * 1000) % 10 !== 0;
 
-  const best = merged.find((m) => m.rows.some((r) => Math.floor(r.t) === 6));
+/** Resolve the Mass readings for a date against loaded lectionary data. */
+export function resolveReadings(
+  data: LectionaryData,
+  date: Date,
+  region: CalendarRegion = currentRegion()
+): DayReadings | null {
+  const merged = dayCodeGroups(date, region).map((g) => ({
+    group: g,
+    ...mergeGroup(data, g.codes)
+  }));
+  const withGospel = merged.filter((m) => m.rows.some((r) => Math.floor(r.t) === 6));
+  const best = withGospel[0];
   if (!best) return null;
 
-  // A proper gospel without its own first reading (e.g. some memorials)
-  // is supplemented by the ferial readings of the day.
-  if (!best.rows.some((r) => Math.floor(r.t) === 1)) {
+  // A proper gospel without its own first reading is supplemented by the
+  // ferial readings of the day.
+  const supplement = (target: { rows: LectionaryRow[] }) => {
+    if (target.rows.some((r) => Math.floor(r.t) === 1)) return;
     const ferial = merged.find(
-      (mm) => mm !== best && mm.rows.some((r) => Math.floor(r.t) === 1)
+      (mm) => mm.rows !== target.rows && mm.rows.some((r) => Math.floor(r.t) === 1)
     );
     if (ferial) {
-      best.rows.push(...ferial.rows.filter((r) => Math.floor(r.t) !== 6));
-      best.rows.sort((a, b) => a.t - b.t);
+      target.rows.push(...ferial.rows.filter((r) => Math.floor(r.t) !== 6));
+      target.rows.sort((a, b) => a.t - b.t);
+    }
+  };
+
+  // P1-6: an observed OBLIGATORY memorial whose formulary carries the proper
+  // marker has prescribed readings — it takes the day, with the ferial cycle
+  // offered alongside. Optional memorials (e.g. St. Joseph the Worker) and
+  // unmarked memorial readings stay behind the ferial (correct praxis), and
+  // a governing solemnity or feast is never displaced.
+  if (best.group.kind !== "proper") {
+    const memorial = withGospel.find(
+      (m) => m.group.kind === "memorial" && !m.group.optional && m.rows.some(hasProperMarker)
+    );
+    if (memorial && memorial !== best) {
+      supplement(memorial);
+      return {
+        code: memorial.code,
+        rows: memorial.rows,
+        secondary: { label: "Ferial readings of the day", code: best.code, rows: best.rows }
+      };
     }
   }
-  return best;
+  supplement(best);
+  return { code: best.code, rows: best.rows };
+}
+
+export async function readingsForDate(date: Date): Promise<DayReadings | null> {
+  return resolveReadings(await loadLectionary(), date);
 }
 
 /**
