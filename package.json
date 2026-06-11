@@ -13,6 +13,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "data": "node scripts/build-data.mjs",
+    "report": "node scripts/build-report.mjs",
     "lectionary": "node scripts/build-lectionary.mjs",
     "votd-widget": "node scripts/build-votd-widget.mjs"
   },

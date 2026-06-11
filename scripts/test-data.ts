@@ -253,17 +253,125 @@ for (const t of ["drc", "cpdv", "vulgate"]) {
   console.log(`  ${t}: ${bad} invalid refs`);
 }
 
-// 8. Text sanity: empty verses across bundles
+// 8. Empty-slot audit (P1-4): data-report.txt must stay in sync with the
+//    bundles, no canonical chapter may be fully empty, and every scattered
+//    empty slot must be listed in the report.
+console.log("");
+const report = readFileSync(join(ROOT, "data-report.txt"), "utf8");
+const PLACEHOLDERS = new Set(["prayer-of-manasseh", "3-esdras", "4-esdras", "psalm-151", "laodiceans"]);
+const isEmpty = (s: string | undefined) => !s || !s.trim();
+const bundles: Record<string, Record<string, string[][]>> = {};
 for (const t of ["drc", "cpdv", "vulgate"]) {
   const idx = JSON.parse(readFileSync(join(ROOT, `public/data/${t}/index.json`), "utf8"));
-  let books = 0, verses = 0, empty = 0;
+  bundles[t] = {};
   for (const slug of idx.books) {
-    const data = JSON.parse(readFileSync(join(ROOT, `public/data/${t}/${slug}.json`), "utf8"));
-    books++;
-    for (const ch of data.chapters) for (const v of ch) { verses++; if (!v || !v.trim()) empty++; }
+    bundles[t][slug] = JSON.parse(
+      readFileSync(join(ROOT, `public/data/${t}/${slug}.json`), "utf8")
+    ).chapters;
   }
-  console.log(`${t}: ${books} books, ${verses} verses, ${empty} empty`);
 }
+for (const [t, books] of Object.entries(bundles)) {
+  let verses = 0;
+  let empties = 0;
+  const fullEmptyCanonical: string[] = [];
+  for (const [slug, chs] of Object.entries(books)) {
+    chs.forEach((ch, ci) => {
+      let chEmpty = 0;
+      for (const v of ch) {
+        verses++;
+        if (isEmpty(v)) {
+          empties++;
+          chEmpty++;
+        }
+      }
+      if (ch.length && chEmpty === ch.length && !PLACEHOLDERS.has(slug))
+        fullEmptyCanonical.push(`${slug} ${ci + 1}`);
+    });
+  }
+  console.log(`${t}: ${Object.keys(books).length} books, ${verses} verses, ${empties} empty`);
+  const m = report.match(new RegExp(`^${t}\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)$`, "m"));
+  check(
+    `data-report.txt summary in sync for ${t}`,
+    !!m &&
+      +m[1] === Object.keys(books).length &&
+      +m[2] === verses &&
+      +m[3] === verses - empties &&
+      +m[4] === empties,
+    m ? `report ${m[2]}v/${m[4]}e vs data ${verses}v/${empties}e` : "summary line missing"
+  );
+  check(
+    `no fully-empty canonical chapter in ${t}`,
+    fullEmptyCanonical.length === 0,
+    fullEmptyCanonical.slice(0, 5).join(", ")
+  );
+}
+const reportSlots = new Set(
+  [...report.matchAll(/^([a-z0-9-]+) (\d+):(\d+)\s+empty in /gm)].map(
+    (m) => `${m[1]} ${m[2]}:${m[3]}`
+  )
+);
+const dataSlots = new Set<string>();
+for (const books of Object.values(bundles)) {
+  for (const [slug, chs] of Object.entries(books)) {
+    if (PLACEHOLDERS.has(slug)) continue;
+    chs.forEach((ch, ci) =>
+      ch.forEach((v, vi) => {
+        if (isEmpty(v)) dataSlots.add(`${slug} ${ci + 1}:${vi + 1}`);
+      })
+    );
+  }
+}
+const missingFromReport = [...dataSlots].filter((s) => !reportSlots.has(s));
+const staleInReport = [...reportSlots].filter((s) => !dataSlots.has(s));
+check(
+  "every scattered empty slot is listed in data-report.txt",
+  missingFromReport.length === 0,
+  missingFromReport.slice(0, 5).join(", ")
+);
+check(
+  "data-report.txt lists no stale scattered slots",
+  staleInReport.length === 0,
+  staleInReport.slice(0, 5).join(", ")
+);
+
+// 9. Every lectionary span must render at least one non-empty verse in every
+//    bundled translation, for every book — the all-books generalization of 6a,
+//    mirroring ReadingText's empty-skip + one-slot-back fallback.
+let silentAll = 0;
+const silentAllSamples: string[] = [];
+for (const [code, rows] of Object.entries(lect)) {
+  for (const r of rows) {
+    for (const span of r.s) {
+      const spans: Span[] = r.b === "psalms" ? hebrewSpanToVulgate(...span) : [span];
+      for (const t of ["drc", "cpdv", "vulgate"]) {
+        const chapters = bundles[t][r.b];
+        const slots = (mapped: Span[]) =>
+          mapped.flatMap(([ch, v1, v2]) => {
+            const chap = chapters?.[ch - 1] ?? [];
+            const last = Math.min(v2 === 999 ? chap.length : v2, chap.length);
+            const got: string[] = [];
+            for (let v = Math.min(v1, chap.length); v <= last; v++) got.push(chap[v - 1] ?? "");
+            return got;
+          });
+        let got = slots(spans);
+        if (got.length && got.every((x) => !x.trim()) && spans[0][1] > 1) {
+          got = slots([[spans[0][0], spans[0][1] - 1, spans[0][2]]]);
+        }
+        if (!got.some((x) => x.trim())) {
+          silentAll++;
+          if (silentAllSamples.length < 8)
+            silentAllSamples.push(`${code} (${t}): ${r.b} ${JSON.stringify(span)}`);
+        }
+      }
+    }
+  }
+}
+check(
+  "every lectionary span renders text in all translations (all books)",
+  silentAll === 0,
+  `${silentAll}`
+);
+for (const s of silentAllSamples) console.log(`   ${s}`);
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

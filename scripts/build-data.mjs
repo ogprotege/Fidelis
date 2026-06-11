@@ -175,3 +175,7 @@ const genDir = join(ROOT, "src", "generated");
 await mkdir(genDir, { recursive: true });
 await writeFile(join(genDir, "bookMeta.json"), JSON.stringify(meta, null, 1));
 console.log(`Wrote src/generated/bookMeta.json (${Object.keys(meta).length} books)`);
+
+// Audit the freshly written bundles: data-report.txt lists every empty grid slot.
+const { writeReport } = await import("./build-report.mjs");
+await writeReport(ROOT);

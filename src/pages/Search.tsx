@@ -60,6 +60,7 @@ export default function Search() {
         const data = await loadBook(translation, b.slug);
         data.chapters.forEach((ch, ci) => {
           ch.forEach((text, vi) => {
+            if (!text) return; // grid-empty slot (see data-report.txt)
             if (found.length < MAX_RESULTS && fold(text).includes(needle)) {
               found.push({ book: b.slug, chapter: ci + 1, verse: vi + 1, text });
             }

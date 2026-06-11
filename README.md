@@ -8,8 +8,10 @@ paraphrasing, no softening of hard sayings, no silent "updates."
 
 - **The full 73-book Catholic canon** in traditional Vulgate order, including all
   seven deuterocanonical books and the Greek portions of Esther and Daniel — plus
-  the traditional Clementine appendix (Prayer of Manasses, 3–4 Esdras, Psalm 151,
-  Laodiceans), clearly marked as outside the canon.
+  the traditional Vulgate appendix, clearly marked as outside the canon (the
+  Prayer of Manasses and 3–4 Esdras of printed Clementine editions; Psalm 151 and
+  Laodiceans from the wider Vulgate manuscript tradition — listed, though the
+  bundled source corpus carries no text for them; see `data-report.txt`).
 - **Three complete translations bundled** (all public domain, all unaltered):
   - **Douay-Rheims, Challoner Revision** (1582–1610, rev. 1749–52)
   - **Catholic Public Domain Version** (2009)

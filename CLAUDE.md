@@ -23,7 +23,7 @@ npx tsx scripts/test-data.ts           # committed-data harness (bundles, psalm 
 
 ### P1 — correctness and integrity (fix before TestFlight)
 
-- **P1-4:** The bundles share one forced verse grid that drifts from printed Douay versification, and ~1,450 grid-empty verses per translation render as blank numbered spans.
+- **P1-4:** Fixed — grid-empty verse slots are skipped in Reader (both columns), Search, and VerseQuote; fully-empty chapters (the five appendix books, textless in the source corpus in every bundle) show an honest notice. `scripts/build-report.mjs` (run by `npm run data` / `npm run report`) emits the committed `data-report.txt` audit: 1,438 appendix placeholder slots + 17 scattered slots; report↔data sync asserted in `scripts/test-data.ts`. About/BookList/README copy corrected (Clementine appendix attribution, grid honesty). The audit surfaced 3 DRC corpus defects (printed 3 Kings 17:11, Prov 30:19, Bar 6:7 absent outright; their slots hold misfiled verses) — documented in the report and About; correcting the corpus itself folds into P1-10.
 - **P1-5:** No calendar region setting — United States transfers (Epiphany to Sunday, Ascension to the Seventh Sunday of Easter) are absent, so the app disagrees with American parishes twice a year.
 - **P1-6:** Memorials with proper readings are never used because the ferial group always wins; the prescribed propers (e.g., St. Barnabas) should surface.
 - **P1-7:** The Easter Vigil renders its nine readings all labeled "First Reading — option N" instead of the Reading I–VII / Epistle / Gospel ladder with interleaved psalms.

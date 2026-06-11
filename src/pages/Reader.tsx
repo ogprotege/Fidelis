@@ -112,6 +112,7 @@ export default function Reader() {
 
   const trans = getTranslation(translation);
   const verses = data?.chapters[chapter - 1] ?? null;
+  const chapterEmpty = verses !== null && verses.every((v) => !v || !v.trim());
   const chapterCount = data?.chapters.length ?? book.chapters;
   const displayName = bookDisplayName(book, translation);
   const bi = bookIndex(bookSlug);
@@ -151,6 +152,8 @@ export default function Reader() {
   const renderVerses = (vs: string[], interactive: boolean) => (
     <div className="verses" style={{ fontSize: `${fontSize}px` }}>
       {vs.map((text, i) => {
+        // Grid-empty slot (see data-report.txt): no text in this translation.
+        if (!text || !text.trim()) return null;
         const v = i + 1;
         const key = refKey({ book: bookSlug, chapter, verse: v });
         const hl = highlights.get(key);
@@ -273,8 +276,15 @@ export default function Reader() {
       )}
       {!error && !verses && <p className="loading">Loading the sacred text…</p>}
 
-      {verses && !parallelData && renderVerses(verses, true)}
-      {verses && parallelData && (
+      {chapterEmpty && (
+        <p className="notice">
+          The bundled {trans?.name ?? translation} source does not include the text of this{" "}
+          {book.appendix ? "book" : "chapter"}.
+        </p>
+      )}
+
+      {verses && !chapterEmpty && !parallelData && renderVerses(verses, true)}
+      {verses && !chapterEmpty && parallelData && (
         <div className="parallel-grid">
           <div>
             <div className="col-label">{trans?.abbrev}</div>
