@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import ReadingText from "../components/ReadingText";
 import {
   DayReadings,
-  READING_LABELS,
+  displayReadings,
   readingsForDate,
   sundayCycle,
   weekdayCycle
@@ -53,17 +53,11 @@ export default function Readings() {
     weekdayCycle(date) === "1" ? "I" : "II"
   }`;
 
-  // group options: consecutive fractional rows within the same integer group
-  const groups = useMemo(() => {
-    if (readings === "loading" || !readings) return [];
-    const byGroup = new Map<number, typeof readings.rows>();
-    for (const row of readings.rows) {
-      const g = Math.floor(row.t);
-      if (!byGroup.has(g)) byGroup.set(g, []);
-      byGroup.get(g)!.push(row);
-    }
-    return [...byGroup.entries()].sort((a, b) => a[0] - b[0]);
-  }, [readings]);
+  // Ordered, labeled sections — incl. the Easter Vigil ladder (P1-7).
+  const sections = useMemo(
+    () => (readings === "loading" || !readings ? [] : displayReadings(readings)),
+    [readings]
+  );
 
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
@@ -138,20 +132,14 @@ export default function Readings() {
       )}
       {readings !== "loading" &&
         readings &&
-        groups.map(([g, rows]) => (
-          <section key={g} className="reading-group">
-            {rows.map((row, i) => (
+        sections.map((sec, si) => (
+          <section key={si} className="reading-group">
+            {sec.map(({ label, row }, i) => (
               <ReadingText
                 key={`${row.t}-${row.b}-${i}`}
                 row={row}
                 translation={translation}
-                label={
-                  i === 0
-                    ? READING_LABELS[g] ?? "Reading"
-                    : rows.length > 2
-                      ? `${READING_LABELS[g] ?? "Reading"} — option ${i + 1}`
-                      : "or (alternative form)"
-                }
+                label={label}
               />
             ))}
           </section>

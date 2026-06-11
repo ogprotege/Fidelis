@@ -399,6 +399,106 @@ export const READING_LABELS: Record<number, string> = {
   6: "Gospel"
 };
 
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
+
+export interface LabeledReading {
+  label: string;
+  row: LectionaryRow;
+}
+
+/** Decompose a row's t: integer reading type, then hundredths read as
+ *  position (tens digit) and variant (units digit) — e.g. 1.21 -> type 1,
+ *  position 2, variant 1 (the shorter form of position 2). */
+function tParts(r: LectionaryRow): { g: number; pos: number; variant: number } {
+  const g = Math.floor(r.t);
+  const u = Math.round((r.t - g) * 100);
+  return { g, pos: Math.floor(u / 10), variant: u % 10 };
+}
+
+/**
+ * Lay out a day's readings for display: ordered sections of labeled rows.
+ *
+ * The Easter Vigil (LW06-6Sat) is the special case (P1-7): its 1.x rows are
+ * the Liturgy-of-the-Word ladder (1.1–1.7 = Reading I–VII, 1.8 = Epistle),
+ * each 2.x psalm interleaves after its reading, and the Gospel closes the
+ * sequence. Elsewhere rows group by reading type; within a group an x.N1 row
+ * of the same book is the shorter form of its x.N primary ("or, shorter
+ * form"), and the remaining rows are genuine options.
+ */
+export function displayReadings(reading: DayReadings): LabeledReading[][] {
+  const rows = [...reading.rows].sort((a, b) => a.t - b.t);
+
+  if (reading.code.includes("LW06-6Sat")) {
+    const sections: LabeledReading[][] = [];
+    for (let p = 1; p <= 8; p++) {
+      const sec: LabeledReading[] = [];
+      rows
+        .filter((r) => tParts(r).g === 1 && tParts(r).pos === p)
+        .forEach((r, i) =>
+          sec.push({
+            label:
+              i === 0 ? (p === 8 ? "Epistle" : `Reading ${ROMAN[p - 1]}`) : "or (shorter form)",
+            row: r
+          })
+        );
+      rows
+        .filter((r) => tParts(r).g === 2 && tParts(r).pos === p)
+        .forEach((r, i) => sec.push({ label: i === 0 ? "Responsorial Psalm" : "or", row: r }));
+      if (sec.length) sections.push(sec);
+    }
+    const gospels = rows.filter((r) => tParts(r).g === 6);
+    if (gospels.length) {
+      sections.push(
+        gospels.map((r, i) => ({ label: i === 0 ? "Gospel" : "or (alternative form)", row: r }))
+      );
+    }
+    // Safety net: any row the ladder did not claim still renders.
+    const claimed = new Set(sections.flat().map((x) => x.row));
+    const rest = rows.filter((r) => !claimed.has(r));
+    if (rest.length) {
+      sections.push(
+        rest.map((r) => ({ label: READING_LABELS[Math.floor(r.t)] ?? "Reading", row: r }))
+      );
+    }
+    return sections;
+  }
+
+  const sections: LabeledReading[][] = [];
+  for (const g of [...new Set(rows.map((r) => Math.floor(r.t)))].sort((a, b) => a - b)) {
+    const list = rows.filter((r) => Math.floor(r.t) === g);
+    const isShorterForm = (r: LectionaryRow) => {
+      const { pos, variant } = tParts(r);
+      return (
+        variant !== 0 &&
+        pos > 0 &&
+        list.some((p) => p.b === r.b && tParts(p).pos === pos && tParts(p).variant === 0)
+      );
+    };
+    const main = READING_LABELS[g] ?? "Reading";
+    const primaries = list.filter((r) => !isShorterForm(r)).length;
+    const sec: LabeledReading[] = [];
+    let opt = 0;
+    for (const r of list) {
+      if (isShorterForm(r)) {
+        sec.push({ label: "or (shorter form)", row: r });
+      } else {
+        sec.push({
+          label:
+            opt === 0
+              ? main
+              : primaries > 2
+                ? `${main} — option ${opt + 1}`
+                : "or (alternative form)",
+          row: r
+        });
+        opt++;
+      }
+    }
+    sections.push(sec);
+  }
+  return sections;
+}
+
 /** Human citation like "1 Kings 18:41-46" or "Psalm 51(50):3-4,5-6". Psalms
  *  show the modern chapter with the Vulgate chapter in parentheses (when they
  *  differ), and the Vulgate-grid verse numbers that match the rendered text. */

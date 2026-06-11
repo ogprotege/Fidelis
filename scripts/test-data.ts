@@ -1,7 +1,12 @@
 /** Data harness. Run: npx tsx scripts/test-data.ts */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { dayCodeCandidates, formatCitation, hebrewSpanToVulgate } from "../src/lib/lectionary";
+import {
+  dayCodeCandidates,
+  displayReadings,
+  formatCitation,
+  hebrewSpanToVulgate
+} from "../src/lib/lectionary";
 
 let failures = 0;
 function check(name: string, ok: boolean, detail = "") {
@@ -58,12 +63,86 @@ for (const region of ["universal", "usa"] as const) {
   }
 }
 
-// 3. Easter Vigil rows (LW06-6Sat) — expect t=1.01..1.07 options + epistle + gospel
-console.log("\nEaster Vigil (LW06-6Sat / + A):");
-for (const k of ["LW06-6Sat", "LW06-6Sat A"]) {
-  const rows = lect[k];
-  if (rows) console.log(`  ${k}: t values = ${rows.map((r) => r.t).join(", ")}`);
+// 3. Easter Vigil display ladder (P1-7): Reading I..VII / Epistle / Gospel
+//    with each psalm interleaved after its reading, shorter forms marked.
+const vigil = {
+  code: "LW06-6Sat A + LW06-6Sat",
+  rows: [...(lect["LW06-6Sat A"] ?? []), ...(lect["LW06-6Sat"] ?? [])]
+};
+const vigilLabels = displayReadings(vigil).map((sec) => sec.map((x) => x.label));
+const vigilFlat = vigilLabels.flat();
+check(
+  "Easter Vigil renders the nine-section ladder",
+  vigilLabels.length === 9,
+  `sections: ${vigilLabels.length} (${vigilLabels.map((s) => s.length).join(",")})`
+);
+const VIGIL_EXPECT = [
+  "Reading I", "or (shorter form)", "Responsorial Psalm", "or",
+  "Reading II", "or (shorter form)", "Responsorial Psalm",
+  "Reading III", "Responsorial Psalm",
+  "Reading IV", "Responsorial Psalm",
+  "Reading V", "Responsorial Psalm",
+  "Reading VI", "Responsorial Psalm",
+  "Reading VII", "Responsorial Psalm", "or",
+  "Epistle", "Responsorial Psalm",
+  "Gospel"
+];
+check(
+  "Easter Vigil labels read I..VII / Epistle / Gospel with interleaved psalms",
+  JSON.stringify(vigilFlat) === JSON.stringify(VIGIL_EXPECT),
+  `got ${JSON.stringify(vigilFlat)}`
+);
+check(
+  "Easter Vigil display drops no row",
+  vigilFlat.length === vigil.rows.length,
+  `${vigilFlat.length} labels vs ${vigil.rows.length} rows`
+);
+for (const cyc of ["A", "B", "C"]) {
+  const v = { code: `LW06-6Sat ${cyc} + LW06-6Sat`, rows: [...(lect[`LW06-6Sat ${cyc}`] ?? []), ...(lect["LW06-6Sat"] ?? [])] };
+  const flat = displayReadings(v).flat();
+  check(
+    `Easter Vigil year ${cyc} ends with a single Gospel`,
+    flat[flat.length - 1].label === "Gospel" && flat.filter((x) => x.label === "Gospel").length === 1
+  );
 }
+
+// 3a. General display labels: long/short forms and genuine options
+const palm = {
+  code: "LW06-0Sun A + LW06-0Sun",
+  rows: [...(lect["LW06-0Sun A"] ?? []), ...(lect["LW06-0Sun"] ?? [])]
+};
+const palmGospels = displayReadings(palm)
+  .flat()
+  .filter((x) => Math.floor(x.row.t) === 6)
+  .map((x) => x.label);
+check(
+  'Palm Sunday A short Passion reads "or (shorter form)"',
+  JSON.stringify(palmGospels) === JSON.stringify(["Gospel", "or (shorter form)"]),
+  `got ${JSON.stringify(palmGospels)}`
+);
+const lent1 = {
+  code: "LW01-0Sun A + LW01-0Sun",
+  rows: [...(lect["LW01-0Sun A"] ?? []), ...(lect["LW01-0Sun"] ?? [])]
+};
+const lent1Second = displayReadings(lent1)
+  .flat()
+  .filter((x) => Math.floor(x.row.t) === 3)
+  .map((x) => x.label);
+check(
+  '1st Sunday of Lent A short second reading reads "or (shorter form)"',
+  JSON.stringify(lent1Second) === JSON.stringify(["Second Reading", "or (shorter form)"]),
+  `got ${JSON.stringify(lent1Second)}`
+);
+const mmc = { code: "OW00-MaryMotherofChurch", rows: lect["OW00-MaryMotherofChurch"] ?? [] };
+const mmcFirst = displayReadings(mmc)
+  .flat()
+  .filter((x) => Math.floor(x.row.t) === 1)
+  .map((x) => x.label);
+check(
+  "Mary Mother of Church first-reading options stay genuine alternatives",
+  JSON.stringify(mmcFirst) === JSON.stringify(["First Reading", "or (alternative form)"]),
+  `got ${JSON.stringify(mmcFirst)}`
+);
 
 // 4. Holy Thursday + Ash Wednesday codes present?
 for (const k of ["LW06-4Thu", "LW06-4Thu A", "LW00-3Wed", "LW00-4Thu", "LW00-5Fri", "LW00-6Sat"]) {
