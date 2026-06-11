@@ -44,16 +44,18 @@ function mergeHasGospel(groups: string[][]): { ok: boolean; code: string } {
   }
   return { ok: false, code: groups.map((g) => g.join("+")).join(" / ") };
 }
-for (const year of [2024, 2025, 2026]) {
-  let fails: string[] = [];
-  const d = new Date(year, 0, 1);
-  while (d.getFullYear() === year) {
-    const r = mergeHasGospel(dayCodeCandidates(new Date(d)));
-    if (!r.ok) fails.push(`${d.toISOString().slice(0, 10)} -> ${r.code}`);
-    d.setDate(d.getDate() + 1);
+for (const region of ["universal", "usa"] as const) {
+  for (const year of [2024, 2025, 2026]) {
+    let fails: string[] = [];
+    const d = new Date(year, 0, 1);
+    while (d.getFullYear() === year) {
+      const r = mergeHasGospel(dayCodeCandidates(new Date(d), region));
+      if (!r.ok) fails.push(`${d.toISOString().slice(0, 10)} -> ${r.code}`);
+      d.setDate(d.getDate() + 1);
+    }
+    console.log(`${year} (${region}): days without resolvable gospel: ${fails.length}`);
+    for (const f of fails.slice(0, 12)) console.log(`   ${f}`);
   }
-  console.log(`${year}: days without resolvable gospel: ${fails.length}`);
-  for (const f of fails.slice(0, 12)) console.log(`   ${f}`);
 }
 
 // 3. Easter Vigil rows (LW06-6Sat) — expect t=1.01..1.07 options + epistle + gospel

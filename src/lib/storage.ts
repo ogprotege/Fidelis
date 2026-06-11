@@ -29,12 +29,18 @@ export interface LastRead {
   chapter: number;
 }
 
+/** Liturgical calendar region: the GRC as such, or with the U.S. transfers
+ *  (Epiphany to the Sunday of Jan 2–8, Ascension to the Seventh Sunday of
+ *  Easter) and the U.S. proper memorials. */
+export type CalendarRegion = "universal" | "usa";
+
 export interface Settings {
   translation: string;
   parallel: string | null;
   fontSize: number; // px
   theme: "parchment" | "night";
   showVerseNumbers: boolean;
+  calendarRegion: CalendarRegion;
 }
 
 const PREFIX = "fidelis:";
@@ -65,6 +71,7 @@ export function getSettings(): Settings {
     fontSize: 19,
     theme: "parchment",
     showVerseNumbers: true,
+    calendarRegion: "universal",
     ...read<Partial<Settings>>("settings", {})
   };
 }

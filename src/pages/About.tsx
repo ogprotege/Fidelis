@@ -94,7 +94,11 @@ export default function About() {
         carries them, with no editorial changes; its shared verse grid and its few
         gaps are described in the note on numbering above. The
         liturgical calendar follows the General Roman Calendar; movable feasts are
-        computed from the date of Easter. Daily Mass reading citations follow the
+        computed from the date of Easter, and a calendar-region setting on the
+        Readings page applies the United States transfers — Epiphany to the Sunday
+        of Jan 2–8, and the Ascension to the Seventh Sunday of Easter, as observed
+        in most U.S. ecclesiastical provinces (Boston, Hartford, New York, Omaha,
+        and Philadelphia keep Ascension Thursday) — and the U.S. proper days. Daily Mass reading citations follow the
         Roman Lectionary cycles (Sundays A/B/C, weekdays I/II), derived from the
         public-domain tables of{" "}
         <a

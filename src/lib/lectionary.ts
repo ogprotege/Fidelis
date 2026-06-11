@@ -8,7 +8,14 @@
  * Citation data: public/data/lectionary.json, derived from the public-domain
  * tables of jayarathina/Tamil-Catholic-Lectionary (see scripts/build-lectionary.mjs).
  */
-import { adventStart, easterDate, liturgicalDay } from "./liturgical";
+import {
+  CalendarRegion,
+  adventStart,
+  currentRegion,
+  easterDate,
+  epiphanyDate,
+  liturgicalDay
+} from "./liturgical";
 
 export interface LectionaryRow {
   /** 1 first reading · 2 responsorial psalm · 3 second reading · 6 gospel
@@ -125,6 +132,8 @@ const NAMED: Record<string, string> = {
   "St. Teresa of Jesus (Ávila), Virgin and Doctor": "Saint Teresa of Jesus, virgin and doctor",
   "St. Ignatius of Antioch, Bishop and Martyr": "Saint Ignatius of Antioch, bishop and martyr",
   "St. Luke, Evangelist": "Saint Luke the Evangelist",
+  "Sts. John de Brébeuf and Isaac Jogues, Priests, and Companions, Martyrs":
+    "Saints Jean de Brébeuf, Isaac Jogues, priests and martyrs; and their companions, martyrs",
   "Sts. Simon and Jude, Apostles": "Saint Simon and Saint Jude, apostles",
   "All Saints": "All Saints",
   "The Commemoration of All the Faithful Departed (All Souls)": "All Souls",
@@ -142,7 +151,8 @@ const NAMED: Record<string, string> = {
   "St. Stephen, the First Martyr": "Saint Stephen, the first martyr",
   "St. John, Apostle and Evangelist": "Saint John the Apostle and evangelist",
   "The Holy Innocents, Martyrs": "Holy Innocents, martyrs",
-  // movable
+  // movable (the Epiphany and Ascension dates depend on the calendar region)
+  "The Epiphany of the Lord": "CW03-Epiphany",
   "The Ascension of the Lord": "EW07-Ascension",
   "Pentecost Sunday": "EW08-Pentecost",
   "Mary, Mother of the Church": "OW00-MaryMotherofChurch",
@@ -161,8 +171,11 @@ const ww = (n: number) => String(n).padStart(2, "0");
  * codes complement each other (e.g. "OW10-4Thu 2" supplies the Year II first
  * reading and psalm, "OW10-4Thu" the gospel shared by both years).
  */
-export function dayCodeCandidates(date: Date): string[][] {
-  const lit = liturgicalDay(date);
+export function dayCodeCandidates(
+  date: Date,
+  region: CalendarRegion = currentRegion()
+): string[][] {
+  const lit = liturgicalDay(date, region);
   const dow = date.getDay();
   const cyc = sundayCycle(date);
   const wd = weekdayCycle(date);
@@ -206,14 +219,14 @@ export function dayCodeCandidates(date: Date): string[][] {
         else if (d >= 29) groups.push([`CW01-Dec${d}`]);
         // Dec 26–28 are covered by the named feast map above
       } else {
-        const epiphany = new Date(y, 0, 6);
-        if (d === 6) groups.push(["CW03-Epiphany"]);
-        else if (dow === 0 && date < epiphany) groups.push(["CW02-0Sun"]);
-        else if (date < epiphany) groups.push([`CW02-Jan${d}`]);
-        else {
-          const n = Math.round((date.getTime() - epiphany.getTime()) / 86_400_000);
-          groups.push([`CW03-Day${n}`, `CW02-Jan${d}`]);
-        }
+        // Epiphany is region-movable (Jan 6, or USA the Sunday of Jan 2–8);
+        // "CW03-DayN" weekday readings count from it wherever it falls.
+        const epiphany = epiphanyDate(y, region);
+        const n = Math.round((date.getTime() - epiphany.getTime()) / 86_400_000);
+        if (n === 0) groups.push(["CW03-Epiphany"]);
+        else if (dow === 0 && n < 0) groups.push(["CW02-0Sun"]);
+        else if (n < 0) groups.push([`CW02-Jan${d}`]);
+        else groups.push([`CW03-Day${n}`, `CW02-Jan${d}`]);
       }
       break;
     }
@@ -267,8 +280,9 @@ function mergeGroup(data: LectionaryData, codes: string[]): { code: string; rows
   for (const code of codes) {
     const found = data[code];
     if (!found?.length) continue;
-    used.push(code);
     const adding = found.filter((r) => !seen.has(Math.floor(r.t)));
+    // Only codes that contribute rows belong in the displayed "code" label.
+    if (adding.length) used.push(code);
     rows.push(...adding);
     for (const r of found) seen.add(Math.floor(r.t));
   }
