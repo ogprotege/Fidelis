@@ -10,10 +10,12 @@
 import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PINS } from "./pins.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const BASE =
-  "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json";
+// Pinned commit, never a moving branch (P1-10) — see scripts/pins.mjs.
+const PIN = PINS.scrollmapper;
+const BASE = `https://raw.githubusercontent.com/${PIN.repo}/${PIN.commit}/formats/json`;
 
 const cacheArg = process.argv.indexOf("--cache-dir");
 const CACHE = cacheArg !== -1 ? process.argv[cacheArg + 1] : join(ROOT, ".cache");
@@ -117,7 +119,9 @@ async function exists(p) {
 }
 
 async function fetchSource(file) {
-  const cached = join(CACHE, `${file}.json`);
+  // Cache keyed by the pinned commit so a stale master-era cache can never
+  // shadow the pin.
+  const cached = join(CACHE, `${file}-${PIN.commit.slice(0, 12)}.json`);
   if (await exists(cached)) {
     console.log(`  using cached ${cached}`);
     return JSON.parse(await readFile(cached, "utf8"));
@@ -179,3 +183,7 @@ console.log(`Wrote src/generated/bookMeta.json (${Object.keys(meta).length} book
 // Audit the freshly written bundles: data-report.txt lists every empty grid slot.
 const { writeReport } = await import("./build-report.mjs");
 await writeReport(ROOT);
+
+// Re-seal the integrity manifest over everything under public/data (P1-10).
+const { writeManifest } = await import("./build-manifest.mjs");
+await writeManifest(ROOT);

@@ -1,5 +1,6 @@
 /** Data harness. Run: npx tsx scripts/test-data.ts */
-import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   dayCodeCandidates,
@@ -512,6 +513,88 @@ check(
   `${silentAll}`
 );
 for (const s of silentAllSamples) console.log(`   ${s}`);
+
+// 10. Integrity manifest (P1-10): every file under public/data must hash to
+//     its manifest entry — verified here independently of the generator.
+console.log("");
+const manifest = JSON.parse(readFileSync(join(ROOT, "public/data/manifest.json"), "utf8"));
+const dataFiles: string[] = [];
+const walkData = (rel: string) => {
+  for (const e of readdirSync(join(ROOT, "public/data", rel), { withFileTypes: true })) {
+    if (e.name.startsWith(".")) continue; // mirror build-manifest's junk filter
+    const r = rel ? `${rel}/${e.name}` : e.name;
+    if (e.isDirectory()) walkData(r);
+    else if (r !== "manifest.json") dataFiles.push(r);
+  }
+};
+walkData("");
+dataFiles.sort();
+const actualHash = new Map<string, string>();
+for (const rel of dataFiles) {
+  actualHash.set(
+    rel,
+    createHash("sha256").update(readFileSync(join(ROOT, "public/data", rel))).digest("hex")
+  );
+}
+const hashProblems: string[] = [];
+for (const rel of dataFiles) {
+  if (!(rel in manifest.files)) hashProblems.push(`unmanifested: ${rel}`);
+  else if (manifest.files[rel] !== actualHash.get(rel)) hashProblems.push(`mismatch: ${rel}`);
+}
+const staleEntries = Object.keys(manifest.files).filter((p) => !actualHash.has(p));
+check(
+  "every data file hashes to its manifest entry",
+  hashProblems.length === 0,
+  hashProblems.slice(0, 5).join(", ")
+);
+check(
+  "manifest lists no files absent from public/data",
+  staleEntries.length === 0,
+  staleEntries.slice(0, 5).join(", ")
+);
+check(
+  "manifest file count matches the data set",
+  manifest.fileCount === dataFiles.length,
+  `${manifest.fileCount} vs ${dataFiles.length}`
+);
+const rootRecomputed = createHash("sha256")
+  .update(dataFiles.map((p) => `${p} ${actualHash.get(p)}`).join("\n"), "utf8")
+  .digest("hex");
+check(
+  "manifest root hash matches an independent recomputation",
+  manifest.rootHash === rootRecomputed,
+  manifest.rootHash === rootRecomputed ? "" : `${manifest.rootHash.slice(0, 12)} vs ${rootRecomputed.slice(0, 12)}`
+);
+// Source pins: both build scripts must fetch pinned commits, never a branch.
+const pinsSrc = readFileSync(join(ROOT, "scripts/pins.mjs"), "utf8");
+const declaredPins = [...pinsSrc.matchAll(/commit:\s*"([0-9a-f]{40})"/g)].map((m) => m[1]);
+check("two 40-hex upstream pins declared in scripts/pins.mjs", declaredPins.length === 2, `${declaredPins.length}`);
+const buildDataSrc = readFileSync(join(ROOT, "scripts/build-data.mjs"), "utf8");
+const buildLectSrc = readFileSync(join(ROOT, "scripts/build-lectionary.mjs"), "utf8");
+const pinnedFetch =
+  !buildDataSrc.includes("/master/") &&
+  !buildLectSrc.includes("/master/") &&
+  buildDataSrc.includes("PINS.") &&
+  buildLectSrc.includes("PINS.");
+check(
+  "build scripts fetch only the pinned commits",
+  pinnedFetch,
+  pinnedFetch ? "" : "a build script still fetches a moving branch"
+);
+const manifestPins = [manifest.sources?.scrollmapper?.commit, manifest.sources?.lectionary?.commit];
+check(
+  "manifest records the declared source pins",
+  manifestPins.every((c) => typeof c === "string" && declaredPins.includes(c)),
+  `manifest: ${manifestPins.map((c) => String(c).slice(0, 7)).join(", ")}`
+);
+const dotfileEntries = Object.keys(manifest.files).filter((p) =>
+  p.split("/").some((seg) => seg.startsWith("."))
+);
+check(
+  "manifest seals no dotfiles (walkers cannot drift on junk files)",
+  dotfileEntries.length === 0,
+  dotfileEntries.slice(0, 3).join(", ")
+);
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

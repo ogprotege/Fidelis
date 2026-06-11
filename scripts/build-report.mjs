@@ -8,9 +8,10 @@
  * Runs standalone (npm run report) and at the end of npm run data.
  * Output is deterministic — no timestamps — so CI can diff it.
  */
+import { realpathSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const TRANSLATIONS = ["drc", "cpdv", "vulgate"];
 
@@ -197,6 +198,6 @@ export async function writeReport(root) {
   console.log(`Wrote ${out}`);
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   await writeReport();
 }

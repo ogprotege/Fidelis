@@ -1,4 +1,11 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
+interface ManifestInfo {
+  rootHash: string;
+  fileCount: number;
+  sources: Record<string, { repo: string; commit: string }>;
+}
 
 const WIDGET_SNIPPET = `<iframe
   src="https://YOUR-DOMAIN/#/widget/votd"
@@ -7,6 +14,14 @@ const WIDGET_SNIPPET = `<iframe
 ></iframe>`;
 
 export default function About() {
+  const [integrity, setIntegrity] = useState<ManifestInfo | null>(null);
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}data/manifest.json`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((m) => m?.rootHash && m?.sources && setIntegrity(m))
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
       <h1 className="page-title">About Fidelis</h1>
@@ -109,6 +124,22 @@ export default function About() {
           jayarathina/Tamil-Catholic-Lectionary
         </a>
         .
+      </p>
+      <p className="small muted">
+        Both sources are fetched at commits pinned by hash — never a moving
+        branch — and every bundled data file is sealed by a SHA-256 manifest
+        that the project's data harness verifies on every run.
+        {integrity && (
+          <>
+            {" "}
+            Texts verified — manifest root <code>{integrity.rootHash.slice(0, 12)}</code>,{" "}
+            {integrity.fileCount} files;{" "}
+            {Object.values(integrity.sources)
+              .map((s) => `${s.repo}@${s.commit.slice(0, 7)}`)
+              .join(", ")}
+            . <em>Forma manet.</em>
+          </>
+        )}
       </p>
     </div>
   );

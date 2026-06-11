@@ -15,10 +15,12 @@
 import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PINS } from "./pins.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SRC_URL =
-  "https://raw.githubusercontent.com/jayarathina/Tamil-Catholic-Lectionary/master/MySQL/liturgy_lectionary_table_readings__list.sql";
+// Pinned commit, never a moving branch (P1-10) — see scripts/pins.mjs.
+const PIN = PINS.lectionary;
+const SRC_URL = `https://raw.githubusercontent.com/${PIN.repo}/${PIN.commit}/MySQL/liturgy_lectionary_table_readings__list.sql`;
 
 // Tamil abbreviation -> canonical book slug. Order does not matter; matching
 // is longest-prefix-first.
@@ -103,7 +105,7 @@ const ABBREVS = Object.keys(TAMIL_BOOKS).sort((a, b) => b.length - a.length);
 async function loadSql() {
   const argPath = process.argv[2];
   if (argPath) return readFile(argPath, "utf8");
-  const cached = join(ROOT, ".cache", "readings__list.sql");
+  const cached = join(ROOT, ".cache", `readings__list-${PIN.commit.slice(0, 12)}.sql`);
   try {
     await access(cached);
     return readFile(cached, "utf8");
@@ -246,3 +248,7 @@ console.log(
 if (unparsed) {
   console.log(`note: ${unparsed} citations skipped (non-standard format)`);
 }
+
+// Re-seal the integrity manifest over everything under public/data (P1-10).
+const { writeManifest } = await import("./build-manifest.mjs");
+await writeManifest(ROOT);
