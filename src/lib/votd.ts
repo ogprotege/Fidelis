@@ -191,10 +191,22 @@ export const VOTD_CYCLE: VotdRef[] = [
   r("sirach", 51, 1, 3)
 ];
 
-/** Day-of-year (1-366) in local time. */
-function dayOfYear(d: Date): number {
-  const start = new Date(d.getFullYear(), 0, 0);
-  return Math.floor((d.getTime() - start.getTime()) / 86_400_000);
+/** Cumulative days before each month in a non-leap year. */
+const MONTH_OFFSETS = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+
+function isLeapYear(y: number): boolean {
+  return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+}
+
+/**
+ * Day-of-year (1–366) in local time, from calendar components only — never
+ * wall-clock millisecond deltas, which run one day low during the midnight
+ * hour while DST is in effect (P1-9). Matches the iOS widget's
+ * Calendar.ordinality(of: .day, in: .year), so web and widget always agree.
+ */
+export function dayOfYear(d: Date): number {
+  const leap = d.getMonth() > 1 && isLeapYear(d.getFullYear()) ? 1 : 0;
+  return MONTH_OFFSETS[d.getMonth()] + d.getDate() + leap;
 }
 
 export function verseOfTheDay(date: Date = new Date()): VotdRef {

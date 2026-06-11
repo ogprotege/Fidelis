@@ -7,6 +7,7 @@ import {
   formatCitation,
   hebrewSpanToVulgate
 } from "../src/lib/lectionary";
+import { dayOfYear } from "../src/lib/votd";
 
 let failures = 0;
 function check(name: string, ok: boolean, detail = "") {
@@ -333,6 +334,64 @@ for (const t of ["drc", "cpdv", "vulgate"]) {
   }
   console.log(`  ${t}: ${bad} invalid refs`);
 }
+
+// 7a. VOTD day-of-year (P1-9): pure calendar-component math, in lockstep
+//     with the iOS widget's Calendar.ordinality selection.
+console.log("");
+const noMsMath = !votdSrc.includes("86_400_000");
+check(
+  "votd.ts no longer does millisecond day arithmetic",
+  noMsMath,
+  noMsMath ? "" : "found 86_400_000 in src/lib/votd.ts"
+);
+let ordinalBad = 0;
+for (const y of [2023, 2024, 2025, 2026, 2027, 2028, 2100]) {
+  let n = 0;
+  const d = new Date(y, 0, 1);
+  while (d.getFullYear() === y) {
+    n++;
+    if (dayOfYear(d) !== n) {
+      ordinalBad++;
+      if (ordinalBad <= 3)
+        console.log(`   ordinal mismatch ${d.toDateString()}: got ${dayOfYear(d)}, want ${n}`);
+    }
+    d.setDate(d.getDate() + 1);
+  }
+}
+check(
+  "dayOfYear matches the calendar ordinal for every day of 7 trap years (incl. 2024/2028 leap, 2100 non-leap)",
+  ordinalBad === 0,
+  `${ordinalBad} mismatches`
+);
+const swiftWidget = readFileSync(join(ROOT, "ios/WidgetExtension/FidelisWidget.swift"), "utf8");
+const swiftOrdinality =
+  swiftWidget.includes("ordinality(of: .day, in: .year") &&
+  swiftWidget.includes("Calendar(identifier: .gregorian)") &&
+  !swiftWidget.includes("Calendar.current");
+check(
+  "Swift widget selects by Gregorian Calendar.ordinality",
+  swiftOrdinality,
+  swiftOrdinality ? "" : "ordinality call or Gregorian calendar pin missing from FidelisWidget.swift"
+);
+const formulasAgree =
+  swiftWidget.includes("(dayOfYear + year) % cycle.count") &&
+  votdSrc.includes("(dayOfYear(date) + date.getFullYear()) % VOTD_CYCLE.length");
+check(
+  "web and Swift index formulas agree",
+  formulasAgree,
+  formulasAgree ? "" : "index formula drifted between votd.ts and FidelisWidget.swift"
+);
+const votdJson = JSON.parse(readFileSync(join(ROOT, "ios/WidgetExtension/votd.json"), "utf8"));
+check(
+  "votd.json cycle length matches votd.ts",
+  votdJson.length === refs.length,
+  `${votdJson.length} vs ${refs.length}`
+);
+check(
+  "votd.json first entry is John 3:16 (cycle order in sync)",
+  votdJson[0]?.reference === "John 3:16",
+  `got "${votdJson[0]?.reference}"`
+);
 
 // 8. Empty-slot audit (P1-4): data-report.txt must stay in sync with the
 //    bundles, no canonical chapter may be fully empty, and every scattered
