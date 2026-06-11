@@ -72,3 +72,58 @@ for (const [label, date] of RCASES) {
     `${label} [cyc ${sundayCycle(date)}/wd ${weekdayCycle(date)}]: ${JSON.stringify(dayCodeCandidates(date))}`
   );
 }
+
+// 4. P0-1/P0-2 acceptance — these assert; the script exits 1 on any failure.
+let failures = 0;
+const expect = (label: string, cond: boolean) => {
+  console.log(`${cond ? "PASS" : "FAIL"}  ${label}`);
+  if (!cond) failures++;
+};
+const names = (x: Date) => liturgicalDay(x).celebrations.map((c) => c.name);
+const has = (x: Date, frag: string) => names(x).some((n) => n.includes(frag));
+const cand = (x: Date) => JSON.stringify(dayCodeCandidates(x));
+
+console.log("\n== P0-1/P0-2 acceptance ==");
+expect("Good Friday 2016 is red", liturgicalDay(d(2016, 3, 25)).color === "red");
+expect("Annunciation absent on 2016-03-25", !has(d(2016, 3, 25), "Annunciation"));
+expect("Annunciation present on 2016-04-04", has(d(2016, 4, 4), "Annunciation"));
+expect("Annunciation absent on 2024-03-25", !has(d(2024, 3, 25), "Annunciation"));
+expect("Monday of Holy Week 2024 is violet", liturgicalDay(d(2024, 3, 25)).color === "violet");
+expect("Annunciation present on 2024-04-08", has(d(2024, 4, 8), "Annunciation"));
+expect("Immaculate Conception absent on 2024-12-08", !has(d(2024, 12, 8), "Immaculate Conception"));
+expect("2024-12-08 (2nd Sunday of Advent) is violet", liturgicalDay(d(2024, 12, 8)).color === "violet");
+expect("Immaculate Conception present on 2024-12-09", has(d(2024, 12, 9), "Immaculate Conception"));
+expect("First Sunday of Advent 2025 is violet", liturgicalDay(d(2025, 11, 30)).color === "violet");
+expect("St. Andrew suppressed on 2025-11-30", !has(d(2025, 11, 30), "Andrew"));
+expect("Ash Wednesday 2024 stands alone", names(d(2024, 2, 14)).join("|") === "Ash Wednesday");
+expect("Christ the King 2026 shows no St. Cecilia", !has(d(2026, 11, 22), "Cecilia"));
+expect("St. Matthias suppressed on Ascension 2026", !has(d(2026, 5, 14), "Matthias"));
+expect("Gaudete 2025: St. John of the Cross yields", !has(d(2025, 12, 14), "John of the Cross"));
+// P0-2: day codes follow the resolved governing celebration
+expect("Good Friday 2016 readings are the Passion", cand(d(2016, 3, 25)).startsWith('[["LW06-5Fri'));
+expect("No Annunciation readings on 2024-03-25", !cand(d(2024, 3, 25)).includes("Annunciation"));
+expect("Annunciation readings on 2024-04-08", cand(d(2024, 4, 8)).startsWith('[["Annunciation'));
+expect("Immaculate Conception readings on 2024-12-09", cand(d(2024, 12, 9)).startsWith('[["Immaculate Conception'));
+expect("Advent Sunday readings on 2024-12-08", cand(d(2024, 12, 8)).startsWith('[["AW02-0Sun'));
+// two colliding obligatory memorials are both demoted to optional for the
+// year (CDW Prot. 2671/98/L): the feria keeps the day
+expect(
+  "Immaculate Heart + St. Anthony 2026-06-13: both demoted, green feria",
+  names(d(2026, 6, 13)).length === 0 && liturgicalDay(d(2026, 6, 13)).color === "green"
+);
+expect(
+  "Immaculate Heart + St. Irenaeus 2025-06-28: both demoted",
+  names(d(2025, 6, 28)).length === 0
+);
+// regression guards: resolved days that were already right must stay right
+expect("Christmas Day 2022 lists the Nativity", has(d(2022, 12, 25), "Nativity of the Lord"));
+expect("All Souls governs Sunday 2025-11-02", has(d(2025, 11, 2), "All Souls"));
+expect("Pentecost 2026 proper readings first", cand(d(2026, 5, 24)).startsWith('[["EW08-Pentecost'));
+expect("St. Barnabas memorial listed on 2026-06-11", has(d(2026, 6, 11), "Barnabas"));
+expect("Ferial readings still first on memorial days", cand(d(2026, 6, 11)).startsWith('[["OW10-4Thu'));
+
+if (failures) {
+  console.error(`\n${failures} acceptance check(s) failed`);
+  process.exit(1);
+}
+console.log("\nAll acceptance checks passed");

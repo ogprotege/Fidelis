@@ -167,38 +167,17 @@ export function dayCodeCandidates(date: Date): string[][] {
   const wd = weekdayCycle(date);
   const groups: string[][] = [];
 
-  // Feasts of the Lord, which (unlike saints' feasts) replace a Sunday of
-  // Ordinary Time or Christmastide when they fall on one.
-  const FEASTS_OF_THE_LORD = new Set([
-    "The Presentation of the Lord (Candlemas)",
-    "The Transfiguration of the Lord",
-    "The Exaltation of the Holy Cross",
-    "The Dedication of the Lateran Basilica",
-    "The Commemoration of All the Faithful Departed (All Souls)",
-    "The Baptism of the Lord",
-    "The Holy Family of Jesus, Mary and Joseph"
-  ]);
-  // Celebrations that *are* particular Sundays.
-  const SUNDAY_CELEBRATIONS = new Set(["Pentecost Sunday", "The Ascension of the Lord"]);
-
-  // Proper of a solemnity or feast takes precedence over the ferial cycle;
-  // memorials normally keep the weekday readings (their propers come after).
-  // On Sundays, precedence narrows: the privileged Sundays of Advent, Lent
-  // and Eastertide yield to nothing here, and other Sundays yield only to
-  // solemnities and feasts of the Lord.
-  const named = (ranks: string[]) => {
-    for (const c of lit.celebrations) {
-      if (!ranks.includes(c.rank)) continue;
-      if (dow === 0 && !SUNDAY_CELEBRATIONS.has(c.name)) {
-        if (lit.season === "Advent" || lit.season === "Lent" || lit.season === "Eastertide")
-          continue;
-        if (c.rank !== "Solemnity" && !FEASTS_OF_THE_LORD.has(c.name)) continue;
-      }
-      const id = NAMED[c.name];
-      if (id) groups.push([`${id} ${cyc}`, id]);
-    }
-  };
-  named(["Solemnity", "Feast"]);
+  // The calendar engine resolves precedence, transfer and suppression, so
+  // lit.celebrations holds only what is observed today, the governing
+  // celebration first. Day codes are a consequence of that resolution, not
+  // a parallel reimplementation of it: a governing solemnity or feast brings
+  // its proper Mass, the seasonal cycle follows as fallback, and memorial
+  // propers stay behind the ferial readings (see below).
+  const governing = lit.celebrations[0];
+  if (governing && (governing.rank === "Solemnity" || governing.rank === "Feast")) {
+    const id = NAMED[governing.name];
+    if (id) groups.push([`${id} ${cyc}`, id]);
+  }
 
   const day = DAY_CODE[dow];
   const y = date.getFullYear();
@@ -267,8 +246,13 @@ export function dayCodeCandidates(date: Date): string[][] {
       break;
   }
 
-  // After the ferial cycle, offer proper readings of memorials as a fallback.
-  named(["Memorial"]);
+  // After the ferial cycle, offer proper readings of observed memorials as a
+  // fallback (suppressed memorials never reach this point).
+  for (const c of lit.celebrations) {
+    if (c.rank !== "Memorial") continue;
+    const id = NAMED[c.name];
+    if (id) groups.push([`${id} ${cyc}`, id]);
+  }
   // Sanity net: the Baptism of the Lord is computed as a celebration; if some
   // edge date produced nothing, fall back to nearest OT week 1 weekday.
   if (!groups.length) groups.push([`OW01-${day} ${wd}`, `OW01-${day}`]);
