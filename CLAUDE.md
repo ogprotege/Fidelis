@@ -8,11 +8,17 @@ daily Mass readings. Companion documents:
 ## Commands
 
 ```sh
-npm run build                          # type-check (tsc) + Vite build
-npx tsx scripts/test-liturgical.ts     # liturgical engine harness (trap-year acceptance cases)
-npx tsx scripts/test-data.ts           # committed-data harness (bundles, psalm spans, lectionary, manifest)
-npm run verify-data                    # SHA-256 manifest check of public/data
+npm test           # both harnesses (all hard assertions, exit 1 on any failure) + manifest verify
+npm run build      # type-check (tsc) + Vite build
+npm run golden     # re-bless golden-year snapshots after a DELIBERATE engine change; review the diff
+npm run verify-data
 ```
+
+Harnesses assert everything (review §B.1 — no print-only expectations remain). Golden-year
+snapshots (§B.2) in `scripts/golden/{2024..2027}.json` pin the full computed calendar, day
+codes, and reading resolution per day for both regions; `test-data.ts` diffs them, so any
+engine change that silently moves a feast is a red `npm test`. (§B.3 — CI running all of
+this on every push — is still open.)
 
 ## Open review items
 

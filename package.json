@@ -11,6 +11,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "test": "tsx scripts/test-liturgical.ts && tsx scripts/test-data.ts && node scripts/build-manifest.mjs --verify",
+    "golden": "tsx scripts/build-golden.ts",
     "preview": "vite preview",
     "data": "node scripts/build-data.mjs",
     "report": "node scripts/build-report.mjs",

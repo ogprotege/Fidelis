@@ -10,6 +10,7 @@ import {
   resolveReadings
 } from "../src/lib/lectionary";
 import { dayOfYear } from "../src/lib/votd";
+import { GOLDEN_REGIONS, GOLDEN_YEARS, goldenYear } from "./golden";
 
 let failures = 0;
 function check(name: string, ok: boolean, detail = "") {
@@ -22,9 +23,13 @@ const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const lect: Record<string, { t: number; b: string; s: [number, number, number][]; partial?: boolean }[]> =
   JSON.parse(readFileSync(join(ROOT, "public/data/lectionary.json"), "utf8"));
 const keys = new Set(Object.keys(lect));
-console.log(`lectionary.json: ${keys.size} day codes, ${Object.values(lect).reduce((a, r) => a + r.length, 0)} rows`);
+const totalRows = Object.values(lect).reduce((a, r) => a + r.length, 0);
 const partial = Object.values(lect).flat().filter((r) => r.partial).length;
-console.log(`rows flagged partial: ${partial}`);
+// Pinned shape of the committed lectionary data: changes only when the
+// pipeline regenerates it deliberately (then update these together).
+check("lectionary.json carries 1140 day codes", keys.size === 1140, `${keys.size}`);
+check("lectionary.json carries 3013 rows", totalRows === 3013, `${totalRows}`);
+check("566 rows flagged partial (P2-4)", partial === 566, `${partial}`);
 
 // 1. NAMED map coverage — every value must exist as a key (plain or with cycle suffix)
 const src = readFileSync(join(ROOT, "src/lib/lectionary.ts"), "utf8");
@@ -42,7 +47,7 @@ for (const v of vals) {
     missing++;
   }
 }
-console.log(`NAMED targets checked: ${vals.length}, missing: ${missing}`);
+check(`every NAMED target exists in lectionary.json (${vals.length} checked)`, missing === 0, `${missing} missing`);
 
 // 2. Full-sweep: every day of 2024, 2025, 2026 must resolve to a gospel
 function mergeHasGospel(groups: string[][]): { ok: boolean; code: string } {
@@ -61,8 +66,11 @@ for (const region of ["universal", "usa"] as const) {
       if (!r.ok) fails.push(`${d.toISOString().slice(0, 10)} -> ${r.code}`);
       d.setDate(d.getDate() + 1);
     }
-    console.log(`${year} (${region}): days without resolvable gospel: ${fails.length}`);
-    for (const f of fails.slice(0, 12)) console.log(`   ${f}`);
+    check(
+      `${year} (${region}): every day resolves to a gospel`,
+      fails.length === 0,
+      fails.slice(0, 3).join("; ")
+    );
   }
 }
 
@@ -253,10 +261,15 @@ check(
   `got ${JSON.stringify(mmcFirst)}`
 );
 
-// 4. Holy Thursday + Ash Wednesday codes present?
-for (const k of ["LW06-4Thu", "LW06-4Thu A", "LW00-3Wed", "LW00-4Thu", "LW00-5Fri", "LW00-6Sat"]) {
-  console.log(`key "${k}": ${keys.has(k) ? "present" : "MISSING"}`);
-}
+// 4. Holy Thursday + Ash Wednesday codes present? (No "LW06-4Thu A" —
+//    Holy Thursday carries no cycle variants; mergeGroup tolerates that.)
+const REQUIRED_KEYS = ["LW06-4Thu", "LW06-4Thu~Chrism", "LW00-3Wed", "LW00-4Thu", "LW00-5Fri", "LW00-6Sat"];
+const absentKeys = REQUIRED_KEYS.filter((k) => !keys.has(k));
+check(
+  "Holy Week and Ash Wednesday day codes all present",
+  absentKeys.length === 0,
+  absentKeys.join(", ")
+);
 
 // 5. Psalm span mapping: responsorial incipits (lectionary citation -> DRC text)
 //    Expectations are the well-known first lines of each responsorial, independent
@@ -425,6 +438,7 @@ const refs = [...votdSrc.matchAll(/r\("([a-z0-9-]+)", (\d+), (\d+)(?:, (\d+))?\)
   book: m[1], ch: +m[2], v1: +m[3], v2: m[4] ? +m[4] : +m[3]
 }));
 console.log(`\nVOTD cycle: ${refs.length} entries`);
+check("VOTD cycle carries 172 entries", refs.length === 172, `${refs.length}`);
 for (const t of ["drc", "cpdv", "vulgate"]) {
   let bad = 0;
   for (const r of refs) {
@@ -440,7 +454,7 @@ for (const t of ["drc", "cpdv", "vulgate"]) {
       bad++;
     }
   }
-  console.log(`  ${t}: ${bad} invalid refs`);
+  check(`every VOTD ref lands on text in ${t}`, bad === 0, `${bad} invalid`);
 }
 
 // 7a. VOTD day-of-year (P1-9): pure calendar-component math, in lockstep
@@ -702,6 +716,36 @@ check(
   dotfileEntries.length === 0,
   dotfileEntries.slice(0, 3).join(", ")
 );
+
+// 11. Golden-year snapshots (review §B.2): the full computed calendar and
+//     lectionary resolution for 2024–2027, both regions, must match the
+//     committed snapshots byte-for-byte. A deliberate engine change is
+//     re-blessed with `npm run golden` and reviewed in the diff.
+console.log("");
+for (const year of GOLDEN_YEARS) {
+  let committed: Record<string, unknown[]>;
+  try {
+    committed = JSON.parse(readFileSync(join(ROOT, `scripts/golden/${year}.json`), "utf8"));
+  } catch {
+    check(`golden snapshot file exists for ${year}`, false, "run npm run golden");
+    continue;
+  }
+  for (const region of GOLDEN_REGIONS) {
+    const fresh = goldenYear(year, region, lect);
+    const old = (committed[region] ?? []) as unknown[];
+    const diffs: string[] = [];
+    for (let i = 0; i < Math.max(fresh.length, old.length) && diffs.length < 4; i++) {
+      if (JSON.stringify(old[i]) !== JSON.stringify(fresh[i])) {
+        diffs.push((fresh[i] as { d?: string })?.d ?? (old[i] as { d?: string })?.d ?? `#${i}`);
+      }
+    }
+    check(
+      `golden ${year} (${region}) matches the committed snapshot`,
+      diffs.length === 0 && fresh.length === old.length,
+      diffs.length ? `first drift: ${diffs.join(", ")}` : `${fresh.length} vs ${old.length} days`
+    );
+  }
+}
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;
