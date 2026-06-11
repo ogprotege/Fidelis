@@ -1,0 +1,116 @@
+== Easter computus ==
+2008: 2008-03-23 OK
+2011: 2011-04-24 OK
+2016: 2016-03-27 OK
+2024: 2024-03-31 OK
+2025: 2025-04-20 OK
+2026: 2026-04-05 OK
+2027: 2027-03-28 OK
+2030: 2030-04-21 OK
+2038: 2038-04-25 OK
+2049: 2049-04-18 OK
+2100: 2100-03-28 OK
+
+== Liturgical day output ==
+
+IC on Advent Sunday (real: 2nd Sun of Advent, violet; IC -> Dec 9)
+  2024-12-08 Second Sunday of Advent [Advent wk2] color=white
+  celebrations: Solemnity:The Immaculate Conception of the Blessed Virgin Mary
+
+Dec 9 2024 (real: Immaculate Conception, transferred)
+  2024-12-09 Monday of the Second Week of Advent [Advent wk2] color=violet
+  celebrations: —
+
+Annunciation in Holy Week (real: Monday of Holy Week; Ann -> Apr 8)
+  2024-03-25 Monday of Holy Week [Lent wk6] color=white
+  celebrations: Solemnity:The Annunciation of the Lord
+
+Apr 8 2024 (real: Annunciation, transferred)
+  2024-04-08 Monday of the Second Week of Easter [Eastertide wk2] color=white
+  celebrations: —
+
+Annunciation on Good Friday 2016 (real: Good Friday; Ann -> Apr 4)
+  2016-03-25 Good Friday [Sacred Triduum wk0] color=white
+  celebrations: Solemnity:The Annunciation of the Lord | Solemnity:Good Friday of the Passion of the Lord
+
+Ash Wednesday + Sts Cyril&Methodius (real: Ash Wed only)
+  2024-02-14 Ash Wednesday [Lent wk0] color=violet
+  celebrations: Memorial:Sts. Cyril and Methodius | Feria:Ash Wednesday
+
+St Andrew on 1st Sunday of Advent (real: Sunday wins, violet)
+  2025-11-30 First Sunday of Advent [Advent wk1] color=red
+  celebrations: Feast:St. Andrew, Apostle
+
+Christmas on Sunday -> Holy Family Dec 30
+  2022-12-30 Sixth Day within the Octave of Christmas [Christmastide wk0] color=white
+  celebrations: Feast:The Holy Family of Jesus, Mary and Joseph
+
+Dec 25 2022 (Sunday)
+  2022-12-25 Christmas Day [Christmastide wk0] color=white
+  celebrations: Solemnity:The Nativity of the Lord (Christmas)
+
+Epiphany Jan 6 2026 (US: transferred to Jan 4)
+  2026-01-06 Tuesday of Christmastide [Christmastide wk0] color=white
+  celebrations: Solemnity:The Epiphany of the Lord (traditional date)
+
+Jan 4 2026 (US Epiphany Sunday; universal: 2nd Sun after Christmas)
+  2026-01-04 Sunday of Christmastide [Christmastide wk0] color=white
+  celebrations: —
+
+Baptism of the Lord 2026
+  2026-01-11 Sunday of Christmastide [Christmastide wk0] color=white
+  celebrations: Feast:The Baptism of the Lord
+
+Ascension Thursday 2026 (US: transferred to May 17)
+  2026-05-14 Thursday of the Sixth Week of Easter [Eastertide wk6] color=white
+  celebrations: Solemnity:The Ascension of the Lord | Feast:St. Matthias, Apostle
+
+Sacred Heart 2026
+  2026-06-12 Friday of the Tenth Week in Ordinary Time [Ordinary Time wk10] color=white
+  celebrations: Solemnity:The Most Sacred Heart of Jesus
+
+Today (Jun 11 2026, St Barnabas)
+  2026-06-11 Thursday of the Tenth Week in Ordinary Time [Ordinary Time wk10] color=green
+  celebrations: Memorial:St. Barnabas, Apostle
+
+Christ the King 2026
+  2026-11-22 Thirty-Fourth Sunday in Ordinary Time [Ordinary Time wk34] color=white
+  celebrations: Solemnity:Our Lord Jesus Christ, King of the Universe | Memorial:St. Cecilia, Virgin and Martyr
+
+All Souls on Sunday 2025
+  2025-11-02 Thirty-First Sunday in Ordinary Time [Ordinary Time wk31] color=violet
+  celebrations: Solemnity:The Commemoration of All the Faithful Departed (All Souls)
+
+Gaudete 2025
+  2025-12-14 Third Sunday of Advent [Advent wk3] color=rose
+  celebrations: Memorial:St. John of the Cross, Priest and Doctor
+
+Laetare 2026
+  2026-03-15 Fourth Sunday of Lent [Lent wk4] color=rose
+  celebrations: —
+
+Easter Vigil / Holy Saturday 2026
+  2026-04-04 Holy Saturday [Sacred Triduum wk0] color=violet
+  celebrations: Solemnity:Holy Saturday
+
+Dec 17 2025 (O Antiphon feria)
+  2025-12-17 Wednesday of the Third Week of Advent [Advent wk3] color=violet
+  celebrations: —
+
+Mary Mother of the Church 2026 (Mon after Pentecost)
+  2026-05-25 Monday of the Eighth Week in Ordinary Time [Ordinary Time wk8] color=green
+  celebrations: Memorial:Mary, Mother of the Church
+
+== Lectionary day-code candidates ==
+IC on Advent Sunday 2024 [cyc C/wd 2]: [["AW02-0Sun C","AW02-0Sun"]]
+Dec 9 2024 [cyc C/wd 2]: [["AW02-1Mon"]]
+Annunciation in Holy Week 2024 [cyc B/wd 2]: [["Annunciation of the Lord B","Annunciation of the Lord"],["LW06-1Mon B","LW06-1Mon"]]
+Annunciation on Good Friday 2016 [cyc C/wd 2]: [["Annunciation of the Lord C","Annunciation of the Lord"],["LW06-5Fri C","LW06-5Fri"]]
+St Andrew on Advent Sunday 2025 [cyc A/wd 1]: [["AW01-0Sun A","AW01-0Sun"]]
+Today Jun 11 2026 [cyc A/wd 2]: [["OW10-4Thu 2","OW10-4Thu"],["Saint Barnabas the Apostle A","Saint Barnabas the Apostle"]]
+Easter Vigil 2026 (Apr 4) [cyc A/wd 2]: [["LW06-6Sat A","LW06-6Sat"]]
+Holy Thursday 2026 (Apr 2) [cyc A/wd 2]: [["LW06-4Thu A","LW06-4Thu"]]
+Pentecost 2026 (May 24) [cyc A/wd 2]: [["EW08-Pentecost A","EW08-Pentecost"],["EW08-0Sun A","EW08-0Sun"]]
+Dec 17 2025 [cyc A/wd 1]: [["AW05-Dec17"]]
+Jan 6 2026 [cyc A/wd 2]: [["CW03-Epiphany"]]
+Christmas 2026 [cyc B/wd 2]: [["Nativity of the Lord 4 B","Nativity of the Lord 4"],["Nativity of the Lord 4"],["Nativity of the Lord 2"],["Nativity of the Lord 1"]]
