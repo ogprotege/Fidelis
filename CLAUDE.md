@@ -3,8 +3,8 @@
 Catholic Bible app (DRB, CPDV, Clementine Vulgate) with liturgical calendar and
 daily Mass readings. Companion documents:
 `docs/review/Fidelis_Code_Review_V1_2026-06-11.md` (the repair manual — every
-P0/P1/P2 item plus hygiene B.1/B.2/B.4 implemented as of v1.1.0; §B.3, CI, still
-open), `docs/review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md`
+P0/P1/P2 item plus hygiene B.1/B.2/B.4 done as of v1.1.0 and §B.3, CI, closed in
+v1.2.1 — the manual is fully implemented), `docs/review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md`
 (the growth plan), and `CHANGELOG.md` (release history; bump `package.json`
 version and add a CHANGELOG entry together).
 
@@ -20,8 +20,9 @@ npm run verify-data
 Harnesses assert everything (review §B.1 — no print-only expectations remain). Golden-year
 snapshots (§B.2) in `scripts/golden/{2024..2027}.json` pin the full computed calendar, day
 codes, and reading resolution per day for both regions; `test-data.ts` diffs them, so any
-engine change that silently moves a feast is a red `npm test`. (§B.3 — CI running all of
-this on every push — is still open.)
+engine change that silently moves a feast is a red `npm test`. §B.3 (CI) is closed:
+`.github/workflows/ci.yml` runs `npm ci`, `npm test`, and `npm run build` on Node 22 for
+every push and pull request, so a red harness or a type error fails the build.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

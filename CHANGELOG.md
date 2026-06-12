@@ -4,6 +4,25 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.2.1] — 2026-06-11 — continuous integration
+
+Closes the last open repair-manual item, §B.3: the harnesses now run in CI, not
+just on a developer's machine.
+
+### Added
+
+- **GitHub Actions CI** (§B.3): `.github/workflows/ci.yml` runs `npm ci`, `npm test`,
+  and `npm run build` on Node 22 for every push and pull request. One job; the only
+  cache is `actions/setup-node`'s built-in npm cache. The harnesses' exit codes fail
+  the build, so a silently moved feast, a broken manifest, or a type error is caught
+  before it can reach a release — the same `npm test` that gates a local commit now
+  gates the remote.
+
+### Changed
+
+- The repair manual (`docs/review/Fidelis_Code_Review_V1_2026-06-11.md`) is now fully
+  implemented: every P0/P1/P2 item plus hygiene B.1/B.2/B.3/B.4.
+
 ## [1.2.0] — 2026-06-12 — quote of the day
 
 Design-spec §3 and the Today-page recomposition of §6: the daily quote joins the daily
