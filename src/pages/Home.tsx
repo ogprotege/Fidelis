@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Antiphon from "../components/Antiphon";
 import VerseQuote from "../components/VerseQuote";
 import { getBook, bookDisplayName } from "../lib/canon";
 import {
@@ -11,10 +12,15 @@ import {
   weekdayCycle
 } from "../lib/lectionary";
 import { liturgicalDay, COLOR_HEX } from "../lib/liturgical";
+import { DailyQuote, loadQuotes, quoteOfTheDay } from "../lib/quotes";
 import { mysteriesForDate } from "../lib/rosary";
 import { getLastRead, getSettings } from "../lib/storage";
 import { verseOfTheDay, formatVotdRef } from "../lib/votd";
 
+/* The Today page never exceeds five cards (CLAUDE.md standing rule):
+   1 Verse of the Day · 2 Quote of the Day · 3 Today in the Church
+   (liturgical day + Mass readings + Marian antiphon, merged per spec §6)
+   · 4 The Holy Rosary · 5 Continue Reading. */
 export default function Home() {
   const today = new Date();
   const votd = verseOfTheDay(today);
@@ -24,8 +30,12 @@ export default function Home() {
   const lastRead = getLastRead();
   const translation = getSettings().translation;
   const [mass, setMass] = useState<DayReadings | null>(null);
+  const [quote, setQuote] = useState<DailyQuote | null>(null);
   useEffect(() => {
     readingsForDate(new Date()).then(setMass).catch(() => setMass(null));
+    loadQuotes()
+      .then((qs) => setQuote(quoteOfTheDay(qs, new Date(), liturgicalDay(new Date()))))
+      .catch(() => setQuote(null));
   }, []);
   const dateLabel = today.toLocaleDateString(undefined, {
     weekday: "long",
@@ -60,8 +70,28 @@ export default function Home() {
         </div>
 
         <div className="card">
+          <h2>Quote of the Day</h2>
+          {!quote && <p className="muted small">…</p>}
+          {quote && (
+            <>
+              <p className="qotd-text">{quote.text}</p>
+              <div className="qotd-author">
+                {quote.author}
+                {quote.authorTitle && (
+                  <span className="muted small sans"> · {quote.authorTitle}</span>
+                )}
+              </div>
+              <div className="qotd-source muted small sans">
+                <em>{quote.work}</em>
+                {quote.locus !== "—" && <> {quote.locus}</>} · {quote.sourceEdition}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="card">
           <h2>
-            Liturgical Day
+            Today in the Church
             <span className="spacer" />
             <span
               className="lit-color-chip"
@@ -72,22 +102,16 @@ export default function Home() {
           <div className="lit-season">
             <strong>{lit.seasonLabel}</strong>
           </div>
-          <div className="muted small sans">Season of {lit.season}</div>
+          <div className="muted small sans">
+            Season of {lit.season} · Sunday Cycle {sundayCycle(today)} · Weekday Year{" "}
+            {weekdayCycle(today) === "1" ? "I" : "II"}
+          </div>
           {lit.celebrations.map((c) => (
             <div className="lit-celebration" key={c.name}>
               <span className="rank">{c.rank}</span>
               {c.name}
             </div>
           ))}
-        </div>
-
-        <div className="card">
-          <h2>Daily Mass Readings</h2>
-          <div className="muted small sans" style={{ marginBottom: "0.4rem" }}>
-            Sunday Cycle {sundayCycle(today)} · Weekday Year{" "}
-            {weekdayCycle(today) === "1" ? "I" : "II"}
-          </div>
-          {!mass && <p className="muted small">…</p>}
           {mass && (
             <ul className="mass-list">
               {Object.entries(
@@ -108,6 +132,7 @@ export default function Home() {
               })}
             </ul>
           )}
+          <Antiphon season={lit.season} />
           <Link className="continue-cta" to="/readings">
             Read at Mass →
           </Link>

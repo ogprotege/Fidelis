@@ -518,6 +518,41 @@ body.widget-mode { background: transparent; }
   display: block;
 }
 
+/* ---------- Quote of the Day ---------- */
+.qotd-text {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  font-style: italic;
+  margin: 0.25rem 0 0.6rem;
+  position: relative;
+  padding-left: 1.1rem;
+}
+.qotd-text::before {
+  content: "\201C";
+  position: absolute;
+  left: 0;
+  top: -0.15rem;
+  font-size: 1.7rem;
+  color: var(--gold);
+  font-style: normal;
+}
+.qotd-author { font-weight: 600; }
+.qotd-source { margin-top: 0.2rem; }
+
+/* ---------- Marian antiphon ---------- */
+.antiphon { margin: 0.8rem 0; }
+.antiphon summary { cursor: pointer; color: var(--link); }
+.antiphon-body {
+  margin-top: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--bg-inset);
+  border-radius: 0.5rem;
+}
+.antiphon-verse { margin-bottom: 0.7rem; }
+.antiphon-verse:last-child { margin-bottom: 0; }
+.antiphon-la { margin: 0; font-style: italic; color: var(--ink-soft); font-size: 0.92rem; line-height: 1.5; }
+.antiphon-en { margin: 0.15rem 0 0; font-size: 0.95rem; line-height: 1.5; }
+
 /* ---------- Misc ---------- */
 .notice {
   background: var(--accent-soft);

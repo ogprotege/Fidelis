@@ -9,6 +9,8 @@ import {
   hebrewSpanToVulgate,
   resolveReadings
 } from "../src/lib/lectionary";
+import { liturgicalDay } from "../src/lib/liturgical";
+import { DailyQuote, quoteOfTheDay } from "../src/lib/quotes";
 import { dayOfYear } from "../src/lib/votd";
 import { GOLDEN_REGIONS, GOLDEN_YEARS, goldenYear } from "./golden";
 
@@ -745,6 +747,70 @@ for (const year of GOLDEN_YEARS) {
       diffs.length ? `first drift: ${diffs.join(", ")}` : `${fresh.length} vs ${old.length} days`
     );
   }
+}
+
+// Quote of the Day (spec §3): corpus↔emitted sync, schema, red list, and
+// deterministic resolution through all three tiers.
+console.log("");
+{
+  const corpus = JSON.parse(readFileSync(join(ROOT, "scripts/quotes.corpus.json"), "utf8"));
+  const emittedRaw = readFileSync(join(ROOT, "public/data/quotes.json"), "utf8");
+  const quotes: DailyQuote[] = JSON.parse(emittedRaw).quotes;
+
+  check(
+    "quotes.json is the emitted corpus (run npm run quotes after editing the source)",
+    emittedRaw === JSON.stringify({ quotes: corpus.quotes }),
+    `${quotes.length} quotes`
+  );
+  check("quote corpus has at least 40 entries", quotes.length >= 40, `${quotes.length}`);
+
+  const REQUIRED = ["id", "text", "author", "work", "locus", "sourceEdition"] as const;
+  const SEASONS = new Set(["advent", "christmastide", "lent", "eastertide"]);
+  let schemaBad = 0;
+  for (const q of quotes) {
+    if (REQUIRED.some((f) => typeof q[f] !== "string" || !q[f].trim())) schemaBad++;
+    else if (q.feast !== null && !/^\d{2}-\d{2}$/.test(q.feast)) schemaBad++;
+    else if (q.season !== null && !SEASONS.has(q.season)) schemaBad++;
+  }
+  check("every quote satisfies the spec §3.1 schema", schemaBad === 0, `${schemaBad} bad`);
+
+  const RED = [/sheen/i, /escriv/i, /pietrelcina|padre pio/i, /john paul/i, /benedict xvi/i];
+  const red = quotes.filter((q) => RED.some((re) => re.test(q.author)));
+  check("no red-list author in the corpus (spec §3.3)", red.length === 0, red.map((q) => q.id).join(", "));
+
+  const every = ["advent", "christmastide", "lent", "eastertide"].filter(
+    (s) => !quotes.some((q) => q.season === s)
+  );
+  check("each seasonal pool is non-empty", every.length === 0, every.join(", "));
+
+  // Tier 1 — sanctoral: Augustine speaks on August 28.
+  const aug = new Date(2026, 7, 28);
+  const q1 = quoteOfTheDay(quotes, aug, liturgicalDay(aug, "universal"));
+  check(
+    "Aug 28: the sanctoral tier serves Augustine",
+    q1?.author.includes("Augustine") === true && q1?.feast === "08-28",
+    q1?.id ?? "null"
+  );
+  // Tier 2 — seasonal: a Lent feria draws from the Lent pool.
+  const lent = new Date(2026, 2, 5); // Thursday of the 2nd week of Lent
+  const q2 = quoteOfTheDay(quotes, lent, liturgicalDay(lent, "universal"));
+  check("Lent feria draws from the Lent pool", q2?.season === "lent", q2?.id ?? "null");
+  // Tier 3 — general: an OT feria draws from the season-untagged remainder.
+  const ot = new Date(2026, 5, 16); // Tuesday of the 11th week in OT
+  const q3 = quoteOfTheDay(quotes, ot, liturgicalDay(ot, "universal"));
+  check("OT feria draws from the general cycle", q3 !== null && q3.season === null, q3?.id ?? "null");
+  // Determinism + totality: every day of 2026 resolves, twice identically.
+  let nulls = 0;
+  let nondet = 0;
+  for (let d = new Date(2026, 0, 1); d.getFullYear() === 2026; d = new Date(2026, d.getMonth(), d.getDate() + 1)) {
+    const lit = liturgicalDay(d, "universal");
+    const a = quoteOfTheDay(quotes, d, lit);
+    const b = quoteOfTheDay(quotes, d, lit);
+    if (!a) nulls++;
+    if (a?.id !== b?.id) nondet++;
+  }
+  check("a quote resolves for every day of 2026", nulls === 0, `${nulls} null`);
+  check("quote selection is deterministic", nondet === 0, `${nondet} differ`);
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
