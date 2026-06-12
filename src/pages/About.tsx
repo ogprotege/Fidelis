@@ -108,8 +108,9 @@ export default function About() {
         project (DRC, CPDV, VulgClementine) and reproduced exactly as that corpus
         carries them, with no editorial changes; its shared verse grid and its few
         gaps are described in the note on numbering above. The
-        liturgical calendar follows the General Roman Calendar; movable feasts are
-        computed from the date of Easter, and a calendar-region setting on the
+        liturgical calendar follows the General Roman Calendar (all solemnities
+        and feasts, with a representative selection of memorials); movable feasts
+        are computed from the date of Easter, and a calendar-region setting on the
         Readings page applies the United States transfers — Epiphany to the Sunday
         of Jan 2–8, and the Ascension to the Seventh Sunday of Easter, as observed
         in most U.S. ecclesiastical provinces (Boston, Hartford, New York, Omaha,

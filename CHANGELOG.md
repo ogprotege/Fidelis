@@ -1,0 +1,123 @@
+# Changelog
+
+All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepachangelog.com/);
+versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
+product — changes to any of them are release-worthy.
+
+## [1.1.0] — 2026-06-11 — the repair release
+
+Implements the repair manual's defect list (`docs/review/Fidelis_Code_Review_V1_2026-06-11.md`):
+every P0, P1, and P2 item, plus hygiene items B.1, B.2, and B.4 (the committed data
+manifest). §B.3 — CI — remains open; see Known issues. Engine and data fixes landed with
+harness assertions (UI-only fixes such as P1-8 sit outside the node harnesses' reach), and
+adversarial-review findings are recorded in the commit messages.
+
+### Fixed — worship-facing accuracy (P0)
+
+- **Liturgical precedence and transfer engine** (P0-1): occurrence resolved by the Table
+  of Liturgical Days; impeded solemnities transfer forward (Annunciation in Holy Week,
+  Immaculate Conception on an Advent Sunday); impeded feasts and memorials are omitted;
+  colliding obligatory memorials are demoted per CDW Prot. 2671/98/L. Whole-year
+  computation, cached per region and year.
+- **Day codes follow the resolved calendar** (P0-2): lectionary day codes derive from the
+  engine's governing celebration — no parallel reimplementation of precedence; transferred
+  feasts bring their readings with them.
+- **Responsorial Psalms render the right verses** (P0-3): `hebrewSpanToVulgate()` maps
+  lectionary psalm citations (modern chapter, English-style verses) onto the
+  Vulgate-versified bundles span-by-span — per-psalm title offsets, the 9/10, 113/114–115,
+  114–115/116, 146–147/147 split/join cases, and nine mid-psalm irregulars. Ash Wednesday
+  begins at *Miserere mei*, not the psalm's superscription; Holy Thursday's psalm is the
+  right half of Hebrew 116.
+
+### Fixed — correctness and integrity (P1)
+
+- **Grid-empty verses** (P1-4): slots the shared verse grid leaves empty are skipped in the
+  Reader (both columns), Search, and verse quotes — never rendered as bare numbers. The
+  five Vulgate-appendix books, which the source corpus carries textless in every bundle,
+  show an honest notice; About/BookList/README state it plainly.
+- **Calendar region** (P1-5): `Universal` / `United States` setting read by both engines.
+  USA: Epiphany on the Sunday of Jan 2–8, Baptism of the Lord to Monday when Epiphany
+  lands Jan 7–8 (with correct Ordinary Time week anchoring), Ascension on the Seventh
+  Sunday of Easter, Our Lady of Guadalupe as a Feast, and all six USA obligatory
+  memorials (Seton, Neumann, Kateri, Claver, Brébeuf/Jogues, Cabrini). The five
+  Thursday-Ascension provinces are documented on About. Epiphany's label is now simply
+  "The Epiphany of the Lord" (closes P2-5); Guadalupe no longer over-ranks the universal
+  calendar.
+- **Memorial proper readings** (P1-6): the dataset's thousandths marker identifies
+  prescribed propers (Barnabas, Timothy & Titus, Martha, the Passion of John the Baptist,
+  Our Lady of Sorrows, Guardian Angels, the Immaculate Heart, Mary Mother of the Church);
+  an observed, obligatory memorial so marked takes the day as "Proper of the Memorial"
+  with the ferial cycle offered alongside. Optional memorials (now flagged: Joseph the
+  Worker, Lourdes, Fatima, Mount Carmel, John Paul II) and unmarked memorials stay behind
+  the ferial. Sts. Timothy and Titus added to the calendar (was missing).
+- **Easter Vigil labels** (P1-7): the Liturgy-of-the-Word ladder renders as Reading I–VII
+  and Epistle with each responsorial interleaved, shorter forms marked
+  "or (shorter form)", the Gospel last. The `x.N1` shorter-form convention is honored on
+  ordinary days too (Palm Sunday's short Passion).
+- **Reader chapter clamp** (P1-8): switching to a translation with fewer chapters clamps
+  to its real chapter count instead of hanging on "Loading the sacred text…".
+- **Verse-of-the-day DST parity** (P1-9): day-of-year is pure calendar-component math,
+  matching the iOS widget's `Calendar.ordinality`; the widget pins the Gregorian calendar
+  so non-Gregorian device settings cannot diverge. Web and widget now always agree.
+- **Pipeline integrity** (P1-10): both upstreams pinned by commit hash
+  (`scripts/pins.mjs`); a fresh rebuild from the pins reproduced the committed corpus
+  byte-for-byte before the pins were trusted. `public/data/manifest.json` seals every
+  data file with SHA-256 (238 files + root hash + source pins), verified by
+  `npm run verify-data` and independently by the harness. About surfaces
+  "Texts verified — manifest root …".
+
+### Fixed — polish (P2)
+
+- Search highlights accent-folded matches correctly (*caelum* marks *cælum*), including
+  ligature boundaries (P2-2).
+- Service worker v2: all-or-nothing shell precache on install, stale-asset purge on
+  activate and on fresh navigations, offline navigations served from the precached shell
+  (P2-3). `docs/IOS.md` notes service workers don't run in Capacitor — and why that costs
+  nothing on iOS.
+- Lectionary citations that subdivide verses ("12b") now carry the `partial` flag —
+  566 rows show the "(approx.)" marker, up from 2 (P2-4).
+- Library backup: JSON export and merging import of bookmarks, highlights, and notes;
+  on a same-verse conflict the newer entry wins, so an old backup can never destroy a
+  fresh note (P2-6).
+- Holy Thursday offers the Chrism Mass (morning) alongside the Mass of the Lord's Supper
+  (evening) (P2-7).
+- Reader reads settings once per mount (P2-8).
+- About/BookList/README appendix attribution corrected: Prayer of Manasses and 3–4 Esdras
+  are the printed Clementine appendix; Psalm 151 and Laodiceans come down in the wider
+  Vulgate manuscript tradition (P2-1).
+
+### Added — testing and audit (B.1, B.2)
+
+- `npm test`: both harnesses as pure assertion suites (181 checks — trap years, USA
+  region, psalm incipits, Vigil labels, memorial propers, manifest, VOTD parity) plus the
+  SHA-256 manifest verification; exit 1 on any failure.
+- Golden-year snapshots (`scripts/golden/2024–2027.json`): the full computed calendar,
+  day codes, and reading resolution for every day in both regions, diffed on every test
+  run. `npm run golden` re-blesses after a deliberate engine change.
+- `data-report.txt`: a committed audit of every empty verse slot — 1,438 appendix
+  placeholder slots per translation, plus 17 scattered slots across the three bundles
+  (12 DRC / 5 CPDV / 8 Vulgate, some shared), with cross-bundle samples for checking
+  against printed editions.
+
+### Known issues
+
+- The sanctoral calendar is a representative selection: all solemnities and feasts, the
+  well-loved and prescribed-proper memorials, and the USA proper days — not every
+  obligatory memorial of the General Roman Calendar. Unmodeled memorials display as
+  ferias.
+- Three DRC corpus defects exist **at the pinned upstream commit** and are disclosed in
+  `data-report.txt` and on About: the printed Douay 3 Kings 17:11, Proverbs 30:19, and
+  Baruch 6:7 are absent from the bundle, their slots holding misfiled verses. Correcting
+  them is an editorial/upstream decision, deliberately not a silent patch.
+- CI (§B.3) is not yet wired; `npm test` is local-only.
+- The "United States" region applies the majority Ascension transfer; the provinces of
+  Boston, Hartford, New York, Omaha, and Philadelphia keep Thursday (documented on About).
+
+## [1.0.0] — baseline
+
+Initial application: three bundled public-domain translations (Douay-Rheims Challoner,
+CPDV, Clementine Vulgate) split per book under `public/data/`; Reader with parallel view,
+bookmarks/highlights/notes, accent-insensitive search; Today page (Verse of the Day,
+Mass readings, liturgical day, Rosary, continue reading); daily Mass readings from the
+Roman lectionary cycles; PWA shell; iOS app via Capacitor with a WidgetKit
+Verse-of-the-Day widget.

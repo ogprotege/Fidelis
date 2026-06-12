@@ -2,8 +2,11 @@
 
 Catholic Bible app (DRB, CPDV, Clementine Vulgate) with liturgical calendar and
 daily Mass readings. Companion documents:
-`docs/review/Fidelis_Code_Review_V1_2026-06-11.md` (the repair manual) and
-`docs/review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md` (the growth plan).
+`docs/review/Fidelis_Code_Review_V1_2026-06-11.md` (the repair manual — every
+P0/P1/P2 item plus hygiene B.1/B.2/B.4 implemented as of v1.1.0; §B.3, CI, still
+open), `docs/review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md`
+(the growth plan), and `CHANGELOG.md` (release history; bump `package.json`
+version and add a CHANGELOG entry together).
 
 ## Commands
 
@@ -20,7 +23,7 @@ codes, and reading resolution per day for both regions; `test-data.ts` diffs the
 engine change that silently moves a feast is a red `npm test`. (§B.3 — CI running all of
 this on every push — is still open.)
 
-## Open review items
+## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
 
@@ -28,7 +31,7 @@ this on every push — is still open.)
 - **P0-2:** Fixed (3993dc9) — day codes derive from the calendar engine's resolved governing celebration.
 - **P0-3:** Fixed — `hebrewSpanToVulgate()` in `src/lib/lectionary.ts` maps lectionary psalm spans (modern chapters, English-style verses) onto the Vulgate-versified bundle grid: per-psalm title offsets, the 9/10, 113/114-115, 114-115/116 and 146-147/147 split cases, and nine mid-psalm join/split irregulars. Verse alignment is asserted by incipit in `scripts/test-data.ts`.
 
-### P1 — correctness and integrity (fix before TestFlight)
+### P1 — correctness and integrity (all fixed)
 
 - **P1-4:** Fixed — grid-empty verse slots are skipped in Reader (both columns), Search, and VerseQuote; fully-empty chapters (the five appendix books, textless in the source corpus in every bundle) show an honest notice. `scripts/build-report.mjs` (run by `npm run data` / `npm run report`) emits the committed `data-report.txt` audit: 1,438 appendix placeholder slots + 17 scattered slots; report↔data sync asserted in `scripts/test-data.ts`. About/BookList/README copy corrected (Clementine appendix attribution, grid honesty). The audit surfaced 3 DRC corpus defects (printed 3 Kings 17:11, Prov 30:19, Bar 6:7 absent outright; their slots hold misfiled verses) — documented in the report and About; correcting the corpus itself folds into P1-10.
 - **P1-5:** Fixed — `calendarRegion` setting (`universal` | `usa`, default universal) in `storage.ts`, read lazily by both engines (`currentRegion()`); explicit region params keep them testable. USA: Epiphany on the Sunday of Jan 2–8 (`epiphanyDate`), Baptism to Monday when Epiphany lands Jan 7–8 (OT week 1 then anchors on the Epiphany Sunday), Ascension on the Seventh Sunday of Easter, the Guadalupe Feast, and all six USA obligatory memorials (Seton, Neumann, Kateri, Claver, Brébeuf/Jogues, Cabrini). Epiphany left `FIXED` for `movableDefs` and the label dropped "(traditional date)" (closes P2-5); Guadalupe moved to `USA_FIXED` (was over-ranked universally). Region select on the Readings toolbar; About documents the transfers incl. the five Thursday-Ascension provinces. 30+ acceptance checks in `test-liturgical.ts`; the gospel sweep in `test-data.ts` runs both regions.

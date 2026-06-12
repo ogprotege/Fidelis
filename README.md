@@ -20,18 +20,37 @@ paraphrasing, no softening of hard sayings, no silent "updates."
   so their text is *not* shipped; instead you can import a licensed copy you own
   on the Translations page (stored only in your browser via IndexedDB).
 - **Daily Mass readings** following the lectionary cycles — Sunday Years A/B/C
-  and weekday Years I/II, with seasonal propers (Advent's December ferias, the
-  Easter Vigil's seven readings, the Triduum), solemnities and feasts with
-  correct Sunday precedence, and the full text of every reading shown in your
-  chosen translation. Citation data derives from the public-domain Roman
-  lectionary tables of
+  and weekday Years I/II — resolved by a liturgical engine that implements the
+  Table of Liturgical Days: precedence, transfer of impeded solemnities
+  (the Annunciation in Holy Week, the Immaculate Conception on an Advent
+  Sunday), omission of impeded feasts, and demotion of colliding memorials.
+  Includes:
+  - the **Easter Vigil** laid out as the Missal orders it (Reading I–VII,
+    Epistle, interleaved psalms, shorter forms marked, Gospel last), the
+    Triduum, Advent's December ferias, and the **Chrism Mass** beside the
+    Mass of the Lord's Supper on Holy Thursday;
+  - **memorial proper readings**: the handful of memorials whose readings are
+    prescribed (St. Barnabas, Sts. Timothy and Titus, the Passion of St. John
+    the Baptist, Guardian Angels, and others the dataset marks) take the day
+    as "Proper of the Memorial", with the ferial cycle offered alongside;
+  - **responsorial psalms aligned to the Vulgate-versified texts** span by
+    span (titles, split and joined psalms), cited with both numberings,
+    e.g. Psalm 51(50);
+  - a **calendar region** setting — Universal, or United States (Epiphany on
+    the Sunday of Jan 2–8, Ascension on the Seventh Sunday of Easter, the six
+    USA obligatory memorials and the Guadalupe Feast).
+  Citation data derives from the public-domain Roman lectionary tables of
   [jayarathina/Tamil-Catholic-Lectionary](https://github.com/jayarathina/Tamil-Catholic-Lectionary)
-  (`npm run lectionary` rebuilds it).
+  (`npm run lectionary` rebuilds it). Where the lectionary subdivides a verse
+  ("12b"), whole verses are shown and the citation is marked "(approx.)" — the
+  text itself is never altered.
 - **Widgets** on the Today page:
   - ✠ **Verse of the Day** — a fixed, curated cycle; deterministic by date
   - **Daily Mass Readings** — today's citations at a glance
-  - **Liturgical Day** — season, week, liturgical color, and celebrations of the
-    General Roman Calendar, with movable feasts computed from the Easter computus
+  - **Liturgical Day** — season, week, liturgical color, and the principal
+    celebrations of the General Roman Calendar (all solemnities and feasts,
+    with a representative selection of memorials), movable feasts computed
+    from the Easter computus
   - **The Holy Rosary** — the day's mysteries with Scripture links
   - **Continue Reading** — picks up where you left off
 - **iOS app** via Capacitor, including a native WidgetKit **home-screen
@@ -43,11 +62,15 @@ paraphrasing, no softening of hard sayings, no silent "updates."
   Vulgate), traditional book names per translation (1 Kings/Liber I Regum,
   Apocalypse/Apocalypsis), adjustable type size, verse deep-links.
 - **Bookmarks, highlights (4 colors), and notes** — stored locally; no account, no
-  tracking, no server.
+  tracking, no server. The Library exports the lot as JSON and imports it back
+  (merging, newer entry per verse wins), so a lost device does not take your
+  marginalia with it.
 - **Search** across any bundled translation, accent-insensitive (Latin
   `misericordia` and `cælum` both work), with reference jumping ("John 3:16",
   "1 Cor 13", "Apocalypsis 21").
-- **PWA**: installable, with offline reading of any book you have opened.
+- **PWA**: installable; the app shell is precached on install (and stale assets
+  purged on deploys), so the app opens offline, with offline reading of any
+  book you have opened.
 - **Parchment & night themes.**
 
 ## Notes on the texts
@@ -59,23 +82,59 @@ paraphrasing, no softening of hard sayings, no silent "updates."
   [scrollmapper/bible_databases](https://github.com/scrollmapper/bible_databases)
   (`DRC`, `CPDV`, `VulgClementine`) and are committed under `public/data/`
   whitespace-normalized but otherwise byte-for-byte.
+- **Provenance is pinned and sealed.** Both upstreams are fetched at exact
+  commit hashes (`scripts/pins.mjs`), never a moving branch, and every file
+  under `public/data/` is hashed into `public/data/manifest.json` (SHA-256 per
+  file plus a root hash), verified by `npm run verify-data` and on every
+  `npm test`. The pins were trusted only after a fresh rebuild reproduced the
+  committed corpus byte-for-byte.
+- **The grid is documented honestly.** The three bundles share their source
+  corpus's aligned verse grid, which in a few places differs from printed
+  editions' own verse breaks; empty grid slots are skipped in display, never
+  shown as bare verse numbers. `data-report.txt` is a committed audit of every
+  such slot — including three known DRC corpus defects (the printed Douay
+  3 Kings 17:11, Proverbs 30:19, and Baruch 6:7 are absent at the pinned
+  upstream commit, their slots holding misfiled verses), disclosed rather than
+  silently patched.
 
 ## Development
 
 ```bash
 npm install
-npm run dev       # local dev server
-npm run build     # type-check + production build to dist/
-npm run preview   # serve the production build
-npm run data      # re-fetch and rebuild public/data/ from upstream sources
-npm run lectionary # re-fetch and rebuild the lectionary citation tables
+npm run dev        # local dev server
+npm test           # liturgical + data harnesses (hard assertions) + manifest verify
+npm run build      # type-check + production build to dist/
+npm run preview    # serve the production build
+npm run data       # rebuild public/data/ from the pinned upstream commits
+npm run lectionary # rebuild the lectionary citation tables (pinned)
+npm run report     # regenerate data-report.txt (also runs after npm run data)
+npm run verify-data # SHA-256 manifest check of public/data
+npm run golden     # re-bless golden-year calendar snapshots after engine changes
 ```
+
+### Testing
+
+`npm test` runs two assertion harnesses and the manifest check:
+
+- `scripts/test-liturgical.ts` — the Easter computus against the known table,
+  trap-year precedence/transfer acceptance (Annunciation on Good Friday 2016,
+  Immaculate Conception 2024, Christmas-on-Sunday 2022, …), and the full
+  Universal/USA region suite;
+- `scripts/test-data.ts` — committed-data integrity: psalm-span incipits,
+  Easter Vigil label ladder, memorial-proper resolution, every lectionary span
+  rendering text in every translation, the empty-slot report in sync, VOTD
+  web/iOS parity, the SHA-256 manifest, and **golden-year snapshots**: the
+  full computed calendar and readings for every day of 2024–2027 in both
+  regions (`scripts/golden/`), so any engine change that silently moves a
+  feast is a red test run. `npm run golden` regenerates them — review that
+  diff like a calendar change.
 
 For iOS: `npm run build && npx cap sync ios && npx cap open ios` (macOS +
 Xcode required; see [docs/IOS.md](docs/IOS.md)).
 
 The app is a fully static site (Vite + React + TypeScript, hash routing) — deploy
-`dist/` to any static host (GitHub Pages, Netlify, etc.).
+`dist/` to any static host (GitHub Pages, Netlify, etc.). See
+[CHANGELOG.md](CHANGELOG.md) for release history.
 
 ---
 
