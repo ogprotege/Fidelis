@@ -1,4 +1,11 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
+interface ManifestInfo {
+  rootHash: string;
+  fileCount: number;
+  sources: Record<string, { repo: string; commit: string }>;
+}
 
 const WIDGET_SNIPPET = `<iframe
   src="https://YOUR-DOMAIN/#/widget/votd"
@@ -7,6 +14,14 @@ const WIDGET_SNIPPET = `<iframe
 ></iframe>`;
 
 export default function About() {
+  const [integrity, setIntegrity] = useState<ManifestInfo | null>(null);
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}data/manifest.json`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((m) => m?.rootHash && m?.sources && setIntegrity(m))
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
       <h1 className="page-title">About Fidelis</h1>
@@ -25,9 +40,11 @@ export default function About() {
         Ecclesiasticus/Sirach, Baruch, and 1–2 Machabees) and the Greek portions of
         Esther and Daniel — books affirmed at the Councils of Hippo (393), Carthage
         (397), Florence (1442), and definitively at Trent (1546). The traditional
-        appendix of the Clementine Vulgate (Prayer of Manasses, 3–4 Esdras, Psalm
-        151, Laodiceans) is preserved as in printed editions, clearly marked as
-        outside the canon.
+        Vulgate appendix is listed in the book picker, clearly marked as outside
+        the canon: printed Clementine editions carried the Prayer of Manasses and
+        3–4 Esdras "lest they perish entirely," while Psalm 151 and the Epistle to
+        the Laodiceans come down in the wider Vulgate manuscript tradition. The
+        bundled source corpus does not yet include the text of these books.
       </p>
 
       <h2 className="testament-title">The Texts</h2>
@@ -56,7 +73,15 @@ export default function About() {
         Note on numbering: the bundled translations follow the Vulgate, so the
         Psalms use the traditional Septuagint numbering (the "Lord is my shepherd"
         psalm is Psalm 22, not 23), and 1–2 Samuel appear in the Douay text as 1–2
-        Kings. The book picker shows each translation's own traditional names.
+        Kings. The book picker shows each translation's own traditional names. The
+        three bundles share their source corpus's aligned verse grid, which in a
+        few places differs from printed editions' own verse breaks (the printed
+        Douay 1 Thessalonians 4:18, for example, sits in the grid at 4:17), and in
+        three places the Douay bundle misplaces one printed verse and lacks
+        another outright (in 3 Kings 17, Proverbs 30, and Baruch 6). Slots the
+        grid leaves empty are skipped in display rather than shown as bare verse
+        numbers; every such slot is catalogued in an audit file
+        (data-report.txt) maintained with the app's source code.
       </p>
 
       <h2 className="testament-title">Embed the Verse of the Day</h2>
@@ -80,9 +105,16 @@ export default function About() {
         <a href="https://github.com/scrollmapper/bible_databases" target="_blank" rel="noreferrer">
           scrollmapper/bible_databases
         </a>{" "}
-        project (DRC, CPDV, VulgClementine) and reproduced without alteration. The
-        liturgical calendar follows the General Roman Calendar; movable feasts are
-        computed from the date of Easter. Daily Mass reading citations follow the
+        project (DRC, CPDV, VulgClementine) and reproduced exactly as that corpus
+        carries them, with no editorial changes; its shared verse grid and its few
+        gaps are described in the note on numbering above. The
+        liturgical calendar follows the General Roman Calendar (all solemnities
+        and feasts, with a representative selection of memorials); movable feasts
+        are computed from the date of Easter, and a calendar-region setting on the
+        Readings page applies the United States transfers — Epiphany to the Sunday
+        of Jan 2–8, and the Ascension to the Seventh Sunday of Easter, as observed
+        in most U.S. ecclesiastical provinces (Boston, Hartford, New York, Omaha,
+        and Philadelphia keep Ascension Thursday) — and the U.S. proper days. Daily Mass reading citations follow the
         Roman Lectionary cycles (Sundays A/B/C, weekdays I/II), derived from the
         public-domain tables of{" "}
         <a
@@ -93,6 +125,22 @@ export default function About() {
           jayarathina/Tamil-Catholic-Lectionary
         </a>
         .
+      </p>
+      <p className="small muted">
+        Both sources are fetched at commits pinned by hash — never a moving
+        branch — and every bundled data file is sealed by a SHA-256 manifest
+        that the project's data harness verifies on every run.
+        {integrity && (
+          <>
+            {" "}
+            Texts verified — manifest root <code>{integrity.rootHash.slice(0, 12)}</code>,{" "}
+            {integrity.fileCount} files;{" "}
+            {Object.values(integrity.sources)
+              .map((s) => `${s.repo}@${s.commit.slice(0, 7)}`)
+              .join(", ")}
+            . <em>Forma manet.</em>
+          </>
+        )}
       </p>
     </div>
   );

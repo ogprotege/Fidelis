@@ -1,7 +1,7 @@
 {
   "name": "fidelis-catholic-bible",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Fidelis — a Catholic Bible app with unaltered public-domain texts: Douay-Rheims, Catholic Public Domain Version, and the Clementine Latin Vulgate.",
   "repository": {
@@ -11,8 +11,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "test": "tsx scripts/test-liturgical.ts && tsx scripts/test-data.ts && node scripts/build-manifest.mjs --verify",
+    "golden": "tsx scripts/build-golden.ts",
     "preview": "vite preview",
     "data": "node scripts/build-data.mjs",
+    "report": "node scripts/build-report.mjs",
+    "manifest": "node scripts/build-manifest.mjs",
+    "verify-data": "node scripts/build-manifest.mjs --verify",
     "lectionary": "node scripts/build-lectionary.mjs",
     "votd-widget": "node scripts/build-votd-widget.mjs"
   },

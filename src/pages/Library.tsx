@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { bookDisplayName, getBook } from "../lib/canon";
 import {
+  exportMarginalia,
   getBookmarks,
   getHighlights,
   getNotes,
   getSettings,
+  importMarginalia,
   setHighlight,
   setNote,
   toggleBookmark
@@ -16,8 +18,35 @@ type Tab = "bookmarks" | "highlights" | "notes";
 export default function Library() {
   const [tab, setTab] = useState<Tab>("bookmarks");
   const [version, setVersion] = useState(0);
+  const [transfer, setTransfer] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   void version;
   const translation = getSettings().translation;
+
+  const doExport = () => {
+    const data = exportMarginalia();
+    const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `fidelis-library-${data.exportedAt.slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setTransfer(
+      `Exported ${data.bookmarks.length} bookmark(s), ${data.highlights.length} highlight(s), ${data.notes.length} note(s).`
+    );
+  };
+
+  const doImport = async (file: File) => {
+    try {
+      const counts = importMarginalia(await file.text());
+      setVersion((x) => x + 1);
+      setTransfer(
+        `Imported ${counts.bookmarks} bookmark(s), ${counts.highlights} highlight(s), ${counts.notes} note(s) — merged with what was here; where both had an entry for the same verse, the newer one was kept.`
+      );
+    } catch (e) {
+      setTransfer(e instanceof Error ? e.message : "Could not read that file.");
+    }
+  };
 
   const bookmarks = getBookmarks();
   const highlights = getHighlights();
@@ -44,7 +73,34 @@ export default function Library() {
             {t[0].toUpperCase() + t.slice(1)}
           </button>
         ))}
+        <span className="spacer" />
+        <button className="icon-btn" onClick={doExport} title="Download bookmarks, highlights, and notes as JSON">
+          ↓ Export
+        </button>
+        <button
+          className="icon-btn"
+          onClick={() => fileRef.current?.click()}
+          title="Merge a previously exported Fidelis library file"
+        >
+          ↑ Import
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) doImport(f);
+            e.target.value = "";
+          }}
+        />
       </div>
+      {transfer && <p className="muted small sans">{transfer}</p>}
+      <p className="muted small sans">
+        Your library lives only in this browser — export it now and then so a
+        lost device does not take your marginalia with it.
+      </p>
 
       {tab === "bookmarks" &&
         (bookmarks.length === 0 ? (

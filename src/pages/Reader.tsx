@@ -30,7 +30,8 @@ export default function Reader() {
   const focusVerse = parseInt(searchParams.get("v") ?? "", 10) || null;
 
   const book = getBook(bookSlug);
-  const settings = getSettings();
+  // Read settings once per mount, not per render (P2-8).
+  const [settings] = useState(getSettings);
   const [parallel, setParallel] = useState<string | null>(settings.parallel);
   const [fontSize, setFontSize] = useState(settings.fontSize);
   const [data, setData] = useState<BookData | null>(null);
@@ -106,12 +107,24 @@ export default function Reader() {
     }
   }, [focusVerse, data]);
 
+  // P1-8: book.chapters is the cross-translation maximum, so a chapter that
+  // exists in one translation may not exist in another (imported RSV-2CE/
+  // NABRE versification differs). Once the target text is loaded, clamp to
+  // its real chapter count instead of waiting forever on a chapter that
+  // isn't there.
+  useEffect(() => {
+    if (data && data.chapters.length > 0 && chapter > data.chapters.length) {
+      navigate(`/read/${translation}/${bookSlug}/${data.chapters.length}`, { replace: true });
+    }
+  }, [data, chapter, translation, bookSlug, navigate]);
+
   if (!book) {
     return <p className="notice">Unknown book. <Link to="/read">Browse the books</Link>.</p>;
   }
 
   const trans = getTranslation(translation);
   const verses = data?.chapters[chapter - 1] ?? null;
+  const chapterEmpty = verses !== null && verses.every((v) => !v || !v.trim());
   const chapterCount = data?.chapters.length ?? book.chapters;
   const displayName = bookDisplayName(book, translation);
   const bi = bookIndex(bookSlug);
@@ -151,6 +164,8 @@ export default function Reader() {
   const renderVerses = (vs: string[], interactive: boolean) => (
     <div className="verses" style={{ fontSize: `${fontSize}px` }}>
       {vs.map((text, i) => {
+        // Grid-empty slot (see data-report.txt): no text in this translation.
+        if (!text || !text.trim()) return null;
         const v = i + 1;
         const key = refKey({ book: bookSlug, chapter, verse: v });
         const hl = highlights.get(key);
@@ -271,10 +286,23 @@ export default function Reader() {
           )}
         </div>
       )}
-      {!error && !verses && <p className="loading">Loading the sacred text…</p>}
+      {!error && !data && <p className="loading">Loading the sacred text…</p>}
+      {!error && data && !verses && (
+        <p className="notice">
+          Chapter {chapter} is not present in {trans?.name ?? translation}
+          {chapterCount > 0 ? ` — this book has ${chapterCount} chapter${chapterCount === 1 ? "" : "s"} there` : ""}.
+        </p>
+      )}
 
-      {verses && !parallelData && renderVerses(verses, true)}
-      {verses && parallelData && (
+      {chapterEmpty && (
+        <p className="notice">
+          The bundled {trans?.name ?? translation} source does not include the text of this{" "}
+          {book.appendix ? "book" : "chapter"}.
+        </p>
+      )}
+
+      {verses && !chapterEmpty && !parallelData && renderVerses(verses, true)}
+      {verses && !chapterEmpty && parallelData && (
         <div className="parallel-grid">
           <div>
             <div className="col-label">{trans?.abbrev}</div>

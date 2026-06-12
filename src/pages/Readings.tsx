@@ -3,13 +3,13 @@ import { useSearchParams } from "react-router-dom";
 import ReadingText from "../components/ReadingText";
 import {
   DayReadings,
-  READING_LABELS,
+  displayReadings,
   readingsForDate,
   sundayCycle,
   weekdayCycle
 } from "../lib/lectionary";
 import { COLOR_HEX, liturgicalDay } from "../lib/liturgical";
-import { getSettings } from "../lib/storage";
+import { CalendarRegion, getSettings, saveSettings } from "../lib/storage";
 import { TRANSLATIONS } from "../lib/translations";
 
 function toISO(d: Date): string {
@@ -30,8 +30,9 @@ export default function Readings() {
   }, [dateParam]);
 
   const [translation, setTranslation] = useState(getSettings().translation);
+  const [region, setRegion] = useState<CalendarRegion>(getSettings().calendarRegion);
   const [readings, setReadings] = useState<DayReadings | null | "loading">("loading");
-  const lit = liturgicalDay(date);
+  const lit = liturgicalDay(date, region);
 
   useEffect(() => {
     let alive = true;
@@ -42,7 +43,7 @@ export default function Readings() {
     return () => {
       alive = false;
     };
-  }, [date]);
+  }, [date, region]);
 
   const go = (d: Date) => setParams({ date: toISO(d) });
   const shift = (days: number) =>
@@ -52,17 +53,19 @@ export default function Readings() {
     weekdayCycle(date) === "1" ? "I" : "II"
   }`;
 
-  // group options: consecutive fractional rows within the same integer group
-  const groups = useMemo(() => {
-    if (readings === "loading" || !readings) return [];
-    const byGroup = new Map<number, typeof readings.rows>();
-    for (const row of readings.rows) {
-      const g = Math.floor(row.t);
-      if (!byGroup.has(g)) byGroup.set(g, []);
-      byGroup.get(g)!.push(row);
-    }
-    return [...byGroup.entries()].sort((a, b) => a[0] - b[0]);
-  }, [readings]);
+  // Ordered, labeled sections — incl. the Easter Vigil ladder (P1-7).
+  const sections = useMemo(
+    () => (readings === "loading" || !readings ? [] : displayReadings(readings)),
+    [readings]
+  );
+  // P1-6: ferial readings offered alongside a memorial's prescribed propers.
+  const secondarySections = useMemo(
+    () =>
+      readings !== "loading" && readings?.secondary
+        ? displayReadings({ code: readings.secondary.code, rows: readings.secondary.rows })
+        : [],
+    [readings]
+  );
 
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
@@ -88,6 +91,18 @@ export default function Readings() {
               {t.abbrev}
             </option>
           ))}
+        </select>
+        <select
+          value={region}
+          onChange={(e) => {
+            const v = e.target.value as CalendarRegion;
+            saveSettings({ calendarRegion: v });
+            setRegion(v);
+          }}
+          title="Calendar region — governs the dates of Epiphany and the Ascension and the U.S. proper days. (The provinces of Boston, Hartford, New York, Omaha, and Philadelphia keep Ascension Thursday.)"
+        >
+          <option value="universal">Universal</option>
+          <option value="usa">United States</option>
         </select>
       </div>
 
@@ -123,32 +138,54 @@ export default function Readings() {
           reader directly.
         </p>
       )}
+      {readings !== "loading" && readings && readings.primaryLabel && (
+        <h2 className="testament-title">{readings.primaryLabel}</h2>
+      )}
       {readings !== "loading" &&
         readings &&
-        groups.map(([g, rows]) => (
-          <section key={g} className="reading-group">
-            {rows.map((row, i) => (
+        sections.map((sec, si) => (
+          <section key={si} className="reading-group">
+            {sec.map(({ label, row }, i) => (
               <ReadingText
                 key={`${row.t}-${row.b}-${i}`}
                 row={row}
                 translation={translation}
-                label={
-                  i === 0
-                    ? READING_LABELS[g] ?? "Reading"
-                    : rows.length > 2
-                      ? `${READING_LABELS[g] ?? "Reading"} — option ${i + 1}`
-                      : "or (alternative form)"
-                }
+                label={label}
               />
             ))}
           </section>
         ))}
+      {readings !== "loading" && readings && readings.secondary && (
+        <>
+          <h2 className="testament-title">{readings.secondary.label}</h2>
+          {secondarySections.map((sec, si) => (
+            <section key={`f-${si}`} className="reading-group">
+              {sec.map(({ label, row }, i) => (
+                <ReadingText
+                  key={`f-${row.t}-${row.b}-${i}`}
+                  row={row}
+                  translation={translation}
+                  label={label}
+                />
+              ))}
+            </section>
+          ))}
+        </>
+      )}
 
       {readings !== "loading" && readings && (
         <p className="muted small sans">
-          Lectionary day: <code>{readings.code}</code>. Citations follow the Roman
-          Lectionary; psalms are shown with both modern and Vulgate numbers, e.g.
-          Psalm 23(22). Where the lectionary subdivides verses (e.g. “12b”), whole
+          Lectionary day: <code>{readings.code}</code>
+          {readings.secondary && (
+            <>
+              {" "}
+              · {readings.secondary.label}: <code>{readings.secondary.code}</code>
+            </>
+          )}
+          . Citations follow the Roman
+          Lectionary; psalms are shown with both modern and Vulgate chapter numbers,
+          e.g. Psalm 23(22), with verse numbers following the Vulgate text as
+          rendered. Where the lectionary subdivides verses (e.g. “12b”), whole
           verses are shown — the text itself is never altered.
         </p>
       )}

@@ -22,6 +22,16 @@
  * cached per year; liturgicalDay(date) reads the year map.
  */
 
+import { CalendarRegion, getSettings } from "./storage";
+
+export type { CalendarRegion };
+
+/** The region every engine entry point defaults to — read lazily from the
+ *  persisted setting so the calendar and lectionary engines always agree. */
+export function currentRegion(): CalendarRegion {
+  return getSettings().calendarRegion;
+}
+
 export type LiturgicalColor = "green" | "violet" | "white" | "red" | "rose" | "black";
 
 export type Season =
@@ -42,6 +52,9 @@ export interface Celebration {
   precedence?: number;
   /** ISO date of the nominal day, set when the celebration was transferred. */
   transferredFrom?: string;
+  /** Optional memorial (memoria ad libitum) — its readings never displace
+   *  the ferial cycle. */
+  optional?: boolean;
 }
 
 export interface LiturgicalDay {
@@ -98,9 +111,24 @@ export function adventStart(year: number): Date {
   return fourthSundayBefore;
 }
 
-/** Sunday after Jan 6 (Baptism of the Lord; ends Christmastide). */
-export function baptismOfTheLord(year: number): Date {
-  const epiphany = ymd(year, 1, 6);
+/** Epiphany: Jan 6, or in the United States the Sunday between Jan 2 and 8. */
+export function epiphanyDate(year: number, region: CalendarRegion = currentRegion()): Date {
+  if (region === "usa") {
+    const jan2 = ymd(year, 1, 2);
+    const dow = jan2.getDay();
+    return addDays(jan2, dow === 0 ? 0 : 7 - dow);
+  }
+  return ymd(year, 1, 6);
+}
+
+/**
+ * The Baptism of the Lord (ends Christmastide): the Sunday after Jan 6 — but
+ * in the United States, when Epiphany lands on Jan 7 or 8, the Monday
+ * immediately following it.
+ */
+export function baptismOfTheLord(year: number, region: CalendarRegion = currentRegion()): Date {
+  const epiphany = epiphanyDate(year, region);
+  if (region === "usa" && epiphany.getDate() >= 7) return addDays(epiphany, 1);
   const dow = epiphany.getDay();
   return addDays(epiphany, dow === 0 ? 7 : 7 - dow);
 }
@@ -122,16 +150,20 @@ const WEEKDAYS = [
 // A representative selection: all solemnities/feasts plus well-loved memorials.
 // `p` overrides the default precedence of the rank (feasts of the Lord rank 5,
 // and Christmas/Epiphany sit among the rank-2 privileged days).
-const FIXED: { m: number; d: number; name: string; rank: Rank; color?: LiturgicalColor; p?: number }[] = [
+// `opt` marks optional memorials (memoria ad libitum): kept at Memorial
+// precedence for occurrence (pre-existing model), but their formularies are
+// never promoted over the ferial readings (P1-6).
+const FIXED: { m: number; d: number; name: string; rank: Rank; color?: LiturgicalColor; p?: number; opt?: boolean }[] = [
   { m: 1, d: 1, name: "Mary, the Holy Mother of God", rank: "Solemnity", color: "white" },
-  { m: 1, d: 6, name: "The Epiphany of the Lord (traditional date)", rank: "Solemnity", color: "white", p: 2 },
+  // The Epiphany is region-movable and is added in movableDefs().
   { m: 1, d: 2, name: "Sts. Basil the Great and Gregory Nazianzen, Doctors", rank: "Memorial", color: "white" },
   { m: 1, d: 21, name: "St. Agnes, Virgin and Martyr", rank: "Memorial", color: "red" },
   { m: 1, d: 25, name: "The Conversion of St. Paul, Apostle", rank: "Feast", color: "white" },
+  { m: 1, d: 26, name: "Sts. Timothy and Titus, Bishops", rank: "Memorial", color: "white" },
   { m: 1, d: 28, name: "St. Thomas Aquinas, Priest and Doctor", rank: "Memorial", color: "white" },
   { m: 1, d: 31, name: "St. John Bosco, Priest", rank: "Memorial", color: "white" },
   { m: 2, d: 2, name: "The Presentation of the Lord (Candlemas)", rank: "Feast", color: "white", p: 5 },
-  { m: 2, d: 11, name: "Our Lady of Lourdes", rank: "Memorial", color: "white" },
+  { m: 2, d: 11, name: "Our Lady of Lourdes", rank: "Memorial", color: "white", opt: true },
   { m: 2, d: 14, name: "Sts. Cyril and Methodius", rank: "Memorial", color: "white" },
   { m: 2, d: 22, name: "The Chair of St. Peter, Apostle", rank: "Feast", color: "white" },
   { m: 3, d: 17, name: "St. Patrick, Bishop", rank: "Memorial", color: "white" },
@@ -139,9 +171,9 @@ const FIXED: { m: number; d: number; name: string; rank: Rank; color?: Liturgica
   { m: 3, d: 25, name: "The Annunciation of the Lord", rank: "Solemnity", color: "white" },
   { m: 4, d: 25, name: "St. Mark, Evangelist", rank: "Feast", color: "red" },
   { m: 4, d: 29, name: "St. Catherine of Siena, Virgin and Doctor", rank: "Memorial", color: "white" },
-  { m: 5, d: 1, name: "St. Joseph the Worker", rank: "Memorial", color: "white" },
+  { m: 5, d: 1, name: "St. Joseph the Worker", rank: "Memorial", color: "white", opt: true },
   { m: 5, d: 3, name: "Sts. Philip and James, Apostles", rank: "Feast", color: "red" },
-  { m: 5, d: 13, name: "Our Lady of Fatima", rank: "Memorial", color: "white" },
+  { m: 5, d: 13, name: "Our Lady of Fatima", rank: "Memorial", color: "white", opt: true },
   { m: 5, d: 14, name: "St. Matthias, Apostle", rank: "Feast", color: "red" },
   { m: 5, d: 31, name: "The Visitation of the Blessed Virgin Mary", rank: "Feast", color: "white" },
   { m: 5, d: 2, name: "St. Athanasius, Bishop and Doctor", rank: "Memorial", color: "white" },
@@ -153,7 +185,7 @@ const FIXED: { m: number; d: number; name: string; rank: Rank; color?: Liturgica
   { m: 6, d: 29, name: "Sts. Peter and Paul, Apostles", rank: "Solemnity", color: "red" },
   { m: 7, d: 3, name: "St. Thomas, Apostle", rank: "Feast", color: "red" },
   { m: 7, d: 11, name: "St. Benedict, Abbot", rank: "Memorial", color: "white" },
-  { m: 7, d: 16, name: "Our Lady of Mount Carmel", rank: "Memorial", color: "white" },
+  { m: 7, d: 16, name: "Our Lady of Mount Carmel", rank: "Memorial", color: "white", opt: true },
   { m: 7, d: 22, name: "St. Mary Magdalene", rank: "Feast", color: "white" },
   { m: 7, d: 25, name: "St. James, Apostle", rank: "Feast", color: "red" },
   { m: 7, d: 26, name: "Sts. Joachim and Anne, Parents of the BVM", rank: "Memorial", color: "white" },
@@ -186,7 +218,7 @@ const FIXED: { m: number; d: number; name: string; rank: Rank; color?: Liturgica
   { m: 10, d: 15, name: "St. Teresa of Jesus (Ávila), Virgin and Doctor", rank: "Memorial", color: "white" },
   { m: 10, d: 17, name: "St. Ignatius of Antioch, Bishop and Martyr", rank: "Memorial", color: "red" },
   { m: 10, d: 18, name: "St. Luke, Evangelist", rank: "Feast", color: "red" },
-  { m: 10, d: 22, name: "St. John Paul II, Pope", rank: "Memorial", color: "white" },
+  { m: 10, d: 22, name: "St. John Paul II, Pope", rank: "Memorial", color: "white", opt: true },
   { m: 10, d: 28, name: "Sts. Simon and Jude, Apostles", rank: "Feast", color: "red" },
   { m: 11, d: 1, name: "All Saints", rank: "Solemnity", color: "white" },
   { m: 11, d: 2, name: "The Commemoration of All the Faithful Departed (All Souls)", rank: "Solemnity", color: "violet" },
@@ -197,13 +229,27 @@ const FIXED: { m: number; d: number; name: string; rank: Rank; color?: Liturgica
   { m: 11, d: 30, name: "St. Andrew, Apostle", rank: "Feast", color: "red" },
   { m: 12, d: 7, name: "St. Ambrose, Bishop and Doctor", rank: "Memorial", color: "white" },
   { m: 12, d: 8, name: "The Immaculate Conception of the Blessed Virgin Mary", rank: "Solemnity", color: "white" },
-  { m: 12, d: 12, name: "Our Lady of Guadalupe", rank: "Feast", color: "white" },
+  // Our Lady of Guadalupe is a Feast of the USA proper calendar (USA_FIXED);
+  // in the General Calendar it is an optional memorial, outside this model.
   { m: 12, d: 13, name: "St. Lucy, Virgin and Martyr", rank: "Memorial", color: "red" },
   { m: 12, d: 14, name: "St. John of the Cross, Priest and Doctor", rank: "Memorial", color: "white" },
   { m: 12, d: 25, name: "The Nativity of the Lord (Christmas)", rank: "Solemnity", color: "white", p: 2 },
   { m: 12, d: 26, name: "St. Stephen, the First Martyr", rank: "Feast", color: "red" },
   { m: 12, d: 27, name: "St. John, Apostle and Evangelist", rank: "Feast", color: "white" },
   { m: 12, d: 28, name: "The Holy Innocents, Martyrs", rank: "Feast", color: "red" }
+];
+
+// Proper calendar of the United States: its Feast and all six obligatory
+// memorials (optional memorials and the Thanksgiving votive are outside the
+// engine's model).
+const USA_FIXED: typeof FIXED = [
+  { m: 1, d: 4, name: "St. Elizabeth Ann Seton, Religious", rank: "Memorial", color: "white" },
+  { m: 1, d: 5, name: "St. John Neumann, Bishop", rank: "Memorial", color: "white" },
+  { m: 7, d: 14, name: "St. Kateri Tekakwitha, Virgin", rank: "Memorial", color: "white" },
+  { m: 9, d: 9, name: "St. Peter Claver, Priest", rank: "Memorial", color: "white" },
+  { m: 10, d: 19, name: "Sts. John de Brébeuf and Isaac Jogues, Priests, and Companions, Martyrs", rank: "Memorial", color: "red" },
+  { m: 11, d: 13, name: "St. Frances Xavier Cabrini, Virgin", rank: "Memorial", color: "white" },
+  { m: 12, d: 12, name: "Our Lady of Guadalupe", rank: "Feast", color: "white" }
 ];
 
 const RANK_PRECEDENCE: Record<Rank, number> = {
@@ -220,16 +266,18 @@ interface CelebrationDef {
   color?: LiturgicalColor;
   precedence: number;
   transferredFrom?: string;
+  optional?: boolean;
 }
 
 /** The year's movable celebrations with their Table precedence. */
-function movableDefs(year: number): [Date, CelebrationDef][] {
+function movableDefs(year: number, region: CalendarRegion): [Date, CelebrationDef][] {
   const easter = easterDate(year);
   const out: [Date, CelebrationDef][] = [];
   const at = (date: Date, name: string, rank: Rank, color: LiturgicalColor, precedence: number) =>
     out.push([date, { name, rank, color, precedence }]);
   const e = (offset: number) => addDays(easter, offset);
 
+  at(epiphanyDate(year, region), "The Epiphany of the Lord", "Solemnity", "white", 2);
   at(e(-46), "Ash Wednesday", "Feria", "violet", 2);
   at(e(-7), "Palm Sunday of the Passion of the Lord", "Sunday", "red", 2);
   at(e(-3), "Holy Thursday — Mass of the Lord's Supper", "Solemnity", "white", 1);
@@ -237,7 +285,8 @@ function movableDefs(year: number): [Date, CelebrationDef][] {
   at(e(-1), "Holy Saturday", "Solemnity", "violet", 1);
   at(e(0), "Easter Sunday of the Resurrection of the Lord", "Solemnity", "white", 1);
   at(e(7), "Divine Mercy Sunday (Second Sunday of Easter)", "Solemnity", "white", 2);
-  at(e(39), "The Ascension of the Lord", "Solemnity", "white", 2);
+  // USA: Ascension Thursday transfers to the Seventh Sunday of Easter.
+  at(e(region === "usa" ? 42 : 39), "The Ascension of the Lord", "Solemnity", "white", 2);
   at(e(49), "Pentecost Sunday", "Solemnity", "red", 2);
   at(e(50), "Mary, Mother of the Church", "Memorial", "white", 10);
   at(e(56), "The Most Holy Trinity", "Solemnity", "white", 3);
@@ -259,7 +308,7 @@ function movableDefs(year: number): [Date, CelebrationDef][] {
     }
   }
   at(holyFamily, "The Holy Family of Jesus, Mary and Joseph", "Feast", "white", 5);
-  at(baptismOfTheLord(year), "The Baptism of the Lord", "Feast", "white", 5);
+  at(baptismOfTheLord(year, region), "The Baptism of the Lord", "Feast", "white", 5);
   return out;
 }
 
@@ -299,16 +348,18 @@ const fromKey = (key: string) => {
   return ymd(y, m, d);
 };
 
-const yearCache = new Map<number, Map<string, Celebration[]>>();
+const yearCache = new Map<string, Map<string, Celebration[]>>();
 
 /**
  * Resolve the whole year's observed celebrations: occurrence (the highest
  * rank takes the day), transfer of impeded solemnities, and omission of
  * impeded feasts and memorials. Transfer is inherently a whole-year
- * operation, hence the per-year computation and cache.
+ * operation, hence the per-year computation and cache (keyed by region,
+ * since the regional transfers reshape the year).
  */
-function resolveYear(year: number): Map<string, Celebration[]> {
-  const cached = yearCache.get(year);
+function resolveYear(year: number, region: CalendarRegion): Map<string, Celebration[]> {
+  const cacheKey = `${region}:${year}`;
+  const cached = yearCache.get(cacheKey);
   if (cached) return cached;
 
   // Candidates per day. Movables go in first so that within an equal
@@ -320,9 +371,16 @@ function resolveYear(year: number): Map<string, Celebration[]> {
     if (list) list.push(def);
     else candidates.set(key, [def]);
   };
-  for (const [date, def] of movableDefs(year)) addDef(date, def);
-  for (const { m, d, name, rank, color, p } of FIXED) {
-    addDef(ymd(year, m, d), { name, rank, color, precedence: p ?? RANK_PRECEDENCE[rank] });
+  for (const [date, def] of movableDefs(year, region)) addDef(date, def);
+  const fixed = region === "usa" ? [...FIXED, ...USA_FIXED] : FIXED;
+  for (const { m, d, name, rank, color, p, opt } of fixed) {
+    addDef(ymd(year, m, d), {
+      name,
+      rank,
+      color,
+      precedence: p ?? RANK_PRECEDENCE[rank],
+      ...(opt ? { optional: true } : {})
+    });
   }
 
   // Transfer pass, in date order: a solemnity (rank 3) impeded by a rank-1/2
@@ -379,11 +437,14 @@ function resolveYear(year: number): Map<string, Celebration[]> {
       winners.map((c) => ({ ...c }))
     );
   }
-  yearCache.set(year, resolved);
+  yearCache.set(cacheKey, resolved);
   return resolved;
 }
 
-export function liturgicalDay(date: Date = new Date()): LiturgicalDay {
+export function liturgicalDay(
+  date: Date = new Date(),
+  region: CalendarRegion = currentRegion()
+): LiturgicalDay {
   const year = date.getFullYear();
   const easter = easterDate(year);
   const ashWednesday = addDays(easter, -46);
@@ -391,7 +452,7 @@ export function liturgicalDay(date: Date = new Date()): LiturgicalDay {
   const pentecost = addDays(easter, 49);
   const advent1 = adventStart(year);
   const christmas = ymd(year, 12, 25);
-  const baptism = baptismOfTheLord(year);
+  const baptism = baptismOfTheLord(year, region);
   const dow = date.getDay();
   const weekday = WEEKDAYS[dow];
 
@@ -451,8 +512,12 @@ export function liturgicalDay(date: Date = new Date()): LiturgicalDay {
     season = "Ordinary Time";
     let week: number;
     if (daysBetween(date, ashWednesday) > 0) {
-      // Ordinary Time I: counted from the Baptism of the Lord (week 1).
-      week = Math.floor(daysBetween(baptism, date) / 7) + 1;
+      // Ordinary Time I: counted from the Baptism of the Lord (week 1). When
+      // the Baptism falls on Monday (USA, Epiphany on Jan 7/8), the count
+      // anchors on the Epiphany Sunday so the next Sunday is still the Second
+      // Sunday in Ordinary Time.
+      const anchor = baptism.getDay() === 0 ? baptism : addDays(baptism, -1);
+      week = Math.floor(daysBetween(anchor, date) / 7) + 1;
     } else {
       // Ordinary Time II: counted backwards from Christ the King (week 34).
       const christKing = addDays(advent1, -7);
@@ -470,7 +535,7 @@ export function liturgicalDay(date: Date = new Date()): LiturgicalDay {
   // Only celebrations actually observed this day survive resolution; the
   // governing one comes first and, when it takes the day, takes its color.
   // Suppressed and transferred celebrations do not appear here at all.
-  const celebrations = resolveYear(year).get(isoKey(date)) ?? [];
+  const celebrations = resolveYear(year, region).get(isoKey(date)) ?? [];
   const top = celebrations[0];
   if (top?.color) color = top.color;
 

@@ -60,6 +60,7 @@ export default function Search() {
         const data = await loadBook(translation, b.slug);
         data.chapters.forEach((ch, ci) => {
           ch.forEach((text, vi) => {
+            if (!text) return; // grid-empty slot (see data-report.txt)
             if (found.length < MAX_RESULTS && fold(text).includes(needle)) {
               found.push({ book: b.slug, chapter: ci + 1, verse: vi + 1, text });
             }
@@ -78,19 +79,35 @@ export default function Search() {
     if (runId.current === id) setProgress(null);
   };
 
+  // Fold with an index map back to the original string, so accent-folded
+  // matches (query "caelum", text "cælum") highlight the right span (P2-2).
+  const foldWithMap = (s: string): { folded: string; map: number[] } => {
+    let folded = "";
+    const map: number[] = []; // folded index -> original index
+    for (let i = 0; i < s.length; i++) {
+      const f = fold(s[i]);
+      for (let j = 0; j < f.length; j++) map.push(i);
+      folded += f;
+    }
+    return { folded, map };
+  };
+
   const highlight = (text: string) => {
-    const idx = fold(text).indexOf(fold(query.trim()));
+    const needle = fold(query.trim());
+    if (!needle) return text;
+    const { folded, map } = foldWithMap(text);
+    const idx = folded.indexOf(needle);
     if (idx === -1) return text;
-    // fold() keeps string length except æ/œ; recompute on the folded string conservatively
-    const plain = text;
-    const q = query.trim();
-    const i = plain.toLowerCase().indexOf(q.toLowerCase());
-    if (i === -1) return text;
+    const start = map[idx];
+    const last = idx + needle.length - 1;
+    // Round outward past a partially consumed source char (query "ca" must
+    // mark the whole "cæ", not stop before the ligature).
+    const end = last + 1 < map.length ? Math.max(map[last + 1], map[last] + 1) : text.length;
     return (
       <>
-        {plain.slice(0, i)}
-        <mark>{plain.slice(i, i + q.length)}</mark>
-        {plain.slice(i + q.length)}
+        {text.slice(0, start)}
+        <mark>{text.slice(start, end)}</mark>
+        {text.slice(end)}
       </>
     );
   };

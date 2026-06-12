@@ -24,7 +24,8 @@ export default function VerseQuote({ translation, book, chapter, verse, endVerse
         if (!alive) return;
         const ch = data.chapters[chapter - 1] ?? [];
         const last = Math.min(endVerse ?? verse, ch.length);
-        const parts = ch.slice(verse - 1, last);
+        // Grid-empty slots (see data-report.txt) are dropped from the range.
+        const parts = ch.slice(verse - 1, last).filter((s) => s && s.trim());
         setText(parts.join(" "));
       })
       .catch(() => alive && setError(true));
@@ -35,5 +36,6 @@ export default function VerseQuote({ translation, book, chapter, verse, endVerse
 
   if (error) return <p className={className}>—</p>;
   if (text === null) return <p className={`${className ?? ""} muted`}>…</p>;
+  if (!text.trim()) return <p className={className}>—</p>;
   return <p className={className}>“{text}”</p>;
 }

@@ -40,7 +40,10 @@ private func loadCycle() -> [VotdItem] {
 }
 
 private func entry(for date: Date, cycle: [VotdItem]) -> VotdEntry {
-    let cal = Calendar.current
+    // Pin Gregorian so dayOfYear/year match the web app's JS Date components
+    // even when the device calendar is Japanese, Buddhist, etc. The time
+    // zone stays the device's current one, as on the web.
+    let cal = Calendar(identifier: .gregorian)
     let dayOfYear = cal.ordinality(of: .day, in: .year, for: date) ?? 1
     let year = cal.component(.year, from: date)
     let item = cycle[(dayOfYear + year) % cycle.count]
@@ -58,7 +61,7 @@ struct VotdProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<VotdEntry>) -> Void) {
         let cycle = loadCycle()
-        let cal = Calendar.current
+        let cal = Calendar(identifier: .gregorian)
         var entries: [VotdEntry] = []
         // one entry per midnight for the next week
         for offset in 0..<7 {

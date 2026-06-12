@@ -15,10 +15,12 @@
 import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PINS } from "./pins.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SRC_URL =
-  "https://raw.githubusercontent.com/jayarathina/Tamil-Catholic-Lectionary/master/MySQL/liturgy_lectionary_table_readings__list.sql";
+// Pinned commit, never a moving branch (P1-10) — see scripts/pins.mjs.
+const PIN = PINS.lectionary;
+const SRC_URL = `https://raw.githubusercontent.com/${PIN.repo}/${PIN.commit}/MySQL/liturgy_lectionary_table_readings__list.sql`;
 
 // Tamil abbreviation -> canonical book slug. Order does not matter; matching
 // is longest-prefix-first.
@@ -103,7 +105,7 @@ const ABBREVS = Object.keys(TAMIL_BOOKS).sort((a, b) => b.length - a.length);
 async function loadSql() {
   const argPath = process.argv[2];
   if (argPath) return readFile(argPath, "utf8");
-  const cached = join(ROOT, ".cache", "readings__list.sql");
+  const cached = join(ROOT, ".cache", `readings__list-${PIN.commit.slice(0, 12)}.sql`);
   try {
     await access(cached);
     return readFile(cached, "utf8");
@@ -128,6 +130,9 @@ function parseCitation(raw) {
   let ref = raw.replace(/காண்க/g, "").replace(/\s+/g, "").split("~")[0].trim();
   let book = null;
   let mode = null;
+  // P2-4: dropping a letter suffix (12b) means the lectionary subdivides a
+  // verse we render whole — the row must carry the partial flag.
+  let letterDropped = false;
 
   // Greek/deuterocanonical additions cited with their own numbering:
   // தானி(இ) = Daniel additions — "chapter 1" is the Prayer of Azariah/Benedicite
@@ -153,9 +158,10 @@ function parseCitation(raw) {
   if (!book) return null;
 
   // "Mal 1:14b-2:1-2" — chapter-crossing range with a trailing end-verse
-  const malStyle = ref.match(/^(\d+):(\d+)[a-z]*-(\d+):(\d+)[a-z]*-(\d+)[a-z]*(.*)$/);
+  const malStyle = ref.match(/^(\d+):(\d+)([a-z]*)-(\d+):(\d+)([a-z]*)-(\d+)([a-z]*)(.*)$/);
   if (malStyle) {
-    const [, c1, v1, c2, v2a, v2b, rest] = malStyle;
+    const [, c1, v1, s1, c2, v2a, s2, v2b, s3, rest] = malStyle;
+    if (s1 || s2 || s3) letterDropped = true;
     ref = `${c1}:${v1}-${c2}:${v2a}` + (rest || "");
     // re-inject the range end as an extra segment on chapter c2
     ref += `,${v2a}-${v2b}`;
@@ -168,15 +174,19 @@ function parseCitation(raw) {
   // Segments split by ; or , or . — each is "ch:vv", "v", "v-v", "v-ch:v", "ch:v-ch:v"
   for (const seg of ref.split(/[;,.]/)) {
     if (!seg) continue;
-    if (/^[a-z]+$/.test(seg)) continue; // letter-only continuation like "4a,c"
+    if (/^[a-z]+$/.test(seg)) {
+      letterDropped = true; // letter-only continuation like "4a,c"
+      continue;
+    }
     const m = seg.match(
-      /^(?:(\d+):)?(\d+)[a-z]*(?:-(?:(\d+):)?(\d+)[a-z]*|-[a-z]+)?$/
+      /^(?:(\d+):)?(\d+)([a-z]*)(?:-(?:(\d+):)?(\d+)([a-z]*)|-([a-z]+))?$/
     );
     if (!m) {
       ok = false;
       continue;
     }
-    const [, chL, vL, chR, vR] = m;
+    const [, chL, vL, sufL, chR, vR, sufR, dashSuf] = m;
+    if (sufL || sufR || dashSuf) letterDropped = true;
     if (chL) chapter = parseInt(chL, 10);
     if (chapter === null) {
       if (SINGLE_CHAPTER.has(book)) chapter = 1;
@@ -210,7 +220,7 @@ function parseCitation(raw) {
       else if (span[0] === 3) span[0] = 14;
     }
   }
-  return { b: book, s: spans, ...(ok ? {} : { partial: true }) };
+  return { b: book, s: spans, ...(ok && !letterDropped ? {} : { partial: true }) };
 }
 
 const sql = await loadSql();
@@ -246,3 +256,7 @@ console.log(
 if (unparsed) {
   console.log(`note: ${unparsed} citations skipped (non-standard format)`);
 }
+
+// Re-seal the integrity manifest over everything under public/data (P1-10).
+const { writeManifest } = await import("./build-manifest.mjs");
+await writeManifest(ROOT);

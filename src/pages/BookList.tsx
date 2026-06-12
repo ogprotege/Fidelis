@@ -43,10 +43,14 @@ export default function BookList() {
       </p>
       {section("The Old Testament", OT_GROUPS)}
       {section("The New Testament", NT_GROUPS)}
-      {section("Appendix to the Clementine Vulgate", GROUPS.filter((g) => g === "Appendix"))}
+      {section("The Vulgate Appendix", GROUPS.filter((g) => g === "Appendix"))}
       <p className="muted small sans" style={{ marginTop: "1rem" }}>
-        The appendix books are not part of the canon; they are preserved here, as in
-        printed editions of the Clementine Vulgate, "lest they perish entirely."
+        The appendix books are not part of the canon. Printed editions of the
+        Clementine Vulgate carried the Prayer of Manasses and 3–4 Esdras "lest
+        they perish entirely"; Psalm 151 and the Epistle to the Laodiceans come
+        down in the wider Vulgate manuscript tradition. They are listed here in
+        that spirit, though the bundled source corpus does not yet include their
+        text.
       </p>
     </>
   );
