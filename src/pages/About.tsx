@@ -126,6 +126,17 @@ export default function About() {
         </a>
         .
       </p>
+      <p className="small">
+        The Quote of the Day is drawn from a curated corpus of the Fathers,
+        Doctors, and saints in public-domain translations only (NPNF/ANF, Pusey's{" "}
+        <em>Confessions</em>, the Dominican Fathers' <em>Summa</em>, Taylor's{" "}
+        <em>Story of a Soul</em>, and the like). Every quotation carries its full
+        source citation — work, locus, and translation — because the Catholic
+        internet is a sea of apocryphal saint quotes, and the attribution is part
+        of the gift. Entries are drafted from the named editions and individually
+        checked against printed copies before being marked verified; the corpus
+        and its verification state live in the repository in the open.
+      </p>
       <p className="small muted">
         Both sources are fetched at commits pinned by hash — never a moving
         branch — and every bundled data file is sealed by a SHA-256 manifest

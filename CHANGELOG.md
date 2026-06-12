@@ -4,6 +4,43 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.2.0] — 2026-06-12 — quote of the day
+
+Design-spec §3 and the Today-page recomposition of §6: the daily quote joins the daily
+verse, and the page keeps its five-card covenant.
+
+### Added
+
+- **Quote of the Day** (spec §3): a curated corpus of the Fathers, Doctors, and saints —
+  public-domain translations only (NPNF/ANF, Pusey, the Dominican Fathers' *Summa*,
+  Taylor's *Story of a Soul*, Longfellow's St. Teresa bookmark, and the like), every
+  entry carrying its full locus and translation credit. Selection is deterministic and
+  liturgically aware (spec §3.2): the feast's own author speaks on their feast when the
+  resolved calendar observes it (Augustine on Aug 28), Advent/Christmastide/Lent/
+  Eastertide draw from seasonal pools, and ordinary days walk the general cycle with the
+  VOTD's index arithmetic. Corpus source: `scripts/quotes.corpus.json`; emitted by
+  `npm run quotes` (which re-seals the manifest); red-list authors (spec §3.3) are
+  refused at build time. 47 launch entries, each flagged `verified: false` until checked
+  against a printed copy per the §3.4 workflow — the harness reports the count both ways.
+- **Marian antiphon line** (spec §6): the Today-in-the-Church card carries the hour's
+  prayer — the Angelus ordinarily, Regina Caeli in Eastertide — expanding to the full
+  text, Latin and English (traditional public-domain versions).
+- Nine new data-harness checks: corpus↔emitted sync, schema, red list, seasonal-pool
+  coverage, all three resolution tiers, full-year totality, determinism.
+
+### Changed
+
+- **Today page recomposed** (spec §6), still exactly five cards: Verse of the Day ·
+  Quote of the Day · **Today in the Church** (the former Liturgical Day and Daily Mass
+  Readings cards merged: season + color, cycles, celebrations, reading citations,
+  antiphon) · The Holy Rosary · Continue Reading.
+
+### Known issues
+
+- The 47 launch quotes are drafts awaiting verification against printed editions
+  (spec §3.4 — "nothing ships unverified" applies to the public release, and the
+  verification ledger is honest in the data). §B.3 (CI) remains open.
+
 ## [1.1.0] — 2026-06-11 — the repair release
 
 Implements the repair manual's defect list (`docs/review/Fidelis_Code_Review_V1_2026-06-11.md`):
