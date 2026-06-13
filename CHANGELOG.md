@@ -4,6 +4,35 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.3.0] — 2026-06-13 — the liturgical year, in color
+
+Design-spec §1. The app already knew the day's color; now it wears it. The §1.1
+token system and §1.2 two-accent rule (the day/night token blocks, the
+parchment→day storage shim) land here as the foundation, and §1.3 builds on them:
+a single setting lets the calendar catechize without a word.
+
+### Added
+
+- **Follow the liturgical year** (spec §1.3): a setting, default on, that tints the
+  *act* accent (`--purple`) with the governing day's liturgical color. `App.tsx`
+  writes the resolved color to `<html data-accent>`; CSS remaps `--purple` to the
+  §1.3 hex pair for each color, as a day-default rule plus a night override. White
+  borrows the gold token — *gold stands for white* — so the great white feasts read
+  in gold (rose on Gaudete and Laetare). A colored-dot toggle in the header shows
+  the day's accent — filled when following, hollow when off — and flips it live. The
+  *honors* accent (`--gold`, the ✠ and wordmark) and `--purple-strong` never move,
+  so the two-accent grammar and the gold masthead are untouched. The mapping is a
+  pure, total `accentFor()` in `src/lib/liturgical.ts`, asserted in the engine
+  harness — Gaudete 2026-12-13 → rose, Easter 2026-04-05 → gold-for-white, the
+  setting off → brand purple year-round — and the §1.3 hex table is checked against
+  `src/styles.css` itself, so a mistyped override fails `npm test`.
+
+### Changed
+
+- The §1.1/§1.2 token migration (committed earlier on this branch) ships in this
+  release: every paint color now lives in the day/night token blocks, nothing
+  outside them carries a raw hex, and no element wears both accents.
+
 ## [1.2.1] — 2026-06-11 — continuous integration
 
 Closes the last open repair-manual item, §B.3: the harnesses now run in CI, not

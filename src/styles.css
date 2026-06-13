@@ -72,6 +72,29 @@
   --badge-import-text: #90CAF9;
 }
 
+/* ── Liturgical accent (spec §1.3) ───────────────────────────────────────────
+   "Follow the liturgical year" remaps the act accent (--purple) to the
+   governing day's color; App.tsx writes <html data-accent="{color}">. Only
+   --purple moves — --gold (the ✠ and wordmark) and --purple-strong keep their
+   brand values, so the two-accent grammar and the gold masthead hold. The day
+   value is the default rule; the night value overrides it under the night
+   theme. White borrows the gold token — "gold stands for white." Absent
+   data-accent (the setting is off), --purple keeps its brand value above, so
+   the app is brand purple year-round. */
+[data-accent="green"]  { --purple: #3E7C4F; }
+[data-accent="violet"] { --purple: #5B3A8E; } /* = brand purple — Advent & Lent */
+[data-accent="white"]  { --purple: #A8862C; } /* gold stands for white */
+[data-accent="red"]    { --purple: #A32638; }
+[data-accent="rose"]   { --purple: #C76A8A; } /* Gaudete & Laetare */
+[data-accent="black"]  { --purple: #4A4A50; }
+
+[data-theme="night"][data-accent="green"]  { --purple: #5CA86E; }
+[data-theme="night"][data-accent="violet"] { --purple: #9B7BD4; }
+[data-theme="night"][data-accent="white"]  { --purple: #D4B254; }
+[data-theme="night"][data-accent="red"]    { --purple: #D45A6A; }
+[data-theme="night"][data-accent="rose"]   { --purple: #D98BA6; }
+[data-theme="night"][data-accent="black"]  { --purple: #8E8E96; }
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -153,6 +176,10 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
   font-size: 0.9rem;
 }
 .icon-btn:hover { border-color: var(--purple); }
+/* The follow-the-liturgical-year toggle shows the day's accent: a filled dot
+   in the live --purple when following (rose on Gaudete, gold on Easter), a
+   hollow dot when off. Reads the same --purple the rest of the UI acts in. */
+.accent-dot { color: var(--purple); font-size: 0.8rem; line-height: 1; }
 
 /* ---------- Layout ---------- */
 .page {

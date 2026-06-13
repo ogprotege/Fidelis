@@ -41,6 +41,8 @@ export interface Settings {
   theme: "day" | "night";
   showVerseNumbers: boolean;
   calendarRegion: CalendarRegion;
+  /** Tint the act accent (--purple) with the day's liturgical color (spec §1.3). */
+  followLiturgicalYear: boolean;
 }
 
 const PREFIX = "fidelis:";
@@ -72,6 +74,7 @@ export function getSettings(): Settings {
     theme: "day",
     showVerseNumbers: true,
     calendarRegion: "universal",
+    followLiturgicalYear: true,
     ...read<Partial<Settings>>("settings", {})
   };
   // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored

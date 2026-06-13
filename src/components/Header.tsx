@@ -3,9 +3,11 @@ import { NavLink } from "react-router-dom";
 interface Props {
   theme: "day" | "night";
   onToggleTheme: () => void;
+  followYear: boolean;
+  onToggleFollowYear: () => void;
 }
 
-export default function Header({ theme, onToggleTheme }: Props) {
+export default function Header({ theme, onToggleTheme, followYear, onToggleFollowYear }: Props) {
   return (
     <header className="header">
       <div className="header-inner">
@@ -23,6 +25,14 @@ export default function Header({ theme, onToggleTheme }: Props) {
           <NavLink to="/translations">Translations</NavLink>
           <NavLink to="/about">About</NavLink>
         </nav>
+        <button
+          className="icon-btn"
+          onClick={onToggleFollowYear}
+          aria-pressed={followYear}
+          title={followYear ? "Following the liturgical year" : "Liturgical colors off — brand purple"}
+        >
+          <span className="accent-dot" aria-hidden="true">{followYear ? "●" : "○"}</span>
+        </button>
         <button
           className="icon-btn"
           onClick={onToggleTheme}

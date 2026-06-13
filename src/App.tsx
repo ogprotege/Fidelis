@@ -11,9 +11,11 @@ import Translations from "./pages/Translations";
 import About from "./pages/About";
 import WidgetVotd from "./pages/WidgetVotd";
 import { getSettings, saveSettings } from "./lib/storage";
+import { accentFor, liturgicalDay } from "./lib/liturgical";
 
 export default function App() {
   const [theme, setTheme] = useState(getSettings().theme);
+  const [followYear, setFollowYear] = useState(getSettings().followLiturgicalYear);
   const location = useLocation();
   const widgetMode = location.pathname.startsWith("/widget/");
 
@@ -27,10 +29,26 @@ export default function App() {
     if (meta && bg) meta.setAttribute("content", bg);
   }, [theme, widgetMode]);
 
+  // Follow the liturgical year (spec §1.3): name the day's color in
+  // <html data-accent>, which CSS uses to remap --purple. Off (or in the
+  // embeddable widget) clears it, so the brand purple shows.
+  useEffect(() => {
+    const root = document.documentElement;
+    const accent = widgetMode ? null : accentFor(followYear, liturgicalDay().color);
+    if (accent) root.dataset.accent = accent;
+    else delete root.dataset.accent;
+  }, [followYear, widgetMode]);
+
   const toggleTheme = () => {
     const next = theme === "night" ? "day" : "night";
     setTheme(next);
     saveSettings({ theme: next });
+  };
+
+  const toggleFollowYear = () => {
+    const next = !followYear;
+    setFollowYear(next);
+    saveSettings({ followLiturgicalYear: next });
   };
 
   if (widgetMode) {
@@ -43,7 +61,12 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header theme={theme} onToggleTheme={toggleTheme} />
+      <Header
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        followYear={followYear}
+        onToggleFollowYear={toggleFollowYear}
+      />
       <main className="page">
         <Routes>
           <Route path="/" element={<Home />} />
