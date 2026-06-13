@@ -18,6 +18,7 @@ import {
   toggleBookmark
 } from "../lib/storage";
 import { TRANSLATIONS, getTranslation } from "../lib/translations";
+import { MAX_FONT_SIZE, MIN_FONT_SIZE } from "../lib/typography";
 
 export default function Reader() {
   const params = useParams<{ translation: string; book: string; chapter: string }>();
@@ -245,7 +246,7 @@ export default function Reader() {
           <button
             className="icon-btn"
             onClick={() => {
-              const s = Math.max(14, fontSize - 1);
+              const s = Math.max(MIN_FONT_SIZE, fontSize - 1);
               setFontSize(s);
               saveSettings({ fontSize: s });
             }}
@@ -256,7 +257,7 @@ export default function Reader() {
           <button
             className="icon-btn"
             onClick={() => {
-              const s = Math.min(28, fontSize + 1);
+              const s = Math.min(MAX_FONT_SIZE, fontSize + 1);
               setFontSize(s);
               saveSettings({ fontSize: s });
             }}

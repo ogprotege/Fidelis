@@ -1,5 +1,12 @@
 /** Local persistence for settings, bookmarks, highlights, notes, and reading position. */
 
+import {
+  DEFAULT_FONT_SIZE,
+  DEFAULT_SCRIPTURE_FONT,
+  ScriptureFont,
+  isScriptureFont
+} from "./typography";
+
 export interface VerseRef {
   book: string;
   chapter: number;
@@ -37,7 +44,9 @@ export type CalendarRegion = "universal" | "usa";
 export interface Settings {
   translation: string;
   parallel: string | null;
-  fontSize: number; // px
+  fontSize: number; // px — one of the §1.4 presets, or any value the Reader stepper lands on
+  /** Scripture reading face (spec §1.4): Garamond, system serif, or system sans. */
+  scriptureFont: ScriptureFont;
   theme: "day" | "night";
   showVerseNumbers: boolean;
   calendarRegion: CalendarRegion;
@@ -70,7 +79,8 @@ export function getSettings(): Settings {
   const settings: Settings = {
     translation: "drc",
     parallel: null,
-    fontSize: 19,
+    fontSize: DEFAULT_FONT_SIZE,
+    scriptureFont: DEFAULT_SCRIPTURE_FONT,
     theme: "day",
     showVerseNumbers: true,
     calendarRegion: "universal",
@@ -80,6 +90,9 @@ export function getSettings(): Settings {
   // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored
   // legacy choice forward so an existing user keeps their light/dark selection.
   if ((settings.theme as string) === "parchment") settings.theme = "day";
+  // Guard a stored font against corruption or a future build's vocabulary so an
+  // unknown value can never strand the reader on an undefined face (spec §1.4).
+  if (!isScriptureFont(settings.scriptureFont)) settings.scriptureFont = DEFAULT_SCRIPTURE_FONT;
   return settings;
 }
 

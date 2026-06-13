@@ -14,10 +14,62 @@
    chip) live in src/lib/liturgical.ts, not here — they are content, not theme.
    ========================================================================== */
 
+/* ── Scripture face: EB Garamond (spec §1.4, SIL OFL 1.1) ────────────────────
+   Bundled woff2, latin + latin-ext, regular + italic. Vite fingerprints these
+   from src/fonts/ into dist/assets/. The unicode-ranges are Google Fonts' own,
+   so the browser fetches latin-ext only when extended-Latin glyphs appear; the
+   Vulgate's æ (U+00E6) and œ (U+0152–0153) live in the latin subset. font-
+   display: swap keeps text readable in the system serif until the face loads.
+   No bold/red weights — red-letter scripture is refused (§1.4, §13.7). */
+@font-face {
+  font-family: "EB Garamond";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/eb-garamond-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/eb-garamond-latin-400-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/eb-garamond-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/eb-garamond-latin-ext-400-italic.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
   --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* EB Garamond first, the system serif behind it while it loads / for any
+     glyph outside the bundled subsets. */
+  --garamond: "EB Garamond", "Iowan Old Style", Palatino, Georgia, "Times New Roman", serif;
+  /* The Scripture face the reader chose (spec §1.4). Default Garamond, so the
+     first paint and the no-JS case are already correct; <html data-font>
+     overrides it below. */
+  --scripture: var(--garamond);
 }
+
+/* The Scripture-face choice, written by App.tsx as <html data-font="…">. */
+[data-font="garamond"] { --scripture: var(--garamond); }
+[data-font="serif"]    { --scripture: var(--serif); }
+[data-font="sans"]     { --scripture: var(--sans); }
 
 /* Day (light). Also the fallback when no [data-theme] is set, so first paint
    is never colorless. The legacy "parchment" choice migrates here (storage.ts). */
@@ -174,8 +226,13 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
   padding: 0.35rem 0.6rem;
   cursor: pointer;
   font-size: 0.9rem;
+  color: inherit;
+  /* The Settings gear is an <a> wearing this class; keep it from picking up the
+     global link underline so the control cluster stays visually uniform. */
+  text-decoration: none;
+  display: inline-block;
 }
-.icon-btn:hover { border-color: var(--purple); }
+.icon-btn:hover { border-color: var(--purple); text-decoration: none; }
 /* The follow-the-liturgical-year toggle shows the day's accent: a filled dot
    in the live --purple when following (rose on Gaudete, gold on Easter), a
    hollow dot when off. Reads the same --purple the rest of the UI acts in. */
@@ -227,6 +284,7 @@ h1.page-title {
 .card h2 .spacer { flex: 1; }
 
 .votd-text {
+  font-family: var(--scripture);
   font-size: 1.25rem;
   line-height: 1.65;
   font-style: italic;
@@ -348,7 +406,7 @@ h1.page-title {
   font-size: 0.95rem;
 }
 
-.verses { line-height: 1.85; max-width: 46rem; margin: 0 auto; }
+.verses { font-family: var(--scripture); line-height: 1.85; max-width: 46rem; margin: 0 auto; }
 .parallel .verses { max-width: none; }
 .verse {
   padding: 0.1rem 0.3rem;
@@ -581,7 +639,7 @@ body.widget-mode { background: transparent; }
   color: var(--gold);
 }
 .reading-citation { font-family: var(--sans); font-size: 0.92rem; font-weight: 600; margin: 0.15rem 0 0.3rem; }
-.reading-body { line-height: 1.8; margin: 0; }
+.reading-body { font-family: var(--scripture); line-height: 1.8; margin: 0; }
 .mass-list { margin: 0.2rem 0 0.8rem; padding-left: 1.2rem; }
 .mass-list li { margin: 0.25rem 0; line-height: 1.45; }
 .mass-list .mass-label {
@@ -630,6 +688,43 @@ body.widget-mode { background: transparent; }
    Latin) keeps it ≥4.5:1 on the bg-2 panel where --text-muted is 4.44:1. */
 .antiphon-la { margin: 0; font-style: italic; color: var(--text); font-size: 0.92rem; line-height: 1.5; }
 .antiphon-en { margin: 0.15rem 0 0; font-size: 0.95rem; line-height: 1.5; }
+
+/* ---------- Settings (spec §1.4 / §2.2) ---------- */
+.settings .card { margin-bottom: 1rem; }
+.settings .card:last-of-type { margin-bottom: 0.5rem; }
+
+/* The living proof of every choice below — rendered in the chosen face and
+   size (spec §2.2). Garamond by default via --scripture. */
+.scripture-preview {
+  font-family: var(--scripture);
+  line-height: 1.7;
+  margin: 0.2rem 0 0.5rem;
+  color: var(--text);
+}
+.preview-ref { margin: 0; }
+
+/* Pills: purple acts, so the chosen one fills purple (spec §1.2). */
+.pill-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+.pill {
+  border: 1px solid var(--border);
+  background: var(--bg-1);
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.pill:hover { border-color: var(--purple); }
+.pill.active {
+  background: var(--purple-strong);
+  color: var(--on-accent);
+  border-color: var(--purple-strong);
+}
+.pill-sub { font-family: var(--sans); font-size: 0.72rem; color: var(--text-muted); }
+.pill.active .pill-sub { color: var(--on-accent); opacity: 0.85; }
+.settings-foot { margin-top: 0.5rem; }
 
 /* ---------- Misc ---------- */
 .notice {

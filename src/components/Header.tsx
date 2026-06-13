@@ -1,5 +1,8 @@
 import { NavLink } from "react-router-dom";
 
+// Until the §2.2 tab-bar redesign, the type/theme controls sit beside the
+// liturgical-year and day/night toggles in the header's control cluster.
+
 interface Props {
   theme: "day" | "night";
   onToggleTheme: () => void;
@@ -29,6 +32,7 @@ export default function Header({ theme, onToggleTheme, followYear, onToggleFollo
           className="icon-btn"
           onClick={onToggleFollowYear}
           aria-pressed={followYear}
+          aria-label="Follow the liturgical year"
           title={followYear ? "Following the liturgical year" : "Liturgical colors off — brand purple"}
         >
           <span className="accent-dot" aria-hidden="true">{followYear ? "●" : "○"}</span>
@@ -36,10 +40,15 @@ export default function Header({ theme, onToggleTheme, followYear, onToggleFollo
         <button
           className="icon-btn"
           onClick={onToggleTheme}
+          aria-pressed={theme === "night"}
+          aria-label={theme === "night" ? "Day mode" : "Night mode"}
           title={theme === "night" ? "Day mode" : "Night mode"}
         >
           {theme === "night" ? "☀" : "☾"}
         </button>
+        <NavLink className="icon-btn" to="/settings" title="Settings" aria-label="Settings">
+          ⚙
+        </NavLink>
       </div>
     </header>
   );

@@ -4,6 +4,56 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.4.0] — 2026-06-13 — the Scripture face
+
+Design-spec §1.4. Scripture now reads like a printed Bible. EB Garamond is
+bundled and set as the default reading face, with a real choice of two
+alternatives and four honest size presets — and the Word is still never printed
+in red.
+
+### Added
+
+- **EB Garamond, bundled** (spec §1.4, SIL OFL 1.1): four woff2 files —
+  `latin` + `latin-ext`, regular + italic, weight 400 — totalling **≈144 KB**,
+  committed under `src/fonts/` with their `OFL.txt` license and a provenance
+  note (pinned to `@fontsource/eb-garamond@5.2.7`, tarball SHA-1
+  `68bd97f7…`). It renders the Vulgate's æ and œ ligatures the way the printed
+  Douay does. `@font-face` declarations carry Google's own `unicode-range`s, so
+  `latin-ext` is fetched only when extended-Latin glyphs appear, and
+  `font-display: swap` keeps the system serif legible until the face loads.
+- **Scripture face setting** (spec §1.4): `scriptureFont` ∈
+  `garamond | serif | sans`, default Garamond — *three is a choice; ten is a
+  chore*. The choice drives a new `--scripture` token via `<html data-font>`
+  (mirroring the §1.3 `data-accent` mechanism) and applies to every Scripture
+  surface: the Reader, the Mass readings, and the verse of the day.
+- **Settings screen** (`src/pages/Settings.tsx`, the §2.2 seam): a live
+  Scripture preview (Genesis 1:1–2 in the current translation) pinned above
+  four **text-size pills** (Small 17 · Medium 19 · Large 22 · X-Large 25) and
+  three **font pills**, each rendered in its own face. Reached from a new
+  header gear. The fuller §2.2 screen (versions, appearance, calendar) folds in
+  later.
+- A `src/lib/typography.ts` module owns the face/size vocabulary, and a new
+  *Typography* section in the data harness asserts it: the four woff2 are
+  present and carry the `wOF2` signature, the OFL is committed, `styles.css`
+  wires all four faces with both subsets' ranges and `swap`, the presets are
+  exactly 17/19/22/25, and the stored defaults are Garamond at 19.
+
+### Changed
+
+- The Reader's **A− / A+ stepper is retained as a fine adjustment** (spec §1.4):
+  it now writes the same `fontSize` setting the presets do, bounded by the
+  shared `MIN/MAX_FONT_SIZE` constants.
+- The service worker (`public/sw.js`, shell cache → `v3`) is now **font-aware**:
+  fonts are referenced from CSS `url()` rather than `index.html`, so the
+  all-or-nothing precache now also pulls the fonts each stylesheet names, and
+  the stale-asset purge keeps them — offline reading holds the chosen face
+  instead of falling back to the system serif (preserves review P2-3).
+
+### Kept refused
+
+- **Red-letter text** (spec §1.4, §13.7): only weight-400 faces are bundled and
+  no per-word color is set on Scripture, asserted in the harness.
+
 ## [1.3.0] — 2026-06-13 — the liturgical year, in color
 
 Design-spec §1. The app already knew the day's color; now it wears it. The §1.1

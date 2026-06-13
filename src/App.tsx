@@ -8,6 +8,7 @@ import Readings from "./pages/Readings";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
 import Translations from "./pages/Translations";
+import Settings from "./pages/Settings";
 import About from "./pages/About";
 import WidgetVotd from "./pages/WidgetVotd";
 import { getSettings, saveSettings } from "./lib/storage";
@@ -28,6 +29,14 @@ export default function App() {
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta && bg) meta.setAttribute("content", bg);
   }, [theme, widgetMode]);
+
+  // Scripture face (spec §1.4): drive the global --scripture token from the
+  // saved choice by naming it in <html data-font>. Set once on load (Settings
+  // updates the attribute live); the :root default already makes the first
+  // paint Garamond, so there is no flash for the default chooser.
+  useEffect(() => {
+    document.documentElement.dataset.font = getSettings().scriptureFont;
+  }, []);
 
   // Follow the liturgical year (spec §1.3): name the day's color in
   // <html data-accent>, which CSS uses to remap --purple. Off (or in the
@@ -76,6 +85,7 @@ export default function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/library" element={<Library />} />
           <Route path="/translations" element={<Translations />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/about" element={<About />} />
           <Route path="*" element={<Home />} />
         </Routes>

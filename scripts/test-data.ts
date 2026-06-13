@@ -12,6 +12,14 @@ import {
 import { liturgicalDay } from "../src/lib/liturgical";
 import { DailyQuote, quoteOfTheDay } from "../src/lib/quotes";
 import { dayOfYear } from "../src/lib/votd";
+import { getSettings } from "../src/lib/storage";
+import {
+  DEFAULT_FONT_SIZE,
+  DEFAULT_SCRIPTURE_FONT,
+  FONT_SIZE_PRESETS,
+  SCRIPTURE_FONTS,
+  isScriptureFont
+} from "../src/lib/typography";
 import { GOLDEN_REGIONS, GOLDEN_YEARS, goldenYear } from "./golden";
 
 let failures = 0;
@@ -811,6 +819,74 @@ console.log("");
   }
   check("a quote resolves for every day of 2026", nulls === 0, `${nulls} null`);
   check("quote selection is deterministic", nondet === 0, `${nondet} differ`);
+}
+
+// ── 9. Typography (spec §1.4): bundled Scripture face + size presets ─────────
+{
+  const fontsDir = join(ROOT, "src/fonts");
+  const FILES = [
+    "eb-garamond-latin-400-normal.woff2",
+    "eb-garamond-latin-400-italic.woff2",
+    "eb-garamond-latin-ext-400-normal.woff2",
+    "eb-garamond-latin-ext-400-italic.woff2"
+  ];
+  let bad = 0;
+  let total = 0;
+  for (const f of FILES) {
+    let buf: Buffer | null = null;
+    try {
+      buf = readFileSync(join(fontsDir, f));
+    } catch {
+      // missing
+    }
+    // A genuine woff2 begins with the "wOF2" signature; guard against an empty
+    // or LFS-pointer placeholder slipping in.
+    const ok = !!buf && buf.length > 1000 && buf.toString("latin1", 0, 4) === "wOF2";
+    if (!ok) {
+      console.log(`bad/missing font: ${f}`);
+      bad++;
+    }
+    if (buf) total += buf.length;
+  }
+  check(`all four EB Garamond woff2 present and valid (${Math.round(total / 1024)} KB)`, bad === 0, `${bad} bad`);
+  check("only weight-400 faces bundled — no red/bold weights (spec §1.4, §13.7)",
+    !FILES.some((f) => /-(?:500|600|700|800|bold)-/.test(f)));
+
+  let ofl = "";
+  try {
+    ofl = readFileSync(join(fontsDir, "OFL.txt"), "utf8");
+  } catch {
+    // missing
+  }
+  check("SIL OFL committed for EB Garamond (spec §1.4)",
+    /SIL OPEN FONT LICENSE/i.test(ofl) && /EB Garamond/i.test(ofl));
+
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const faces = (css.match(/@font-face/g) ?? []).length;
+  check("styles.css @font-face references all four woff2 files",
+    FILES.every((f) => css.includes(f)) && faces >= 4, `${faces} faces`);
+  check("EB Garamond declared with font-display: swap",
+    /font-family:\s*"EB Garamond"[\s\S]*?font-display:\s*swap/.test(css));
+  check("latin unicode-range present (covers æ U+00E6, œ U+0152–0153)", css.includes("U+0152-0153"));
+  check("latin-ext unicode-range present", css.includes("U+0100-02BA"));
+  check("--scripture mapped for all three faces",
+    /\[data-font="garamond"\]/.test(css) &&
+      /\[data-font="serif"\]/.test(css) &&
+      /\[data-font="sans"\]/.test(css));
+  check("reading text uses var(--scripture)", /\.verses\s*\{[^}]*var\(--scripture\)/.test(css));
+
+  check("four size presets, 17/19/22/25 (spec §1.4)",
+    JSON.stringify(FONT_SIZE_PRESETS.map((p) => p.px)) === "[17,19,22,25]");
+  check("exactly three faces: garamond/serif/sans",
+    JSON.stringify(SCRIPTURE_FONTS.map((f) => f.id)) === '["garamond","serif","sans"]');
+  check("default face is Garamond", DEFAULT_SCRIPTURE_FONT === "garamond");
+  check("default size 19 is itself a preset", FONT_SIZE_PRESETS.some((p) => p.px === DEFAULT_FONT_SIZE));
+  check("isScriptureFont guards the vocabulary",
+    isScriptureFont("garamond") && !isScriptureFont("comic-sans") && !isScriptureFont(undefined));
+
+  const s = getSettings();
+  check("getSettings() defaults scriptureFont to garamond", s.scriptureFont === "garamond");
+  check("getSettings() defaults fontSize to a preset", FONT_SIZE_PRESETS.some((p) => p.px === s.fontSize));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
