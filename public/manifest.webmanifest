@@ -4,8 +4,8 @@
   "description": "The unaltered Word: Douay-Rheims, CPDV, and the Clementine Latin Vulgate, with the full 73-book Catholic canon.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f6efe1",
-  "theme_color": "#8a1f2d",
+  "background_color": "#F4F2EE",
+  "theme_color": "#F4F2EE",
   "icons": [
     {
       "src": "icons/icon.svg",

@@ -38,7 +38,7 @@ export interface Settings {
   translation: string;
   parallel: string | null;
   fontSize: number; // px
-  theme: "parchment" | "night";
+  theme: "day" | "night";
   showVerseNumbers: boolean;
   calendarRegion: CalendarRegion;
 }
@@ -65,15 +65,19 @@ function write(key: string, value: unknown): void {
 export const refKey = (r: VerseRef) => `${r.book}/${r.chapter}/${r.verse}`;
 
 export function getSettings(): Settings {
-  return {
+  const settings: Settings = {
     translation: "drc",
     parallel: null,
     fontSize: 19,
-    theme: "parchment",
+    theme: "day",
     showVerseNumbers: true,
     calendarRegion: "universal",
     ...read<Partial<Settings>>("settings", {})
   };
+  // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored
+  // legacy choice forward so an existing user keeps their light/dark selection.
+  if ((settings.theme as string) === "parchment") settings.theme = "day";
+  return settings;
 }
 
 export function saveSettings(patch: Partial<Settings>): Settings {

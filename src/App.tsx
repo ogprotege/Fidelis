@@ -20,10 +20,15 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.body.classList.toggle("widget-mode", widgetMode);
+    // Keep the browser chrome in step with the active palette; read the
+    // resolved token so the hex stays defined only in styles.css.
+    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg-0").trim();
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && bg) meta.setAttribute("content", bg);
   }, [theme, widgetMode]);
 
   const toggleTheme = () => {
-    const next = theme === "parchment" ? "night" : "parchment";
+    const next = theme === "night" ? "day" : "night";
     setTheme(next);
     saveSettings({ theme: next });
   };

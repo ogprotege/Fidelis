@@ -37,5 +37,12 @@ export default function VerseQuote({ translation, book, chapter, verse, endVerse
   if (error) return <p className={className}>—</p>;
   if (text === null) return <p className={`${className ?? ""} muted`}>…</p>;
   if (!text.trim()) return <p className={className}>—</p>;
-  return <p className={className}>“{text}”</p>;
+  // The quotation marks are gold (sacred); the verse text is not (spec §1.2).
+  return (
+    <p className={className}>
+      <span className="quote-mark">“</span>
+      {text}
+      <span className="quote-mark">”</span>
+    </p>
+  );
 }

@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 interface Props {
-  theme: "parchment" | "night";
+  theme: "day" | "night";
   onToggleTheme: () => void;
 }
 
@@ -26,9 +26,9 @@ export default function Header({ theme, onToggleTheme }: Props) {
         <button
           className="icon-btn"
           onClick={onToggleTheme}
-          title={theme === "parchment" ? "Night mode" : "Parchment mode"}
+          title={theme === "night" ? "Day mode" : "Night mode"}
         >
-          {theme === "parchment" ? "☾" : "☀"}
+          {theme === "night" ? "☀" : "☾"}
         </button>
       </div>
     </header>
