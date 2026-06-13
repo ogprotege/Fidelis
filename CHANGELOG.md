@@ -4,6 +4,50 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.5.0] — 2026-06-13 — the icon set
+
+Design-spec §1.5. The emoji glyphs — which render inconsistently from one
+platform to the next — give way to a hand-drawn, six-piece inline SVG set, so
+the marks of the app look the same everywhere and bend to the liturgical accent.
+
+### Added
+
+- **`Icon` component** (`src/components/Icon.tsx`, spec §1.5): a six-piece set —
+  bookmark, note, share, commentary, sun/moon, cross — drawn in a single 1.6
+  stroke weight on a 24×24 grid. Every icon strokes in `currentColor`, so the
+  two-accent rule (§1.2) colors it for free: **gold where it honors or marks
+  state** (the cross in the wordmark and the Verse-of-the-Day heading, a
+  bookmarked or annotated verse, a saved Library entry) and the **neutral text
+  color where it acts** (the Reader's Bookmark / Note / Copy buttons, the
+  day/night toggle). Sized in `em` so each call site scales it exactly like the
+  glyph it replaced. The commentary bubble is defined now, ready for the §4
+  commentary layer.
+
+### Changed
+
+- **Emoji glyphs replaced** across the interactive UI: the bookmark (⚑), note
+  (✎), copy/share (⧉), and day/night (☾/☀) marks in the Reader, the Library, and
+  the header, and the cross (✠) in the masthead, the Verse-of-the-Day card, and
+  the embeddable widget, are now SVG. The settings gear and the Angelus dove,
+  outside the named six-piece set, are left as they were; typographic
+  affordances (arrows, A−/A+, the ✕ close) are unchanged.
+- **Native iOS widget cross drawn natively** (`ios/WidgetExtension/FidelisWidget.swift`):
+  the home-screen Verse-of-the-Day widget no longer renders the cross as
+  `Text("✠")` from the system emoji font — the surface §1.5's rationale bites
+  hardest on — but as a SwiftUI `CrossIcon` `Path` tracing the same 24×24,
+  1.6-weight geometry as the web `Icon`, so the mark matches across web and
+  native (the web↔Swift lockstep already kept for VOTD selection in P1-9).
+
+### Tested
+
+- A new *Iconography* section in the data harness (`scripts/test-data.ts`)
+  locks the rule into `npm test`: no in-scope emoji glyph survives in any `.tsx`
+  under `src/` (block comments stripped, so the `Icon` component's own
+  doc-comment stays legal while a *rendered* glyph anywhere is still caught), the
+  native iOS widget carries none either, and the `Icon` component stays
+  `currentColor`-driven, single-weight, and complete (all six names defined).
+  Red before the swap, green after.
+
 ## [1.4.0] — 2026-06-13 — the Scripture face
 
 Design-spec §1.4. Scripture now reads like a printed Bible. EB Garamond is

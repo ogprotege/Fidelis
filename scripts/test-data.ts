@@ -889,5 +889,66 @@ console.log("");
   check("getSettings() defaults fontSize to a preset", FONT_SIZE_PRESETS.some((p) => p.px === s.fontSize));
 }
 
+// ── 10. Iconography (spec §1.5): the six-piece inline SVG set replaces the
+//        emoji glyphs in interactive UI. Guard that none creep back in, and
+//        that the Icon component stays currentColor-driven and single-weight.
+{
+  // The five named glyphs (⚑ ✎ ☾/☀ ⧉ ✠); escaped so this guard file holds
+  // none of them itself. Gear/dove and typographic affordances are out of scope.
+  const FORBIDDEN: [string, string][] = [
+    ["⚑", "bookmark flag"],
+    ["✎", "pencil"],
+    ["☾", "crescent moon"],
+    ["☀", "sun"],
+    ["⧉", "copy/share"],
+    ["✠", "cross"]
+  ];
+  // Every .tsx under src/ (App.tsx and any future nesting included), with block
+  // comments stripped first — so Icon.tsx's doc-comment, which names the glyphs
+  // it supersedes, is exempt, while a *rendered* glyph anywhere (Icon.tsx too)
+  // is still caught.
+  const offenders: string[] = [];
+  const tsxFiles = readdirSync(join(ROOT, "src"), { recursive: true })
+    .map(String)
+    .filter((f) => f.endsWith(".tsx"));
+  for (const f of tsxFiles) {
+    const code = readFileSync(join(ROOT, "src", f), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const [glyph, label] of FORBIDDEN) {
+      if (code.includes(glyph)) offenders.push(`src/${f}: ${label}`);
+    }
+  }
+  check("no emoji glyphs remain in interactive UI (spec §1.5)", offenders.length === 0,
+    offenders.join("; "));
+
+  // The native iOS widget is the home-screen parallel of the web Verse-of-the-Day
+  // surfaces — the one most exposed to the system emoji font §1.5 set out to
+  // retire. It must draw the cross natively (CrossIcon), not Text("✠"); keep it
+  // in lockstep, as P1-9 keeps the VOTD selection in lockstep.
+  let swift = "";
+  try {
+    swift = readFileSync(join(ROOT, "ios/WidgetExtension/FidelisWidget.swift"), "utf8");
+  } catch {
+    // widget source absent
+  }
+  const swiftGlyph = FORBIDDEN.find(([g]) => swift.includes(g));
+  check("native iOS widget draws the cross natively, no emoji glyph (spec §1.5)",
+    swift.length > 0 && !swiftGlyph, swiftGlyph ? swiftGlyph[1] : "");
+
+  let icon = "";
+  try {
+    icon = readFileSync(join(ROOT, "src/components/Icon.tsx"), "utf8");
+  } catch {
+    // not yet created
+  }
+  check("Icon component exists", icon.length > 0);
+  check("Icon strokes with currentColor so accent mode colors it (acceptance §1.5)",
+    icon.includes('stroke="currentColor"'));
+  const widths = new Set([...icon.matchAll(/strokeWidth=\{?["']?([\d.]+)/g)].map((m) => m[1]));
+  check("Icon draws in a single stroke weight (spec §1.5)", widths.size === 1, [...widths].join("/"));
+  const NAMES = ["bookmark", "note", "share", "commentary", "sun", "moon", "cross"];
+  check("Icon defines the six-piece set, incl. commentary for §4",
+    NAMES.every((n) => new RegExp(`["']${n}["']`).test(icon)), NAMES.join(", "));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

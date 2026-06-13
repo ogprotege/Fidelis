@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import Icon from "./Icon";
 
 // Until the §2.2 tab-bar redesign, the type/theme controls sit beside the
 // liturgical-year and day/night toggles in the header's control cluster.
@@ -16,7 +17,7 @@ export default function Header({ theme, onToggleTheme, followYear, onToggleFollo
       <div className="header-inner">
         <NavLink to="/" style={{ textDecoration: "none" }}>
           <span className="brand">
-            <span className="cross">✠</span> Fidelis <small>Catholic Bible</small>
+            <span className="cross"><Icon name="cross" /></span> Fidelis <small>Catholic Bible</small>
           </span>
         </NavLink>
         <nav className="nav">
@@ -44,7 +45,7 @@ export default function Header({ theme, onToggleTheme, followYear, onToggleFollo
           aria-label={theme === "night" ? "Day mode" : "Night mode"}
           title={theme === "night" ? "Day mode" : "Night mode"}
         >
-          {theme === "night" ? "☀" : "☾"}
+          <Icon name={theme === "night" ? "sun" : "moon"} />
         </button>
         <NavLink className="icon-btn" to="/settings" title="Settings" aria-label="Settings">
           ⚙

@@ -238,6 +238,23 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
    hollow dot when off. Reads the same --purple the rest of the UI acts in. */
 .accent-dot { color: var(--purple); font-size: 0.8rem; line-height: 1; }
 
+/* ── Iconography (spec §1.5): the six-piece inline SVG set. Sized in em so each
+   call site scales it exactly like the emoji glyph it replaced; the stroke is
+   currentColor, so the two-accent rule (§1.2) colors it — gold to honor or mark
+   state, the neutral/accent text color to act (it inherits whatever its
+   container sets). */
+.icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+}
+/* The cross is a fixed gold honor wherever it appears outside the gold .brand
+   and .w-title (e.g. the Verse-of-the-Day heading). */
+.cross { color: var(--gold); }
+/* Library entries are saved, chosen things — gold marks them, as in the Reader. */
+.lib-mark { color: var(--gold); }
+
 /* ---------- Layout ---------- */
 .page {
   width: 100%;

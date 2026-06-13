@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom";
+import Icon from "../components/Icon";
 import VerseQuote from "../components/VerseQuote";
 import { bookDisplayName, getBook } from "../lib/canon";
 import { getTranslation } from "../lib/translations";
@@ -20,7 +21,7 @@ export default function WidgetVotd() {
 
   return (
     <div className="widget-votd">
-      <div className="w-title">✠ Verse of the Day</div>
+      <div className="w-title"><span className="cross"><Icon name="cross" /></span> Verse of the Day</div>
       <VerseQuote
         translation={translation}
         book={votd.book}

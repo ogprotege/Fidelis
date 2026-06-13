@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Antiphon from "../components/Antiphon";
+import Icon from "../components/Icon";
 import VerseQuote from "../components/VerseQuote";
 import { getBook, bookDisplayName } from "../lib/canon";
 import {
@@ -52,7 +53,7 @@ export default function Home() {
       <h1 className="page-title">{dateLabel}</h1>
       <div className="widget-grid">
         <div className="card">
-          <h2>✠ Verse of the Day</h2>
+          <h2><span className="cross"><Icon name="cross" /></span> Verse of the Day</h2>
           <VerseQuote
             translation={translation}
             book={votd.book}

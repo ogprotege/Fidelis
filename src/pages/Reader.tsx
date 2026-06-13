@@ -18,6 +18,7 @@ import {
   toggleBookmark
 } from "../lib/storage";
 import { TRANSLATIONS, getTranslation } from "../lib/translations";
+import Icon from "../components/Icon";
 import { MAX_FONT_SIZE, MIN_FONT_SIZE } from "../lib/typography";
 
 export default function Reader() {
@@ -186,8 +187,8 @@ export default function Reader() {
           >
             {settings.showVerseNumbers && <sup className="vnum">{v}</sup>}
             {text}
-            {interactive && bookmarks.has(key) && <span className="bm-mark">⚑</span>}
-            {interactive && notedKeys.has(key) && <span className="note-mark">✎</span>}{" "}
+            {interactive && bookmarks.has(key) && <span className="bm-mark"><Icon name="bookmark" title="Bookmarked" /></span>}
+            {interactive && notedKeys.has(key) && <span className="note-mark"><Icon name="note" title="Has a note" /></span>}{" "}
           </span>
         );
       })}
@@ -347,7 +348,7 @@ export default function Reader() {
               setMarksVersion((x) => x + 1);
             }}
           >
-            {bookmarks.has(selKey) ? "⚑ Unbookmark" : "⚑ Bookmark"}
+            <Icon name="bookmark" /> {bookmarks.has(selKey) ? "Unbookmark" : "Bookmark"}
           </button>
           {(["gold", "rose", "sky", "olive"] as HighlightColor[]).map((c) => (
             <button
@@ -379,10 +380,10 @@ export default function Reader() {
               setNoteOpen(!noteOpen);
             }}
           >
-            ✎ Note
+            <Icon name="note" /> Note
           </button>
           <button className="icon-btn" onClick={copySelected}>
-            ⧉ Copy
+            <Icon name="share" /> Copy
           </button>
           <button className="icon-btn" onClick={() => setSelected(null)} title="Close">
             ✕
