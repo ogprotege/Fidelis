@@ -20,6 +20,8 @@ import {
   SCRIPTURE_FONTS,
   isScriptureFont
 } from "../src/lib/typography";
+import { THEME_OPTIONS, isThemeChoice, resolveTheme } from "../src/lib/theme";
+import { formatBytes } from "../src/lib/format";
 import { GOLDEN_REGIONS, GOLDEN_YEARS, goldenYear } from "./golden";
 
 let failures = 0;
@@ -1018,6 +1020,115 @@ console.log("");
   // Acceptance: the bar respects the iOS home-indicator inset.
   check("acceptance: bar respects iOS safe-area inset — env(safe-area-inset-bottom) on .tabbar",
     /\.tabbar\s*\{[^}]*env\(safe-area-inset-bottom\)/.test(css));
+}
+
+// ── 12. The one Settings screen (spec §2.2): live preview + SettingsContext,
+//        the folded Appearance/Calendar controls, version cards, and the Data
+//        section's real per-bundle sizes. Pure helpers are asserted directly;
+//        the wiring is asserted against source, in the §2.1 manner.
+{
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+
+  // Appearance resolution (System → the OS preference), pure and DOM-free.
+  check("resolveTheme: System follows the OS — dark→night, light→day (spec §2.2)",
+    resolveTheme("system", true) === "night" && resolveTheme("system", false) === "day");
+  check("resolveTheme: Day/Night pin the palette regardless of the OS",
+    resolveTheme("day", true) === "day" && resolveTheme("night", false) === "night");
+  check("THEME_OPTIONS are System/Day/Night in order",
+    JSON.stringify(THEME_OPTIONS.map((o) => o.id)) === '["system","day","night"]');
+  check("isThemeChoice guards the vocabulary",
+    isThemeChoice("system") && isThemeChoice("day") && !isThemeChoice("parchment") && !isThemeChoice(undefined));
+  check("getSettings() defaults theme to System (spec §2.2)", getSettings().theme === "system");
+
+  // Download sizes are human-readable and real.
+  check("formatBytes renders MB/KB/B",
+    formatBytes(5_026_728) === "4.8 MB" && formatBytes(2048) === "2 KB" && formatBytes(500) === "500 B");
+
+  // The manifest now seals real per-bundle sizes (spec §2.2 / P1-10 extended).
+  const m22 = JSON.parse(readFileSync(join(ROOT, "public/data/manifest.json"), "utf8"));
+  const bundleIds = ["drc", "cpdv", "vulgate"];
+  check("manifest seals per-bundle file counts and byte sizes",
+    !!m22.bundles &&
+      bundleIds.every((id) => m22.bundles[id]?.files === 79 && m22.bundles[id]?.bytes > 1_000_000),
+    bundleIds.map((id) => `${id} ${m22.bundles?.[id] ? formatBytes(m22.bundles[id].bytes) : "?"}`).join(", "));
+
+  // SettingsContext is the live source of truth (spec §2.2 engineering note).
+  const ctx = readFileSync(join(ROOT, "src/SettingsContext.tsx"), "utf8");
+  check("SettingsContext exposes provider + read/update hooks",
+    /export function SettingsProvider/.test(ctx) &&
+      /export function useSettings/.test(ctx) &&
+      /export function useUpdateSettings/.test(ctx));
+  const main = readFileSync(join(ROOT, "src/main.tsx"), "utf8");
+  check("the app is wrapped in <SettingsProvider>", /<SettingsProvider>/.test(main));
+
+  // App drives the RESOLVED palette; "system" itself never reaches CSS.
+  const app = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+  check("App resolves theme through resolveTheme and consumes the context",
+    app.includes("resolveTheme") && app.includes("useSettings"));
+  check('styles.css carries no [data-theme="system"] rule (system resolves to day/night)',
+    !/\[data-theme="system"\]/.test(css));
+
+  // The control cluster has folded out of the header (spec §2.1/§2.2).
+  const header = readFileSync(join(ROOT, "src/components/Header.tsx"), "utf8");
+  check("header folds away the day/night + liturgical-year controls",
+    header.includes("<TabBar") && !header.includes("onToggleTheme") && !header.includes("accent-dot"));
+  check("App renders <Header /> with no control props", /<Header\s*\/>/.test(app));
+
+  // The embeddable widget's theme is honored by App (the single writer of
+  // <html data-theme>), so App's own theme effect can no longer clobber it.
+  const widget = readFileSync(join(ROOT, "src/pages/WidgetVotd.tsx"), "utf8");
+  check("App is the single data-theme writer and honors the widget ?theme",
+    app.includes('get("theme")') && app.includes("widgetMode") && !widget.includes("dataset.theme"));
+
+  // The Settings screen itself.
+  const set = readFileSync(join(ROOT, "src/pages/Settings.tsx"), "utf8");
+  check("Settings: live preview is Genesis 1:1–2 in the current translation",
+    /loadBook\(settings\.translation,\s*"genesis"\)/.test(set) && set.includes("Scripture preview"));
+  check("Settings: preview/Reader respond live through the context",
+    set.includes("useSettings") && set.includes("useUpdateSettings"));
+  check("Settings: horizontally scrolling Bible-version cards",
+    set.includes("version-cards") && set.includes('role="radiogroup"'));
+  check("Settings: RSV-2CE/NABRE lock + import link to /translations",
+    set.includes("lock-badge") && /\/translations#\$\{t\.id\}/.test(set));
+  check("Settings: text-size and font pills",
+    set.includes("FONT_SIZE_PRESETS") && set.includes("SCRIPTURE_FONTS"));
+  check("Settings: Appearance is System/Day/Night + the follow-the-year switch",
+    set.includes("THEME_OPTIONS") && /role="switch"/.test(set) && set.includes("followLiturgicalYear"));
+  check("Settings: the follow-the-year catechesis line (spec §2.2)",
+    set.includes("violet in Advent, rose on Gaudete"));
+  check("Settings: the calendar region select (moved from Readings)",
+    set.includes("calendarRegion") &&
+      set.includes('value="universal"') &&
+      set.includes('value="usa"'));
+  check("Settings: Data offers per-bundle download with real sizes",
+    set.includes("downloadBundle") && set.includes("formatBytes"));
+  check("Settings: Data reuses the P2-6 export/import",
+    set.includes("exportMarginalia") && set.includes("importMarginalia"));
+  check("Settings: the manifest integrity line links to About",
+    set.includes("rootHash") && /to="\/about"/.test(set));
+
+  // Readings is left clean — the region select is gone (spec §2.2).
+  const readings = readFileSync(join(ROOT, "src/pages/Readings.tsx"), "utf8");
+  check("Readings no longer renders the region select or writes settings",
+    !readings.includes('value="usa"') && !readings.includes("saveSettings"));
+  check("Readings reads the region live from the context",
+    readings.includes("useSettings") && readings.includes("settings.calendarRegion"));
+
+  // About carries the anchor the Data line points at.
+  const about = readFileSync(join(ROOT, "src/pages/About.tsx"), "utf8");
+  check("About marks the integrity line with id=\"integrity\"", about.includes('id="integrity"'));
+
+  // No-flash boot: index.html resolves theme + face before paint.
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  check("index.html pre-paint script resolves theme (prefers-color-scheme) + font",
+    html.includes("prefers-color-scheme") && /dataset\.theme/.test(html) && /dataset\.font/.test(html));
+
+  // The chosen version-card is outlined in purple (purple acts, §1.2); the
+  // switch fills purple when on.
+  check("acceptance: selected version-card is outlined purple — .version-card.active uses var(--purple)",
+    /\.version-card\.active\s*\{[^}]*var\(--purple\)/.test(css));
+  check("acceptance: the follow-the-year switch fills purple when on",
+    /\.switch\[aria-checked="true"\]\s*\{[^}]*var\(--purple-strong\)/.test(css));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

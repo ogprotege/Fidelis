@@ -6,6 +6,7 @@ import {
   ScriptureFont,
   isScriptureFont
 } from "./typography";
+import { DEFAULT_THEME, ThemeChoice, isThemeChoice } from "./theme";
 
 export interface VerseRef {
   book: string;
@@ -47,7 +48,8 @@ export interface Settings {
   fontSize: number; // px — one of the §1.4 presets, or any value the Reader stepper lands on
   /** Scripture reading face (spec §1.4): Garamond, system serif, or system sans. */
   scriptureFont: ScriptureFont;
-  theme: "day" | "night";
+  /** Appearance (spec §2.2): System follows the OS; Day/Night pin the palette. */
+  theme: ThemeChoice;
   showVerseNumbers: boolean;
   calendarRegion: CalendarRegion;
   /** Tint the act accent (--purple) with the day's liturgical color (spec §1.3). */
@@ -81,7 +83,7 @@ export function getSettings(): Settings {
     parallel: null,
     fontSize: DEFAULT_FONT_SIZE,
     scriptureFont: DEFAULT_SCRIPTURE_FONT,
-    theme: "day",
+    theme: DEFAULT_THEME,
     showVerseNumbers: true,
     calendarRegion: "universal",
     followLiturgicalYear: true,
@@ -90,6 +92,10 @@ export function getSettings(): Settings {
   // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored
   // legacy choice forward so an existing user keeps their light/dark selection.
   if ((settings.theme as string) === "parchment") settings.theme = "day";
+  // Guard the stored theme against corruption or a pre-§2.2 build's vocabulary
+  // so an unknown value can never strand the app on an undefined palette. A
+  // genuine prior "day"/"night" survives; anything else falls back to System.
+  if (!isThemeChoice(settings.theme)) settings.theme = DEFAULT_THEME;
   // Guard a stored font against corruption or a future build's vocabulary so an
   // unknown value can never strand the reader on an undefined face (spec §1.4).
   if (!isScriptureFont(settings.scriptureFont)) settings.scriptureFont = DEFAULT_SCRIPTURE_FONT;
@@ -100,6 +106,20 @@ export function saveSettings(patch: Partial<Settings>): Settings {
   const next = { ...getSettings(), ...patch };
   write("settings", next);
   return next;
+}
+
+/** Which bundled translations the user has explicitly saved for offline
+ *  reading (spec §2.2 Data). The service-worker data cache is the real source
+ *  of truth for offline availability; this is the lightweight UI record of
+ *  which downloads the user has run, so the Settings cards can show a ✓. */
+export function getOfflineTranslations(): string[] {
+  return read<string[]>("offline", []);
+}
+
+export function markOfflineTranslation(id: string): void {
+  const set = new Set(getOfflineTranslations());
+  set.add(id);
+  write("offline", [...set]);
 }
 
 export function getLastRead(): LastRead | null {

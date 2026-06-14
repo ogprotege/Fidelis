@@ -4,6 +4,60 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.7.0] — 2026-06-13 — the one Settings screen
+
+Design-spec §2.2. The scattered, snapshot reads of `getSettings()` give way to a
+single live `SettingsContext`, and the type/theme controls fold out of the header
+into one Catena-style Settings screen with a **live Scripture preview pinned on
+top** — Genesis 1:1–2 in the current translation, font, and size, re-rendering the
+instant any control below is touched, no reload.
+
+### Added
+
+- **`SettingsContext`** (`src/SettingsContext.tsx`, spec §2.2 engineering note):
+  one source of truth for settings; `useSettings()` subscribes and `update(patch)`
+  persists through `saveSettings()` and re-renders every consumer, so the preview,
+  the Reader, and the theme respond live. The non-React engines (`liturgical.ts`,
+  `votd.ts`) keep reading `getSettings()` lazily — `update()` writes localStorage
+  synchronously, so the next render sees the new value.
+- **The §2.2 Settings screen** (`src/pages/Settings.tsx`): live preview · Bible
+  version cards (year + provenance, the chosen one outlined in purple, RSV-2CE /
+  NABRE shown locked with an import link) · text-size pills · font pills, each
+  rendered in its own face · **Appearance** (System / Day / Night + the *Follow the
+  liturgical year* switch and its one-line catechesis) · **Calendar** region (moved
+  here from the Readings toolbar) · **Data** (download-for-offline per translation
+  with real sizes, export/import of notes and highlights, and the manifest
+  integrity line linking to About).
+- **System theme** (`src/lib/theme.ts`): theme is now System / Day / Night, with a
+  pure `resolveTheme()` (asserted in the harness) and a `prefers-color-scheme`
+  listener so "System" tracks the OS live. A pre-paint boot script in `index.html`
+  resolves theme + face before the stylesheet paints, so a Night/System user never
+  flashes Day. New installs default to **System**.
+- **Real offline-download sizes**: `build-manifest.mjs` now seals a per-bundle
+  `{ files, bytes }` map (DRB 4.5 MB · CPDV 4.8 MB · VUL 4.0 MB) from the same file
+  walk that hashes the corpus — never hand-entered — and `--verify` checks it. The
+  manifest root hash is unchanged. `downloadBundle()` warms the service-worker data
+  cache and only earns a "Saved ✓" when every file actually fetched `res.ok`.
+
+### Changed
+
+- **Header folds to brand + five tabs** (`src/components/Header.tsx`, spec §2.1/§2.2):
+  the day/night and liturgical-year toggles move into Settings (reachable via
+  More → Settings).
+- **Reader, Readings, Home, BookList, Search, Library** now read settings live from
+  the context; the Reader's A−/A+ stepper and the size pills write the same
+  `fontSize` source of truth. The Readings toolbar loses its region select (now in
+  Settings) and reads the region live.
+
+### Fixed
+
+- The embeddable Verse-of-the-Day widget honors `?theme=night` again: App is now
+  the single writer of `<html data-theme>` and applies the widget's own param
+  (default day), so its palette is self-contained and no longer clobbered by the
+  app's theme effect or leaked from the visitor's saved settings.
+- The liturgical accent tint re-derives the moment the calendar region changes (a
+  missing effect dependency had left it stale on region-divergent days).
+
 ## [1.6.0] — 2026-06-13 — the five-tab bar
 
 Design-spec §2.1. The seven-link header that wrapped and cramped on phones gives

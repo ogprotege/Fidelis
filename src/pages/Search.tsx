@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { BOOKS, bookDisplayName, getBook } from "../lib/canon";
 import { loadBook } from "../lib/data";
 import { parseReference } from "../lib/refparse";
-import { getSettings } from "../lib/storage";
 import { TRANSLATIONS } from "../lib/translations";
+import { useSettings } from "../SettingsContext";
 
 interface Result {
   book: string;
@@ -27,7 +27,8 @@ function fold(s: string): string {
 
 export default function Search() {
   const [query, setQuery] = useState("");
-  const [translation, setTranslation] = useState(getSettings().translation);
+  const settings = useSettings();
+  const [translation, setTranslation] = useState(settings.translation);
   const [results, setResults] = useState<Result[]>([]);
   const [progress, setProgress] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);

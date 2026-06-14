@@ -13,8 +13,8 @@ export default function WidgetVotd() {
   const [params] = useSearchParams();
   const tParam = params.get("t") ?? "drc";
   const translation = getTranslation(tParam)?.bundled ? tParam : "drc";
-  const theme = params.get("theme");
-  if (theme === "night") document.documentElement.dataset.theme = "night";
+  // The palette (?theme=night, default day) is applied by App, the single
+  // writer of <html data-theme>, so it can't be clobbered by App's own effect.
 
   const votd = verseOfTheDay();
   const book = getBook(votd.book)!;

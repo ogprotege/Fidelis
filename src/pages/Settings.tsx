@@ -1,14 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { loadBook } from "../lib/data";
-import { getSettings, saveSettings } from "../lib/storage";
-import { getTranslation } from "../lib/translations";
-import { FONT_SIZE_PRESETS, SCRIPTURE_FONTS, ScriptureFont } from "../lib/typography";
+import {
+  ManifestDoc,
+  downloadBundle,
+  importedTranslations,
+  loadBook,
+  loadManifest
+} from "../lib/data";
+import {
+  CalendarRegion,
+  exportMarginalia,
+  getOfflineTranslations,
+  importMarginalia,
+  markOfflineTranslation
+} from "../lib/storage";
+import { TRANSLATIONS, getTranslation } from "../lib/translations";
+import { FONT_SIZE_PRESETS, SCRIPTURE_FONTS } from "../lib/typography";
+import { THEME_OPTIONS } from "../lib/theme";
+import { formatBytes } from "../lib/format";
+import { useSettings, useUpdateSettings } from "../SettingsContext";
 
-/** Typography settings (spec §1.4), with the live Scripture preview pinned at
- *  the top (spec §2.2). The fuller Settings screen — versions, appearance,
- *  calendar, notifications — folds into this page when §2.2 ships; theme and
- *  the liturgical-year accent stay in the header until then. */
+/** The one Settings screen (spec §2.2), Catena-style: a live Scripture preview
+ *  pinned on top — the living proof of every choice below — then the version,
+ *  type, appearance, calendar, and data sections. Every control writes through
+ *  the SettingsContext, so the preview (and the Reader, and the theme) react at
+ *  once, with no reload. */
 
 // Shown until Genesis 1:1–2 loads (and if it can't): a Vulgate line carrying the
 // æ ligature, so the preview always demonstrates the face the spec asks it to.
@@ -16,21 +32,16 @@ const SAMPLE =
   "In principio creavit Deus cælum et terram. Terra autem erat inanis et vacua, et tenebræ erant super faciem abyssi.";
 
 export default function Settings() {
-  // Read settings once per mount, not per render (P2-8).
-  const [settings] = useState(getSettings);
-  const translation = settings.translation;
-  const trans = getTranslation(translation);
+  const settings = useSettings();
+  const update = useUpdateSettings();
+  const trans = getTranslation(settings.translation);
 
-  const [fontSize, setFontSize] = useState(settings.fontSize);
-  const [scriptureFont, setScriptureFont] = useState<ScriptureFont>(settings.scriptureFont);
+  // ── Live preview: Genesis 1:1–2 in the current translation (spec §2.2) ──────
   const [preview, setPreview] = useState<string | null>(null);
-
-  // Genesis 1:1–2 in the current translation (spec §2.2). Falls back to the
-  // Latin sample if the text isn't bundled or fails to load.
   useEffect(() => {
     let alive = true;
     setPreview(null);
-    loadBook(translation, "genesis")
+    loadBook(settings.translation, "genesis")
       .then((data) => {
         if (!alive) return;
         const ch = data.chapters[0] ?? [];
@@ -41,47 +52,152 @@ export default function Settings() {
     return () => {
       alive = false;
     };
-  }, [translation]);
-
-  // The preview and Reader pick up the face from the global --scripture custom
-  // property; setting <html data-font> here re-skins both instantly.
-  const chooseFont = (f: ScriptureFont) => {
-    setScriptureFont(f);
-    saveSettings({ scriptureFont: f });
-    document.documentElement.dataset.font = f;
-  };
-  const chooseSize = (px: number) => {
-    setFontSize(px);
-    saveSettings({ fontSize: px });
-  };
-
+  }, [settings.translation]);
   const showingScripture = preview !== null;
+
+  // ── Version cards: which non-bundled texts the user has imported ────────────
+  const [imported, setImported] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    importedTranslations().then(setImported);
+  }, []);
+
+  // ── Data: manifest (for real sizes), offline record, download progress ──────
+  const [manifest, setManifest] = useState<ManifestDoc | null>(null);
+  useEffect(() => {
+    loadManifest().then(setManifest);
+  }, []);
+  const [offline, setOffline] = useState<string[]>(getOfflineTranslations);
+  const [progress, setProgress] = useState<Record<string, { done: number; total: number }>>({});
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const download = async (id: string) => {
+    setDownloadError(null);
+    setProgress((p) => ({ ...p, [id]: { done: 0, total: 0 } }));
+    try {
+      await downloadBundle(id, (done, total) =>
+        setProgress((p) => ({ ...p, [id]: { done, total } }))
+      );
+      markOfflineTranslation(id);
+      setOffline(getOfflineTranslations());
+    } catch (e) {
+      // Only an actually-cached bundle earns the ✓; surface the failure instead.
+      setDownloadError(e instanceof Error ? e.message : "Download failed — please try again with a connection.");
+    } finally {
+      setProgress((p) => {
+        const next = { ...p };
+        delete next[id];
+        return next;
+      });
+    }
+  };
+
+  // ── Data: export / import the library (P2-6) ────────────────────────────────
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [transfer, setTransfer] = useState<string | null>(null);
+  const doExport = () => {
+    const data = exportMarginalia();
+    const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `fidelis-library-${data.exportedAt.slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setTransfer(
+      `Exported ${data.bookmarks.length} bookmark(s), ${data.highlights.length} highlight(s), ${data.notes.length} note(s).`
+    );
+  };
+  const doImport = async (file: File) => {
+    try {
+      const counts = importMarginalia(await file.text());
+      setTransfer(
+        `Imported ${counts.bookmarks} bookmark(s), ${counts.highlights} highlight(s), ${counts.notes} note(s) — merged with what was here; the newer entry won any conflict.`
+      );
+    } catch (e) {
+      setTransfer(e instanceof Error ? e.message : "Could not read that file.");
+    }
+  };
 
   return (
     <div className="page-narrow settings">
       <h1 className="page-title">Settings</h1>
 
+      {/* 1 ── Scripture preview (the living proof of every choice below) */}
       <section className="card preview-card">
         <h2>Scripture preview</h2>
-        <p className="scripture-preview" style={{ fontSize: `${fontSize}px` }}>
+        <p className="scripture-preview" style={{ fontSize: `${settings.fontSize}px` }}>
           {preview ?? SAMPLE}
         </p>
         <p className="preview-ref muted small">
           {showingScripture
-            ? `Genesis 1:1–2 · ${trans?.abbrev ?? translation}`
+            ? `Genesis 1:1–2 · ${trans?.abbrev ?? settings.translation}`
             : "Sample · Clementine Vulgate"}
         </p>
       </section>
 
+      {/* 2 ── Bible version */}
+      <section className="card">
+        <h2>Bible version</h2>
+        <div className="version-cards" role="radiogroup" aria-label="Bible version">
+          {TRANSLATIONS.map((t) => {
+            const selected = settings.translation === t.id;
+            const available = t.bundled || imported.has(t.id);
+            return (
+              <div
+                key={t.id}
+                className={`version-card ${selected ? "active" : ""} ${available ? "" : "locked"}`}
+                role={available ? "radio" : undefined}
+                aria-checked={available ? selected : undefined}
+                tabIndex={available ? 0 : undefined}
+                onClick={available ? () => update({ translation: t.id }) : undefined}
+                onKeyDown={
+                  available
+                    ? (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          update({ translation: t.id });
+                        }
+                      }
+                    : undefined
+                }
+              >
+                <div className="version-abbrev">
+                  {t.abbrev}
+                  {selected && <span className="version-check" aria-hidden="true">✓</span>}
+                </div>
+                <div className="version-name">{t.name}</div>
+                <div className="version-meta muted small sans">
+                  {t.language === "la" ? "Latin" : "English"} · {t.year}
+                </div>
+                {available ? (
+                  <div className="version-prov small sans muted">
+                    {t.bundled ? "Public domain · bundled" : "Imported on this device"}
+                  </div>
+                ) : (
+                  <div className="version-lock small sans">
+                    <span className="lock-badge">Under copyright</span>{" "}
+                    <Link to={`/translations#${t.id}`}>Import a licensed copy →</Link>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <p className="muted small sans">
+          The chosen version is your default everywhere — Today, the book list, search, and
+          the Reader. RSV-2CE and NABRE are under copyright; import a licensed copy you own.
+        </p>
+      </section>
+
+      {/* 3 ── Text size */}
       <section className="card">
         <h2>Text size</h2>
         <div className="pill-row" role="group" aria-label="Text size">
           {FONT_SIZE_PRESETS.map((p) => (
             <button
               key={p.px}
-              className={`pill ${fontSize === p.px ? "active" : ""}`}
-              aria-pressed={fontSize === p.px}
-              onClick={() => chooseSize(p.px)}
+              className={`pill ${settings.fontSize === p.px ? "active" : ""}`}
+              aria-pressed={settings.fontSize === p.px}
+              onClick={() => update({ fontSize: p.px })}
             >
               {p.label}
               <span className="pill-sub">{p.px}</span>
@@ -91,16 +207,17 @@ export default function Settings() {
         <p className="muted small">The Reader's A− / A+ buttons fine-tune the size between presets.</p>
       </section>
 
+      {/* 4 ── Font (each pill rendered in its own face) */}
       <section className="card">
         <h2>Font</h2>
         <div className="pill-row" role="group" aria-label="Scripture font">
           {SCRIPTURE_FONTS.map((f) => (
             <button
               key={f.id}
-              className={`pill ${scriptureFont === f.id ? "active" : ""}`}
-              aria-pressed={scriptureFont === f.id}
+              className={`pill ${settings.scriptureFont === f.id ? "active" : ""}`}
+              aria-pressed={settings.scriptureFont === f.id}
               style={{ fontFamily: `var(${f.cssVar})` }}
-              onClick={() => chooseFont(f.id)}
+              onClick={() => update({ scriptureFont: f.id })}
             >
               {f.label}
             </button>
@@ -111,10 +228,132 @@ export default function Settings() {
         </p>
       </section>
 
-      <p className="muted small settings-foot">
-        Theme and the liturgical-year accent live in the header for now.{" "}
-        <Link to="/about">About Fidelis →</Link>
-      </p>
+      {/* 5 ── Appearance */}
+      <section className="card">
+        <h2>Appearance</h2>
+        <div className="pill-row" role="group" aria-label="Theme">
+          {THEME_OPTIONS.map((o) => (
+            <button
+              key={o.id}
+              className={`pill ${settings.theme === o.id ? "active" : ""}`}
+              aria-pressed={settings.theme === o.id}
+              onClick={() => update({ theme: o.id })}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">Follow the liturgical year</div>
+            <p className="catechesis muted small">
+              Accent color follows the Church's calendar: violet in Advent, rose on Gaudete.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.followLiturgicalYear}
+            aria-label="Follow the liturgical year"
+            className="switch"
+            onClick={() => update({ followLiturgicalYear: !settings.followLiturgicalYear })}
+          />
+        </div>
+      </section>
+
+      {/* 6 ── Calendar (region moved here from the Readings toolbar, spec §2.2) */}
+      <section className="card">
+        <h2>Calendar</h2>
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">Region</div>
+            <p className="catechesis muted small">
+              Governs the dates of Epiphany and the Ascension and the U.S. proper days. (Boston,
+              Hartford, New York, Omaha, and Philadelphia keep Ascension Thursday.)
+            </p>
+          </div>
+          <select
+            value={settings.calendarRegion}
+            aria-label="Calendar region"
+            onChange={(e) => update({ calendarRegion: e.target.value as CalendarRegion })}
+          >
+            <option value="universal">Universal</option>
+            <option value="usa">United States</option>
+          </select>
+        </div>
+      </section>
+
+      {/* 7 ── Data */}
+      <section className="card">
+        <h2>Data</h2>
+
+        <div className="setting-label">Download for offline</div>
+        <p className="catechesis muted small">
+          Save a bundled translation's full text to this device so it reads with no connection.
+        </p>
+        {TRANSLATIONS.filter((t) => t.bundled).map((t) => {
+          const bytes = manifest?.bundles?.[t.id]?.bytes;
+          const prog = progress[t.id];
+          const saved = offline.includes(t.id);
+          return (
+            <div className="download-row" key={t.id}>
+              <span>
+                <span className="download-name">{t.abbrev}</span>{" "}
+                <span className="muted small sans">{bytes != null ? formatBytes(bytes) : "—"}</span>
+              </span>
+              {prog ? (
+                <span className="muted small sans">
+                  {prog.total ? `Saving… ${prog.done}/${prog.total}` : "Saving…"}
+                </span>
+              ) : (
+                <button className="pill" onClick={() => download(t.id)}>
+                  {saved ? "Saved ✓ · Update" : "Download"}
+                </button>
+              )}
+            </div>
+          );
+        })}
+        {downloadError && <p className="notice small">{downloadError}</p>}
+
+        <hr className="rule" />
+
+        <div className="setting-label">My notes and highlights</div>
+        <p className="catechesis muted small">
+          Your bookmarks, highlights, and notes live only in this browser — export them now and
+          then so a lost device does not take your marginalia with it.
+        </p>
+        <div className="pill-row">
+          <button className="pill" onClick={doExport}>
+            ↓ Export (JSON)
+          </button>
+          <button className="pill" onClick={() => fileRef.current?.click()}>
+            ↑ Import
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) doImport(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
+        {transfer && <p className="muted small sans">{transfer}</p>}
+
+        <hr className="rule" />
+
+        <p className="muted small sans" style={{ marginBottom: 0 }}>
+          {manifest?.rootHash && (
+            <>
+              Texts verified · manifest <code>{manifest.rootHash.slice(0, 12)}</code> ·{" "}
+            </>
+          )}
+          <Link to="/about">About &amp; sources →</Link>
+        </p>
+      </section>
     </div>
   );
 }

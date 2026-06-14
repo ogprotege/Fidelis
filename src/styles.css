@@ -793,6 +793,107 @@ body.widget-mode { background: transparent; }
 .pill.active .pill-sub { color: var(--on-accent); opacity: 0.85; }
 .settings-foot { margin-top: 0.5rem; }
 
+/* §2.2 Bible-version cards: a horizontally scrolling rail; the chosen card is
+   outlined in purple (purple acts) — outlined, not filled, since it carries
+   text. Locked (copyrighted, not imported) cards dim and link to import. */
+.version-cards {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding: 0.15rem 0.15rem 0.6rem;
+  margin: 0 -0.15rem 0.4rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.version-card {
+  flex: 0 0 15rem;
+  scroll-snap-align: start;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--bg-1);
+  padding: 0.7rem 0.85rem;
+  cursor: pointer;
+}
+.version-card:hover { border-color: var(--purple); }
+.version-card.active { border-color: var(--purple); box-shadow: inset 0 0 0 1px var(--purple); }
+.version-card.locked { cursor: default; opacity: 0.82; }
+.version-card.locked:hover { border-color: var(--border); }
+.version-card:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.version-abbrev {
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.version-check { color: var(--purple); }
+.version-name { margin-top: 0.15rem; line-height: 1.3; }
+.version-meta { margin-top: 0.2rem; }
+.version-prov,
+.version-lock { margin-top: 0.45rem; }
+.lock-badge {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  color: var(--badge-import-text);
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  padding: 0.05rem 0.35rem;
+}
+
+/* §2.2 labeled control row: text on the left, control on the right. */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+.setting-row + .setting-row { border-top: 1px solid var(--border); padding-top: 0.7rem; }
+.setting-label { font-family: var(--sans); font-weight: 600; font-size: 0.92rem; }
+.catechesis { margin: 0.15rem 0 0; max-width: 34rem; }
+
+/* §2.2 toggle switch (Follow the liturgical year): a role="switch" button. */
+.switch {
+  flex: none;
+  width: 2.7rem;
+  height: 1.55rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.18rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: var(--bg-1);
+  transform: translateY(-50%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: left 0.15s, background 0.15s;
+}
+.switch[aria-checked="true"] { background: var(--purple-strong); border-color: var(--purple-strong); }
+.switch[aria-checked="true"]::after { left: calc(100% - 1.33rem); background: var(--on-accent); }
+.switch:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+
+/* §2.2 Data: per-translation offline-download rows. */
+.download-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0;
+}
+.download-row + .download-row { border-top: 1px solid var(--border); }
+.download-name { font-family: var(--sans); font-weight: 600; }
+
 /* ---------- Misc ---------- */
 .notice {
   background: var(--bg-2);

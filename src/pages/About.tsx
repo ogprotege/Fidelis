@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
-interface ManifestInfo {
-  rootHash: string;
-  fileCount: number;
-  sources: Record<string, { repo: string; commit: string }>;
-}
+import { ManifestDoc, loadManifest } from "../lib/data";
 
 const WIDGET_SNIPPET = `<iframe
   src="https://YOUR-DOMAIN/#/widget/votd"
@@ -14,12 +9,11 @@ const WIDGET_SNIPPET = `<iframe
 ></iframe>`;
 
 export default function About() {
-  const [integrity, setIntegrity] = useState<ManifestInfo | null>(null);
+  const [integrity, setIntegrity] = useState<ManifestDoc | null>(null);
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}data/manifest.json`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((m) => m?.rootHash && m?.sources && setIntegrity(m))
-      .catch(() => {});
+    loadManifest().then((m) => {
+      if (m?.rootHash && m?.sources) setIntegrity(m);
+    });
   }, []);
 
   return (
@@ -110,8 +104,8 @@ export default function About() {
         gaps are described in the note on numbering above. The
         liturgical calendar follows the General Roman Calendar (all solemnities
         and feasts, with a representative selection of memorials); movable feasts
-        are computed from the date of Easter, and a calendar-region setting on the
-        Readings page applies the United States transfers — Epiphany to the Sunday
+        are computed from the date of Easter, and a calendar-region setting in
+        Settings applies the United States transfers — Epiphany to the Sunday
         of Jan 2–8, and the Ascension to the Seventh Sunday of Easter, as observed
         in most U.S. ecclesiastical provinces (Boston, Hartford, New York, Omaha,
         and Philadelphia keep Ascension Thursday) — and the U.S. proper days. Daily Mass reading citations follow the
@@ -137,7 +131,7 @@ export default function About() {
         checked against printed copies before being marked verified; the corpus
         and its verification state live in the repository in the open.
       </p>
-      <p className="small muted">
+      <p className="small muted" id="integrity">
         Both sources are fetched at commits pinned by hash — never a moving
         branch — and every bundled data file is sealed by a SHA-256 manifest
         that the project's data harness verifies on every run.

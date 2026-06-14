@@ -9,17 +9,16 @@ import {
   getHighlights,
   getNote,
   getNotes,
-  getSettings,
   refKey,
   saveLastRead,
-  saveSettings,
   setHighlight,
   setNote,
   toggleBookmark
 } from "../lib/storage";
 import { TRANSLATIONS, getTranslation } from "../lib/translations";
 import Icon from "../components/Icon";
-import { MAX_FONT_SIZE, MIN_FONT_SIZE } from "../lib/typography";
+import { clampFontSize } from "../lib/typography";
+import { useSettings, useUpdateSettings } from "../SettingsContext";
 
 export default function Reader() {
   const params = useParams<{ translation: string; book: string; chapter: string }>();
@@ -32,10 +31,12 @@ export default function Reader() {
   const focusVerse = parseInt(searchParams.get("v") ?? "", 10) || null;
 
   const book = getBook(bookSlug);
-  // Read settings once per mount, not per render (P2-8).
-  const [settings] = useState(getSettings);
-  const [parallel, setParallel] = useState<string | null>(settings.parallel);
-  const [fontSize, setFontSize] = useState(settings.fontSize);
+  // Live settings (spec §2.2): font size, the parallel pane, and verse numbers
+  // all reflect Settings-screen changes without a remount.
+  const settings = useSettings();
+  const update = useUpdateSettings();
+  const parallel = settings.parallel;
+  const fontSize = settings.fontSize;
   const [data, setData] = useState<BookData | null>(null);
   const [parallelData, setParallelData] = useState<BookData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +93,9 @@ export default function Reader() {
   useEffect(() => {
     if (book) {
       saveLastRead({ translation, book: bookSlug, chapter });
-      saveSettings({ translation });
+      // Remember the chosen translation as the default — but only when it
+      // actually changes, so turning chapters doesn't churn the context.
+      if (settings.translation !== translation) update({ translation });
     }
     setSelected(null);
     setNoteOpen(false);
@@ -230,11 +233,7 @@ export default function Reader() {
         <div className="toolbar-right">
           <select
             value={parallel ?? ""}
-            onChange={(e) => {
-              const v = e.target.value || null;
-              setParallel(v);
-              saveSettings({ parallel: v });
-            }}
+            onChange={(e) => update({ parallel: e.target.value || null })}
             title="Parallel translation"
           >
             <option value="">No parallel</option>
@@ -246,22 +245,14 @@ export default function Reader() {
           </select>
           <button
             className="icon-btn"
-            onClick={() => {
-              const s = Math.max(MIN_FONT_SIZE, fontSize - 1);
-              setFontSize(s);
-              saveSettings({ fontSize: s });
-            }}
+            onClick={() => update({ fontSize: clampFontSize(fontSize - 1) })}
             title="Smaller text"
           >
             A−
           </button>
           <button
             className="icon-btn"
-            onClick={() => {
-              const s = Math.min(MAX_FONT_SIZE, fontSize + 1);
-              setFontSize(s);
-              saveSettings({ fontSize: s });
-            }}
+            onClick={() => update({ fontSize: clampFontSize(fontSize + 1) })}
             title="Larger text"
           >
             A+

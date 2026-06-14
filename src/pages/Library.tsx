@@ -7,12 +7,12 @@ import {
   getBookmarks,
   getHighlights,
   getNotes,
-  getSettings,
   importMarginalia,
   setHighlight,
   setNote,
   toggleBookmark
 } from "../lib/storage";
+import { useSettings } from "../SettingsContext";
 
 type Tab = "bookmarks" | "highlights" | "notes";
 
@@ -22,7 +22,7 @@ export default function Library() {
   const [transfer, setTransfer] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   void version;
-  const translation = getSettings().translation;
+  const translation = useSettings().translation;
 
   const doExport = () => {
     const data = exportMarginalia();

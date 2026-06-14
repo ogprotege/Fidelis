@@ -2,20 +2,13 @@ import { NavLink } from "react-router-dom";
 import Icon from "./Icon";
 import TabBar from "./TabBar";
 
-// Spec §2.1: the five-tab navigation (Today · Read · Search · Mass · More) lives
-// in <TabBar>, rendered here as the header row on wide viewports and re-laid by
-// CSS into a bottom tab bar on phones. The type/theme controls sit beside the
-// liturgical-year and day/night toggles in the header's control cluster (the
-// §2.2 Settings redesign will fold them into the one Settings screen).
+// Spec §2.1 / §2.2: the header is the brand and the five-tab navigation, nothing
+// more. <TabBar> renders as the header row on wide viewports and is re-laid by
+// CSS into a bottom tab bar on phones. The old control cluster (day/night and
+// the liturgical-year accent) has folded into the one Settings screen (§2.2),
+// reachable via More → Settings.
 
-interface Props {
-  theme: "day" | "night";
-  onToggleTheme: () => void;
-  followYear: boolean;
-  onToggleFollowYear: () => void;
-}
-
-export default function Header({ theme, onToggleTheme, followYear, onToggleFollowYear }: Props) {
+export default function Header() {
   return (
     <header className="header">
       <div className="header-inner">
@@ -25,27 +18,6 @@ export default function Header({ theme, onToggleTheme, followYear, onToggleFollo
           </span>
         </NavLink>
         <TabBar />
-        <button
-          className="icon-btn"
-          onClick={onToggleFollowYear}
-          aria-pressed={followYear}
-          aria-label="Follow the liturgical year"
-          title={followYear ? "Following the liturgical year" : "Liturgical colors off — brand purple"}
-        >
-          <span className="accent-dot" aria-hidden="true">{followYear ? "●" : "○"}</span>
-        </button>
-        <button
-          className="icon-btn"
-          onClick={onToggleTheme}
-          aria-pressed={theme === "night"}
-          aria-label={theme === "night" ? "Day mode" : "Night mode"}
-          title={theme === "night" ? "Day mode" : "Night mode"}
-        >
-          <Icon name={theme === "night" ? "sun" : "moon"} />
-        </button>
-        <NavLink className="icon-btn" to="/settings" title="Settings" aria-label="Settings">
-          ⚙
-        </NavLink>
       </div>
     </header>
   );

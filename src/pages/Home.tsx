@@ -15,8 +15,9 @@ import {
 import { liturgicalDay, COLOR_HEX } from "../lib/liturgical";
 import { DailyQuote, loadQuotes, quoteOfTheDay } from "../lib/quotes";
 import { mysteriesForDate } from "../lib/rosary";
-import { getLastRead, getSettings } from "../lib/storage";
+import { getLastRead } from "../lib/storage";
 import { verseOfTheDay, formatVotdRef } from "../lib/votd";
+import { useSettings } from "../SettingsContext";
 
 /* The Today page never exceeds five cards (CLAUDE.md standing rule):
    1 Verse of the Day · 2 Quote of the Day · 3 Today in the Church
@@ -29,7 +30,7 @@ export default function Home() {
   const lit = liturgicalDay(today);
   const rosary = mysteriesForDate(today);
   const lastRead = getLastRead();
-  const translation = getSettings().translation;
+  const translation = useSettings().translation;
   const [mass, setMass] = useState<DayReadings | null>(null);
   const [quote, setQuote] = useState<DailyQuote | null>(null);
   useEffect(() => {

@@ -12,6 +12,20 @@
  },
  "fileCount": 239,
  "rootHash": "b10a5cef704217a9947cadf90df443e8fa733e95ef7ccb79781151999918c3c5",
+ "bundles": {
+  "cpdv": {
+   "files": 79,
+   "bytes": 5026728
+  },
+  "drc": {
+   "files": 79,
+   "bytes": 4729437
+  },
+  "vulgate": {
+   "files": 79,
+   "bytes": 4153676
+  }
+ },
  "files": {
   "cpdv/1-chronicles.json": "dad2bf8f81ef910afbf748d2b4ae9b6758b6f8b39af90485d035b29f87995285",
   "cpdv/1-corinthians.json": "f1f890bc593b7c7882838663c9ba1f2470e83c80111b687de128e9d685fea8cf",

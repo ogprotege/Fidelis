@@ -3,6 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Pre-paint appearance (spec §2.2): resolve the saved theme (System →
+         the OS preference) and Scripture face and write them to <html> before
+         the stylesheet paints, so a Night/System user never flashes Day. This
+         mirrors the defaults in src/lib/storage.ts and src/lib/theme.ts. -->
+    <script>
+      (function () {
+        try {
+          // The embeddable widget is self-contained: theme from its own ?theme
+          // param (default day), never the visitor's saved settings.
+          var hash = location.hash || "";
+          if (hash.indexOf("/widget/") !== -1) {
+            document.documentElement.dataset.theme = hash.indexOf("theme=night") !== -1 ? "night" : "day";
+            document.documentElement.dataset.font = "garamond";
+            return;
+          }
+          var s = JSON.parse(localStorage.getItem("fidelis:settings") || "{}");
+          var theme = s.theme === "parchment" ? "day" : s.theme;
+          if (theme !== "day" && theme !== "night" && theme !== "system") theme = "system";
+          var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.dataset.theme = theme === "system" ? (dark ? "night" : "day") : theme;
+          var font = s.scriptureFont;
+          if (font !== "garamond" && font !== "serif" && font !== "sans") font = "garamond";
+          document.documentElement.dataset.font = font;
+        } catch (e) {}
+      })();
+    </script>
     <meta name="description" content="Fidelis — a Catholic Bible app. The unaltered Word: Douay-Rheims, Catholic Public Domain Version, and the Clementine Latin Vulgate, with the full 73-book canon." />
     <meta name="theme-color" content="#F4F2EE" />
     <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
