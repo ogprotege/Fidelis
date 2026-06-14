@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { BOOKS, GROUPS, OT_GROUPS, NT_GROUPS, bookDisplayName } from "../lib/canon";
-import { getSettings } from "../lib/storage";
+import { useSettings } from "../SettingsContext";
 
 export default function BookList() {
-  const translation = getSettings().translation;
+  const translation = useSettings().translation;
 
   const section = (title: string, groups: readonly string[]) => (
     <>

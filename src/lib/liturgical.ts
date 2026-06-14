@@ -34,6 +34,22 @@ export function currentRegion(): CalendarRegion {
 
 export type LiturgicalColor = "green" | "violet" | "white" | "red" | "rose" | "black";
 
+/**
+ * "Follow the liturgical year" (spec §1.3). When the setting is on, the
+ * governing day's color names the accent written to `<html data-accent>`, and
+ * CSS remaps `--purple` to that color — white borrows the gold token, so the
+ * great white feasts read in gold ("gold stands for white"). When off, returns
+ * `null`: no attribute is written and the app keeps its brand purple. Pure and
+ * total, so the catechetical mapping (rose on Gaudete and Laetare) is asserted
+ * in the harness, not only observed in the DOM.
+ */
+export function accentFor(
+  followLiturgicalYear: boolean,
+  color: LiturgicalColor
+): LiturgicalColor | null {
+  return followLiturgicalYear ? color : null;
+}
+
 export type Season =
   | "Advent"
   | "Christmastide"

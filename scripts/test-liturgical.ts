@@ -1,6 +1,7 @@
 /** Trap-year harness for the liturgical engine. Run: npx tsx scripts/test-liturgical.ts */
 import {
   CalendarRegion,
+  accentFor,
   adventStart,
   baptismOfTheLord,
   easterDate,
@@ -8,6 +9,7 @@ import {
   liturgicalDay
 } from "../src/lib/liturgical";
 import { dayCodeCandidates } from "../src/lib/lectionary";
+import { readFileSync } from "node:fs";
 
 const d = (y: number, m: number, day: number) => new Date(y, m - 1, day);
 const iso = (x: Date) =>
@@ -165,6 +167,87 @@ expect(
   "Dec 12 2025 (universal) stays a violet Advent feria",
   !hasR(d(2025, 12, 12), "universal", "Guadalupe") &&
     liturgicalDay(d(2025, 12, 12), "universal").color === "violet"
+);
+
+// 6. §1.3 acceptance — "Follow the liturgical year" accent.
+// The accent is a pure gate over the governing day's color: on ⇒ the color
+// names <html data-accent>, off ⇒ null (no attribute, brand purple stays).
+// The white→gold and rose hues live in CSS and are asserted in section 7.
+console.log("\n== §1.3 liturgical accent ==");
+// The two named acceptance days, in both regions (rose/white are region-agnostic).
+for (const r of ["universal", "usa"] as CalendarRegion[]) {
+  expect(
+    `Gaudete Sunday 2026-12-13 yields a rose accent (${r})`,
+    accentFor(true, liturgicalDay(d(2026, 12, 13), r).color) === "rose"
+  );
+  expect(
+    `Easter 2026-04-05 yields the white accent — gold-for-white (${r})`,
+    accentFor(true, liturgicalDay(d(2026, 4, 5), r).color) === "white"
+  );
+}
+// The on/off gate itself: off ⇒ null for every color, so the brand purple
+// (asserted in section 7) is what shows year-round when the setting is off.
+expect("accentFor passes the day's color through when following", accentFor(true, "rose") === "rose");
+expect("accentFor passes white through (CSS maps it to gold)", accentFor(true, "white") === "white");
+expect("accentFor is null when not following — Gaudete", accentFor(false, "rose") === null);
+expect("accentFor is null when not following — Easter/white", accentFor(false, "white") === null);
+expect("accentFor is null when not following — green feria", accentFor(false, "green") === null);
+expect(
+  "Setting OFF on Easter ⇒ no accent (brand purple)",
+  accentFor(false, liturgicalDay(d(2026, 4, 5)).color) === null
+);
+
+// 7. §1.3 acceptance — the hex table is transcribed onto --purple in CSS.
+// The accent recolors ONLY --purple (the "act" accent); --gold and the brand
+// masthead never move. Each color is a day-default rule plus a night override.
+// White borrows the §1.1 gold token. Absent data-accent (setting off), --purple
+// keeps its brand value, so the app is brand purple year-round.
+console.log("\n== §1.3 accent hex table (styles.css) ==");
+const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+// Body of the first CSS rule whose selector matches exactly (a negative
+// lookbehind keeps a bare [data-accent="x"] query from matching the tail of a
+// compound [data-theme="night"][data-accent="x"] selector).
+const purpleOf = (selector: string): string | null => {
+  const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const rule = css.match(new RegExp("(?<!\\])" + esc + "\\s*\\{([^}]*)\\}"));
+  if (!rule) return null;
+  const decl = rule[1].match(/--purple:\s*(#[0-9A-Fa-f]{3,8})/);
+  return decl ? decl[1].toUpperCase() : null;
+};
+// night / day pairs, exactly as the §1.3 table reads them.
+const ACCENT_HEX: Record<string, [string, string]> = {
+  green: ["#5CA86E", "#3E7C4F"],
+  violet: ["#9B7BD4", "#5B3A8E"], // = brand purple (Advent & Lent)
+  white: ["#D4B254", "#A8862C"], // gold stands for white
+  red: ["#D45A6A", "#A32638"],
+  rose: ["#D98BA6", "#C76A8A"], // Gaudete & Laetare
+  black: ["#8E8E96", "#4A4A50"]
+};
+for (const [accent, [night, day]] of Object.entries(ACCENT_HEX)) {
+  expect(
+    `[data-accent="${accent}"] sets --purple to ${day} (day)`,
+    purpleOf(`[data-accent="${accent}"]`) === day.toUpperCase()
+  );
+  expect(
+    `[data-theme="night"][data-accent="${accent}"] sets --purple to ${night} (night)`,
+    purpleOf(`[data-theme="night"][data-accent="${accent}"]`) === night.toUpperCase()
+  );
+}
+// gold-for-white: the white accent must reuse the §1.1 --gold token values.
+expect("white accent borrows the gold day hex #A8862C", purpleOf('[data-accent="white"]') === "#A8862C");
+expect(
+  "white accent borrows the gold night hex #D4B254",
+  purpleOf('[data-theme="night"][data-accent="white"]') === "#D4B254"
+);
+// setting OFF ⇒ no data-accent ⇒ the brand --purple shows year-round.
+expect("base day --purple is brand purple #5B3A8E (off ⇒ brand)", purpleOf('[data-theme="day"]') === "#5B3A8E");
+expect("base night --purple is brand purple #9B7BD4 (off ⇒ brand)", purpleOf('[data-theme="night"]') === "#9B7BD4");
+// The day-mode override has equal specificity to the base [data-theme="day"]
+// block, so it wins only because it comes later in the file. Guard the order:
+// a reorder would silently drop the day-mode accent (night wins by specificity).
+expect(
+  "day-default [data-accent] rules follow the base --purple (day cascade wins)",
+  css.indexOf('[data-accent="') > css.indexOf("--purple: #5B3A8E")
 );
 
 if (failures) {

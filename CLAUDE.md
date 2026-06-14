@@ -5,8 +5,9 @@ daily Mass readings. Companion documents:
 `docs/review/Fidelis_Code_Review_V1_2026-06-11.md` (the repair manual — every
 P0/P1/P2 item plus hygiene B.1/B.2/B.4 done as of v1.1.0 and §B.3, CI, closed in
 v1.2.1 — the manual is fully implemented), `docs/review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md`
-(the growth plan), and `CHANGELOG.md` (release history; bump `package.json`
-version and add a CHANGELOG entry together).
+(the growth plan; its §1–§2 identity layer shipped in v1.3.0, the identity release,
+recorded below), and `CHANGELOG.md` (release history; bump `package.json` version
+and add a CHANGELOG entry together).
 
 ## Commands
 
@@ -23,6 +24,48 @@ codes, and reading resolution per day for both regions; `test-data.ts` diffs the
 engine change that silently moves a feast is a red `npm test`. §B.3 (CI) is closed:
 `.github/workflows/ci.yml` runs `npm ci`, `npm test`, and `npm run build` on Node 22 for
 every push and pull request, so a red harness or a type error fails the build.
+
+## Identity release — design spec §1–§2 (v1.3.0)
+
+The spec's visual/identity layer shipped in v1.3.0 "the identity release" — six work
+items (A1–A6) on the `v1.1-identity` branch:
+
+- **§1.1/§1.2 — token system + two-accent rule** (A1): every paint color lives in
+  the day/night token blocks in `src/styles.css`; nothing outside them carries a raw
+  hex, and no element wears both accents (**purple acts, gold honors**). The legacy
+  `parchment` theme value migrates to `day` in `storage.ts`.
+- **§1.3 — the liturgical year, in color** (A2): `accentFor()` in
+  `src/lib/liturgical.ts` (pure, asserted in `test-liturgical.ts` §6–7) remaps
+  `--purple` to the governing day's color via `<html data-accent>`, gated by the
+  `followLiturgicalYear` setting (default on). White borrows gold; `--gold` and
+  `--purple-strong` never move.
+- **§1.4 — the Scripture face** (A3): EB Garamond bundled (4 woff2, ≈144 KB, SIL
+  OFL in `src/fonts/`); `scriptureFont` ∈ `garamond|serif|sans` drives `--scripture`
+  via `<html data-font>`; four size presets (17/19/22/25) own the vocabulary in
+  `src/lib/typography.ts`. `sw.js` is font-aware (shell cache `v3`). Still no
+  red-letter text — weight-400 only, asserted.
+- **§1.5 — the icon set** (A4): `src/components/Icon.tsx`, six `currentColor`
+  marks (bookmark, note, share, commentary, sun/moon, cross) on a 24×24 / 1.6-weight
+  grid replacing the emoji glyphs; the iOS widget draws the cross natively. The
+  harness forbids in-scope emoji in any `.tsx`.
+- **§2.1 — five-tab nav** (A5): `src/components/TabBar.tsx` — Today/Read/Search/
+  Mass plus a More popover (Library/Translations/Settings/About, **not a route**);
+  header row on desktop, bottom bar on phones with the safe-area inset.
+- **§2.2 — the one Settings screen** (A6): `src/SettingsContext.tsx` is the live
+  source of truth (`useSettings()`/`update()`); the non-React engines still read
+  `getSettings()` lazily (`update()` writes localStorage synchronously, so the next
+  render sees it). `src/pages/Settings.tsx` holds the live preview, version cards,
+  size/font pills, Appearance (System/Day/Night via `resolveTheme()` in
+  `src/lib/theme.ts` + the follow-the-year switch), calendar region (moved off the
+  Readings toolbar), and Data (offline download with real per-bundle sizes,
+  marginalia export/import). App is the single writer of `<html data-theme>`. This
+  supersedes P2-8's once-per-mount read.
+
+**Deferred within §2.2** (each waits on a layer not yet built): the Settings
+*Commentaries* subsection (needs the §4 commentary layer) and the optional single
+daily-readings notification (off by default; bounded by standing rule 3 — no
+notification pressure). Spec §3–§13 remain the open roadmap; §3 (Quote of the Day)
+and the §6 Today recomposition already shipped in 1.2.0.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

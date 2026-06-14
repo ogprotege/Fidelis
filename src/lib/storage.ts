@@ -1,5 +1,13 @@
 /** Local persistence for settings, bookmarks, highlights, notes, and reading position. */
 
+import {
+  DEFAULT_FONT_SIZE,
+  DEFAULT_SCRIPTURE_FONT,
+  ScriptureFont,
+  isScriptureFont
+} from "./typography";
+import { DEFAULT_THEME, ThemeChoice, isThemeChoice } from "./theme";
+
 export interface VerseRef {
   book: string;
   chapter: number;
@@ -37,10 +45,15 @@ export type CalendarRegion = "universal" | "usa";
 export interface Settings {
   translation: string;
   parallel: string | null;
-  fontSize: number; // px
-  theme: "parchment" | "night";
+  fontSize: number; // px — one of the §1.4 presets, or any value the Reader stepper lands on
+  /** Scripture reading face (spec §1.4): Garamond, system serif, or system sans. */
+  scriptureFont: ScriptureFont;
+  /** Appearance (spec §2.2): System follows the OS; Day/Night pin the palette. */
+  theme: ThemeChoice;
   showVerseNumbers: boolean;
   calendarRegion: CalendarRegion;
+  /** Tint the act accent (--purple) with the day's liturgical color (spec §1.3). */
+  followLiturgicalYear: boolean;
 }
 
 const PREFIX = "fidelis:";
@@ -65,21 +78,48 @@ function write(key: string, value: unknown): void {
 export const refKey = (r: VerseRef) => `${r.book}/${r.chapter}/${r.verse}`;
 
 export function getSettings(): Settings {
-  return {
+  const settings: Settings = {
     translation: "drc",
     parallel: null,
-    fontSize: 19,
-    theme: "parchment",
+    fontSize: DEFAULT_FONT_SIZE,
+    scriptureFont: DEFAULT_SCRIPTURE_FONT,
+    theme: DEFAULT_THEME,
     showVerseNumbers: true,
     calendarRegion: "universal",
+    followLiturgicalYear: true,
     ...read<Partial<Settings>>("settings", {})
   };
+  // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored
+  // legacy choice forward so an existing user keeps their light/dark selection.
+  if ((settings.theme as string) === "parchment") settings.theme = "day";
+  // Guard the stored theme against corruption or a pre-§2.2 build's vocabulary
+  // so an unknown value can never strand the app on an undefined palette. A
+  // genuine prior "day"/"night" survives; anything else falls back to System.
+  if (!isThemeChoice(settings.theme)) settings.theme = DEFAULT_THEME;
+  // Guard a stored font against corruption or a future build's vocabulary so an
+  // unknown value can never strand the reader on an undefined face (spec §1.4).
+  if (!isScriptureFont(settings.scriptureFont)) settings.scriptureFont = DEFAULT_SCRIPTURE_FONT;
+  return settings;
 }
 
 export function saveSettings(patch: Partial<Settings>): Settings {
   const next = { ...getSettings(), ...patch };
   write("settings", next);
   return next;
+}
+
+/** Which bundled translations the user has explicitly saved for offline
+ *  reading (spec §2.2 Data). The service-worker data cache is the real source
+ *  of truth for offline availability; this is the lightweight UI record of
+ *  which downloads the user has run, so the Settings cards can show a ✓. */
+export function getOfflineTranslations(): string[] {
+  return read<string[]>("offline", []);
+}
+
+export function markOfflineTranslation(id: string): void {
+  const set = new Set(getOfflineTranslations());
+  set.add(id);
+  write("offline", [...set]);
 }
 
 export function getLastRead(): LastRead | null {

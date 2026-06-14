@@ -7,7 +7,37 @@ export interface BookData {
   chapters: string[][];
 }
 
+/** Per-bundle file count and byte total, emitted by build-manifest.mjs from the
+ *  same file walk that hashes the corpus (so the size is real, not guessed). */
+export interface BundleInfo {
+  files: number;
+  bytes: number;
+}
+
+/** The sealed data manifest (public/data/manifest.json, P1-10) as the client
+ *  reads it: the integrity surface plus the §2.2 per-bundle download sizes. */
+export interface ManifestDoc {
+  rootHash: string;
+  fileCount: number;
+  sources: Record<string, { repo: string; commit: string }>;
+  files: Record<string, string>;
+  bundles?: Record<string, BundleInfo>;
+}
+
 const memCache = new Map<string, Promise<BookData>>();
+
+let manifestPromise: Promise<ManifestDoc | null> | null = null;
+
+/** Fetch and cache the data manifest once per session. Used by About (the
+ *  integrity line) and Settings (per-bundle sizes + the offline file list). */
+export function loadManifest(): Promise<ManifestDoc | null> {
+  if (!manifestPromise) {
+    manifestPromise = fetch(`${import.meta.env.BASE_URL}data/manifest.json`)
+      .then((r) => (r.ok ? (r.json() as Promise<ManifestDoc>) : null))
+      .catch(() => null);
+  }
+  return manifestPromise;
+}
 
 const DB_NAME = "fidelis-imported";
 const DB_VERSION = 1;
@@ -128,4 +158,40 @@ export async function getVerseText(
 ): Promise<string | undefined> {
   const data = await loadBook(translation, book);
   return data.chapters[chapter - 1]?.[verse - 1];
+}
+
+/** Save a bundled translation for offline reading (spec §2.2 Data): fetch every
+ *  file the manifest lists under `${translation}/`, which the service worker's
+ *  cache-first /data/ handler persists into `fidelis-data-v1`. The manifest is
+ *  the authoritative file list, so this exactly mirrors what ships. Returns the
+ *  number of files fetched; `onProgress` reports as each completes. */
+export async function downloadBundle(
+  translation: string,
+  onProgress?: (done: number, total: number) => void
+): Promise<number> {
+  const m = await loadManifest();
+  if (!m) throw new Error("The data manifest is unavailable; cannot download offline.");
+  const prefix = `${translation}/`;
+  const files = Object.keys(m.files).filter((rel) => rel.startsWith(prefix));
+  if (files.length === 0) throw new Error(`No bundled files found for ${translation}.`);
+  let done = 0;
+  let failed = 0;
+  onProgress?.(0, files.length);
+  for (const rel of files) {
+    try {
+      // fetch() rejects only on a transport failure, so a 404/500 must be
+      // caught by res.ok — the service worker likewise caches only res.ok, so
+      // a non-OK file is NOT saved and we must not claim the bundle is offline.
+      const res = await fetch(`${import.meta.env.BASE_URL}data/${rel}`);
+      if (!res.ok) failed++;
+    } catch {
+      failed++;
+    }
+    done++;
+    onProgress?.(done, files.length);
+  }
+  if (failed > 0) {
+    throw new Error(`${failed} of ${files.length} files could not be saved — please retry with a connection.`);
+  }
+  return done;
 }

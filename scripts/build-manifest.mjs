@@ -44,19 +44,33 @@ export function rootHashOf(files) {
 export async function computeFiles(root = ROOT) {
   const dataDir = join(root, "public", "data");
   const files = {};
+  // Per-top-level-directory file count and byte total (spec §2.2: the Settings
+  // "Download for offline" sizes are real, summed from the same buffers we hash
+  // — never hand-entered). Root files (lectionary.json, quotes.json) aren't a
+  // bundle, so only paths with a directory are counted.
+  const bundles = {};
   for (const rel of await walk(dataDir)) {
-    files[rel] = sha256(await readFile(join(dataDir, rel)));
+    const buf = await readFile(join(dataDir, rel));
+    files[rel] = sha256(buf);
+    const slash = rel.indexOf("/");
+    if (slash > 0) {
+      const top = rel.slice(0, slash);
+      const b = (bundles[top] ??= { files: 0, bytes: 0 });
+      b.files++;
+      b.bytes += buf.length;
+    }
   }
-  return files;
+  return { files, bundles };
 }
 
 export async function writeManifest(root = ROOT) {
-  const files = await computeFiles(root);
+  const { files, bundles } = await computeFiles(root);
   const manifest = {
     note: "SHA-256 per file under public/data/, derived only from the pinned sources. Regenerate: npm run manifest; verify: npm run verify-data.",
     sources: PINS,
     fileCount: Object.keys(files).length,
     rootHash: rootHashOf(files),
+    bundles,
     files
   };
   const dest = join(root, "public", "data", MANIFEST);
@@ -73,7 +87,7 @@ export async function verifyManifest(root = ROOT) {
   } catch (e) {
     return { ok: false, problems: [`manifest unreadable: ${e.message}`] };
   }
-  const actual = await computeFiles(root);
+  const { files: actual, bundles: actualBundles } = await computeFiles(root);
   for (const [p, h] of Object.entries(manifest.files ?? {})) {
     if (!(p in actual)) problems.push(`missing file: ${p}`);
     else if (actual[p] !== h) problems.push(`hash mismatch: ${p}`);
@@ -84,6 +98,8 @@ export async function verifyManifest(root = ROOT) {
   if (manifest.rootHash !== rootHashOf(actual)) problems.push("root hash mismatch");
   if (manifest.fileCount !== Object.keys(actual).length)
     problems.push(`fileCount mismatch: manifest says ${manifest.fileCount}, found ${Object.keys(actual).length}`);
+  if (JSON.stringify(manifest.bundles ?? {}) !== JSON.stringify(actualBundles))
+    problems.push("bundle sizes mismatch");
   for (const [k, pin] of Object.entries(PINS)) {
     const m = manifest.sources?.[k];
     if (!m || m.commit !== pin.commit || m.repo !== pin.repo)

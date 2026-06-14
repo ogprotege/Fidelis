@@ -1,56 +1,171 @@
+/* ============================================================================
+   Design tokens (spec §1.1) and the two-accent rule (spec §1.2).
+
+   Royal purple + gold on a warm Claude grayscale. Every color the UI paints
+   lives in the token blocks below; nothing outside them carries a raw hex.
+
+     PURPLE ACTS.  Everything the user can touch — links, buttons, the active
+                   tab, focused inputs, the selected translation card.
+     GOLD HONORS.  Everything sacred or chosen — the ✠, the verse/quote-of-the-
+                   day quotation marks, small-caps section labels, the rule
+                   beside a selected verse, apparatus marks, highlight one.
+
+   No element carries both accents. Liturgical data colors (the day's color
+   chip) live in src/lib/liturgical.ts, not here — they are content, not theme.
+   ========================================================================== */
+
+/* ── Scripture face: EB Garamond (spec §1.4, SIL OFL 1.1) ────────────────────
+   Bundled woff2, latin + latin-ext, regular + italic. Vite fingerprints these
+   from src/fonts/ into dist/assets/. The unicode-ranges are Google Fonts' own,
+   so the browser fetches latin-ext only when extended-Latin glyphs appear; the
+   Vulgate's æ (U+00E6) and œ (U+0152–0153) live in the latin subset. font-
+   display: swap keeps text readable in the system serif until the face loads.
+   No bold/red weights — red-letter scripture is refused (§1.4, §13.7). */
+@font-face {
+  font-family: "EB Garamond";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/eb-garamond-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/eb-garamond-latin-400-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/eb-garamond-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "EB Garamond";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/eb-garamond-latin-ext-400-italic.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
   --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* EB Garamond first, the system serif behind it while it loads / for any
+     glyph outside the bundled subsets. */
+  --garamond: "EB Garamond", "Iowan Old Style", Palatino, Georgia, "Times New Roman", serif;
+  /* The Scripture face the reader chose (spec §1.4). Default Garamond, so the
+     first paint and the no-JS case are already correct; <html data-font>
+     overrides it below. */
+  --scripture: var(--garamond);
+}
 
-  --bg: #f6efe1;
-  --bg-card: #fffdf6;
-  --bg-inset: #efe5d0;
-  --ink: #2b2117;
-  --ink-soft: #6b5d4a;
-  --rule: #d9cbae;
-  --accent: #8a1f2d; /* deep cardinal red */
-  --accent-soft: #f3dfe0;
-  --gold: #a8842c;
-  --link: #7a1b28;
-  --shadow: 0 1px 3px rgba(60, 42, 20, 0.12), 0 8px 24px -12px rgba(60, 42, 20, 0.25);
+/* The Scripture-face choice, written by App.tsx as <html data-font="…">. */
+[data-font="garamond"] { --scripture: var(--garamond); }
+[data-font="serif"]    { --scripture: var(--serif); }
+[data-font="sans"]     { --scripture: var(--sans); }
 
-  --hl-gold: #f4e3ae;
-  --hl-rose: #f6d5d8;
-  --hl-sky: #d3e5f0;
-  --hl-olive: #dfe6c8;
+/* Day (light). Also the fallback when no [data-theme] is set, so first paint
+   is never colorless. The legacy "parchment" choice migrates here (storage.ts). */
+:root,
+[data-theme="day"] {
+  --bg-0: #F4F2EE;          /* app background (warm gray, not white) */
+  --bg-1: #FCFBF8;          /* cards, sheets */
+  --bg-2: #ECE9E2;          /* hover, raised controls, insets */
+  --border: #DCD8CF;        /* hairlines */
+  --text: #26241F;          /* body */
+  --text-muted: #6E6A61;    /* metadata, citations */
+  --purple: #5B3A8E;        /* interactive on light */
+  --purple-strong: #4A2F74; /* filled buttons */
+  --gold: #A8862C;          /* sacred markers on light */
+
+  --on-accent: #FFFFFF;     /* text/icon on a filled purple control */
+  --shadow: 0 1px 3px rgba(38, 36, 31, 0.08), 0 8px 24px -12px rgba(38, 36, 31, 0.18);
+
+  /* User highlight washes ("gold" is highlight color one, the sacred one). */
+  --hl-gold: #F4E3AE;
+  --hl-rose: #F6D5D8;
+  --hl-sky: #D3E5F0;
+  --hl-olive: #DFE6C8;
+
+  /* Translation status badges (informational chrome, outside the accent grammar). */
+  --badge-pd-bg: #DCEDC8;
+  --badge-pd-text: #33691E;
+  --badge-import-text: #1A4A66;
 }
 
 [data-theme="night"] {
-  --bg: #14110c;
-  --bg-card: #1e1913;
-  --bg-inset: #29221a;
-  --ink: #e8ddc8;
-  --ink-soft: #a89a80;
-  --rule: #3a3225;
-  --accent: #d4737f;
-  --accent-soft: #3a2326;
-  --gold: #d3b15f;
-  --link: #e0939d;
+  --bg-0: #1B1B1E;
+  --bg-1: #242428;
+  --bg-2: #2D2D33;
+  --border: #3A3A41;
+  --text: #ECEAE4;          /* warm off-white */
+  --text-muted: #A19D94;
+  --purple: #9B7BD4;        /* interactive on dark */
+  --purple-strong: #6B46A8;
+  --gold: #D4B254;          /* sacred markers on dark */
+
+  --on-accent: #FFFFFF;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
 
-  --hl-gold: #4a3d1d;
-  --hl-rose: #4a2429;
-  --hl-sky: #1f3543;
-  --hl-olive: #32391e;
+  --hl-gold: #4A3D1D;
+  --hl-rose: #4A2429;
+  --hl-sky: #1F3543;
+  --hl-olive: #32391E;
+
+  --badge-pd-bg: #2E3B1F;
+  --badge-pd-text: #AED581;
+  --badge-import-text: #90CAF9;
 }
+
+/* ── Liturgical accent (spec §1.3) ───────────────────────────────────────────
+   "Follow the liturgical year" remaps the act accent (--purple) to the
+   governing day's color; App.tsx writes <html data-accent="{color}">. Only
+   --purple moves — --gold (the ✠ and wordmark) and --purple-strong keep their
+   brand values, so the two-accent grammar and the gold masthead hold. The day
+   value is the default rule; the night value overrides it under the night
+   theme. White borrows the gold token — "gold stands for white." Absent
+   data-accent (the setting is off), --purple keeps its brand value above, so
+   the app is brand purple year-round. */
+[data-accent="green"]  { --purple: #3E7C4F; }
+[data-accent="violet"] { --purple: #5B3A8E; } /* = brand purple — Advent & Lent */
+[data-accent="white"]  { --purple: #A8862C; } /* gold stands for white */
+[data-accent="red"]    { --purple: #A32638; }
+[data-accent="rose"]   { --purple: #C76A8A; } /* Gaudete & Laetare */
+[data-accent="black"]  { --purple: #4A4A50; }
+
+[data-theme="night"][data-accent="green"]  { --purple: #5CA86E; }
+[data-theme="night"][data-accent="violet"] { --purple: #9B7BD4; }
+[data-theme="night"][data-accent="white"]  { --purple: #D4B254; }
+[data-theme="night"][data-accent="red"]    { --purple: #D45A6A; }
+[data-theme="night"][data-accent="rose"]   { --purple: #D98BA6; }
+[data-theme="night"][data-accent="black"]  { --purple: #8E8E96; }
 
 * { box-sizing: border-box; }
 
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
-  color: var(--ink);
+  background: var(--bg-0);
+  color: var(--text);
   font-family: var(--serif);
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: var(--link); text-decoration: none; }
+/* Purple acts: one focus signal for everything reachable. */
+:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+a { color: var(--purple); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 button, select, input, textarea { font-family: inherit; color: inherit; }
@@ -62,8 +177,8 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
   position: sticky;
   top: 0;
   z-index: 30;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--rule);
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
 .header-inner {
@@ -75,6 +190,8 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
   gap: 1rem;
   flex-wrap: wrap;
 }
+/* Brand is gold — a fixed identity constant (spec §1.3), the masthead, not a
+   generic action; cross and wordmark read as one gold mark. */
 .brand {
   display: flex;
   align-items: baseline;
@@ -82,14 +199,14 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: var(--accent);
+  color: var(--gold);
 }
 .brand .cross { font-size: 1.1rem; color: var(--gold); }
 .brand small {
   font-size: 0.7rem;
   font-family: var(--sans);
   font-weight: 400;
-  color: var(--ink-soft);
+  color: var(--text-muted);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -97,20 +214,96 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
 .nav a {
   padding: 0.35rem 0.7rem;
   border-radius: 0.5rem;
-  color: var(--ink-soft);
+  color: var(--text-muted);
 }
-.nav a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-.nav a:hover { text-decoration: none; color: var(--accent); }
+.nav a.active { color: var(--purple); font-weight: 600; }
+.nav a:hover { text-decoration: none; color: var(--purple); }
+
+/* ── Tab bar (spec §2.1) ─────────────────────────────────────────────────────
+   <TabBar> wears the .nav look on wide viewports — Today · Read · Search · Mass
+   · More as the header row. The bottom-bar layout for phones lives in the media
+   query at the foot of this file (CSS-only swap, no router changes). "More" is a
+   popover over Library/Translations/Settings/About — a dropdown here, rising
+   above the bar on phones — not a route, so the URL space is unchanged. */
+.tabbar .more { position: relative; display: flex; }
+.tabbar .more-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.5rem;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+.tabbar .more-btn:hover { color: var(--purple); }
+/* Purple acts (§1.2): More colors active while you are on one of its routes. */
+.tabbar .more-btn.active { color: var(--purple); font-weight: 600; }
+.more-caret { transition: transform 0.15s ease; }
+.more-btn[aria-expanded="true"] .more-caret { transform: rotate(180deg); }
+
+/* The popover of secondary destinations. */
+.more-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  min-width: 11rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+  padding: 0.3rem;
+  z-index: 50;
+}
+.more-menu a {
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.4rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.more-menu a:hover { color: var(--purple); background: var(--bg-2); text-decoration: none; }
+.more-menu a.active { color: var(--purple); font-weight: 600; }
 
 .icon-btn {
-  border: 1px solid var(--rule);
-  background: var(--bg-card);
+  border: 1px solid var(--border);
+  background: var(--bg-1);
   border-radius: 0.5rem;
   padding: 0.35rem 0.6rem;
   cursor: pointer;
   font-size: 0.9rem;
+  color: inherit;
+  /* The Settings gear is an <a> wearing this class; keep it from picking up the
+     global link underline so the control cluster stays visually uniform. */
+  text-decoration: none;
+  display: inline-block;
 }
-.icon-btn:hover { border-color: var(--gold); }
+.icon-btn:hover { border-color: var(--purple); text-decoration: none; }
+/* The follow-the-liturgical-year toggle shows the day's accent: a filled dot
+   in the live --purple when following (rose on Gaudete, gold on Easter), a
+   hollow dot when off. Reads the same --purple the rest of the UI acts in. */
+.accent-dot { color: var(--purple); font-size: 0.8rem; line-height: 1; }
+
+/* ── Iconography (spec §1.5): the six-piece inline SVG set. Sized in em so each
+   call site scales it exactly like the emoji glyph it replaced; the stroke is
+   currentColor, so the two-accent rule (§1.2) colors it — gold to honor or mark
+   state, the neutral/accent text color to act (it inherits whatever its
+   container sets). */
+.icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+}
+/* The cross is a fixed gold honor wherever it appears outside the gold .brand
+   and .w-title (e.g. the Verse-of-the-Day heading). */
+.cross { color: var(--gold); }
+/* Library entries are saved, chosen things — gold marks them, as in the Reader. */
+.lib-mark { color: var(--gold); }
 
 /* ---------- Layout ---------- */
 .page {
@@ -125,10 +318,10 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
 h1.page-title {
   font-size: 1.6rem;
   margin: 0.5rem 0 1rem;
-  color: var(--accent);
+  color: var(--text);
   font-weight: 700;
 }
-.subtitle { color: var(--ink-soft); margin-top: -0.5rem; }
+.subtitle { color: var(--text-muted); margin-top: -0.5rem; }
 
 /* ---------- Cards / widgets ---------- */
 .widget-grid {
@@ -137,12 +330,13 @@ h1.page-title {
   gap: 1rem;
 }
 .card {
-  background: var(--bg-card);
-  border: 1px solid var(--rule);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
   border-radius: 0.9rem;
   box-shadow: var(--shadow);
   padding: 1.1rem 1.25rem;
 }
+/* Small-caps section label — gold honors. */
 .card h2 {
   margin: 0 0 0.6rem;
   font-size: 0.8rem;
@@ -157,13 +351,15 @@ h1.page-title {
 .card h2 .spacer { flex: 1; }
 
 .votd-text {
+  font-family: var(--scripture);
   font-size: 1.25rem;
   line-height: 1.65;
   font-style: italic;
   margin: 0.25rem 0 0.75rem;
-  quotes: "\201C" "\201D";
 }
-.votd-ref { font-family: var(--sans); font-size: 0.85rem; color: var(--ink-soft); }
+/* Verse-of-the-day quotation marks — gold honors (spec §1.2). */
+.quote-mark { color: var(--gold); font-style: normal; }
+.votd-ref { font-family: var(--sans); font-size: 0.85rem; color: var(--text-muted); }
 .votd-ref a { font-weight: 600; }
 
 .lit-color-chip {
@@ -171,14 +367,14 @@ h1.page-title {
   width: 0.8rem;
   height: 0.8rem;
   border-radius: 50%;
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid var(--border);
   vertical-align: -0.05rem;
 }
 .lit-season { font-size: 1.15rem; margin: 0.2rem 0; }
 .lit-celebration {
   margin: 0.45rem 0 0;
   padding: 0.5rem 0.7rem;
-  background: var(--bg-inset);
+  background: var(--bg-2);
   border-radius: 0.5rem;
   font-size: 0.97rem;
 }
@@ -187,21 +383,22 @@ h1.page-title {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--ink-soft);
+  color: var(--text-muted);
   display: block;
 }
 
 .rosary-list { margin: 0.3rem 0 0; padding-left: 1.4rem; }
 .rosary-list li { margin: 0.3rem 0; line-height: 1.45; }
-.rosary-list .mref { font-family: var(--sans); font-size: 0.78rem; color: var(--ink-soft); margin-left: 0.4rem; }
+.rosary-list .mref { font-family: var(--sans); font-size: 0.78rem; color: var(--purple); margin-left: 0.4rem; }
 
+/* Filled CTA — purple acts. */
 .continue-cta {
   display: inline-block;
   margin-top: 0.4rem;
   padding: 0.5rem 1rem;
   border-radius: 0.6rem;
-  background: var(--accent);
-  color: #fff !important;
+  background: var(--purple-strong);
+  color: var(--on-accent) !important;
   font-family: var(--sans);
   font-size: 0.9rem;
   font-weight: 600;
@@ -211,7 +408,7 @@ h1.page-title {
 /* ---------- Book grid ---------- */
 .testament-title {
   font-size: 1.25rem;
-  color: var(--accent);
+  color: var(--text);
   border-bottom: 2px solid var(--gold);
   padding-bottom: 0.3rem;
   margin: 1.75rem 0 0.75rem;
@@ -221,19 +418,21 @@ h1.page-title {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.13em;
-  color: var(--ink-soft);
+  color: var(--text-muted);
   margin: 1rem 0 0.4rem;
 }
 .book-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+/* Navigation chips read as neutral until touched; purple appears on hover. */
 .book-grid a {
-  background: var(--bg-card);
-  border: 1px solid var(--rule);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
   padding: 0.4rem 0.75rem;
   border-radius: 0.5rem;
   font-size: 0.95rem;
+  color: var(--text);
 }
-.book-grid a:hover { border-color: var(--gold); text-decoration: none; }
-.book-grid a .deutero-mark { color: var(--gold); margin-left: 0.25rem; }
+.book-grid a:hover { border-color: var(--purple); text-decoration: none; }
+.book-grid a .deutero-mark { color: var(--text-muted); margin-left: 0.25rem; }
 
 /* ---------- Reader ---------- */
 .reader-toolbar {
@@ -244,15 +443,15 @@ h1.page-title {
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
-  background: var(--bg);
+  background: var(--bg-0);
   padding: 0.6rem 0;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--border);
   font-family: var(--sans);
   font-size: 0.9rem;
 }
 .reader-toolbar select {
-  background: var(--bg-card);
-  border: 1px solid var(--rule);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.35rem 0.5rem;
   font-size: 0.9rem;
@@ -264,24 +463,25 @@ h1.page-title {
   text-align: center;
   margin: 1.6rem 0 0.2rem;
   font-size: 1.5rem;
-  color: var(--accent);
+  color: var(--text);
 }
 .chapter-subtitle {
   text-align: center;
-  color: var(--ink-soft);
+  color: var(--text-muted);
   font-style: italic;
   margin: 0 0 1.4rem;
   font-size: 0.95rem;
 }
 
-.verses { line-height: 1.85; max-width: 46rem; margin: 0 auto; }
+.verses { font-family: var(--scripture); line-height: 1.85; max-width: 46rem; margin: 0 auto; }
 .parallel .verses { max-width: none; }
 .verse {
   padding: 0.1rem 0.3rem;
   border-radius: 0.3rem;
   cursor: pointer;
 }
-.verse:hover { background: var(--bg-inset); }
+.verse:hover { background: var(--bg-2); }
+/* The rule beside a selected verse — gold honors. */
 .verse.selected { outline: 2px solid var(--gold); }
 .verse.hl-gold { background: var(--hl-gold); }
 .verse.hl-rose { background: var(--hl-rose); }
@@ -290,13 +490,14 @@ h1.page-title {
 .vnum {
   font-family: var(--sans);
   font-size: 0.62em;
-  color: var(--accent);
+  color: var(--text-muted);
   vertical-align: super;
   margin-right: 0.28em;
   font-weight: 700;
 }
+/* Apparatus marks — chosen, so gold honors. */
 .verse .note-mark { color: var(--gold); font-size: 0.8em; margin-left: 0.2em; }
-.verse .bm-mark { color: var(--accent); font-size: 0.8em; margin-left: 0.2em; }
+.verse .bm-mark { color: var(--gold); font-size: 0.8em; margin-left: 0.2em; }
 
 .parallel-grid {
   display: grid;
@@ -324,11 +525,12 @@ h1.page-title {
 }
 .chapter-nav a {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border);
   border-radius: 0.6rem;
-  background: var(--bg-card);
+  background: var(--bg-1);
+  color: var(--text);
 }
-.chapter-nav a:hover { border-color: var(--gold); text-decoration: none; }
+.chapter-nav a:hover { border-color: var(--purple); text-decoration: none; }
 
 /* verse action bar */
 .verse-actions {
@@ -336,8 +538,8 @@ h1.page-title {
   left: 50%;
   bottom: 1.2rem;
   transform: translateX(-50%);
-  background: var(--bg-card);
-  border: 1px solid var(--rule);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
   border-radius: 0.8rem;
   box-shadow: var(--shadow);
   padding: 0.6rem 0.8rem;
@@ -350,12 +552,12 @@ h1.page-title {
   flex-wrap: wrap;
   max-width: min(94vw, 40rem);
 }
-.verse-actions .ref { font-weight: 700; color: var(--accent); margin-right: 0.3rem; }
+.verse-actions .ref { font-weight: 700; color: var(--text); margin-right: 0.3rem; }
 .hl-dot {
   width: 1.35rem;
   height: 1.35rem;
   border-radius: 50%;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border);
   cursor: pointer;
   padding: 0;
 }
@@ -369,8 +571,8 @@ h1.page-title {
 .note-editor textarea {
   width: 100%;
   min-height: 4rem;
-  background: var(--bg-inset);
-  border: 1px solid var(--rule);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.5rem;
   font-size: 0.95rem;
@@ -382,24 +584,24 @@ h1.page-title {
   flex: 1;
   min-width: 14rem;
   padding: 0.55rem 0.8rem;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border);
   border-radius: 0.6rem;
-  background: var(--bg-card);
+  background: var(--bg-1);
   font-size: 1rem;
 }
 .search-bar select, .search-bar button {
   padding: 0.5rem 0.8rem;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border);
   border-radius: 0.6rem;
-  background: var(--bg-card);
+  background: var(--bg-1);
   font-size: 0.95rem;
   cursor: pointer;
 }
-.search-bar button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
-.search-progress { font-family: var(--sans); font-size: 0.85rem; color: var(--ink-soft); margin: 0.6rem 0; }
+.search-bar button.primary { background: var(--purple-strong); color: var(--on-accent); border-color: var(--purple-strong); font-weight: 600; }
+.search-progress { font-family: var(--sans); font-size: 0.85rem; color: var(--text-muted); margin: 0.6rem 0; }
 .result {
   padding: 0.7rem 0;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--border);
   line-height: 1.6;
 }
 .result .ref { font-family: var(--sans); font-size: 0.82rem; font-weight: 700; }
@@ -409,26 +611,26 @@ h1.page-title {
 .tabs { display: flex; gap: 0.4rem; font-family: var(--sans); font-size: 0.9rem; margin-bottom: 1rem; }
 .tabs button {
   padding: 0.45rem 0.9rem;
-  border: 1px solid var(--rule);
-  background: var(--bg-card);
+  border: 1px solid var(--border);
+  background: var(--bg-1);
   border-radius: 0.6rem;
   cursor: pointer;
 }
-.tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-.lib-item { padding: 0.75rem 0; border-bottom: 1px solid var(--rule); }
-.lib-item .when { font-family: var(--sans); font-size: 0.75rem; color: var(--ink-soft); }
+.tabs button.active { background: var(--purple-strong); color: var(--on-accent); border-color: var(--purple-strong); }
+.lib-item { padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+.lib-item .when { font-family: var(--sans); font-size: 0.75rem; color: var(--text-muted); }
 .lib-item .actions { margin-top: 0.3rem; }
 .lib-item .actions button {
   border: none;
   background: none;
-  color: var(--link);
+  color: var(--purple);
   cursor: pointer;
   font-size: 0.82rem;
   font-family: var(--sans);
   padding: 0;
   margin-right: 0.8rem;
 }
-.lib-note { background: var(--bg-inset); border-radius: 0.5rem; padding: 0.5rem 0.7rem; margin-top: 0.4rem; }
+.lib-note { background: var(--bg-2); border-radius: 0.5rem; padding: 0.5rem 0.7rem; margin-top: 0.4rem; }
 
 /* ---------- Translations page ---------- */
 .trans-card { margin-bottom: 1rem; }
@@ -442,21 +644,19 @@ h1.page-title {
   margin-left: 0.5rem;
   vertical-align: 0.1rem;
 }
-.badge.pd { background: #dcedc8; color: #33691e; }
-.badge.copyright { background: var(--accent-soft); color: var(--accent); }
-.badge.imported { background: var(--hl-sky); color: #1a4a66; }
-[data-theme="night"] .badge.pd { background: #2e3b1f; color: #aed581; }
-[data-theme="night"] .badge.imported { color: #90caf9; }
+.badge.pd { background: var(--badge-pd-bg); color: var(--badge-pd-text); }
+.badge.copyright { background: var(--bg-2); color: var(--text-muted); }
+.badge.imported { background: var(--hl-sky); color: var(--badge-import-text); }
 .trans-name { font-size: 1.15rem; font-weight: 700; margin: 0; }
-.trans-meta { font-family: var(--sans); font-size: 0.8rem; color: var(--ink-soft); margin: 0.15rem 0 0.5rem; }
+.trans-meta { font-family: var(--sans); font-size: 0.8rem; color: var(--text-muted); margin: 0.15rem 0 0.5rem; }
 .import-zone { margin-top: 0.7rem; font-family: var(--sans); font-size: 0.88rem; }
 
 /* ---------- Widget embed page ---------- */
 body.widget-mode { background: transparent; }
 .widget-votd {
   font-family: var(--serif);
-  background: var(--bg-card);
-  border: 1px solid var(--rule);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
   border-radius: 0.8rem;
   padding: 1rem 1.2rem;
   max-width: 28rem;
@@ -472,7 +672,7 @@ body.widget-mode { background: transparent; }
 }
 
 .embed-snippet {
-  background: var(--bg-inset);
+  background: var(--bg-2);
   border-radius: 0.5rem;
   padding: 0.8rem;
   font-family: ui-monospace, monospace;
@@ -491,9 +691,9 @@ body.widget-mode { background: transparent; }
 }
 .readings-toolbar input[type="date"], .readings-toolbar select {
   padding: 0.4rem 0.6rem;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: var(--bg-card);
+  background: var(--bg-1);
   font-size: 0.9rem;
 }
 .reading-group { margin: 1.4rem 0; }
@@ -506,7 +706,7 @@ body.widget-mode { background: transparent; }
   color: var(--gold);
 }
 .reading-citation { font-family: var(--sans); font-size: 0.92rem; font-weight: 600; margin: 0.15rem 0 0.3rem; }
-.reading-body { line-height: 1.8; margin: 0; }
+.reading-body { font-family: var(--scripture); line-height: 1.8; margin: 0; }
 .mass-list { margin: 0.2rem 0 0.8rem; padding-left: 1.2rem; }
 .mass-list li { margin: 0.25rem 0; line-height: 1.45; }
 .mass-list .mass-label {
@@ -514,7 +714,7 @@ body.widget-mode { background: transparent; }
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--ink-soft);
+  color: var(--text-muted);
   display: block;
 }
 
@@ -527,6 +727,7 @@ body.widget-mode { background: transparent; }
   position: relative;
   padding-left: 1.1rem;
 }
+/* Quote-of-the-day opening mark — gold honors. */
 .qotd-text::before {
   content: "\201C";
   position: absolute;
@@ -541,42 +742,251 @@ body.widget-mode { background: transparent; }
 
 /* ---------- Marian antiphon ---------- */
 .antiphon { margin: 0.8rem 0; }
-.antiphon summary { cursor: pointer; color: var(--link); }
+.antiphon summary { cursor: pointer; color: var(--purple); }
 .antiphon-body {
   margin-top: 0.6rem;
   padding: 0.7rem 0.9rem;
-  background: var(--bg-inset);
+  background: var(--bg-2);
   border-radius: 0.5rem;
 }
 .antiphon-verse { margin-bottom: 0.7rem; }
 .antiphon-verse:last-child { margin-bottom: 0; }
-.antiphon-la { margin: 0; font-style: italic; color: var(--ink-soft); font-size: 0.92rem; line-height: 1.5; }
+/* The Latin prayer is read text; full-strength --text (italic still marks it
+   Latin) keeps it ≥4.5:1 on the bg-2 panel where --text-muted is 4.44:1. */
+.antiphon-la { margin: 0; font-style: italic; color: var(--text); font-size: 0.92rem; line-height: 1.5; }
 .antiphon-en { margin: 0.15rem 0 0; font-size: 0.95rem; line-height: 1.5; }
+
+/* ---------- Settings (spec §1.4 / §2.2) ---------- */
+.settings .card { margin-bottom: 1rem; }
+.settings .card:last-of-type { margin-bottom: 0.5rem; }
+
+/* The living proof of every choice below — rendered in the chosen face and
+   size (spec §2.2). Garamond by default via --scripture. */
+.scripture-preview {
+  font-family: var(--scripture);
+  line-height: 1.7;
+  margin: 0.2rem 0 0.5rem;
+  color: var(--text);
+}
+.preview-ref { margin: 0; }
+
+/* Pills: purple acts, so the chosen one fills purple (spec §1.2). */
+.pill-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+.pill {
+  border: 1px solid var(--border);
+  background: var(--bg-1);
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.pill:hover { border-color: var(--purple); }
+.pill.active {
+  background: var(--purple-strong);
+  color: var(--on-accent);
+  border-color: var(--purple-strong);
+}
+.pill-sub { font-family: var(--sans); font-size: 0.72rem; color: var(--text-muted); }
+.pill.active .pill-sub { color: var(--on-accent); opacity: 0.85; }
+.settings-foot { margin-top: 0.5rem; }
+
+/* §2.2 Bible-version cards: a horizontally scrolling rail; the chosen card is
+   outlined in purple (purple acts) — outlined, not filled, since it carries
+   text. Locked (copyrighted, not imported) cards dim and link to import. */
+.version-cards {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding: 0.15rem 0.15rem 0.6rem;
+  margin: 0 -0.15rem 0.4rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.version-card {
+  flex: 0 0 15rem;
+  scroll-snap-align: start;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--bg-1);
+  padding: 0.7rem 0.85rem;
+  cursor: pointer;
+}
+.version-card:hover { border-color: var(--purple); }
+.version-card.active { border-color: var(--purple); box-shadow: inset 0 0 0 1px var(--purple); }
+.version-card.locked { cursor: default; opacity: 0.82; }
+.version-card.locked:hover { border-color: var(--border); }
+.version-card:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.version-abbrev {
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.version-check { color: var(--purple); }
+.version-name { margin-top: 0.15rem; line-height: 1.3; }
+.version-meta { margin-top: 0.2rem; }
+.version-prov,
+.version-lock { margin-top: 0.45rem; }
+.lock-badge {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  color: var(--badge-import-text);
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  padding: 0.05rem 0.35rem;
+}
+
+/* §2.2 labeled control row: text on the left, control on the right. */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+.setting-row + .setting-row { border-top: 1px solid var(--border); padding-top: 0.7rem; }
+.setting-label { font-family: var(--sans); font-weight: 600; font-size: 0.92rem; }
+.catechesis { margin: 0.15rem 0 0; max-width: 34rem; }
+
+/* §2.2 toggle switch (Follow the liturgical year): a role="switch" button. */
+.switch {
+  flex: none;
+  width: 2.7rem;
+  height: 1.55rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.18rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: var(--bg-1);
+  transform: translateY(-50%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: left 0.15s, background 0.15s;
+}
+.switch[aria-checked="true"] { background: var(--purple-strong); border-color: var(--purple-strong); }
+.switch[aria-checked="true"]::after { left: calc(100% - 1.33rem); background: var(--on-accent); }
+.switch:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+
+/* §2.2 Data: per-translation offline-download rows. */
+.download-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0;
+}
+.download-row + .download-row { border-top: 1px solid var(--border); }
+.download-name { font-family: var(--sans); font-weight: 600; }
 
 /* ---------- Misc ---------- */
 .notice {
-  background: var(--accent-soft);
-  border: 1px solid var(--accent);
-  color: var(--accent);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
   border-radius: 0.6rem;
   padding: 0.8rem 1rem;
   font-family: var(--sans);
   font-size: 0.9rem;
   line-height: 1.5;
 }
-.muted { color: var(--ink-soft); }
+.muted { color: var(--text-muted); }
 .small { font-size: 0.85rem; }
 .sans { font-family: var(--sans); }
-hr.rule { border: none; border-top: 1px solid var(--rule); margin: 1.5rem 0; }
+hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 
 .footer {
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--border);
   padding: 1.2rem 1rem 2rem;
   text-align: center;
   font-family: var(--sans);
   font-size: 0.8rem;
-  color: var(--ink-soft);
+  color: var(--text-muted);
 }
+/* The Latin motto is sacred text — gold honors. */
 .footer .motto { font-family: var(--serif); font-style: italic; font-size: 0.95rem; color: var(--gold); }
 
-.loading { text-align: center; color: var(--ink-soft); font-style: italic; padding: 2rem 0; }
+.loading { text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0; }
+
+/* ── Tab bar on phones (spec §2.1) ───────────────────────────────────────────
+   The five-tab nav drops to the bottom edge; the header keeps the brand and the
+   control cluster only, so it never wraps at phone widths. The bar respects the
+   iOS home-indicator inset via env(safe-area-inset-bottom). This block sits at
+   the foot of the file so its overrides win on equal specificity. */
+@media (max-width: 640px) {
+  /* Header holds one line and drops the wordmark subtitle, so it cannot wrap. */
+  .header-inner { flex-wrap: nowrap; gap: 0.6rem; }
+  .brand { font-size: 1.2rem; }
+  .brand small { display: none; }
+  /* The desktop nav's margin-left:auto pushed the control cluster to the right
+     edge; the nav leaves the flow on phones, so re-create that with an auto
+     margin on the brand — keeps the accent/theme/gear cluster right-aligned. */
+  .header-inner > :first-child { margin-right: auto; }
+  /* Lift the header's stacking context above the Reader's floating verse-action
+     bar (z-index 40): the bar and its More popover live inside this context, so
+     the popover must out-rank verse-actions when both show on the Reader page.
+     (Raising .tabbar alone cannot escape .header's context — the gate is here.) */
+  .header { z-index: 45; }
+
+  /* Pin the bar to the bottom edge as five equal columns. */
+  .tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 35;
+    margin-left: 0;
+    gap: 0;
+    flex-wrap: nowrap;
+    background: var(--bg-1);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.08), 0 -8px 24px -12px rgba(0, 0, 0, 0.18);
+    padding: 0.25rem 0.25rem calc(0.25rem + env(safe-area-inset-bottom));
+  }
+  .tabbar > a,
+  .tabbar .more { flex: 1 1 0; }
+  /* Each tab a comfortable thumb target (≥44px, iOS HIG) — flex-centered so the
+     min-height is honored and the label sits centred in the column. */
+  .tabbar > a,
+  .tabbar .more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    text-align: center;
+    width: 100%;
+    padding: 0.4rem 0.2rem;
+    border-radius: 0.5rem;
+  }
+
+  /* The popover rises above the bar, spanning the width. Making .more static
+     lets the fixed .tabbar be the positioning context for the menu. */
+  .tabbar .more { position: static; }
+  .more-menu {
+    top: auto;
+    bottom: calc(100% + 0.5rem);
+    left: 0.5rem;
+    right: 0.5rem;
+    min-width: 0;
+  }
+
+  /* Clear the fixed bar: the footer's motto and the Reader's floating verse
+     action bar both sit above it. */
+  .footer { padding-bottom: calc(2rem + 3.25rem + env(safe-area-inset-bottom)); }
+  .verse-actions { bottom: calc(3.75rem + env(safe-area-inset-bottom)); }
+}

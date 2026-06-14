@@ -97,7 +97,7 @@ export default function Translations() {
       />
       {message && <div className="notice" style={{ marginBottom: "1rem" }}>{message}</div>}
       {TRANSLATIONS.map((t) => (
-        <div className="card trans-card" key={t.id}>
+        <div className="card trans-card" id={t.id} key={t.id}>
           <h3 className="trans-name">
             {t.name}
             {t.bundled ? (

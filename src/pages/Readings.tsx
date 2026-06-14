@@ -9,8 +9,8 @@ import {
   weekdayCycle
 } from "../lib/lectionary";
 import { COLOR_HEX, liturgicalDay } from "../lib/liturgical";
-import { CalendarRegion, getSettings, saveSettings } from "../lib/storage";
 import { TRANSLATIONS } from "../lib/translations";
+import { useSettings } from "../SettingsContext";
 
 function toISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
@@ -29,8 +29,12 @@ export default function Readings() {
     return new Date();
   }, [dateParam]);
 
-  const [translation, setTranslation] = useState(getSettings().translation);
-  const [region, setRegion] = useState<CalendarRegion>(getSettings().calendarRegion);
+  // The calendar region lives on the Settings screen now (spec §2.2); read it
+  // live from context so changing it there re-resolves this page at once. The
+  // reading translation stays a local switcher on this toolbar.
+  const settings = useSettings();
+  const region = settings.calendarRegion;
+  const [translation, setTranslation] = useState(settings.translation);
   const [readings, setReadings] = useState<DayReadings | null | "loading">("loading");
   const lit = liturgicalDay(date, region);
 
@@ -91,18 +95,6 @@ export default function Readings() {
               {t.abbrev}
             </option>
           ))}
-        </select>
-        <select
-          value={region}
-          onChange={(e) => {
-            const v = e.target.value as CalendarRegion;
-            saveSettings({ calendarRegion: v });
-            setRegion(v);
-          }}
-          title="Calendar region — governs the dates of Epiphany and the Ascension and the U.S. proper days. (The provinces of Boston, Hartford, New York, Omaha, and Philadelphia keep Ascension Thursday.)"
-        >
-          <option value="universal">Universal</option>
-          <option value="usa">United States</option>
         </select>
       </div>
 

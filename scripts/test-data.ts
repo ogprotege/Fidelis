@@ -12,6 +12,16 @@ import {
 import { liturgicalDay } from "../src/lib/liturgical";
 import { DailyQuote, quoteOfTheDay } from "../src/lib/quotes";
 import { dayOfYear } from "../src/lib/votd";
+import { getSettings } from "../src/lib/storage";
+import {
+  DEFAULT_FONT_SIZE,
+  DEFAULT_SCRIPTURE_FONT,
+  FONT_SIZE_PRESETS,
+  SCRIPTURE_FONTS,
+  isScriptureFont
+} from "../src/lib/typography";
+import { THEME_OPTIONS, isThemeChoice, resolveTheme } from "../src/lib/theme";
+import { formatBytes } from "../src/lib/format";
 import { GOLDEN_REGIONS, GOLDEN_YEARS, goldenYear } from "./golden";
 
 let failures = 0;
@@ -811,6 +821,314 @@ console.log("");
   }
   check("a quote resolves for every day of 2026", nulls === 0, `${nulls} null`);
   check("quote selection is deterministic", nondet === 0, `${nondet} differ`);
+}
+
+// ── 9. Typography (spec §1.4): bundled Scripture face + size presets ─────────
+{
+  const fontsDir = join(ROOT, "src/fonts");
+  const FILES = [
+    "eb-garamond-latin-400-normal.woff2",
+    "eb-garamond-latin-400-italic.woff2",
+    "eb-garamond-latin-ext-400-normal.woff2",
+    "eb-garamond-latin-ext-400-italic.woff2"
+  ];
+  let bad = 0;
+  let total = 0;
+  for (const f of FILES) {
+    let buf: Buffer | null = null;
+    try {
+      buf = readFileSync(join(fontsDir, f));
+    } catch {
+      // missing
+    }
+    // A genuine woff2 begins with the "wOF2" signature; guard against an empty
+    // or LFS-pointer placeholder slipping in.
+    const ok = !!buf && buf.length > 1000 && buf.toString("latin1", 0, 4) === "wOF2";
+    if (!ok) {
+      console.log(`bad/missing font: ${f}`);
+      bad++;
+    }
+    if (buf) total += buf.length;
+  }
+  check(`all four EB Garamond woff2 present and valid (${Math.round(total / 1024)} KB)`, bad === 0, `${bad} bad`);
+  check("only weight-400 faces bundled — no red/bold weights (spec §1.4, §13.7)",
+    !FILES.some((f) => /-(?:500|600|700|800|bold)-/.test(f)));
+
+  let ofl = "";
+  try {
+    ofl = readFileSync(join(fontsDir, "OFL.txt"), "utf8");
+  } catch {
+    // missing
+  }
+  check("SIL OFL committed for EB Garamond (spec §1.4)",
+    /SIL OPEN FONT LICENSE/i.test(ofl) && /EB Garamond/i.test(ofl));
+
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const faces = (css.match(/@font-face/g) ?? []).length;
+  check("styles.css @font-face references all four woff2 files",
+    FILES.every((f) => css.includes(f)) && faces >= 4, `${faces} faces`);
+  check("EB Garamond declared with font-display: swap",
+    /font-family:\s*"EB Garamond"[\s\S]*?font-display:\s*swap/.test(css));
+  check("latin unicode-range present (covers æ U+00E6, œ U+0152–0153)", css.includes("U+0152-0153"));
+  check("latin-ext unicode-range present", css.includes("U+0100-02BA"));
+  check("--scripture mapped for all three faces",
+    /\[data-font="garamond"\]/.test(css) &&
+      /\[data-font="serif"\]/.test(css) &&
+      /\[data-font="sans"\]/.test(css));
+  check("reading text uses var(--scripture)", /\.verses\s*\{[^}]*var\(--scripture\)/.test(css));
+
+  check("four size presets, 17/19/22/25 (spec §1.4)",
+    JSON.stringify(FONT_SIZE_PRESETS.map((p) => p.px)) === "[17,19,22,25]");
+  check("exactly three faces: garamond/serif/sans",
+    JSON.stringify(SCRIPTURE_FONTS.map((f) => f.id)) === '["garamond","serif","sans"]');
+  check("default face is Garamond", DEFAULT_SCRIPTURE_FONT === "garamond");
+  check("default size 19 is itself a preset", FONT_SIZE_PRESETS.some((p) => p.px === DEFAULT_FONT_SIZE));
+  check("isScriptureFont guards the vocabulary",
+    isScriptureFont("garamond") && !isScriptureFont("comic-sans") && !isScriptureFont(undefined));
+
+  const s = getSettings();
+  check("getSettings() defaults scriptureFont to garamond", s.scriptureFont === "garamond");
+  check("getSettings() defaults fontSize to a preset", FONT_SIZE_PRESETS.some((p) => p.px === s.fontSize));
+}
+
+// ── 10. Iconography (spec §1.5): the six-piece inline SVG set replaces the
+//        emoji glyphs in interactive UI. Guard that none creep back in, and
+//        that the Icon component stays currentColor-driven and single-weight.
+{
+  // The five named glyphs (⚑ ✎ ☾/☀ ⧉ ✠); escaped so this guard file holds
+  // none of them itself. Gear/dove and typographic affordances are out of scope.
+  const FORBIDDEN: [string, string][] = [
+    ["⚑", "bookmark flag"],
+    ["✎", "pencil"],
+    ["☾", "crescent moon"],
+    ["☀", "sun"],
+    ["⧉", "copy/share"],
+    ["✠", "cross"]
+  ];
+  // Every .tsx under src/ (App.tsx and any future nesting included), with block
+  // comments stripped first — so Icon.tsx's doc-comment, which names the glyphs
+  // it supersedes, is exempt, while a *rendered* glyph anywhere (Icon.tsx too)
+  // is still caught.
+  const offenders: string[] = [];
+  const tsxFiles = readdirSync(join(ROOT, "src"), { recursive: true })
+    .map(String)
+    .filter((f) => f.endsWith(".tsx"));
+  for (const f of tsxFiles) {
+    const code = readFileSync(join(ROOT, "src", f), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const [glyph, label] of FORBIDDEN) {
+      if (code.includes(glyph)) offenders.push(`src/${f}: ${label}`);
+    }
+  }
+  check("no emoji glyphs remain in interactive UI (spec §1.5)", offenders.length === 0,
+    offenders.join("; "));
+
+  // The native iOS widget is the home-screen parallel of the web Verse-of-the-Day
+  // surfaces — the one most exposed to the system emoji font §1.5 set out to
+  // retire. It must draw the cross natively (CrossIcon), not Text("✠"); keep it
+  // in lockstep, as P1-9 keeps the VOTD selection in lockstep.
+  let swift = "";
+  try {
+    swift = readFileSync(join(ROOT, "ios/WidgetExtension/FidelisWidget.swift"), "utf8");
+  } catch {
+    // widget source absent
+  }
+  const swiftGlyph = FORBIDDEN.find(([g]) => swift.includes(g));
+  check("native iOS widget draws the cross natively, no emoji glyph (spec §1.5)",
+    swift.length > 0 && !swiftGlyph, swiftGlyph ? swiftGlyph[1] : "");
+
+  let icon = "";
+  try {
+    icon = readFileSync(join(ROOT, "src/components/Icon.tsx"), "utf8");
+  } catch {
+    // not yet created
+  }
+  check("Icon component exists", icon.length > 0);
+  check("Icon strokes with currentColor so accent mode colors it (acceptance §1.5)",
+    icon.includes('stroke="currentColor"'));
+  const widths = new Set([...icon.matchAll(/strokeWidth=\{?["']?([\d.]+)/g)].map((m) => m[1]));
+  check("Icon draws in a single stroke weight (spec §1.5)", widths.size === 1, [...widths].join("/"));
+  const NAMES = ["bookmark", "note", "share", "commentary", "sun", "moon", "cross"];
+  check("Icon defines the six-piece set, incl. commentary for §4",
+    NAMES.every((n) => new RegExp(`["']${n}["']`).test(icon)), NAMES.join(", "));
+}
+
+// ── 11. Tab bar (spec §2.1): five-tab navigation — Today · Read · Search · Mass
+//        · More — as the desktop header row and a phone bottom bar, by CSS only.
+//        These lock the three acceptance criteria the build/type-check cannot see
+//        (the fourth, a green build, is `npm run build`): the header cannot wrap
+//        at phone widths, the active tab is purple, and the bar honors the iOS
+//        safe-area inset.
+{
+  let tab = "";
+  try {
+    tab = readFileSync(join(ROOT, "src/components/TabBar.tsx"), "utf8");
+  } catch {
+    // not yet created
+  }
+  // Strip comments so the doc-comment's own "Today · Read · Search · Mass · More"
+  // line can't satisfy the order/label checks — they must hit the real JSX.
+  const tabCode = tab.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const header = readFileSync(join(ROOT, "src/components/Header.tsx"), "utf8");
+
+  check("TabBar component exists", tab.length > 0);
+
+  // The five primary entries, in spec order, on the existing routes (no router
+  // changes): Today (/), Read (/read), Search (/search), Mass (/readings), More.
+  const PRIMARY: [string, string][] = [
+    ["/", "Today"],
+    ["/read", "Read"],
+    ["/search", "Search"],
+    ["/readings", "Mass"]
+  ];
+  check("TabBar renders the four primary tabs on their routes (spec §2.1)",
+    PRIMARY.every(([to, label]) =>
+      new RegExp(`to=["']${to}["'][^>]*>\\s*${label}`).test(tabCode)), PRIMARY.map((p) => p[1]).join(" · "));
+  // Anchor each label to its JSX text node (">label"), not a raw substring —
+  // identifiers like onMoreRoute/MORE would otherwise place "More" first.
+  check("TabBar's primary tabs are in spec order (Today·Read·Search·Mass·More)",
+    ["Today", "Read", "Search", "Mass", "More"]
+      .map((l) => tabCode.search(new RegExp(`>\\s*${l}`)))
+      .every((i, n, a) => i >= 0 && (n === 0 || i > a[n - 1])));
+
+  // "More" opens exactly Library, Translations, Settings, About — and nothing
+  // routes there (it is a popover, not a route).
+  const MORE = ["/library", "/translations", "/settings", "/about"];
+  check("More opens exactly Library/Translations/Settings/About (spec §2.1)",
+    MORE.every((to) => new RegExp(`["']${to}["']`).test(tabCode)), MORE.join(", "));
+
+  // The header delegates to <TabBar>; the old seven-link inline nav is gone.
+  check("Header renders <TabBar> in place of the inline nav (spec §2.1)",
+    header.includes("<TabBar") && !/<nav className="nav">/.test(header));
+
+  // Acceptance: the phone breakpoint pins the bar to the bottom edge and forces
+  // the header onto one line so it cannot wrap at 390px.
+  check("phone media query (max-width: 640px) exists (spec §2.1)",
+    /@media\s*\(max-width:\s*640px\)/.test(css));
+  check("acceptance: header cannot wrap at phone width — .header-inner flex-wrap: nowrap",
+    /\.header-inner\s*\{[^}]*flex-wrap:\s*nowrap/.test(css));
+  check("acceptance: the bar pins to the bottom edge — .tabbar position: fixed; bottom: 0",
+    /\.tabbar\s*\{[^}]*position:\s*fixed[^}]*bottom:\s*0/.test(css));
+
+  // Acceptance: the active tab is purple (purple acts, §1.2) — for both the
+  // NavLink tabs and the More button.
+  check("acceptance: active tab is purple — .nav a.active uses var(--purple)",
+    /\.nav a\.active\s*\{[^}]*color:\s*var\(--purple\)/.test(css));
+  check("acceptance: active More button is purple — .more-btn.active uses var(--purple)",
+    /\.more-btn\.active\s*\{[^}]*color:\s*var\(--purple\)/.test(css));
+
+  // Acceptance: the bar respects the iOS home-indicator inset.
+  check("acceptance: bar respects iOS safe-area inset — env(safe-area-inset-bottom) on .tabbar",
+    /\.tabbar\s*\{[^}]*env\(safe-area-inset-bottom\)/.test(css));
+}
+
+// ── 12. The one Settings screen (spec §2.2): live preview + SettingsContext,
+//        the folded Appearance/Calendar controls, version cards, and the Data
+//        section's real per-bundle sizes. Pure helpers are asserted directly;
+//        the wiring is asserted against source, in the §2.1 manner.
+{
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+
+  // Appearance resolution (System → the OS preference), pure and DOM-free.
+  check("resolveTheme: System follows the OS — dark→night, light→day (spec §2.2)",
+    resolveTheme("system", true) === "night" && resolveTheme("system", false) === "day");
+  check("resolveTheme: Day/Night pin the palette regardless of the OS",
+    resolveTheme("day", true) === "day" && resolveTheme("night", false) === "night");
+  check("THEME_OPTIONS are System/Day/Night in order",
+    JSON.stringify(THEME_OPTIONS.map((o) => o.id)) === '["system","day","night"]');
+  check("isThemeChoice guards the vocabulary",
+    isThemeChoice("system") && isThemeChoice("day") && !isThemeChoice("parchment") && !isThemeChoice(undefined));
+  check("getSettings() defaults theme to System (spec §2.2)", getSettings().theme === "system");
+
+  // Download sizes are human-readable and real.
+  check("formatBytes renders MB/KB/B",
+    formatBytes(5_026_728) === "4.8 MB" && formatBytes(2048) === "2 KB" && formatBytes(500) === "500 B");
+
+  // The manifest now seals real per-bundle sizes (spec §2.2 / P1-10 extended).
+  const m22 = JSON.parse(readFileSync(join(ROOT, "public/data/manifest.json"), "utf8"));
+  const bundleIds = ["drc", "cpdv", "vulgate"];
+  check("manifest seals per-bundle file counts and byte sizes",
+    !!m22.bundles &&
+      bundleIds.every((id) => m22.bundles[id]?.files === 79 && m22.bundles[id]?.bytes > 1_000_000),
+    bundleIds.map((id) => `${id} ${m22.bundles?.[id] ? formatBytes(m22.bundles[id].bytes) : "?"}`).join(", "));
+
+  // SettingsContext is the live source of truth (spec §2.2 engineering note).
+  const ctx = readFileSync(join(ROOT, "src/SettingsContext.tsx"), "utf8");
+  check("SettingsContext exposes provider + read/update hooks",
+    /export function SettingsProvider/.test(ctx) &&
+      /export function useSettings/.test(ctx) &&
+      /export function useUpdateSettings/.test(ctx));
+  const main = readFileSync(join(ROOT, "src/main.tsx"), "utf8");
+  check("the app is wrapped in <SettingsProvider>", /<SettingsProvider>/.test(main));
+
+  // App drives the RESOLVED palette; "system" itself never reaches CSS.
+  const app = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+  check("App resolves theme through resolveTheme and consumes the context",
+    app.includes("resolveTheme") && app.includes("useSettings"));
+  check('styles.css carries no [data-theme="system"] rule (system resolves to day/night)',
+    !/\[data-theme="system"\]/.test(css));
+
+  // The control cluster has folded out of the header (spec §2.1/§2.2).
+  const header = readFileSync(join(ROOT, "src/components/Header.tsx"), "utf8");
+  check("header folds away the day/night + liturgical-year controls",
+    header.includes("<TabBar") && !header.includes("onToggleTheme") && !header.includes("accent-dot"));
+  check("App renders <Header /> with no control props", /<Header\s*\/>/.test(app));
+
+  // The embeddable widget's theme is honored by App (the single writer of
+  // <html data-theme>), so App's own theme effect can no longer clobber it.
+  const widget = readFileSync(join(ROOT, "src/pages/WidgetVotd.tsx"), "utf8");
+  check("App is the single data-theme writer and honors the widget ?theme",
+    app.includes('get("theme")') && app.includes("widgetMode") && !widget.includes("dataset.theme"));
+
+  // The Settings screen itself.
+  const set = readFileSync(join(ROOT, "src/pages/Settings.tsx"), "utf8");
+  check("Settings: live preview is Genesis 1:1–2 in the current translation",
+    /loadBook\(settings\.translation,\s*"genesis"\)/.test(set) && set.includes("Scripture preview"));
+  check("Settings: preview/Reader respond live through the context",
+    set.includes("useSettings") && set.includes("useUpdateSettings"));
+  check("Settings: horizontally scrolling Bible-version cards",
+    set.includes("version-cards") && set.includes('role="radiogroup"'));
+  check("Settings: RSV-2CE/NABRE lock + import link to /translations",
+    set.includes("lock-badge") && /\/translations#\$\{t\.id\}/.test(set));
+  check("Settings: text-size and font pills",
+    set.includes("FONT_SIZE_PRESETS") && set.includes("SCRIPTURE_FONTS"));
+  check("Settings: Appearance is System/Day/Night + the follow-the-year switch",
+    set.includes("THEME_OPTIONS") && /role="switch"/.test(set) && set.includes("followLiturgicalYear"));
+  check("Settings: the follow-the-year catechesis line (spec §2.2)",
+    set.includes("violet in Advent, rose on Gaudete"));
+  check("Settings: the calendar region select (moved from Readings)",
+    set.includes("calendarRegion") &&
+      set.includes('value="universal"') &&
+      set.includes('value="usa"'));
+  check("Settings: Data offers per-bundle download with real sizes",
+    set.includes("downloadBundle") && set.includes("formatBytes"));
+  check("Settings: Data reuses the P2-6 export/import",
+    set.includes("exportMarginalia") && set.includes("importMarginalia"));
+  check("Settings: the manifest integrity line links to About",
+    set.includes("rootHash") && /to="\/about"/.test(set));
+
+  // Readings is left clean — the region select is gone (spec §2.2).
+  const readings = readFileSync(join(ROOT, "src/pages/Readings.tsx"), "utf8");
+  check("Readings no longer renders the region select or writes settings",
+    !readings.includes('value="usa"') && !readings.includes("saveSettings"));
+  check("Readings reads the region live from the context",
+    readings.includes("useSettings") && readings.includes("settings.calendarRegion"));
+
+  // About carries the anchor the Data line points at.
+  const about = readFileSync(join(ROOT, "src/pages/About.tsx"), "utf8");
+  check("About marks the integrity line with id=\"integrity\"", about.includes('id="integrity"'));
+
+  // No-flash boot: index.html resolves theme + face before paint.
+  const html = readFileSync(join(ROOT, "index.html"), "utf8");
+  check("index.html pre-paint script resolves theme (prefers-color-scheme) + font",
+    html.includes("prefers-color-scheme") && /dataset\.theme/.test(html) && /dataset\.font/.test(html));
+
+  // The chosen version-card is outlined in purple (purple acts, §1.2); the
+  // switch fills purple when on.
+  check("acceptance: selected version-card is outlined purple — .version-card.active uses var(--purple)",
+    /\.version-card\.active\s*\{[^}]*var\(--purple\)/.test(css));
+  check("acceptance: the follow-the-year switch fills purple when on",
+    /\.switch\[aria-checked="true"\]\s*\{[^}]*var\(--purple-strong\)/.test(css));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

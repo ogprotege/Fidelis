@@ -73,6 +73,28 @@ struct VotdProvider: TimelineProvider {
     }
 }
 
+/// The Fidelis cross, drawn to match the web app's six-piece icon set
+/// (src/components/Icon.tsx, spec §1.5) — a single 1.6 stroke on a 24×24 grid —
+/// so the home-screen widget shows the same mark as every web surface instead of
+/// a system-emoji cross glyph (which §1.5 set out to retire for rendering
+/// inconsistently across platforms).
+private struct CrossIcon: View {
+    var color: Color
+    var size: CGFloat = 11
+
+    var body: some View {
+        Path { p in
+            let s = size / 24
+            p.move(to: CGPoint(x: 12 * s, y: 3 * s))
+            p.addLine(to: CGPoint(x: 12 * s, y: 21 * s))
+            p.move(to: CGPoint(x: 6.5 * s, y: 8.5 * s))
+            p.addLine(to: CGPoint(x: 17.5 * s, y: 8.5 * s))
+        }
+        .stroke(color, style: StrokeStyle(lineWidth: 1.6 * (size / 24), lineCap: .round, lineJoin: .round))
+        .frame(width: size, height: size)
+    }
+}
+
 struct FidelisWidgetView: View {
     var entry: VotdEntry
     @Environment(\.widgetFamily) var family
@@ -85,7 +107,7 @@ struct FidelisWidgetView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 4) {
-                Text("✠").foregroundColor(gold)
+                CrossIcon(color: gold)
                 Text("VERSE OF THE DAY")
                     .font(.system(size: 10, weight: .semibold))
                     .tracking(1.2)

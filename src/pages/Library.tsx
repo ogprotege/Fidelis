@@ -1,17 +1,18 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { bookDisplayName, getBook } from "../lib/canon";
+import Icon from "../components/Icon";
 import {
   exportMarginalia,
   getBookmarks,
   getHighlights,
   getNotes,
-  getSettings,
   importMarginalia,
   setHighlight,
   setNote,
   toggleBookmark
 } from "../lib/storage";
+import { useSettings } from "../SettingsContext";
 
 type Tab = "bookmarks" | "highlights" | "notes";
 
@@ -21,7 +22,7 @@ export default function Library() {
   const [transfer, setTransfer] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   void version;
-  const translation = getSettings().translation;
+  const translation = useSettings().translation;
 
   const doExport = () => {
     const data = exportMarginalia();
@@ -108,7 +109,7 @@ export default function Library() {
         ) : (
           bookmarks.map((bm) => (
             <div className="lib-item" key={`${bm.book}-${bm.chapter}-${bm.verse}`}>
-              ⚑ {refLink(bm.book, bm.chapter, bm.verse)}{" "}
+              <span className="lib-mark"><Icon name="bookmark" /></span> {refLink(bm.book, bm.chapter, bm.verse)}{" "}
               <span className="when">added {when(bm.createdAt)}</span>
               <div className="actions">
                 <button
@@ -149,11 +150,11 @@ export default function Library() {
 
       {tab === "notes" &&
         (notes.length === 0 ? (
-          <p className="muted">No notes yet. Tap a verse while reading and choose ✎ Note.</p>
+          <p className="muted">No notes yet. Tap a verse while reading and choose <Icon name="note" /> Note.</p>
         ) : (
           notes.map((n) => (
             <div className="lib-item" key={`${n.book}-${n.chapter}-${n.verse}`}>
-              ✎ {refLink(n.book, n.chapter, n.verse)}{" "}
+              <span className="lib-mark"><Icon name="note" /></span> {refLink(n.book, n.chapter, n.verse)}{" "}
               <span className="when">updated {when(n.updatedAt)}</span>
               <div className="lib-note">{n.text}</div>
               <div className="actions">
