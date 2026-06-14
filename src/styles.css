@@ -219,6 +219,56 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
 .nav a.active { color: var(--purple); font-weight: 600; }
 .nav a:hover { text-decoration: none; color: var(--purple); }
 
+/* ── Tab bar (spec §2.1) ─────────────────────────────────────────────────────
+   <TabBar> wears the .nav look on wide viewports — Today · Read · Search · Mass
+   · More as the header row. The bottom-bar layout for phones lives in the media
+   query at the foot of this file (CSS-only swap, no router changes). "More" is a
+   popover over Library/Translations/Settings/About — a dropdown here, rising
+   above the bar on phones — not a route, so the URL space is unchanged. */
+.tabbar .more { position: relative; display: flex; }
+.tabbar .more-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.5rem;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+.tabbar .more-btn:hover { color: var(--purple); }
+/* Purple acts (§1.2): More colors active while you are on one of its routes. */
+.tabbar .more-btn.active { color: var(--purple); font-weight: 600; }
+.more-caret { transition: transform 0.15s ease; }
+.more-btn[aria-expanded="true"] .more-caret { transform: rotate(180deg); }
+
+/* The popover of secondary destinations. */
+.more-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  min-width: 11rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+  padding: 0.3rem;
+  z-index: 50;
+}
+.more-menu a {
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.4rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.more-menu a:hover { color: var(--purple); background: var(--bg-2); text-decoration: none; }
+.more-menu a.active { color: var(--purple); font-weight: 600; }
+
 .icon-btn {
   border: 1px solid var(--border);
   background: var(--bg-1);
@@ -771,3 +821,71 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 .footer .motto { font-family: var(--serif); font-style: italic; font-size: 0.95rem; color: var(--gold); }
 
 .loading { text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0; }
+
+/* ── Tab bar on phones (spec §2.1) ───────────────────────────────────────────
+   The five-tab nav drops to the bottom edge; the header keeps the brand and the
+   control cluster only, so it never wraps at phone widths. The bar respects the
+   iOS home-indicator inset via env(safe-area-inset-bottom). This block sits at
+   the foot of the file so its overrides win on equal specificity. */
+@media (max-width: 640px) {
+  /* Header holds one line and drops the wordmark subtitle, so it cannot wrap. */
+  .header-inner { flex-wrap: nowrap; gap: 0.6rem; }
+  .brand { font-size: 1.2rem; }
+  .brand small { display: none; }
+  /* The desktop nav's margin-left:auto pushed the control cluster to the right
+     edge; the nav leaves the flow on phones, so re-create that with an auto
+     margin on the brand — keeps the accent/theme/gear cluster right-aligned. */
+  .header-inner > :first-child { margin-right: auto; }
+  /* Lift the header's stacking context above the Reader's floating verse-action
+     bar (z-index 40): the bar and its More popover live inside this context, so
+     the popover must out-rank verse-actions when both show on the Reader page.
+     (Raising .tabbar alone cannot escape .header's context — the gate is here.) */
+  .header { z-index: 45; }
+
+  /* Pin the bar to the bottom edge as five equal columns. */
+  .tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 35;
+    margin-left: 0;
+    gap: 0;
+    flex-wrap: nowrap;
+    background: var(--bg-1);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.08), 0 -8px 24px -12px rgba(0, 0, 0, 0.18);
+    padding: 0.25rem 0.25rem calc(0.25rem + env(safe-area-inset-bottom));
+  }
+  .tabbar > a,
+  .tabbar .more { flex: 1 1 0; }
+  /* Each tab a comfortable thumb target (≥44px, iOS HIG) — flex-centered so the
+     min-height is honored and the label sits centred in the column. */
+  .tabbar > a,
+  .tabbar .more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    text-align: center;
+    width: 100%;
+    padding: 0.4rem 0.2rem;
+    border-radius: 0.5rem;
+  }
+
+  /* The popover rises above the bar, spanning the width. Making .more static
+     lets the fixed .tabbar be the positioning context for the menu. */
+  .tabbar .more { position: static; }
+  .more-menu {
+    top: auto;
+    bottom: calc(100% + 0.5rem);
+    left: 0.5rem;
+    right: 0.5rem;
+    min-width: 0;
+  }
+
+  /* Clear the fixed bar: the footer's motto and the Reader's floating verse
+     action bar both sit above it. */
+  .footer { padding-bottom: calc(2rem + 3.25rem + env(safe-area-inset-bottom)); }
+  .verse-actions { bottom: calc(3.75rem + env(safe-area-inset-bottom)); }
+}

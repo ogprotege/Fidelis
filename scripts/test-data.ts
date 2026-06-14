@@ -950,5 +950,75 @@ console.log("");
     NAMES.every((n) => new RegExp(`["']${n}["']`).test(icon)), NAMES.join(", "));
 }
 
+// ── 11. Tab bar (spec §2.1): five-tab navigation — Today · Read · Search · Mass
+//        · More — as the desktop header row and a phone bottom bar, by CSS only.
+//        These lock the three acceptance criteria the build/type-check cannot see
+//        (the fourth, a green build, is `npm run build`): the header cannot wrap
+//        at phone widths, the active tab is purple, and the bar honors the iOS
+//        safe-area inset.
+{
+  let tab = "";
+  try {
+    tab = readFileSync(join(ROOT, "src/components/TabBar.tsx"), "utf8");
+  } catch {
+    // not yet created
+  }
+  // Strip comments so the doc-comment's own "Today · Read · Search · Mass · More"
+  // line can't satisfy the order/label checks — they must hit the real JSX.
+  const tabCode = tab.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const header = readFileSync(join(ROOT, "src/components/Header.tsx"), "utf8");
+
+  check("TabBar component exists", tab.length > 0);
+
+  // The five primary entries, in spec order, on the existing routes (no router
+  // changes): Today (/), Read (/read), Search (/search), Mass (/readings), More.
+  const PRIMARY: [string, string][] = [
+    ["/", "Today"],
+    ["/read", "Read"],
+    ["/search", "Search"],
+    ["/readings", "Mass"]
+  ];
+  check("TabBar renders the four primary tabs on their routes (spec §2.1)",
+    PRIMARY.every(([to, label]) =>
+      new RegExp(`to=["']${to}["'][^>]*>\\s*${label}`).test(tabCode)), PRIMARY.map((p) => p[1]).join(" · "));
+  // Anchor each label to its JSX text node (">label"), not a raw substring —
+  // identifiers like onMoreRoute/MORE would otherwise place "More" first.
+  check("TabBar's primary tabs are in spec order (Today·Read·Search·Mass·More)",
+    ["Today", "Read", "Search", "Mass", "More"]
+      .map((l) => tabCode.search(new RegExp(`>\\s*${l}`)))
+      .every((i, n, a) => i >= 0 && (n === 0 || i > a[n - 1])));
+
+  // "More" opens exactly Library, Translations, Settings, About — and nothing
+  // routes there (it is a popover, not a route).
+  const MORE = ["/library", "/translations", "/settings", "/about"];
+  check("More opens exactly Library/Translations/Settings/About (spec §2.1)",
+    MORE.every((to) => new RegExp(`["']${to}["']`).test(tabCode)), MORE.join(", "));
+
+  // The header delegates to <TabBar>; the old seven-link inline nav is gone.
+  check("Header renders <TabBar> in place of the inline nav (spec §2.1)",
+    header.includes("<TabBar") && !/<nav className="nav">/.test(header));
+
+  // Acceptance: the phone breakpoint pins the bar to the bottom edge and forces
+  // the header onto one line so it cannot wrap at 390px.
+  check("phone media query (max-width: 640px) exists (spec §2.1)",
+    /@media\s*\(max-width:\s*640px\)/.test(css));
+  check("acceptance: header cannot wrap at phone width — .header-inner flex-wrap: nowrap",
+    /\.header-inner\s*\{[^}]*flex-wrap:\s*nowrap/.test(css));
+  check("acceptance: the bar pins to the bottom edge — .tabbar position: fixed; bottom: 0",
+    /\.tabbar\s*\{[^}]*position:\s*fixed[^}]*bottom:\s*0/.test(css));
+
+  // Acceptance: the active tab is purple (purple acts, §1.2) — for both the
+  // NavLink tabs and the More button.
+  check("acceptance: active tab is purple — .nav a.active uses var(--purple)",
+    /\.nav a\.active\s*\{[^}]*color:\s*var\(--purple\)/.test(css));
+  check("acceptance: active More button is purple — .more-btn.active uses var(--purple)",
+    /\.more-btn\.active\s*\{[^}]*color:\s*var\(--purple\)/.test(css));
+
+  // Acceptance: the bar respects the iOS home-indicator inset.
+  check("acceptance: bar respects iOS safe-area inset — env(safe-area-inset-bottom) on .tabbar",
+    /\.tabbar\s*\{[^}]*env\(safe-area-inset-bottom\)/.test(css));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

@@ -1,8 +1,12 @@
 import { NavLink } from "react-router-dom";
 import Icon from "./Icon";
+import TabBar from "./TabBar";
 
-// Until the §2.2 tab-bar redesign, the type/theme controls sit beside the
-// liturgical-year and day/night toggles in the header's control cluster.
+// Spec §2.1: the five-tab navigation (Today · Read · Search · Mass · More) lives
+// in <TabBar>, rendered here as the header row on wide viewports and re-laid by
+// CSS into a bottom tab bar on phones. The type/theme controls sit beside the
+// liturgical-year and day/night toggles in the header's control cluster (the
+// §2.2 Settings redesign will fold them into the one Settings screen).
 
 interface Props {
   theme: "day" | "night";
@@ -20,15 +24,7 @@ export default function Header({ theme, onToggleTheme, followYear, onToggleFollo
             <span className="cross"><Icon name="cross" /></span> Fidelis <small>Catholic Bible</small>
           </span>
         </NavLink>
-        <nav className="nav">
-          <NavLink to="/" end>Today</NavLink>
-          <NavLink to="/readings">Mass</NavLink>
-          <NavLink to="/read">Read</NavLink>
-          <NavLink to="/search">Search</NavLink>
-          <NavLink to="/library">Library</NavLink>
-          <NavLink to="/translations">Translations</NavLink>
-          <NavLink to="/about">About</NavLink>
-        </nav>
+        <TabBar />
         <button
           className="icon-btn"
           onClick={onToggleFollowYear}

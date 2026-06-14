@@ -4,6 +4,51 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.6.0] — 2026-06-13 — the five-tab bar
+
+Design-spec §2.1. The seven-link header that wrapped and cramped on phones gives
+way to a five-tab navigation — **Today · Read · Search · Mass · More** — that
+renders as the header row on wide viewports and drops to a thumb-friendly bar
+pinned to the bottom edge on phones. One component, swapped by CSS alone; the URL
+space is untouched.
+
+### Added
+
+- **`TabBar` component** (`src/components/TabBar.tsx`, spec §2.1): the five
+  primary entries on the existing routes — Today (`/`), Read (`/read`), Search
+  (`/search`), Mass (`/readings`) — plus **More**, a dismissable popover over the
+  four secondary destinations (Library, Translations, Settings, About). "More" is
+  a popover, **not a route**, so the router is unchanged. It drops down under the
+  header link on desktop and rises above the bar on phones; the active tab — and
+  More while you are on one of its routes — colors in `--purple` (purple acts,
+  §1.2). The popover dismisses on outside-click, Escape (which returns focus to
+  the trigger), and on navigation, with a correct disclosure-button contract
+  (`aria-expanded`, and `aria-controls` only while the menu is mounted).
+
+### Changed
+
+- **Header nav replaced by `<TabBar>`** (`src/components/Header.tsx`): the inline
+  seven-link `<nav>` is gone; the brand and the liturgical-accent / day-night /
+  settings control cluster stay in place (the §2.2 Settings redesign will fold
+  the cluster into the one Settings screen).
+- **Responsive layout** (`src/styles.css`): a `@media (max-width: 640px)` block
+  pins the bar to the bottom edge as five equal columns, each a ≥44px touch
+  target, honoring the iOS home-indicator inset via `env(safe-area-inset-bottom)`;
+  the header is held to one line (`flex-wrap: nowrap`, wordmark subtitle hidden,
+  control cluster re-anchored right) so it cannot wrap at 390px. The Reader's
+  floating verse-action bar and the footer motto clear the bar, and the header's
+  stacking context is lifted above the verse-action bar so the More popover wins
+  on the Reader page.
+
+### Tested
+
+- A new *Tab bar* section in the data harness (`scripts/test-data.ts`) locks the
+  spec and the acceptance criteria into `npm test`: the five entries in order on
+  their routes, More opening exactly the four secondary destinations, the header
+  delegating to `<TabBar>` (old inline nav gone), and the three criteria the
+  type-check cannot see — the header cannot wrap at phone width (`flex-wrap:
+  nowrap`), the active tab is purple, and the bar honors the safe-area inset.
+
 ## [1.5.0] — 2026-06-13 — the icon set
 
 Design-spec §1.5. The emoji glyphs — which render inconsistently from one
