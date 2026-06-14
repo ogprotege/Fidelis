@@ -4,227 +4,119 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
-## [1.7.0] — 2026-06-13 — the one Settings screen
+## [1.3.0] — 2026-06-14 — the identity release
 
-Design-spec §2.2. The scattered, snapshot reads of `getSettings()` give way to a
-single live `SettingsContext`, and the type/theme controls fold out of the header
-into one Catena-style Settings screen with a **live Scripture preview pinned on
-top** — Genesis 1:1–2 in the current translation, font, and size, re-rendering the
-instant any control below is touched, no reload.
-
-### Added
-
-- **`SettingsContext`** (`src/SettingsContext.tsx`, spec §2.2 engineering note):
-  one source of truth for settings; `useSettings()` subscribes and `update(patch)`
-  persists through `saveSettings()` and re-renders every consumer, so the preview,
-  the Reader, and the theme respond live. The non-React engines (`liturgical.ts`,
-  `votd.ts`) keep reading `getSettings()` lazily — `update()` writes localStorage
-  synchronously, so the next render sees the new value.
-- **The §2.2 Settings screen** (`src/pages/Settings.tsx`): live preview · Bible
-  version cards (year + provenance, the chosen one outlined in purple, RSV-2CE /
-  NABRE shown locked with an import link) · text-size pills · font pills, each
-  rendered in its own face · **Appearance** (System / Day / Night + the *Follow the
-  liturgical year* switch and its one-line catechesis) · **Calendar** region (moved
-  here from the Readings toolbar) · **Data** (download-for-offline per translation
-  with real sizes, export/import of notes and highlights, and the manifest
-  integrity line linking to About).
-- **System theme** (`src/lib/theme.ts`): theme is now System / Day / Night, with a
-  pure `resolveTheme()` (asserted in the harness) and a `prefers-color-scheme`
-  listener so "System" tracks the OS live. A pre-paint boot script in `index.html`
-  resolves theme + face before the stylesheet paints, so a Night/System user never
-  flashes Day. New installs default to **System**.
-- **Real offline-download sizes**: `build-manifest.mjs` now seals a per-bundle
-  `{ files, bytes }` map (DRB 4.5 MB · CPDV 4.8 MB · VUL 4.0 MB) from the same file
-  walk that hashes the corpus — never hand-entered — and `--verify` checks it. The
-  manifest root hash is unchanged. `downloadBundle()` warms the service-worker data
-  cache and only earns a "Saved ✓" when every file actually fetched `res.ok`.
-
-### Changed
-
-- **Header folds to brand + five tabs** (`src/components/Header.tsx`, spec §2.1/§2.2):
-  the day/night and liturgical-year toggles move into Settings (reachable via
-  More → Settings).
-- **Reader, Readings, Home, BookList, Search, Library** now read settings live from
-  the context; the Reader's A−/A+ stepper and the size pills write the same
-  `fontSize` source of truth. The Readings toolbar loses its region select (now in
-  Settings) and reads the region live.
-
-### Fixed
-
-- The embeddable Verse-of-the-Day widget honors `?theme=night` again: App is now
-  the single writer of `<html data-theme>` and applies the widget's own param
-  (default day), so its palette is self-contained and no longer clobbered by the
-  app's theme effect or leaked from the visitor's saved settings.
-- The liturgical accent tint re-derives the moment the calendar region changes (a
-  missing effect dependency had left it stale on region-divergent days).
-
-## [1.6.0] — 2026-06-13 — the five-tab bar
-
-Design-spec §2.1. The seven-link header that wrapped and cramped on phones gives
-way to a five-tab navigation — **Today · Read · Search · Mass · More** — that
-renders as the header row on wide viewports and drops to a thumb-friendly bar
-pinned to the bottom edge on phones. One component, swapped by CSS alone; the URL
-space is untouched.
+Design-spec §1–§2: Fidelis takes on its visual identity and its navigation in one
+release. The app already knew the day's liturgical color; now it wears it. Scripture
+reads in a bundled printed-Bible face, the chrome speaks in two accents and one
+hand-drawn icon set, the seven-link header becomes a five-tab bar, and every control
+gathers into a single live Settings screen. Six work items (A1–A6); the Word is still
+never printed in red.
 
 ### Added
 
-- **`TabBar` component** (`src/components/TabBar.tsx`, spec §2.1): the five
-  primary entries on the existing routes — Today (`/`), Read (`/read`), Search
-  (`/search`), Mass (`/readings`) — plus **More**, a dismissable popover over the
-  four secondary destinations (Library, Translations, Settings, About). "More" is
-  a popover, **not a route**, so the router is unchanged. It drops down under the
-  header link on desktop and rises above the bar on phones; the active tab — and
-  More while you are on one of its routes — colors in `--purple` (purple acts,
-  §1.2). The popover dismisses on outside-click, Escape (which returns focus to
-  the trigger), and on navigation, with a correct disclosure-button contract
-  (`aria-expanded`, and `aria-controls` only while the menu is mounted).
+- **The token system and the two-accent rule** (A1, §1.1–§1.2): every paint color now
+  lives in the day/night token blocks in `src/styles.css` — nothing outside them
+  carries a raw hex, and no element wears both accents. **Purple acts** (interaction);
+  **gold honors** (the ✠, the wordmark, a bookmarked or annotated verse). The legacy
+  `parchment` theme value migrates to `day` on load.
+- **Follow the liturgical year** (A2, §1.3): a setting, default on, that tints the
+  *act* accent (`--purple`) with the governing day's liturgical color. `accentFor()`
+  in `src/lib/liturgical.ts` — pure and total — resolves the color; `App.tsx` writes
+  it to `<html data-accent>`; CSS remaps `--purple` to the §1.3 hex pair for each
+  color, a day-default rule plus a night override. White borrows the gold token —
+  *gold stands for white* — so the great white feasts read in gold (rose on Gaudete
+  and Laetare). The *honors* accent (`--gold`) and `--purple-strong` never move, so
+  the two-accent grammar and the gold masthead are untouched. Gaudete 2026-12-13 →
+  rose, Easter 2026-04-05 → gold-for-white, and the setting off → brand purple
+  year-round are asserted in the engine harness, and the §1.3 hex table is checked
+  against `src/styles.css` itself.
+- **EB Garamond, bundled** (A3, §1.4, SIL OFL 1.1): four woff2 files (`latin` +
+  `latin-ext`, regular + italic, weight 400), ≈144 KB under `src/fonts/` with their
+  `OFL.txt` and a pinned-tarball provenance note — it renders the Vulgate's æ and œ
+  ligatures the way the printed Douay does. `scriptureFont` ∈ `garamond | serif |
+  sans` (default Garamond) drives a `--scripture` token via `<html data-font>` and
+  applies to every Scripture surface (Reader, Mass readings, Verse of the Day). Four
+  honest size presets — Small 17 · Medium 19 · Large 22 · X-Large 25 — with the
+  Reader's A−/A+ stepper retained as a fine adjustment writing the same `fontSize`.
+  The face/size vocabulary lives in `src/lib/typography.ts`; the harness asserts the
+  woff2 signatures, the committed OFL, the `@font-face` wiring with both subsets'
+  ranges and `swap`, the presets, and the Garamond-at-19 defaults.
+- **A hand-drawn SVG icon set** (A4, §1.5): `src/components/Icon.tsx`, a six-piece set
+  — bookmark, note, share, commentary, sun/moon, cross — drawn in a single 1.6 stroke
+  weight on a 24×24 grid. Every icon strokes in `currentColor`, so the two-accent rule
+  colors it for free: gold where it honors or marks state, the neutral color where it
+  acts. It replaces the emoji glyphs across the interactive UI; the native iOS widget
+  draws the cross as a SwiftUI `Path` tracing the same geometry, so the mark matches
+  web and native. The harness forbids any rendered in-scope emoji in `.tsx`.
+- **Five-tab navigation** (A5, §2.1): `src/components/TabBar.tsx` — Today · Read ·
+  Search · Mass · More — rendering as the header row on wide viewports and a
+  thumb-friendly bottom bar pinned to the bottom edge on phones (≥44px targets,
+  honoring `env(safe-area-inset-bottom)`). **More** is a dismissable popover over the
+  four secondary destinations (Library, Translations, Settings, About), **not a
+  route**, with a correct disclosure contract (`aria-expanded`, `aria-controls` only
+  while mounted, outside-click / Escape dismissal that returns focus to the trigger).
+  The URL space is untouched.
+- **The one Settings screen** (A6, §2.2): a single live `SettingsContext`
+  (`src/SettingsContext.tsx`) replaces the scattered snapshot reads of `getSettings()`
+  — `useSettings()` subscribes and `update()` persists and re-renders every consumer
+  (the non-React engines keep reading `getSettings()` lazily; `update()` writes
+  localStorage synchronously, so the next render sees the new value).
+  `src/pages/Settings.tsx` pins a **live Scripture preview** (Genesis 1:1–2 in the
+  current translation, font, and size, re-rendering as any control below is touched)
+  above Bible-version cards (RSV-2CE / NABRE shown locked with an import link),
+  text-size pills, font pills (each in its own face), **Appearance** (System / Day /
+  Night + the follow-the-year switch and its one-line catechesis), **Calendar** region
+  (moved here from the Readings toolbar), and **Data** (per-translation offline
+  download with real sizes, marginalia export/import, and the manifest integrity line
+  linking to About).
+- **System theme** (§2.2, `src/lib/theme.ts`): theme is System / Day / Night, with a
+  pure `resolveTheme()` (asserted in the harness) and a `prefers-color-scheme` listener
+  so "System" tracks the OS live. A pre-paint boot script in `index.html` resolves the
+  theme and face before the stylesheet paints, so a Night/System user never flashes
+  Day. New installs default to **System**.
+- **Real offline-download sizes**: `build-manifest.mjs` seals a per-bundle `{ files,
+  bytes }` map (DRB 4.5 MB · CPDV 4.8 MB · VUL 4.0 MB) from the same file walk that
+  hashes the corpus — never hand-entered — and `--verify` checks it. `downloadBundle()`
+  warms the service-worker data cache and only earns a "Saved ✓" when every file
+  actually fetched `res.ok`.
 
 ### Changed
 
-- **Header nav replaced by `<TabBar>`** (`src/components/Header.tsx`): the inline
-  seven-link `<nav>` is gone; the brand and the liturgical-accent / day-night /
-  settings control cluster stay in place (the §2.2 Settings redesign will fold
-  the cluster into the one Settings screen).
-- **Responsive layout** (`src/styles.css`): a `@media (max-width: 640px)` block
-  pins the bar to the bottom edge as five equal columns, each a ≥44px touch
-  target, honoring the iOS home-indicator inset via `env(safe-area-inset-bottom)`;
-  the header is held to one line (`flex-wrap: nowrap`, wordmark subtitle hidden,
-  control cluster re-anchored right) so it cannot wrap at 390px. The Reader's
-  floating verse-action bar and the footer motto clear the bar, and the header's
-  stacking context is lifted above the verse-action bar so the More popover wins
-  on the Reader page.
-
-### Tested
-
-- A new *Tab bar* section in the data harness (`scripts/test-data.ts`) locks the
-  spec and the acceptance criteria into `npm test`: the five entries in order on
-  their routes, More opening exactly the four secondary destinations, the header
-  delegating to `<TabBar>` (old inline nav gone), and the three criteria the
-  type-check cannot see — the header cannot wrap at phone width (`flex-wrap:
-  nowrap`), the active tab is purple, and the bar honors the safe-area inset.
-
-## [1.5.0] — 2026-06-13 — the icon set
-
-Design-spec §1.5. The emoji glyphs — which render inconsistently from one
-platform to the next — give way to a hand-drawn, six-piece inline SVG set, so
-the marks of the app look the same everywhere and bend to the liturgical accent.
-
-### Added
-
-- **`Icon` component** (`src/components/Icon.tsx`, spec §1.5): a six-piece set —
-  bookmark, note, share, commentary, sun/moon, cross — drawn in a single 1.6
-  stroke weight on a 24×24 grid. Every icon strokes in `currentColor`, so the
-  two-accent rule (§1.2) colors it for free: **gold where it honors or marks
-  state** (the cross in the wordmark and the Verse-of-the-Day heading, a
-  bookmarked or annotated verse, a saved Library entry) and the **neutral text
-  color where it acts** (the Reader's Bookmark / Note / Copy buttons, the
-  day/night toggle). Sized in `em` so each call site scales it exactly like the
-  glyph it replaced. The commentary bubble is defined now, ready for the §4
-  commentary layer.
-
-### Changed
-
-- **Emoji glyphs replaced** across the interactive UI: the bookmark (⚑), note
-  (✎), copy/share (⧉), and day/night (☾/☀) marks in the Reader, the Library, and
-  the header, and the cross (✠) in the masthead, the Verse-of-the-Day card, and
-  the embeddable widget, are now SVG. The settings gear and the Angelus dove,
-  outside the named six-piece set, are left as they were; typographic
-  affordances (arrows, A−/A+, the ✕ close) are unchanged.
-- **Native iOS widget cross drawn natively** (`ios/WidgetExtension/FidelisWidget.swift`):
-  the home-screen Verse-of-the-Day widget no longer renders the cross as
-  `Text("✠")` from the system emoji font — the surface §1.5's rationale bites
-  hardest on — but as a SwiftUI `CrossIcon` `Path` tracing the same 24×24,
-  1.6-weight geometry as the web `Icon`, so the mark matches across web and
-  native (the web↔Swift lockstep already kept for VOTD selection in P1-9).
-
-### Tested
-
-- A new *Iconography* section in the data harness (`scripts/test-data.ts`)
-  locks the rule into `npm test`: no in-scope emoji glyph survives in any `.tsx`
-  under `src/` (block comments stripped, so the `Icon` component's own
-  doc-comment stays legal while a *rendered* glyph anywhere is still caught), the
-  native iOS widget carries none either, and the `Icon` component stays
-  `currentColor`-driven, single-weight, and complete (all six names defined).
-  Red before the swap, green after.
-
-## [1.4.0] — 2026-06-13 — the Scripture face
-
-Design-spec §1.4. Scripture now reads like a printed Bible. EB Garamond is
-bundled and set as the default reading face, with a real choice of two
-alternatives and four honest size presets — and the Word is still never printed
-in red.
-
-### Added
-
-- **EB Garamond, bundled** (spec §1.4, SIL OFL 1.1): four woff2 files —
-  `latin` + `latin-ext`, regular + italic, weight 400 — totalling **≈144 KB**,
-  committed under `src/fonts/` with their `OFL.txt` license and a provenance
-  note (pinned to `@fontsource/eb-garamond@5.2.7`, tarball SHA-1
-  `68bd97f7…`). It renders the Vulgate's æ and œ ligatures the way the printed
-  Douay does. `@font-face` declarations carry Google's own `unicode-range`s, so
-  `latin-ext` is fetched only when extended-Latin glyphs appear, and
-  `font-display: swap` keeps the system serif legible until the face loads.
-- **Scripture face setting** (spec §1.4): `scriptureFont` ∈
-  `garamond | serif | sans`, default Garamond — *three is a choice; ten is a
-  chore*. The choice drives a new `--scripture` token via `<html data-font>`
-  (mirroring the §1.3 `data-accent` mechanism) and applies to every Scripture
-  surface: the Reader, the Mass readings, and the verse of the day.
-- **Settings screen** (`src/pages/Settings.tsx`, the §2.2 seam): a live
-  Scripture preview (Genesis 1:1–2 in the current translation) pinned above
-  four **text-size pills** (Small 17 · Medium 19 · Large 22 · X-Large 25) and
-  three **font pills**, each rendered in its own face. Reached from a new
-  header gear. The fuller §2.2 screen (versions, appearance, calendar) folds in
-  later.
-- A `src/lib/typography.ts` module owns the face/size vocabulary, and a new
-  *Typography* section in the data harness asserts it: the four woff2 are
-  present and carry the `wOF2` signature, the OFL is committed, `styles.css`
-  wires all four faces with both subsets' ranges and `swap`, the presets are
-  exactly 17/19/22/25, and the stored defaults are Garamond at 19.
-
-### Changed
-
-- The Reader's **A− / A+ stepper is retained as a fine adjustment** (spec §1.4):
-  it now writes the same `fontSize` setting the presets do, bounded by the
-  shared `MIN/MAX_FONT_SIZE` constants.
-- The service worker (`public/sw.js`, shell cache → `v3`) is now **font-aware**:
-  fonts are referenced from CSS `url()` rather than `index.html`, so the
-  all-or-nothing precache now also pulls the fonts each stylesheet names, and
-  the stale-asset purge keeps them — offline reading holds the chosen face
-  instead of falling back to the system serif (preserves review P2-3).
+- **The header folds to brand + five tabs** (`src/components/Header.tsx`): the inline
+  seven-link nav and the day/night + liturgical-year control cluster are gone — the
+  toggles now live in Settings (reachable via More → Settings).
+- **Reader, Readings, Home, BookList, Search, Library** read settings live from the
+  context; the Reader's A−/A+ stepper and the size pills write the same `fontSize`
+  source of truth. The Readings toolbar loses its region select (now in Settings) and
+  reads the region live. App is the single writer of `<html data-theme>`.
+- **The service worker shell cache advances to `v3` and is font-aware**: fonts are
+  referenced from CSS `url()` rather than `index.html`, so the all-or-nothing precache
+  pulls the fonts each stylesheet names and the stale-asset purge keeps them — offline
+  reading holds the chosen face instead of falling back to the system serif (preserves
+  review P2-3).
 
 ### Kept refused
 
-- **Red-letter text** (spec §1.4, §13.7): only weight-400 faces are bundled and
-  no per-word color is set on Scripture, asserted in the harness.
+- **Red-letter text** (§1.4, §13.7): only weight-400 faces are bundled and no per-word
+  color is set on Scripture, asserted in the harness.
 
-## [1.3.0] — 2026-06-13 — the liturgical year, in color
+### Fixed
 
-Design-spec §1. The app already knew the day's color; now it wears it. The §1.1
-token system and §1.2 two-accent rule (the day/night token blocks, the
-parchment→day storage shim) land here as the foundation, and §1.3 builds on them:
-a single setting lets the calendar catechize without a word.
+- The embeddable Verse-of-the-Day widget honors `?theme=night` again: App is the single
+  writer of `<html data-theme>` and applies the widget's own param (default day), so its
+  palette is self-contained and no longer clobbered by the app's theme effect or leaked
+  from the visitor's saved settings.
+- The liturgical accent tint re-derives the moment the calendar region changes (a
+  missing effect dependency had left it stale on region-divergent days).
 
-### Added
+### Deferred
 
-- **Follow the liturgical year** (spec §1.3): a setting, default on, that tints the
-  *act* accent (`--purple`) with the governing day's liturgical color. `App.tsx`
-  writes the resolved color to `<html data-accent>`; CSS remaps `--purple` to the
-  §1.3 hex pair for each color, as a day-default rule plus a night override. White
-  borrows the gold token — *gold stands for white* — so the great white feasts read
-  in gold (rose on Gaudete and Laetare). A colored-dot toggle in the header shows
-  the day's accent — filled when following, hollow when off — and flips it live. The
-  *honors* accent (`--gold`, the ✠ and wordmark) and `--purple-strong` never move,
-  so the two-accent grammar and the gold masthead are untouched. The mapping is a
-  pure, total `accentFor()` in `src/lib/liturgical.ts`, asserted in the engine
-  harness — Gaudete 2026-12-13 → rose, Easter 2026-04-05 → gold-for-white, the
-  setting off → brand purple year-round — and the §1.3 hex table is checked against
-  `src/styles.css` itself, so a mistyped override fails `npm test`.
-
-### Changed
-
-- The §1.1/§1.2 token migration (committed earlier on this branch) ships in this
-  release: every paint color now lives in the day/night token blocks, nothing
-  outside them carries a raw hex, and no element wears both accents.
+- Within §2.2, the Settings **Commentaries** subsection waits on the §4 commentary
+  layer, and the optional single daily-readings notification (off by default, bounded
+  by the no-notification-pressure rule, §13) is not yet built. Design-spec §3–§13 remain
+  the open roadmap — §3 (Quote of the Day) and the §6 Today recomposition already
+  shipped in 1.2.0.
 
 ## [1.2.1] — 2026-06-11 — continuous integration
 

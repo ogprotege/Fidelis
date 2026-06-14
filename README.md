@@ -60,7 +60,9 @@ paraphrasing, no softening of hard sayings, no silent "updates."
   `<iframe src="https://your-domain/#/widget/votd">` (options: `?t=vulgate&theme=night`)
 - **Reader**: translation switcher, parallel view (e.g. Douay side-by-side with the
   Vulgate), traditional book names per translation (1 Kings/Liber I Regum,
-  Apocalypse/Apocalypsis), adjustable type size, verse deep-links.
+  Apocalypse/Apocalypsis), a choice of reading face (bundled EB Garamond, system
+  serif, or sans) with four size presets and an A−/A+ fine adjustment, verse
+  deep-links.
 - **Bookmarks, highlights (4 colors), and notes** — stored locally; no account, no
   tracking, no server. The Library exports the lot as JSON and imports it back
   (merging, newer entry per verse wins), so a lost device does not take your
@@ -71,7 +73,28 @@ paraphrasing, no softening of hard sayings, no silent "updates."
 - **PWA**: installable; the app shell is precached on install (and stale assets
   purged on deploys), so the app opens offline, with offline reading of any
   book you have opened.
-- **Parchment & night themes.**
+- **The liturgical year, in color** — an optional setting (on by default) tints the
+  app's working accent with the governing day's liturgical color: green in Ordinary
+  Time, violet in Advent and Lent, rose on Gaudete and Laetare, red on martyrs'
+  days, black on Good Friday, and gold standing in for white on the great feasts.
+  The sacred marks (the ✠ and the wordmark) stay gold; only the working accent
+  moves, so the calendar catechizes without a word.
+- **A hand-drawn icon set** — bookmark, note, share, commentary, sun/moon, and the
+  cross are inline SVG on one 24×24 stroke grid, not platform emoji, so the marks
+  look the same everywhere. Each strokes in the current color, picking up gold where
+  it honors and the neutral accent where it acts; the iOS home-screen widget draws
+  the same cross natively.
+- **Five-tab navigation** — Today · Read · Search · Mass · More: a header row on
+  wide screens, a thumb-friendly bottom bar on phones (honoring the iOS
+  home-indicator inset). "More" is a popover over Library, Translations, Settings,
+  and About — not a route, so deep links are unchanged.
+- **One Settings screen** with a live Scripture preview (Genesis 1:1–2 in the chosen
+  translation, face, and size, re-rendering as you adjust the controls below): Bible
+  version, text size, reading face, appearance, calendar region, per-translation
+  offline download with real sizes, and JSON export/import of your marginalia.
+- **System / Day / Night theme** — System tracks the device's color-scheme
+  preference live; a pre-paint boot script resolves the theme and reading face
+  before first paint, so a night reader never sees a flash of day.
 
 ## Notes on the texts
 
