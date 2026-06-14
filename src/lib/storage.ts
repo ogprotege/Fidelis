@@ -7,6 +7,7 @@ import {
   isScriptureFont
 } from "./typography";
 import { DEFAULT_THEME, ThemeChoice, isThemeChoice } from "./theme";
+import type { ReadingState } from "./reading";
 
 export interface VerseRef {
   book: string;
@@ -54,6 +55,8 @@ export interface Settings {
   calendarRegion: CalendarRegion;
   /** Tint the act accent (--purple) with the day's liturgical color (spec §1.3). */
   followLiturgicalYear: boolean;
+  /** Show the §6.1 reading-time indulgence line in the Reader. */
+  showIndulgence: boolean;
 }
 
 const PREFIX = "fidelis:";
@@ -87,6 +90,7 @@ export function getSettings(): Settings {
     showVerseNumbers: true,
     calendarRegion: "universal",
     followLiturgicalYear: true,
+    showIndulgence: true,
     ...read<Partial<Settings>>("settings", {})
   };
   // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored
@@ -128,6 +132,16 @@ export function getLastRead(): LastRead | null {
 
 export function saveLastRead(pos: LastRead): void {
   write("lastRead", pos);
+}
+
+/** The §6.1 reading-time accumulator state (frequently mutated; kept out of
+ *  Settings, like LastRead). */
+export function getReading(): ReadingState | null {
+  return read<ReadingState | null>("reading", null);
+}
+
+export function saveReading(state: ReadingState): void {
+  write("reading", state);
 }
 
 export function getBookmarks(): Bookmark[] {

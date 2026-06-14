@@ -259,6 +259,23 @@ export default function Settings() {
             onClick={() => update({ followLiturgicalYear: !settings.followLiturgicalYear })}
           />
         </div>
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">The reading-time indulgence</div>
+            <p className="catechesis muted small">
+              Show a quiet line after a half-hour of reading, with the Church's indulgence
+              for it. Off hides it entirely.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.showIndulgence}
+            aria-label="The reading-time indulgence"
+            className="switch"
+            onClick={() => update({ showIndulgence: !settings.showIndulgence })}
+          />
+        </div>
       </section>
 
       {/* 6 ── Calendar (region moved here from the Readings toolbar, spec §2.2) */}

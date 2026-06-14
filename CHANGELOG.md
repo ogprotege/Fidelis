@@ -4,6 +4,26 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.5.0] — 2026-06-14 — v1.2 B2: the indulgence line (Ench. Ind. conc. 30)
+
+Spec §6.1, the quietest feature in the app. While you read in the Reader, continuous
+reading time accumulates (Page Visibility API; paused when the tab is hidden; the
+continuity clock resets after a ten-minute gap; the daily total lives in localStorage and
+resets at local midnight). At half an hour, one small gold line appears beneath the chapter
+title — *"You have read for half an hour. The Church grants a plenary indulgence for this,
+under the usual conditions (Ench. Ind., conc. 30)."* — and stays until midnight. Tapping it
+opens a sheet listing the usual conditions. No streaks, no history, no badge, no sound; a
+setting hides it entirely. Piety, not gamification.
+
+### Added
+
+- **The reading-time accumulator** (`src/lib/reading.ts`): a pure, injected-time reducer
+  (`advance`) reusing `votd.dayOfYear` for DST-safe local-midnight rollover; harness-tested
+  for the gap reset and the day rollover.
+- **The indulgence line** (`IndulgenceNotice`): the Reader-scoped Page-Visibility timer and
+  the gold line, with the conditions explained in the reused bottom-sheet.
+- **A setting** (`showIndulgence`, default on) to hide it entirely.
+
 ## [1.4.0] — 2026-06-14 — v1.2 B1: rosary mystery sheets with the traditional prayers
 
 Design-spec §6, card 4, upgraded one step. Tapping a mystery on the Today page now

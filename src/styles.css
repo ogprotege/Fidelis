@@ -1077,3 +1077,25 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   .sheet-backdrop { align-items: center; }
   .sheet { border-radius: 0.9rem; max-height: 80vh; }
 }
+
+/* The reading-time indulgence line (spec §6.1). Gold honor; the only act is the
+   tap that opens the conditions sheet. Gold-on-interactive is spec-mandated. */
+.indulgence-line {
+  display: block;
+  width: 100%;
+  margin: 0.1rem 0 0.5rem;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--gold);
+}
+.indulgence-line:hover,
+.indulgence-line:focus-visible { text-decoration: underline; }
+
+.conditions-list { margin: 0.5rem 0; padding-left: 1.3rem; }
+.conditions-list li { margin: 0.25rem 0; line-height: 1.5; }

@@ -15,6 +15,7 @@ import { dayOfYear } from "../src/lib/votd";
 import { MYSTERY_SETS } from "../src/lib/rosary";
 import { passageText } from "../src/lib/passage";
 import { PRAYERS } from "../src/lib/prayers";
+import { advance, dayKey, GAP_MS, HALF_HOUR_MS } from "../src/lib/reading";
 import { getSettings } from "../src/lib/storage";
 import {
   DEFAULT_FONT_SIZE,
@@ -1205,6 +1206,68 @@ check(
   "modal backdrop uses the --scrim token, no raw color",
   /\.sheet-backdrop\s*\{[^}]*var\(--scrim\)/.test(sheetCss)
 );
+
+// 12. The reading-time indulgence accumulator (v1.2 B2, spec §6.1). Pure; driven
+//     by injected timestamps. Gap reset and local-midnight rollover are the
+//     acceptance criteria.
+console.log("");
+{
+  const MIN = 60 * 1000;
+  const t0 = new Date(2026, 5, 14, 9, 0, 0).getTime(); // Jun 14 2026 09:00 local
+
+  // Accumulation: six 5-min ticks credit 30 minutes and earn the indulgence.
+  let s = advance(null, { type: "resume", at: t0 });
+  for (let k = 1; k <= 6; k++) s = advance(s, { type: "tick", at: t0 + k * 5 * MIN });
+  check("reading: six 5-min ticks accumulate 30 minutes", s.ms === 30 * MIN, `${s.ms / MIN}min`);
+  check("reading: 30 minutes earns the indulgence", s.earned === true);
+
+  // Gap reset: a tick a full 10 min after the last resets the continuity clock.
+  let g = advance(null, { type: "resume", at: t0 });
+  g = advance(g, { type: "tick", at: t0 + 5 * MIN });
+  g = advance(g, { type: "tick", at: t0 + 5 * MIN + GAP_MS });
+  check("reading: a >=10-min gap resets the continuity clock", g.ms === 0, `${g.ms / MIN}min`);
+  check("reading: a pre-earn gap leaves earned false", g.earned === false);
+
+  // Earned latches through a same-day gap reset.
+  const after = advance(s, { type: "tick", at: t0 + 6 * 5 * MIN + GAP_MS + MIN });
+  check("reading: earned latches through a same-day gap reset", after.earned === true && after.ms === 0);
+
+  // resume re-baselines without crediting time.
+  let r = advance(null, { type: "resume", at: t0 });
+  r = advance(r, { type: "tick", at: t0 + 3 * MIN });
+  r = advance(r, { type: "resume", at: t0 + 9 * MIN });
+  check("reading: resume re-baselines without crediting", r.ms === 3 * MIN, `${r.ms / MIN}min`);
+
+  // Local-midnight rollover resets ms AND earned.
+  const late = new Date(2026, 5, 14, 23, 50, 0).getTime();
+  const next = new Date(2026, 5, 15, 0, 5, 0).getTime();
+  let d = advance(null, { type: "resume", at: late });
+  d = advance(d, { type: "tick", at: late + 2 * MIN });
+  d = { ...d, earned: true }; // force earned to prove the rollover clears it
+  const rolled = advance(d, { type: "tick", at: next });
+  check("reading: local-midnight rollover resets ms and earned",
+    rolled.ms === 0 && rolled.earned === false, `ms=${rolled.ms} earned=${rolled.earned}`);
+
+  // dayKey is local, not UTC.
+  check("reading: dayKey changes across local midnight",
+    dayKey(new Date(2026, 5, 14, 23, 59, 0).getTime()) !== dayKey(new Date(2026, 5, 15, 0, 1, 0).getTime()));
+  check("reading: dayKey is stable within a local day",
+    dayKey(new Date(2026, 5, 14, 1, 0, 0).getTime()) === dayKey(new Date(2026, 5, 14, 22, 0, 0).getTime()));
+
+  // Purity guard: the module injects time, never reads the clock itself.
+  const readingSrc = readFileSync(join(ROOT, "src/lib/reading.ts"), "utf8");
+  check("reading.ts has no Date.now()/argless new Date() (pure)",
+    !/Date\.now\(/.test(readingSrc) && !/new Date\(\s*\)/.test(readingSrc));
+
+  check("reading: HALF_HOUR_MS and GAP_MS are 30 and 10 minutes",
+    HALF_HOUR_MS === 30 * MIN && GAP_MS === 10 * MIN);
+
+  // The rendered line must match the spec's §6.1 wording exactly ("the Church's,
+  // not ours") — guard against silent drift. Whitespace-tolerant for the JSX wrap.
+  const noticeSrc = readFileSync(join(ROOT, "src/components/IndulgenceNotice.tsx"), "utf8");
+  check("indulgence line text matches the spec §6.1 wording exactly",
+    /You have read for half an hour\.\s+The Church grants a plenary indulgence for this,\s+under the usual conditions \(Ench\. Ind\., conc\. 30\)\./.test(noticeSrc));
+}
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

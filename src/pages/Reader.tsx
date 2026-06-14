@@ -17,6 +17,7 @@ import {
 } from "../lib/storage";
 import { TRANSLATIONS, getTranslation } from "../lib/translations";
 import Icon from "../components/Icon";
+import IndulgenceNotice from "../components/IndulgenceNotice";
 import { clampFontSize } from "../lib/typography";
 import { useSettings, useUpdateSettings } from "../SettingsContext";
 
@@ -267,6 +268,7 @@ export default function Reader() {
         {trans?.name}
         {bookSlug === "psalms" && " · traditional Vulgate Psalm numbering"}
       </p>
+      <IndulgenceNotice enabled={settings.showIndulgence} />
 
       {error && (
         <div className="notice">
