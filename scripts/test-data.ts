@@ -12,6 +12,26 @@ import {
 import { liturgicalDay } from "../src/lib/liturgical";
 import { DailyQuote, quoteOfTheDay } from "../src/lib/quotes";
 import { dayOfYear } from "../src/lib/votd";
+import { MYSTERY_SETS } from "../src/lib/rosary";
+import { passageText } from "../src/lib/passage";
+import { PRAYERS } from "../src/lib/prayers";
+import { advance, dayKey, GAP_MS, HALF_HOUR_MS } from "../src/lib/reading";
+import {
+  PRESETS,
+  chaptersForBooks,
+  todayPortion,
+  markPortionRead,
+  planDay,
+  planTotalDays,
+  isComplete,
+  paceForDays,
+  targetDateToPerDay,
+  formatPortion,
+  versesOf,
+  LONG_VERSES,
+  ReadingPlan
+} from "../src/lib/plans";
+import { BOOKS, getBook } from "../src/lib/canon";
 import { getSettings } from "../src/lib/storage";
 import {
   DEFAULT_FONT_SIZE,
@@ -1129,6 +1149,205 @@ console.log("");
     /\.version-card\.active\s*\{[^}]*var\(--purple\)/.test(css));
   check("acceptance: the follow-the-year switch fills purple when on",
     /\.switch\[aria-checked="true"\]\s*\{[^}]*var\(--purple-strong\)/.test(css));
+}
+
+// 11. Rosary mystery sheets (v1.2 B1). Every mystery's meditation passage must
+//     resolve to real text in every bundled translation, and passageText must
+//     equal the Reader's own verse filter (so the sheet can't drift). The five
+//     traditional prayers must be present and complete. Today stays five cards.
+console.log("");
+const allMysteries = Object.values(MYSTERY_SETS).flatMap((s) => s.mysteries);
+check("the four mystery sets hold 20 mysteries", allMysteries.length === 20, `${allMysteries.length}`);
+
+for (const t of ["drc", "cpdv", "vulgate"]) {
+  let bad = 0;
+  let drift = 0;
+  for (const m of allMysteries) {
+    const [book, chapter, start] = m.ref;
+    try {
+      const data = JSON.parse(
+        readFileSync(join(ROOT, `public/data/${t}/${book}.json`), "utf8")
+      );
+      const got = passageText(data, chapter, start, m.end);
+      if (!got.trim()) {
+        console.log(`  ${t}: empty passage — ${m.title} (${book} ${chapter}:${start})`);
+        bad++;
+      }
+      // Independent recompute of the Reader's own grid-empty filter.
+      const ch: string[] = data.chapters[chapter - 1] ?? [];
+      const last = Math.min(m.end ?? start, ch.length);
+      const reader = ch.slice(start - 1, last).filter((s) => s && s.trim()).join(" ");
+      if (got !== reader) {
+        console.log(`  ${t}: passage drift — ${m.title}`);
+        drift++;
+      }
+    } catch {
+      console.log(`  ${t}: missing book ${book} — ${m.title}`);
+      bad++;
+    }
+  }
+  check(`every mystery passage lands on text in ${t}`, bad === 0, `${bad} invalid`);
+  check(`passageText matches the Reader filter in ${t}`, drift === 0, `${drift} drift`);
+}
+
+check(
+  "five rosary prayers carry Latin and English",
+  PRAYERS.length === 5 && PRAYERS.every((p) => p.la.trim() && p.en.trim()),
+  `${PRAYERS.length}`
+);
+check(
+  "each rosary prayer closes with Amen (Latin and English)",
+  PRAYERS.every((p) => /Amen\.?$/.test(p.la.trim()) && /Amen\.?$/.test(p.en.trim()))
+);
+
+// Standing rule 2: the Today page renders exactly five cards.
+const homeSrc = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
+check(
+  "Today page renders exactly five cards (standing rule 2)",
+  (homeSrc.match(/className="card"/g) || []).length === 5,
+  `${(homeSrc.match(/className="card"/g) || []).length} cards`
+);
+
+// Two-accent rule on the new sheet: close acts in purple, label honors in gold.
+const sheetCss = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+check(
+  "sheet close button acts in purple (two-accent §1.2)",
+  /\.sheet-close\s*\{[^}]*var\(--purple\)/.test(sheetCss)
+);
+check(
+  "sheet prayers label honors in gold (two-accent §1.2)",
+  /\.mystery-sheet-prayers-label\s*\{[^}]*var\(--gold\)/.test(sheetCss)
+);
+check(
+  "modal backdrop uses the --scrim token, no raw color",
+  /\.sheet-backdrop\s*\{[^}]*var\(--scrim\)/.test(sheetCss)
+);
+
+// 12. The reading-time indulgence accumulator (v1.2 B2, spec §6.1). Pure; driven
+//     by injected timestamps. Gap reset and local-midnight rollover are the
+//     acceptance criteria.
+console.log("");
+{
+  const MIN = 60 * 1000;
+  const t0 = new Date(2026, 5, 14, 9, 0, 0).getTime(); // Jun 14 2026 09:00 local
+
+  // Accumulation: six 5-min ticks credit 30 minutes and earn the indulgence.
+  let s = advance(null, { type: "resume", at: t0 });
+  for (let k = 1; k <= 6; k++) s = advance(s, { type: "tick", at: t0 + k * 5 * MIN });
+  check("reading: six 5-min ticks accumulate 30 minutes", s.ms === 30 * MIN, `${s.ms / MIN}min`);
+  check("reading: 30 minutes earns the indulgence", s.earned === true);
+
+  // Gap reset: a tick a full 10 min after the last resets the continuity clock.
+  let g = advance(null, { type: "resume", at: t0 });
+  g = advance(g, { type: "tick", at: t0 + 5 * MIN });
+  g = advance(g, { type: "tick", at: t0 + 5 * MIN + GAP_MS });
+  check("reading: a >=10-min gap resets the continuity clock", g.ms === 0, `${g.ms / MIN}min`);
+  check("reading: a pre-earn gap leaves earned false", g.earned === false);
+
+  // Earned latches through a same-day gap reset.
+  const after = advance(s, { type: "tick", at: t0 + 6 * 5 * MIN + GAP_MS + MIN });
+  check("reading: earned latches through a same-day gap reset", after.earned === true && after.ms === 0);
+
+  // resume re-baselines without crediting time.
+  let r = advance(null, { type: "resume", at: t0 });
+  r = advance(r, { type: "tick", at: t0 + 3 * MIN });
+  r = advance(r, { type: "resume", at: t0 + 9 * MIN });
+  check("reading: resume re-baselines without crediting", r.ms === 3 * MIN, `${r.ms / MIN}min`);
+
+  // Local-midnight rollover resets ms AND earned.
+  const late = new Date(2026, 5, 14, 23, 50, 0).getTime();
+  const next = new Date(2026, 5, 15, 0, 5, 0).getTime();
+  let d = advance(null, { type: "resume", at: late });
+  d = advance(d, { type: "tick", at: late + 2 * MIN });
+  d = { ...d, earned: true }; // force earned to prove the rollover clears it
+  const rolled = advance(d, { type: "tick", at: next });
+  check("reading: local-midnight rollover resets ms and earned",
+    rolled.ms === 0 && rolled.earned === false, `ms=${rolled.ms} earned=${rolled.earned}`);
+
+  // dayKey is local, not UTC.
+  check("reading: dayKey changes across local midnight",
+    dayKey(new Date(2026, 5, 14, 23, 59, 0).getTime()) !== dayKey(new Date(2026, 5, 15, 0, 1, 0).getTime()));
+  check("reading: dayKey is stable within a local day",
+    dayKey(new Date(2026, 5, 14, 1, 0, 0).getTime()) === dayKey(new Date(2026, 5, 14, 22, 0, 0).getTime()));
+
+  // Purity guard: the module injects time, never reads the clock itself.
+  const readingSrc = readFileSync(join(ROOT, "src/lib/reading.ts"), "utf8");
+  check("reading.ts has no Date.now()/argless new Date() (pure)",
+    !/Date\.now\(/.test(readingSrc) && !/new Date\(\s*\)/.test(readingSrc));
+
+  check("reading: HALF_HOUR_MS and GAP_MS are 30 and 10 minutes",
+    HALF_HOUR_MS === 30 * MIN && GAP_MS === 10 * MIN);
+
+  // The rendered line must match the spec's §6.1 wording exactly ("the Church's,
+  // not ours") — guard against silent drift. Whitespace-tolerant for the JSX wrap.
+  const noticeSrc = readFileSync(join(ROOT, "src/components/IndulgenceNotice.tsx"), "utf8");
+  check("indulgence line text matches the spec §6.1 wording exactly",
+    /You have read for half an hour\.\s+The Church grants a plenary indulgence for this,\s+under the usual conditions \(Ench\. Ind\., conc\. 30\)\./.test(noticeSrc));
+}
+
+// 13. Reading plans (v1.2 B3, spec §7). Pure citation arithmetic over the real
+//     canon counts: preset totals, pace, completion advance, and the weighted
+//     Whole-Canon order (no two long chapters in a day; psalms spread).
+console.log("");
+{
+  // Canon counts come from the real bundled data (parity with the corpus).
+  for (const [slug, t] of [["genesis", "drc"], ["psalms", "drc"], ["matthew", "drc"], ["revelation", "drc"]] as const) {
+    const real = JSON.parse(readFileSync(join(ROOT, `public/data/${t}/${slug}.json`), "utf8")).chapters.length;
+    check(`canon chapter count for ${slug} matches the real data`, getBook(slug)!.chapters === real, `${getBook(slug)!.chapters} vs ${real}`);
+  }
+  check("psalms 118 is 176 verses (Vulgate numbering)", getBook("psalms")!.verses[117] === 176, `${getBook("psalms")!.verses[117]}`);
+
+  // Preset totals equal the summed real chapter counts.
+  const sumChapters = (slugs: string[]) => slugs.reduce((n, s) => n + getBook(s)!.chapters, 0);
+  const byId = Object.fromEntries(PRESETS.map((p) => [p.id, p.build()]));
+  check("Gospels preset = 89 chapters", byId.gospels.chapters.length === 89, `${byId.gospels.chapters.length}`);
+  check("Psalter preset = 150 chapters", byId.psalter.chapters.length === 150, `${byId.psalter.chapters.length}`);
+  check("Gospels preset pace = 1/day (89 in 90 days)", byId.gospels.perDay === 1, `${byId.gospels.perDay}`);
+  check("Psalter preset pace = 5/day (150 in 30 days)", byId.psalter.perDay === 5, `${byId.psalter.perDay}`);
+  check("NT preset total matches summed NT chapter counts",
+    byId.nt.chapters.length === sumChapters(BOOKS.filter((b) => ["Gospels", "Acts of the Apostles", "Pauline Epistles", "Catholic Epistles", "Apocalypse"].includes(b.group)).map((b) => b.slug)),
+    `${byId.nt.chapters.length}`);
+  check("Deuterocanon preset total matches summed deutero chapter counts",
+    byId.deuterocanon.chapters.length === sumChapters(BOOKS.filter((b) => b.deutero).map((b) => b.slug)),
+    `${byId.deuterocanon.chapters.length}`);
+
+  // Whole Canon: permutation of the full 73-book canon; weighting invariants.
+  const canonRefs = chaptersForBooks(BOOKS.filter((b) => !b.appendix).map((b) => b.slug));
+  const wc = byId.canon.chapters;
+  check("Whole Canon length = full canon chapter count", wc.length === canonRefs.length, `${wc.length} vs ${canonRefs.length}`);
+  check("Whole Canon is a permutation of the canon (no loss/dup)",
+    JSON.stringify([...wc].sort()) === JSON.stringify([...canonRefs].sort()));
+  let twoLongDays = 0;
+  let ps118DayVerses = 0;
+  for (let i = 0; i < wc.length; i += byId.canon.perDay) {
+    const day = wc.slice(i, i + byId.canon.perDay);
+    if (day.filter((r) => versesOf(r) >= LONG_VERSES).length > 1) twoLongDays++;
+    if (day.includes("psalms/118")) ps118DayVerses = day.reduce((n, r) => n + versesOf(r), 0);
+  }
+  check("Whole Canon: no day pairs two long chapters", twoLongDays === 0, `${twoLongDays} bad days`);
+  check("Whole Canon: Psalm 118's day is near-solo (one long chapter)", ps118DayVerses > 0 && ps118DayVerses < 176 + 3 * LONG_VERSES, `${ps118DayVerses} verses`);
+  let gap = 0, maxGap = 0;
+  for (const r of wc) { if (r.startsWith("psalms/")) gap = 0; else { gap++; maxGap = Math.max(maxGap, gap); } }
+  check("Whole Canon: psalms are spread through the year (bounded gaps)", maxGap <= 20, `max gap ${maxGap}`);
+
+  // Completion advance.
+  const plan: ReadingPlan = { id: "t", name: "t", chapters: ["a/1", "a/2", "a/3", "a/4", "a/5"], perDay: 2, startedAt: 0, completedThrough: 0 };
+  check("todayPortion is the next perDay chapters", JSON.stringify(todayPortion(plan)) === JSON.stringify(["a/1", "a/2"]));
+  const p1 = markPortionRead(plan);
+  check("markPortionRead advances by perDay", p1.completedThrough === 2);
+  check("planDay reflects the portion index", planDay(p1) === 2 && planDay(plan) === 1);
+  check("planTotalDays = ceil(len/perDay)", planTotalDays(plan) === 3);
+  const p2 = markPortionRead(markPortionRead(p1)); // 2 -> 4 -> 5 (clamped)
+  check("markPortionRead clamps at the end and completes", p2.completedThrough === 5 && isComplete(p2));
+  check("todayPortion is empty when complete", todayPortion(p2).length === 0);
+
+  // Pace helpers.
+  check("paceForDays(150,30)=5 and paceForDays(89,90)=1", paceForDays(150, 30) === 5 && paceForDays(89, 90) === 1);
+  check("targetDateToPerDay spans the date range", targetDateToPerDay(60, 0, 30 * 24 * 60 * 60 * 1000) === 2);
+
+  // formatPortion range collapsing.
+  check("formatPortion collapses a same-book run", formatPortion(["genesis/3", "genesis/4"], "drc") === "Genesis 3–4");
+  check("formatPortion joins mixed books with a middot", formatPortion(["genesis/3", "psalms/7"], "drc") === "Genesis 3 · Psalms 7");
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

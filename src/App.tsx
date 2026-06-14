@@ -4,6 +4,8 @@ import Header from "./components/Header";
 import Home from "./pages/Home";
 import BookList from "./pages/BookList";
 import Reader from "./pages/Reader";
+import Plans from "./pages/Plans";
+import PlanCreator from "./pages/PlanCreator";
 import Readings from "./pages/Readings";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
@@ -95,6 +97,8 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/read" element={<BookList />} />
           <Route path="/read/:translation/:book/:chapter" element={<Reader />} />
+          <Route path="/plans" element={<Plans />} />
+          <Route path="/plans/new" element={<PlanCreator />} />
           <Route path="/readings" element={<Readings />} />
           <Route path="/search" element={<Search />} />
           <Route path="/library" element={<Library />} />

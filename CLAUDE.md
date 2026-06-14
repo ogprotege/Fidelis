@@ -6,6 +6,7 @@ daily Mass readings. Companion documents:
 P0/P1/P2 item plus hygiene B.1/B.2/B.4 done as of v1.1.0 and §B.3, CI, closed in
 v1.2.1 — the manual is fully implemented), `docs/review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md`
 (the growth plan; its §1–§2 identity layer shipped in v1.3.0, the identity release,
+and its §6 card 4 / §6.1 / §7 devotional layer in v1.4.0, the daily soul — both
 recorded below), and `CHANGELOG.md` (release history; bump `package.json` version
 and add a CHANGELOG entry together).
 
@@ -64,8 +65,50 @@ items (A1–A6) on the `v1.1-identity` branch:
 **Deferred within §2.2** (each waits on a layer not yet built): the Settings
 *Commentaries* subsection (needs the §4 commentary layer) and the optional single
 daily-readings notification (off by default; bounded by standing rule 3 — no
-notification pressure). Spec §3–§13 remain the open roadmap; §3 (Quote of the Day)
-and the §6 Today recomposition already shipped in 1.2.0.
+notification pressure). §3 (Quote of the Day) and the §6 Today recomposition
+shipped in 1.2.0; §6 card 4, §6.1, and §7 in 1.4.0 (the daily soul, below). The §4
+commentary layer, §5, and §8–§12 remain the open roadmap (§13 is the binding refusal
+list, in the standing rules).
+
+## The daily soul release — design spec §6 card 4, §6.1, §7 (v1.4.0)
+
+The spec's devotional layer shipped in v1.4.0 "the daily soul" — three work items
+(B1–B3) on the `v1.2-daily-soul` branch, pushed/merged as `v1.4.0`. Specs:
+`docs/superpowers/specs/2026-06-14-{rosary-mystery-sheet,indulgence-timer,reading-plans}-design.md`.
+
+- **§6 card 4 — the rosary mystery sheet** (B1): tapping a mystery on the Today card
+  opens a reusable bottom-sheet (`src/components/Sheet.tsx` — `role="dialog"`, dimmed
+  `--scrim` backdrop, Escape/backdrop/✕ dismiss, focus trap + return, z-60, no motion).
+  `MysterySheet.tsx` renders the mystery's passage verbatim via the shared
+  `passageText(data, ch, v, end?)` in `src/lib/passage.ts` — extracted from `VerseQuote`,
+  which now calls it, so the sheet can never drift from the Reader (asserted per mystery ×
+  DRC/CPDV/Vulgate, `test-data.ts` §11) — then the five prayers (`src/lib/prayers.ts`,
+  Latin+English) collapsed. The 20 mystery refs in `rosary.ts` gained an optional `end?`
+  for fuller passages. Honor is the gold quote-marks + gold "Prayers" label, **never a `✠`
+  glyph** (the §1.5 emoji guard forbids ✠; `✕`/`✓` are allowed).
+- **§6.1 — the reading-time indulgence** (B2): `src/lib/reading.ts` is the pure accumulator
+  — `advance(prev, {type:'tick'|'resume', at})` with `dayKey` reusing `votd.dayOfYear` for
+  DST-safe local-midnight rollover; a ≥10-min gap resets the continuity clock, the daily
+  total persists at `fidelis:reading`, and an `earned` latch sticks until midnight.
+  `<IndulgenceNotice enabled>` (Reader-scoped, Page Visibility API, ~15s tick) shows the
+  gold line beneath the chapter title at 30 min — exact §6.1 wording, source-guarded in
+  `test-data.ts` §12 — tap → conditions `Sheet`. `showIndulgence` setting (default on)
+  hides it. Nothing renders before 30 min (§13.4 — no progress theater); harness-tested for
+  gap reset and midnight rollover.
+- **§7 — reading plans** (B3): `src/lib/plans.ts` is pure citation arithmetic over the real
+  `canon.ts` counts (`chapters: number`, `verses: number[]` from `bookMeta.json`). Model
+  `{ id, name, chapters: ["genesis/1",…], perDay, startedAt, completedThrough }` at
+  `fidelis:plans` (storage CRUD + `activePlan()`, `ReadingPlan` imported type-only to avoid a
+  cycle). Five presets; `weightedCanon()` interleaves the Psalter (Bresenham) then
+  de-clusters so no perDay-day holds two ≥80-verse chapters (Psalm 118 gets a near-solo
+  day). `/plans` (manage) and `/plans/new` (one-screen creator: grouped checkboxes, pace by
+  chapters/day or target date, name) reached from Read; a Continue-Reading line + a
+  "Mark today's portion read" action at the Reader's chapter end. "Day N" is a portion
+  index, not a calendar streak. Arithmetic asserted in `test-data.ts` §13 (preset totals
+  from real data, pace, completion advance, the weighted order).
+
+The new `Sheet` primitive is built to host the deferred §4 commentary layer. The single
+optional daily-readings notification stays deferred and off (no notification pressure).
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

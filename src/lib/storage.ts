@@ -7,6 +7,8 @@ import {
   isScriptureFont
 } from "./typography";
 import { DEFAULT_THEME, ThemeChoice, isThemeChoice } from "./theme";
+import type { ReadingState } from "./reading";
+import type { ReadingPlan } from "./plans";
 
 export interface VerseRef {
   book: string;
@@ -54,6 +56,8 @@ export interface Settings {
   calendarRegion: CalendarRegion;
   /** Tint the act accent (--purple) with the day's liturgical color (spec §1.3). */
   followLiturgicalYear: boolean;
+  /** Show the §6.1 reading-time indulgence line in the Reader. */
+  showIndulgence: boolean;
 }
 
 const PREFIX = "fidelis:";
@@ -87,6 +91,7 @@ export function getSettings(): Settings {
     showVerseNumbers: true,
     calendarRegion: "universal",
     followLiturgicalYear: true,
+    showIndulgence: true,
     ...read<Partial<Settings>>("settings", {})
   };
   // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored
@@ -128,6 +133,54 @@ export function getLastRead(): LastRead | null {
 
 export function saveLastRead(pos: LastRead): void {
   write("lastRead", pos);
+}
+
+/** The §6.1 reading-time accumulator state (frequently mutated; kept out of
+ *  Settings, like LastRead). */
+export function getReading(): ReadingState | null {
+  return read<ReadingState | null>("reading", null);
+}
+
+export function saveReading(state: ReadingState): void {
+  write("reading", state);
+}
+
+export function getPlans(): ReadingPlan[] {
+  return read<ReadingPlan[]>("plans", []);
+}
+
+function planId(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+}
+
+export function addPlan(p: Omit<ReadingPlan, "id" | "startedAt" | "completedThrough">): ReadingPlan {
+  const plan: ReadingPlan = { ...p, id: planId(), startedAt: Date.now(), completedThrough: 0 };
+  const list = getPlans();
+  list.unshift(plan);
+  write("plans", list);
+  return plan;
+}
+
+export function updatePlan(plan: ReadingPlan): void {
+  const list = getPlans();
+  const i = list.findIndex((x) => x.id === plan.id);
+  if (i >= 0) {
+    list[i] = plan;
+    write("plans", list);
+  }
+}
+
+export function deletePlan(id: string): void {
+  write("plans", getPlans().filter((x) => x.id !== id));
+}
+
+/** The plan surfaced everywhere: the most-recently-started incomplete one. */
+export function activePlan(): ReadingPlan | null {
+  const open = getPlans().filter((p) => p.completedThrough < p.chapters.length);
+  if (!open.length) return null;
+  return open.reduce((a, b) => (b.startedAt > a.startedAt ? b : a));
 }
 
 export function getBookmarks(): Bookmark[] {

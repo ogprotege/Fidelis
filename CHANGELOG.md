@@ -4,6 +4,59 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.4.0] — 2026-06-14 — the daily soul
+
+Design-spec §6 (card 4), §6.1, and §7 in one release: the app grows a quiet devotional life
+around the text without ever raising its voice. Three work items (B1–B3); no streaks, no
+badges, no reminders, no notification pressure — every acknowledgment is the Church's, not
+ours.
+
+### Added
+
+- **The rosary mystery sheet** (B1, §6 card 4): each of the day's five mysteries is tappable,
+  opening a reusable bottom-sheet (`Sheet`) over a dimmed backdrop — Escape, tap-outside, or
+  close to dismiss, with focus managed and returned. The mystery's Scripture passage renders
+  verbatim from the current translation through the new shared `passageText` helper — the same
+  verse-range path the Reader uses, asserted per mystery × DRC/CPDV/Vulgate so the two can
+  never disagree — and beneath it, collapsed, the five traditional prayers in Latin and English
+  (`src/lib/prayers.ts`): Pater Noster, Ave Maria, Gloria Patri, the Fatima Prayer, the Salve
+  Regina. The twenty mysteries now carry fuller meditation passages (the Annunciation,
+  Luke 1:26–38; the Visitation with the Magnificat, Luke 1:39–56) rather than a single anchor
+  verse. No audio, no beads, no motion — a prayer book.
+- **The reading-time indulgence** (B2, §6.1): while you read in the Reader, continuous reading
+  time accumulates (Page Visibility API; paused when the tab is hidden; the continuity clock
+  resets after a ten-minute gap; the daily total in localStorage resets at local midnight). At
+  half an hour, one small gold line appears beneath the chapter title — *"You have read for half
+  an hour. The Church grants a plenary indulgence for this, under the usual conditions (Ench.
+  Ind., conc. 30)."* — sticky until midnight; tapping it opens a sheet with the usual conditions.
+  The accumulator (`src/lib/reading.ts`) is a pure, injected-time reducer reusing
+  `votd.dayOfYear` for DST-safe rollover, harness-tested for the gap reset and the midnight
+  rollover. A setting (`showIndulgence`, default on) hides it entirely.
+- **Reading plans, citation-only** (B3, §7): a plan is a list of chapter references and a
+  divisor, nothing more (`src/lib/plans.ts`, pure citation arithmetic over the real canon
+  counts). Five presets — The Four Gospels in 90 Days, The Deuterocanon in 30 Days, The Psalter
+  in a Month, The New Testament in a Year, and The Whole Canon in a Year (weighted, the Psalter
+  woven through the year so Psalm 118 never shares a day with another long chapter). A
+  one-screen creator (`/plans/new`: grouped book checkboxes, pace by chapters-per-day or a
+  target date, a name) and a management page (`/plans`), reached from Read. Surfaces: one line
+  in Continue Reading and a "Mark today's portion read" action at the chapter's end. "Day N" is
+  a portion index, not a calendar streak.
+
+### Changed
+
+- `VerseQuote` renders through the shared `passageText` helper (no behavior change).
+- The Today page still holds exactly five cards; the new surfaces are overlays and inline
+  lines, never a sixth card.
+
+### Deferred
+
+- The single **optional daily-readings notification** (§6/§7) stays deferred and off —
+  standing rule: no notification pressure.
+- The Settings **Commentaries** subsection and the **§4 commentary layer** remain on the
+  roadmap; the new `Sheet` primitive is built to host them. Editing a plan's books after
+  creation is delete-and-recreate; the six Vulgate-appendix books stay outside the canon
+  presets.
+
 ## [1.3.0] — 2026-06-14 — the identity release
 
 Design-spec §1–§2: Fidelis takes on its visual identity and its navigation in one
