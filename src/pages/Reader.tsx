@@ -20,6 +20,8 @@ import Icon from "../components/Icon";
 import IndulgenceNotice from "../components/IndulgenceNotice";
 import { clampFontSize } from "../lib/typography";
 import { useSettings, useUpdateSettings } from "../SettingsContext";
+import { activePlan, updatePlan } from "../lib/storage";
+import { isComplete, todayPortion, markPortionRead } from "../lib/plans";
 
 export default function Reader() {
   const params = useParams<{ translation: string; book: string; chapter: string }>();
@@ -42,6 +44,7 @@ export default function Reader() {
   const [parallelData, setParallelData] = useState<BookData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [plan, setPlan] = useState(activePlan);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [marksVersion, setMarksVersion] = useState(0);
@@ -326,6 +329,22 @@ export default function Reader() {
           ) : (
             <span />
           )}
+        </div>
+      )}
+
+      {verses && plan && !isComplete(plan) && todayPortion(plan).includes(`${bookSlug}/${chapter}`) && (
+        <div className="plan-mark">
+          <button
+            type="button"
+            className="continue-cta"
+            onClick={() => {
+              const next = markPortionRead(plan);
+              updatePlan(next);
+              setPlan(next);
+            }}
+          >
+            Mark today's portion read ✓
+          </button>
         </div>
       )}
 

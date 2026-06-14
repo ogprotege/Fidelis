@@ -41,6 +41,9 @@ export default function BookList() {
           († = deuterocanonical — always part of the Catholic Bible)
         </span>
       </p>
+      <p className="plans-link">
+        <Link to="/plans">Reading plans →</Link>
+      </p>
       {section("The Old Testament", OT_GROUPS)}
       {section("The New Testament", NT_GROUPS)}
       {section("The Vulgate Appendix", GROUPS.filter((g) => g === "Appendix"))}

@@ -8,6 +8,7 @@ import {
 } from "./typography";
 import { DEFAULT_THEME, ThemeChoice, isThemeChoice } from "./theme";
 import type { ReadingState } from "./reading";
+import type { ReadingPlan } from "./plans";
 
 export interface VerseRef {
   book: string;
@@ -142,6 +143,44 @@ export function getReading(): ReadingState | null {
 
 export function saveReading(state: ReadingState): void {
   write("reading", state);
+}
+
+export function getPlans(): ReadingPlan[] {
+  return read<ReadingPlan[]>("plans", []);
+}
+
+function planId(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+}
+
+export function addPlan(p: Omit<ReadingPlan, "id" | "startedAt" | "completedThrough">): ReadingPlan {
+  const plan: ReadingPlan = { ...p, id: planId(), startedAt: Date.now(), completedThrough: 0 };
+  const list = getPlans();
+  list.unshift(plan);
+  write("plans", list);
+  return plan;
+}
+
+export function updatePlan(plan: ReadingPlan): void {
+  const list = getPlans();
+  const i = list.findIndex((x) => x.id === plan.id);
+  if (i >= 0) {
+    list[i] = plan;
+    write("plans", list);
+  }
+}
+
+export function deletePlan(id: string): void {
+  write("plans", getPlans().filter((x) => x.id !== id));
+}
+
+/** The plan surfaced everywhere: the most-recently-started incomplete one. */
+export function activePlan(): ReadingPlan | null {
+  const open = getPlans().filter((p) => p.completedThrough < p.chapters.length);
+  if (!open.length) return null;
+  return open.reduce((a, b) => (b.startedAt > a.startedAt ? b : a));
 }
 
 export function getBookmarks(): Bookmark[] {

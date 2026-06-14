@@ -4,6 +4,25 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.6.0] — 2026-06-14 — v1.2 B3: reading plans, the Catena way
+
+Spec §7. Reading plans as pure citation arithmetic: a plan is a list of chapter references
+and a divisor, nothing more. Five citation-only presets — The Four Gospels in 90 Days, The
+Deuterocanon in 30 Days, The Psalter in a Month, The New Testament in a Year, and The Whole
+Canon in a Year (weighted, the Psalter woven through the year so Psalm 118 never shares a day
+with another long chapter). A one-screen creator (grouped book checkboxes, pace by chapters/day
+or a target date, a name). Surfaces: one line in Continue Reading, a "Mark today's portion read"
+action at the chapter's end, and management under Read (/plans). No reminders, no streaks.
+
+### Added
+
+- **`src/lib/plans.ts`**: the pure citation arithmetic — preset builders, pace math, completion
+  advance, and the weighted Whole-Canon order, all over the real canon counts in `canon.ts`;
+  harness-tested.
+- **`/plans` and `/plans/new`**: the plan list and the one-screen creator, reached from Read.
+- **Continue Reading** gains a today's-portion line; the **Reader** gains the chapter-end
+  "Mark today's portion read" action. The Today page stays five cards.
+
 ## [1.5.0] — 2026-06-14 — v1.2 B2: the indulgence line (Ench. Ind. conc. 30)
 
 Spec §6.1, the quietest feature in the app. While you read in the Reader, continuous

@@ -17,7 +17,8 @@ import {
 import { liturgicalDay, COLOR_HEX } from "../lib/liturgical";
 import { DailyQuote, loadQuotes, quoteOfTheDay } from "../lib/quotes";
 import { mysteriesForDate, Mystery } from "../lib/rosary";
-import { getLastRead } from "../lib/storage";
+import { getLastRead, activePlan } from "../lib/storage";
+import { isComplete, todayPortion, planDay, planTotalDays, formatPortion } from "../lib/plans";
 import { verseOfTheDay, formatVotdRef } from "../lib/votd";
 import { useSettings } from "../SettingsContext";
 
@@ -33,6 +34,8 @@ export default function Home() {
   const rosary = mysteriesForDate(today);
   const lastRead = getLastRead();
   const translation = useSettings().translation;
+  const plan = activePlan();
+  const planPortion = plan && !isComplete(plan) ? todayPortion(plan) : [];
   const [mass, setMass] = useState<DayReadings | null>(null);
   const [quote, setQuote] = useState<DailyQuote | null>(null);
   const [openMystery, setOpenMystery] = useState<Mystery | null>(null);
@@ -171,6 +174,14 @@ export default function Home() {
 
         <div className="card">
           <h2>Continue Reading</h2>
+          {plan && planPortion.length > 0 && (
+            <p className="plan-line">
+              <Link to={`/read/${translation}/${planPortion[0]}`}>
+                Today's reading · {formatPortion(planPortion, translation)} · Day {planDay(plan)} of{" "}
+                {planTotalDays(plan)}
+              </Link>
+            </p>
+          )}
           {lastRead ? (
             <>
               <p>
