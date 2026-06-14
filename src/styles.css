@@ -87,6 +87,7 @@
 
   --on-accent: #FFFFFF;     /* text/icon on a filled purple control */
   --shadow: 0 1px 3px rgba(38, 36, 31, 0.08), 0 8px 24px -12px rgba(38, 36, 31, 0.18);
+  --scrim: rgba(38, 36, 31, 0.45); /* modal backdrop (warm dark) */
 
   /* User highlight washes ("gold" is highlight color one, the sacred one). */
   --hl-gold: #F4E3AE;
@@ -113,6 +114,7 @@
 
   --on-accent: #FFFFFF;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --scrim: rgba(0, 0, 0, 0.6); /* modal backdrop */
 
   --hl-gold: #4A3D1D;
   --hl-rose: #4A2429;
@@ -989,4 +991,89 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
      action bar both sit above it. */
   .footer { padding-bottom: calc(2rem + 3.25rem + env(safe-area-inset-bottom)); }
   .verse-actions { bottom: calc(3.75rem + env(safe-area-inset-bottom)); }
+}
+
+/* Rosary mystery sheet — Today card 4 (v1.2 B1). Purple acts, gold honors. */
+.rosary-list .rosary-mystery {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.15rem 0;
+  margin: 0;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.45;
+}
+.rosary-list .rosary-title { flex: 1; }
+.rosary-list .rosary-mystery:hover .rosary-title,
+.rosary-list .rosary-mystery:focus-visible .rosary-title { text-decoration: underline; }
+.rosary-list .rosary-mystery .mref { margin-left: 0; }
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 60;
+}
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 34rem;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem 0.9rem 0 0;
+  box-shadow: var(--shadow);
+  padding: 1.3rem 1.3rem calc(1.3rem + env(safe-area-inset-bottom));
+}
+.sheet-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  background: none;
+  border: none;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--purple);
+}
+.mystery-sheet-title { margin: 0 3rem 0.2rem 0; }
+.mystery-sheet-cite { margin-bottom: 0.7rem; }
+.mystery-sheet-passage {
+  font-family: var(--scripture);
+  font-size: 1.05rem;
+  line-height: 1.62;
+  margin: 0 0 0.5rem;
+}
+.mystery-sheet-prayers-label {
+  margin: 1.1rem 0 0.2rem;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.prayer { border-top: 1px solid var(--border); padding: 0.45rem 0; }
+.prayer summary { cursor: pointer; color: var(--purple); }
+.prayer-body { margin-top: 0.45rem; }
+.prayer-la { margin: 0; font-style: italic; color: var(--text); line-height: 1.5; }
+.prayer-en { margin: 0.2rem 0 0; line-height: 1.5; }
+
+@media (min-width: 640px) {
+  .sheet-backdrop { align-items: center; }
+  .sheet { border-radius: 0.9rem; max-height: 80vh; }
 }

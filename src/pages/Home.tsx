@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import Antiphon from "../components/Antiphon";
 import Icon from "../components/Icon";
 import VerseQuote from "../components/VerseQuote";
+import Sheet from "../components/Sheet";
+import MysterySheet from "../components/MysterySheet";
 import { getBook, bookDisplayName } from "../lib/canon";
 import {
   DayReadings,
@@ -14,7 +16,7 @@ import {
 } from "../lib/lectionary";
 import { liturgicalDay, COLOR_HEX } from "../lib/liturgical";
 import { DailyQuote, loadQuotes, quoteOfTheDay } from "../lib/quotes";
-import { mysteriesForDate } from "../lib/rosary";
+import { mysteriesForDate, Mystery } from "../lib/rosary";
 import { getLastRead } from "../lib/storage";
 import { verseOfTheDay, formatVotdRef } from "../lib/votd";
 import { useSettings } from "../SettingsContext";
@@ -33,6 +35,7 @@ export default function Home() {
   const translation = useSettings().translation;
   const [mass, setMass] = useState<DayReadings | null>(null);
   const [quote, setQuote] = useState<DailyQuote | null>(null);
+  const [openMystery, setOpenMystery] = useState<Mystery | null>(null);
   useEffect(() => {
     readingsForDate(new Date()).then(setMass).catch(() => setMass(null));
     loadQuotes()
@@ -149,10 +152,18 @@ export default function Home() {
           <ol className="rosary-list">
             {rosary.mysteries.map((m) => (
               <li key={m.title}>
-                {m.title}
-                <Link className="mref" to={readerLink(m.ref[0], m.ref[1], m.ref[2])}>
-                  {getBook(m.ref[0])!.abbrev} {m.ref[1]}:{m.ref[2]}
-                </Link>
+                <button
+                  type="button"
+                  className="rosary-mystery"
+                  onClick={() => setOpenMystery(m)}
+                  aria-haspopup="dialog"
+                >
+                  <span className="rosary-title">{m.title}</span>
+                  <span className="mref">
+                    {getBook(m.ref[0])!.abbrev} {m.ref[1]}:{m.ref[2]}
+                    {m.end && m.end !== m.ref[2] ? `–${m.end}` : ""}
+                  </span>
+                </button>
               </li>
             ))}
           </ol>
@@ -193,6 +204,16 @@ export default function Home() {
             <Link to="/search">Search the Scriptures</Link>
           </p>
         </div>
+
+        {openMystery && (
+          <Sheet titleId="mystery-sheet-title" onClose={() => setOpenMystery(null)}>
+            <MysterySheet
+              mystery={openMystery}
+              translation={translation}
+              titleId="mystery-sheet-title"
+            />
+          </Sheet>
+        )}
       </div>
     </>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { loadBook } from "../lib/data";
+import { passageText } from "../lib/passage";
 
 interface Props {
   translation: string;
@@ -22,11 +23,7 @@ export default function VerseQuote({ translation, book, chapter, verse, endVerse
     loadBook(translation, book)
       .then((data) => {
         if (!alive) return;
-        const ch = data.chapters[chapter - 1] ?? [];
-        const last = Math.min(endVerse ?? verse, ch.length);
-        // Grid-empty slots (see data-report.txt) are dropped from the range.
-        const parts = ch.slice(verse - 1, last).filter((s) => s && s.trim());
-        setText(parts.join(" "));
+        setText(passageText(data, chapter, verse, endVerse));
       })
       .catch(() => alive && setError(true));
     return () => {

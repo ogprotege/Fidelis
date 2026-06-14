@@ -12,6 +12,9 @@ import {
 import { liturgicalDay } from "../src/lib/liturgical";
 import { DailyQuote, quoteOfTheDay } from "../src/lib/quotes";
 import { dayOfYear } from "../src/lib/votd";
+import { MYSTERY_SETS } from "../src/lib/rosary";
+import { passageText } from "../src/lib/passage";
+import { PRAYERS } from "../src/lib/prayers";
 import { getSettings } from "../src/lib/storage";
 import {
   DEFAULT_FONT_SIZE,
@@ -1130,6 +1133,78 @@ console.log("");
   check("acceptance: the follow-the-year switch fills purple when on",
     /\.switch\[aria-checked="true"\]\s*\{[^}]*var\(--purple-strong\)/.test(css));
 }
+
+// 11. Rosary mystery sheets (v1.2 B1). Every mystery's meditation passage must
+//     resolve to real text in every bundled translation, and passageText must
+//     equal the Reader's own verse filter (so the sheet can't drift). The five
+//     traditional prayers must be present and complete. Today stays five cards.
+console.log("");
+const allMysteries = Object.values(MYSTERY_SETS).flatMap((s) => s.mysteries);
+check("the four mystery sets hold 20 mysteries", allMysteries.length === 20, `${allMysteries.length}`);
+
+for (const t of ["drc", "cpdv", "vulgate"]) {
+  let bad = 0;
+  let drift = 0;
+  for (const m of allMysteries) {
+    const [book, chapter, start] = m.ref;
+    try {
+      const data = JSON.parse(
+        readFileSync(join(ROOT, `public/data/${t}/${book}.json`), "utf8")
+      );
+      const got = passageText(data, chapter, start, m.end);
+      if (!got.trim()) {
+        console.log(`  ${t}: empty passage — ${m.title} (${book} ${chapter}:${start})`);
+        bad++;
+      }
+      // Independent recompute of the Reader's own grid-empty filter.
+      const ch: string[] = data.chapters[chapter - 1] ?? [];
+      const last = Math.min(m.end ?? start, ch.length);
+      const reader = ch.slice(start - 1, last).filter((s) => s && s.trim()).join(" ");
+      if (got !== reader) {
+        console.log(`  ${t}: passage drift — ${m.title}`);
+        drift++;
+      }
+    } catch {
+      console.log(`  ${t}: missing book ${book} — ${m.title}`);
+      bad++;
+    }
+  }
+  check(`every mystery passage lands on text in ${t}`, bad === 0, `${bad} invalid`);
+  check(`passageText matches the Reader filter in ${t}`, drift === 0, `${drift} drift`);
+}
+
+check(
+  "five rosary prayers carry Latin and English",
+  PRAYERS.length === 5 && PRAYERS.every((p) => p.la.trim() && p.en.trim()),
+  `${PRAYERS.length}`
+);
+check(
+  "each rosary prayer closes with Amen (Latin and English)",
+  PRAYERS.every((p) => /Amen\.?$/.test(p.la.trim()) && /Amen\.?$/.test(p.en.trim()))
+);
+
+// Standing rule 2: the Today page renders exactly five cards.
+const homeSrc = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
+check(
+  "Today page renders exactly five cards (standing rule 2)",
+  (homeSrc.match(/className="card"/g) || []).length === 5,
+  `${(homeSrc.match(/className="card"/g) || []).length} cards`
+);
+
+// Two-accent rule on the new sheet: close acts in purple, label honors in gold.
+const sheetCss = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+check(
+  "sheet close button acts in purple (two-accent §1.2)",
+  /\.sheet-close\s*\{[^}]*var\(--purple\)/.test(sheetCss)
+);
+check(
+  "sheet prayers label honors in gold (two-accent §1.2)",
+  /\.mystery-sheet-prayers-label\s*\{[^}]*var\(--gold\)/.test(sheetCss)
+);
+check(
+  "modal backdrop uses the --scrim token, no raw color",
+  /\.sheet-backdrop\s*\{[^}]*var\(--scrim\)/.test(sheetCss)
+);
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

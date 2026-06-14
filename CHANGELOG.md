@@ -4,6 +4,33 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.4.0] — 2026-06-14 — v1.2 B1: rosary mystery sheets with the traditional prayers
+
+Design-spec §6, card 4, upgraded one step. Tapping a mystery on the Today page now
+opens a quiet bottom-sheet: the mystery's Scripture passage, rendered verbatim from
+your current translation, and beneath it — collapsed — the five traditional prayers
+of the Rosary in Latin and English. No audio, no beads, no motion. A prayer book.
+
+### Added
+
+- **The mystery sheet** (§6 card 4): each of the day's five mysteries is now tappable,
+  opening a reusable bottom-sheet (`Sheet`) over a dimmed backdrop — Escape, tap-outside,
+  or close to dismiss, with focus managed and returned. The passage renders through the
+  new shared `passageText` helper, the same verse-range path the Reader uses, so the two
+  can never disagree (asserted per mystery × DRC/CPDV/Vulgate).
+- **Fuller meditation passages**: the twenty mysteries now carry traditional narrative
+  ranges (e.g. the Annunciation, Luke 1:26–38; the Visitation with the Magnificat,
+  Luke 1:39–56) rather than a single anchor verse.
+- **The traditional prayers** (`src/lib/prayers.ts`): Pater Noster, Ave Maria, Gloria
+  Patri, the Fatima Prayer, and the Salve Regina — public-domain Latin and English,
+  collapsed beneath each mystery's passage.
+
+### Changed
+
+- `VerseQuote` now renders through `passageText` (no behavior change).
+- The Today page still holds exactly five cards; the mystery sheet is an overlay, not
+  a sixth card.
+
 ## [1.3.0] — 2026-06-14 — the identity release
 
 Design-spec §1–§2: Fidelis takes on its visual identity and its navigation in one
