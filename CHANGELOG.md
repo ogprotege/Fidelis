@@ -4,71 +4,58 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
-## [1.6.0] — 2026-06-14 — v1.2 B3: reading plans, the Catena way
+## [1.4.0] — 2026-06-14 — the daily soul
 
-Spec §7. Reading plans as pure citation arithmetic: a plan is a list of chapter references
-and a divisor, nothing more. Five citation-only presets — The Four Gospels in 90 Days, The
-Deuterocanon in 30 Days, The Psalter in a Month, The New Testament in a Year, and The Whole
-Canon in a Year (weighted, the Psalter woven through the year so Psalm 118 never shares a day
-with another long chapter). A one-screen creator (grouped book checkboxes, pace by chapters/day
-or a target date, a name). Surfaces: one line in Continue Reading, a "Mark today's portion read"
-action at the chapter's end, and management under Read (/plans). No reminders, no streaks.
+Design-spec §6 (card 4), §6.1, and §7 in one release: the app grows a quiet devotional life
+around the text without ever raising its voice. Three work items (B1–B3); no streaks, no
+badges, no reminders, no notification pressure — every acknowledgment is the Church's, not
+ours.
 
 ### Added
 
-- **`src/lib/plans.ts`**: the pure citation arithmetic — preset builders, pace math, completion
-  advance, and the weighted Whole-Canon order, all over the real canon counts in `canon.ts`;
-  harness-tested.
-- **`/plans` and `/plans/new`**: the plan list and the one-screen creator, reached from Read.
-- **Continue Reading** gains a today's-portion line; the **Reader** gains the chapter-end
-  "Mark today's portion read" action. The Today page stays five cards.
-
-## [1.5.0] — 2026-06-14 — v1.2 B2: the indulgence line (Ench. Ind. conc. 30)
-
-Spec §6.1, the quietest feature in the app. While you read in the Reader, continuous
-reading time accumulates (Page Visibility API; paused when the tab is hidden; the
-continuity clock resets after a ten-minute gap; the daily total lives in localStorage and
-resets at local midnight). At half an hour, one small gold line appears beneath the chapter
-title — *"You have read for half an hour. The Church grants a plenary indulgence for this,
-under the usual conditions (Ench. Ind., conc. 30)."* — and stays until midnight. Tapping it
-opens a sheet listing the usual conditions. No streaks, no history, no badge, no sound; a
-setting hides it entirely. Piety, not gamification.
-
-### Added
-
-- **The reading-time accumulator** (`src/lib/reading.ts`): a pure, injected-time reducer
-  (`advance`) reusing `votd.dayOfYear` for DST-safe local-midnight rollover; harness-tested
-  for the gap reset and the day rollover.
-- **The indulgence line** (`IndulgenceNotice`): the Reader-scoped Page-Visibility timer and
-  the gold line, with the conditions explained in the reused bottom-sheet.
-- **A setting** (`showIndulgence`, default on) to hide it entirely.
-
-## [1.4.0] — 2026-06-14 — v1.2 B1: rosary mystery sheets with the traditional prayers
-
-Design-spec §6, card 4, upgraded one step. Tapping a mystery on the Today page now
-opens a quiet bottom-sheet: the mystery's Scripture passage, rendered verbatim from
-your current translation, and beneath it — collapsed — the five traditional prayers
-of the Rosary in Latin and English. No audio, no beads, no motion. A prayer book.
-
-### Added
-
-- **The mystery sheet** (§6 card 4): each of the day's five mysteries is now tappable,
-  opening a reusable bottom-sheet (`Sheet`) over a dimmed backdrop — Escape, tap-outside,
-  or close to dismiss, with focus managed and returned. The passage renders through the
-  new shared `passageText` helper, the same verse-range path the Reader uses, so the two
-  can never disagree (asserted per mystery × DRC/CPDV/Vulgate).
-- **Fuller meditation passages**: the twenty mysteries now carry traditional narrative
-  ranges (e.g. the Annunciation, Luke 1:26–38; the Visitation with the Magnificat,
-  Luke 1:39–56) rather than a single anchor verse.
-- **The traditional prayers** (`src/lib/prayers.ts`): Pater Noster, Ave Maria, Gloria
-  Patri, the Fatima Prayer, and the Salve Regina — public-domain Latin and English,
-  collapsed beneath each mystery's passage.
+- **The rosary mystery sheet** (B1, §6 card 4): each of the day's five mysteries is tappable,
+  opening a reusable bottom-sheet (`Sheet`) over a dimmed backdrop — Escape, tap-outside, or
+  close to dismiss, with focus managed and returned. The mystery's Scripture passage renders
+  verbatim from the current translation through the new shared `passageText` helper — the same
+  verse-range path the Reader uses, asserted per mystery × DRC/CPDV/Vulgate so the two can
+  never disagree — and beneath it, collapsed, the five traditional prayers in Latin and English
+  (`src/lib/prayers.ts`): Pater Noster, Ave Maria, Gloria Patri, the Fatima Prayer, the Salve
+  Regina. The twenty mysteries now carry fuller meditation passages (the Annunciation,
+  Luke 1:26–38; the Visitation with the Magnificat, Luke 1:39–56) rather than a single anchor
+  verse. No audio, no beads, no motion — a prayer book.
+- **The reading-time indulgence** (B2, §6.1): while you read in the Reader, continuous reading
+  time accumulates (Page Visibility API; paused when the tab is hidden; the continuity clock
+  resets after a ten-minute gap; the daily total in localStorage resets at local midnight). At
+  half an hour, one small gold line appears beneath the chapter title — *"You have read for half
+  an hour. The Church grants a plenary indulgence for this, under the usual conditions (Ench.
+  Ind., conc. 30)."* — sticky until midnight; tapping it opens a sheet with the usual conditions.
+  The accumulator (`src/lib/reading.ts`) is a pure, injected-time reducer reusing
+  `votd.dayOfYear` for DST-safe rollover, harness-tested for the gap reset and the midnight
+  rollover. A setting (`showIndulgence`, default on) hides it entirely.
+- **Reading plans, citation-only** (B3, §7): a plan is a list of chapter references and a
+  divisor, nothing more (`src/lib/plans.ts`, pure citation arithmetic over the real canon
+  counts). Five presets — The Four Gospels in 90 Days, The Deuterocanon in 30 Days, The Psalter
+  in a Month, The New Testament in a Year, and The Whole Canon in a Year (weighted, the Psalter
+  woven through the year so Psalm 118 never shares a day with another long chapter). A
+  one-screen creator (`/plans/new`: grouped book checkboxes, pace by chapters-per-day or a
+  target date, a name) and a management page (`/plans`), reached from Read. Surfaces: one line
+  in Continue Reading and a "Mark today's portion read" action at the chapter's end. "Day N" is
+  a portion index, not a calendar streak.
 
 ### Changed
 
-- `VerseQuote` now renders through `passageText` (no behavior change).
-- The Today page still holds exactly five cards; the mystery sheet is an overlay, not
-  a sixth card.
+- `VerseQuote` renders through the shared `passageText` helper (no behavior change).
+- The Today page still holds exactly five cards; the new surfaces are overlays and inline
+  lines, never a sixth card.
+
+### Deferred
+
+- The single **optional daily-readings notification** (§6/§7) stays deferred and off —
+  standing rule: no notification pressure.
+- The Settings **Commentaries** subsection and the **§4 commentary layer** remain on the
+  roadmap; the new `Sheet` primitive is built to host them. Editing a plan's books after
+  creation is delete-and-recreate; the six Vulgate-appendix books stay outside the canon
+  presets.
 
 ## [1.3.0] — 2026-06-14 — the identity release
 
