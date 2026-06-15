@@ -45,6 +45,6 @@
   },
   "allowScripts": {
     "fsevents@2.3.3": true,
-    "esbuild@0.28.0": true
+    "esbuild@0.28.1": true
   }
 }
