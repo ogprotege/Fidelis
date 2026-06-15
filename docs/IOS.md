@@ -17,6 +17,44 @@ In Xcode select the **App** scheme, pick a simulator or device, and Run.
 Everything works offline — all three translations and the lectionary data are
 bundled inside the app.
 
+### Run it in the Simulator (step by step)
+
+*Verified:* `npm run build && npx cap sync ios` runs clean and copies the web
+bundle into `ios/App/App/public`; the project targets **iOS 15.0+**, so any modern
+simulator works.
+
+GUI route (simplest):
+
+1. `npx cap open ios` opens the project in Xcode.
+2. In the toolbar's device menu pick a simulator (e.g. **iPhone 15**).
+3. Press **⌘R** (or the ▶ Run button). The app boots in the Simulator.
+
+Terminal route (no Xcode window needed):
+
+```bash
+xcrun simctl list devices available     # see installed simulators
+npx cap run ios                         # interactive: pick a target, builds + launches
+# or pin one explicitly:
+npx cap run ios --target="<UDID-from-the-list>"
+```
+
+No simulators listed? Install an iOS runtime in **Xcode ▸ Settings ▸ Components**,
+or create a device in **Xcode ▸ Window ▸ Devices and Simulators**.
+
+After any web change, re-sync before running again:
+
+```bash
+npm run build && npx cap sync ios
+```
+
+Common gotchas:
+
+- **"No such module 'Capacitor'"** — let Swift Package Manager finish resolving
+  (watch Xcode's status bar) before building. This project uses **SPM, not
+  CocoaPods**, so there is no `pod install` step.
+- **Stale content** — you skipped `npx cap sync ios` after `npm run build`.
+- **Signing prompts** appear only for a *physical device*; the Simulator needs none.
+
 Before shipping to TestFlight/App Store, set your own bundle identifier and
 signing team in the App target (the default id is `app.fidelis.bible`).
 
