@@ -92,7 +92,7 @@ export default function Library() {
           style={{ display: "none" }}
           onChange={(e) => {
             const f = e.target.files?.[0];
-            if (f) doImport(f);
+            if (f) void doImport(f);
             e.target.value = "";
           }}
         />

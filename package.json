@@ -11,7 +11,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "test": "tsx scripts/test-liturgical.ts && tsx scripts/test-data.ts && node scripts/build-manifest.mjs --verify",
+    "lint": "eslint src",
+    "test": "tsx scripts/test-liturgical.ts && tsx scripts/test-data.ts && node scripts/build-manifest.mjs --verify && eslint src",
     "golden": "tsx scripts/build-golden.ts",
     "preview": "vite preview",
     "data": "node scripts/build-data.mjs",
@@ -28,19 +29,23 @@
   "dependencies": {
     "@capacitor/core": "^8.4.0",
     "@capacitor/ios": "^8.4.0",
-    "present": "^1.0.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router-dom": "^7.17.0",
-    "scripts": "^0.1.0"
+    "react-router-dom": "^7.17.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.0",
+    "@eslint/js": "^9.39.4",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.6.0",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1",
     "vite": "^8.0.16"
   },
   "allowScripts": {

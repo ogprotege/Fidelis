@@ -42,7 +42,7 @@ export default function Search() {
     // "John 3:16"-style input jumps straight to the passage.
     const ref = parseReference(q);
     if (ref && ref.chapter) {
-      navigate(
+      void navigate(
         `/read/${translation}/${ref.book.slug}/${ref.chapter}${ref.verse ? `?v=${ref.verse}` : ""}`
       );
       return;

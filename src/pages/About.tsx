@@ -11,9 +11,11 @@ const WIDGET_SNIPPET = `<iframe
 export default function About() {
   const [integrity, setIntegrity] = useState<ManifestDoc | null>(null);
   useEffect(() => {
-    loadManifest().then((m) => {
-      if (m?.rootHash && m?.sources) setIntegrity(m);
-    });
+    loadManifest()
+      .then((m) => {
+        if (m?.rootHash && m?.sources) setIntegrity(m);
+      })
+      .catch(() => {});
   }, []);
 
   return (

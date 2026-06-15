@@ -26,7 +26,7 @@ export default function PlanCreator() {
     const preset = PRESETS.find((p) => p.id === id)!;
     const { chapters, perDay } = preset.build();
     addPlan({ name: preset.name, chapters, perDay });
-    navigate("/plans");
+    void navigate("/plans");
   };
 
   const total = chaptersForBooks([...selected]).length;
@@ -39,7 +39,7 @@ export default function PlanCreator() {
       pd = targetDateToPerDay(chapters.length, Date.now(), new Date(`${targetDate}T00:00:00`).getTime());
     }
     addPlan({ name: name.trim() || "My reading plan", chapters, perDay: pd });
-    navigate("/plans");
+    void navigate("/plans");
   };
 
   const group = (g: BookGroup) => {

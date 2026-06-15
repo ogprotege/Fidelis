@@ -1,8 +1,10 @@
 name: CI
 
-# Review item §B.3: run the harnesses and the build on every push and pull
-# request so a feast that silently moves, or a type error, is caught before it
-# ever reaches a release. One job; the only cache is setup-node's built-in npm cache.
+# Review item §B.3: run the linter, the harnesses, and the build on every push
+# and pull request so a feast that silently moves, a lint error, or a type error
+# is caught before it ever reaches a release. One job; the only cache is
+# setup-node's built-in npm cache. (`npm test` also runs `eslint src`, so the
+# same command gates locally and remotely; the dedicated lint step fails fast.)
 
 on:
   push:
@@ -18,5 +20,6 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: npm run lint
       - run: npm test
       - run: npm run build

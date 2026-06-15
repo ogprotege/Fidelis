@@ -129,6 +129,9 @@ export default function Reader() {
     setNoteOpen(false);
     setCommentaryFor(null);
     window.scrollTo(0, 0);
+    // Runs on navigation only; settings.translation/update are read to persist
+    // the chosen translation, not to re-fire this effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [translation, bookSlug, chapter, book]);
 
   useEffect(() => {
@@ -148,7 +151,7 @@ export default function Reader() {
   // isn't there.
   useEffect(() => {
     if (data && data.chapters.length > 0 && chapter > data.chapters.length) {
-      navigate(`/read/${translation}/${bookSlug}/${data.chapters.length}`, { replace: true });
+      void navigate(`/read/${translation}/${bookSlug}/${data.chapters.length}`, { replace: true });
     }
   }, [data, chapter, translation, bookSlug, navigate]);
 
