@@ -1264,3 +1264,18 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 /* Disabled CTA (e.g. Start with no books picked): dim, no pointer, and cancel
    the :hover brightness so it never looks clickable. */
 .continue-cta:disabled { opacity: 0.5; cursor: not-allowed; filter: none; }
+
+/* Honor the OS "reduce motion" preference. The app is near-motionless by design
+   (the Sheet never animates), but the few small transitions that remain — the
+   More caret, the settings switches — are neutralized for users who ask the
+   system to reduce motion, so the no-motion intent is enforced, not incidental. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
