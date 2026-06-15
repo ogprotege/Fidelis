@@ -34,6 +34,7 @@ import {
 import { BOOKS, getBook } from "../src/lib/canon";
 import { parseHaydockSfm } from "./build-haydock.mjs";
 import { parseCatenaOsis } from "./build-catena.mjs";
+import { normalizeFather, groupCatena, fathersOf, isDoctor } from "../src/lib/commentary";
 import { getSettings } from "../src/lib/storage";
 import {
   DEFAULT_FONT_SIZE,
@@ -1511,6 +1512,144 @@ console.log("");
     "Catena drops the Gospel lemma ('Ver. N.' headers never enter comments)",
     !catena["matthew"]["5:3"].some((e) => /^Ver\.? \d/.test(e.text))
   );
+}
+
+// 16. Commentary UI layer (spec §4.2): the pure Catena father-normalisation that
+//     drives the per-Father chips, the Doctors-only filter, and the grouping that
+//     folds the source's "It goes on" connectives back into a Father's block.
+console.log("");
+{
+  const F = (raw: string) => normalizeFather(raw);
+
+  // The top-15 raw Catena labels by corpus frequency (pinned; from §15's data).
+  // Every one must resolve to a Father, never the graceful "source" fallback.
+  const TOP15 = [
+    "Chrysostom", "Augustine", "Theophylact", "Bede", "Jerome", "Origen",
+    "Ambrose", "Gregory", "Cyril", "Pseudo-Chrysostom", "Hilary", "Remigius",
+    "Pseudo-Jerome", "Rabanus", "Alcuin"
+  ];
+  check(
+    "every top-15 Catena label normalises to a Father (no fallback)",
+    TOP15.every((l) => F(l).kind === "father"),
+    TOP15.filter((l) => F(l).kind !== "father").join(", ") || "all father"
+  );
+
+  // Doctors of the Church, both ways — the Doctors-only filter rests on this.
+  const DOCTORS = ["Chrysostom","Augustine","Jerome","Ambrose","Gregory","Basil","Athanasius","Bede","Hilary","Cyril","Leo"];
+  const NON_DOCTORS = ["Theophylact","Origen","Remigius","Rabanus","Alcuin","Eusebius","Gregory of Nyssa","Maximus","Titus of Bostra","Didymus","Isidore"];
+  check(
+    "Doctors of the Church flagged isDoctor=true",
+    DOCTORS.every((l) => F(l).kind === "father" && F(l).isDoctor === true),
+    DOCTORS.filter((l) => !(F(l).kind === "father" && F(l).isDoctor)).join(", ") || "all doctors"
+  );
+  check(
+    "non-Doctor Fathers flagged isDoctor=false",
+    NON_DOCTORS.every((l) => F(l).kind === "father" && F(l).isDoctor === false),
+    NON_DOCTORS.filter((l) => !(F(l).kind === "father" && F(l).isDoctor === false)).join(", ") || "all non-doctors"
+  );
+
+  // Newman edited this Catena edition and is a Doctor; he is never a per-verse label.
+  check("John Henry Newman is in the Doctors set", isDoctor("newman") === true);
+
+  // The ambiguous Gregory disambiguates by label; citation forms match by prefix.
+  check("bare 'Gregory' is Gregory the Great (Doctor)", F("Gregory").id === "gregory-the-great" && F("Gregory").isDoctor === true);
+  check("'Gregory of Nyssa' is distinct, not a Doctor", F("Gregory of Nyssa").id === "gregory-of-nyssa" && F("Gregory of Nyssa").isDoctor === false);
+  check("'Gregory Naz.' is Gregory Nazianzen (Doctor)", F("Gregory Naz.").id === "gregory-nazianzen" && F("Gregory Naz.").isDoctor === true);
+  check("citation 'Chrys., Hom. in Matt., 56' → Chrysostom", F("Chrys., Hom. in Matt., 56").id === "chrysostom");
+  check("citation 'Aug., Serm. 351, 8' → Augustine", F("Aug., Serm. 351, 8").id === "augustine");
+
+  // Pseudonymous authors stay distinct and are never Doctors.
+  check(
+    "'Pseudo-Chrysostom' is distinct from Chrysostom, not a Doctor",
+    F("Pseudo-Chrysostom").id === "pseudo-chrysostom" && F("Pseudo-Chrysostom").isDoctor === false
+  );
+  check(
+    "every Dionysius label → Pseudo-Dionysius (not a Doctor)",
+    ["Dionysius ar", "Dionys.", "Dionys., de Divin., Nom. i", "Pseudo-Dionysius, Dion. De Cael. Hierarch. 4"]
+      .every((l) => F(l).id === "pseudo-dionysius" && F(l).isDoctor === false)
+  );
+
+  // Gloss is the Glossa Ordinaria: a source, clearly not a Father.
+  check(
+    "'Gloss' variants → Glossa Ordinaria, not a Father",
+    ["Gloss", "Gloss. interlin.", "Gloss., non occ.", "Gloss. ord."]
+      .every((l) => F(l).kind === "gloss" && F(l).name === "Glossa Ordinaria")
+  );
+
+  // The connective phrases (and the empty label) are continuations, not chips.
+  check(
+    "connective phrases and '' are continuations",
+    ["", "It goes on", "There follows", "Wherefore it goes on", "He adds", "What follows"]
+      .every((l) => F(l).kind === "continuation")
+  );
+
+  // groupCatena folds a continuation back into the preceding Father's block.
+  const g1 = groupCatena([
+    { father: "Chrysostom", text: "A" },
+    { father: "", text: "B" },
+    { father: "It goes on", text: "C" },
+    { father: "Augustine", text: "D" }
+  ]);
+  check(
+    "groupCatena merges continuations into the prior Father's block",
+    g1.length === 2 &&
+      g1[0].father?.id === "chrysostom" &&
+      g1[0].text.includes("A") && g1[0].text.includes("B") && g1[0].text.includes("C") &&
+      g1[1].father?.id === "augustine" && g1[1].text === "D"
+  );
+
+  // fathersOf is the distinct, in-order chip list — no Gloss, no duplicates.
+  const g2 = groupCatena([
+    { father: "Augustine", text: "1" },
+    { father: "Chrysostom", text: "2" },
+    { father: "Augustine", text: "3" },
+    { father: "Gloss", text: "4" }
+  ]);
+  check(
+    "fathersOf returns distinct Fathers in first-appearance order, excluding Gloss",
+    JSON.stringify(fathersOf(g2).map((f) => f.id)) === JSON.stringify(["augustine", "chrysostom"])
+  );
+
+  // Identity disambiguations that matter for the Doctors-only filter:
+  check("'Isidore' is Isidore of Pelusium — NOT a Doctor", F("Isidore").id === "isidore-pelusium" && F("Isidore").isDoctor === false);
+  check("'Isid. Hisp.' is Isidore of Seville — a Doctor", F("Isid. Hisp. Orig. 8. 4").id === "isidore-of-seville" && F("Isid. Hisp. Orig. 8. 4").isDoctor === true);
+  check("'Dion. alex' is Dionysius of Alexandria (a Father, not the Areopagite, not a Doctor)",
+    F("Dion. alex").id === "dionysius-of-alexandria" && F("Dion. alex").isDoctor === false && F("Dionysius ar").id === "pseudo-dionysius");
+  check("'Clem. alex' is Clement of Alexandria", F("Clem. alex").id === "clement-of-alexandria");
+
+  // Transcription typos in the pinned corpus heal to the right Father.
+  check("typo 'Origin, in Matt.' → Origen", F("Origin, in Matt., XV, 7").id === "origen");
+  check("typo 'Psuedo-Chrys.' → Pseudo-Chrysostom", F("Psuedo-Chrys., Vict. Ant. e Cat. in Marc.").id === "pseudo-chrysostom");
+  check("typo 'Theophyact' → Theophylact", F("Theophyact").id === "theophylact");
+  check("abbrev 'Hil.' → Hilary (Doctor), 'Max' → Maximus, 'Tit. bos' → Titus of Bostra",
+    F("Hil.").id === "hilary" && F("Hil.").isDoctor === true && F("Max").id === "maximus" && F("Tit. bos").id === "titus-of-bostra");
+
+  // Genuine non-person sources stay 'source'; a lemma sentence is a continuation.
+  check("'A Greek expositor' and a council are sources, not Fathers",
+    F("A Greek expositor").kind === "source" && F("Second Council of Constantinople, Concil. Con. ii. Collat. 8").kind === "source");
+  check("a lemma-sentence label is a continuation, not a chip",
+    F("Thus we find Jesus partook of a banquet at Bethany").kind === "continuation");
+
+  // Corpus-wide guard (pinned data): classify EVERY Catena label and prove the
+  // graceful "source" fallback hides no real Father, and coverage stays high.
+  const cdir = join(ROOT, "public/data/commentary/catena");
+  const labelCounts: Record<string, number> = {};
+  for (const fn of readdirSync(cdir)) {
+    if (!fn.endsWith(".json")) continue;
+    const bk: Record<string, { father?: string }[]> = JSON.parse(readFileSync(join(cdir, fn), "utf8"));
+    for (const notes of Object.values(bk)) for (const n of notes) labelCounts[n.father ?? ""] = (labelCounts[n.father ?? ""] ?? 0) + 1;
+  }
+  const sourceOk = (l: string) => ["A Greek expositor", "Josephus", "Faustus"].includes(l) || /council|concil/i.test(l);
+  let fatherEntries = 0, totalEntries = 0;
+  const leaked: string[] = [];
+  for (const [lbl, c] of Object.entries(labelCounts)) {
+    totalEntries += c;
+    const k = normalizeFather(lbl).kind;
+    if (k === "father") fatherEntries += c;
+    if (k === "source" && !sourceOk(lbl)) leaked.push(lbl);
+  }
+  check("Catena normaliser: ≥93% of all entries resolve to a Father", fatherEntries / totalEntries >= 0.93, `${((100 * fatherEntries) / totalEntries).toFixed(2)}% of ${totalEntries}`);
+  check("Catena normaliser: the 'source' fallback hides no real Father (only anonymous/council sources)", leaked.length === 0, leaked.slice(0, 6).join(" | "));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

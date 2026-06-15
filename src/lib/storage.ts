@@ -58,6 +58,16 @@ export interface Settings {
   followLiturgicalYear: boolean;
   /** Show the §6.1 reading-time indulgence line in the Reader. */
   showIndulgence: boolean;
+  /** Commentary layer (spec §4.2 / §2.2 item 7). The master switch — off hides
+   *  the gold dots and the Commentary action entirely (the bare page). */
+  commentaryEnabled: boolean;
+  /** Include Haydock — drives the gold dots and the Haydock tab. Off also hides
+   *  the dots (they mark Haydock notes). */
+  commentaryHaydock: boolean;
+  /** Include the Catena Aurea — the Catena tab and the Gospel Commentary action. */
+  commentaryCatena: boolean;
+  /** Seed the Catena tab's Doctors-only filter on (default off). */
+  commentaryDoctorsOnly: boolean;
 }
 
 const PREFIX = "fidelis:";
@@ -92,6 +102,10 @@ export function getSettings(): Settings {
     calendarRegion: "universal",
     followLiturgicalYear: true,
     showIndulgence: true,
+    commentaryEnabled: true,
+    commentaryHaydock: true,
+    commentaryCatena: true,
+    commentaryDoctorsOnly: false,
     ...read<Partial<Settings>>("settings", {})
   };
   // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored
