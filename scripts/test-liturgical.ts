@@ -33,6 +33,15 @@ for (const [y, want] of EASTER) {
   expect(`Easter ${y} = ${want}`, iso(easterDate(y)) === want);
 }
 
+// 1b. First Sunday of Advent against the known table (each is a Sunday).
+const ADVENT: [number, string][] = [
+  [2023, "2023-12-03"], [2024, "2024-12-01"], [2025, "2025-11-30"],
+  [2026, "2026-11-29"], [2027, "2027-11-28"]
+];
+for (const [y, want] of ADVENT) {
+  expect(`Advent 1 ${y} = ${want} (Sunday)`, iso(adventStart(y)) === want && adventStart(y).getDay() === 0);
+}
+
 // (The former trap-day and day-code print dumps are superseded by the
 //  golden-year snapshots in scripts/golden/, diffed by test-data.ts.)
 
