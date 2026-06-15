@@ -71,6 +71,7 @@ No algorithm. Just the text, kept.
 | **The daily Mass** | A liturgical engine implementing the Table of Liturgical Days: precedence, transfers, the Easter Vigil ladder, memorial propers, and Vulgate-aligned responsorial psalms — Universal or USA calendar. |
 | **The liturgical year, in color** | The working accent takes the day's liturgical color; the sacred marks stay gold. The calendar catechizes without a word. |
 | **The daily soul** | A tappable rosary with the traditional prayers, a quiet half-hour reading indulgence, and citation-only reading plans — devotion that never nags. |
+| **The Fathers, one tap away** | Haydock across the whole canon and the Catena Aurea on the Gospels — a small gold dot marks a commented verse, a sheet opens the commentary with per-Father chips and a Doctors-only filter. Scripture stays Scripture; study stays study. |
 | **Yours, on your device** | Bookmarks, highlights, notes, and reading plans live in your browser. No account, no server, no telemetry. Export/import as JSON. |
 | **Everywhere** | Installable PWA with offline reading, a native iOS WidgetKit home-screen widget, and an embeddable Verse-of-the-Day iframe. |
 
@@ -176,6 +177,13 @@ piety, never gamification.
   so a lost device never takes your marginalia with it.
 - **Search** across any bundled translation, **accent-insensitive** (Latin `misericordia` and
   `cælum` both match), with reference jumping ("John 3:16", "1 Cor 13", "Apocalypsis 21").
+- **Commentary** — a small **gold dot** after a verse number marks a Haydock note; the verse
+  actions gain a **Commentary** entry that opens a study sheet (a side panel on desktop, a bottom
+  sheet on phones) with **Haydock** (the annotated Douay, whole canon) and **Catena Aurea**
+  (Aquinas's chain of the Fathers on the Gospels, the Newman edition) tabs. The Catena tab filters
+  **by Father** and to the **Doctors of the Church**. Commentary never interleaves into the page —
+  it is a tap away, and a single Settings switch removes the dots entirely. No AI, no paraphrase:
+  the Fathers in their own words.
 
 ---
 
@@ -251,6 +259,13 @@ A short, binding list — the product is defined as much by what it will not do:
   committed audit of every such slot — including three known DRC corpus defects (the printed Douay
   3 Kings 17:11, Proverbs 30:19, and Baruch 6:7 are absent at the pinned upstream commit, their
   slots holding misfiled verses), disclosed rather than silently patched.
+- **Commentary is pinned and sealed like the Scripture.** Haydock comes from the 1883 Dunigan
+  USFM transcription (`cmahte/ENG-B-Haydock1883-pd-PSFM`) and the Catena Aurea from the Newman /
+  Oxford translation as the Isidore-Guild OSIS (`Isidore-Guild/catena`, CC0); both are fetched at
+  commits pinned by hash and hashed into the same `manifest.json`. The Catena's attribution labels
+  are normalized by a pure, harness-asserted module (`src/lib/commentary.ts`): 93.9% resolve to a
+  named Father, and a corpus-wide test proves the small remainder hides no Father. The text itself
+  is reproduced unaltered — no summaries, no paraphrase.
 
 ---
 
