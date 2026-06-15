@@ -155,6 +155,30 @@ Deferred from §4 and after: §5 (the CCC citation index — verse→paragraph l
 Catechism text never bundled) is the next PR; commentary offline-download (Settings →
 Data) and per-Father "by era" filtering remain open.
 
+## The Android shell — the "freely given" release (v1.6.0)
+
+A distribution release (`v1.6.0`): no app behavior changed — the web bundle is
+byte-identical to 1.5.1 — but Fidelis now ships a **native Android shell** beside
+iOS, and the README states the free-forever pledge explicitly.
+
+- **Android (Capacitor)**: `npx cap add android` generated `android/` — the same
+  `dist/` build in a native WebView, offline by construction (no service worker in
+  the Capacitor WebView; the whole bundle ships in the APK, exactly as iOS). App id
+  `app.fidelis.bible`; `capacitor.config.ts` gained `android.backgroundColor`
+  matching the day `--bg-0` token. The committed scaffold mirrors iOS — the Gradle
+  project + resources are tracked, the synced `app/src/main/assets/public` and the
+  build output gitignored (`android/.gitignore`). Build/run:
+  `npm run build && npx cap sync android && npx cap open android` (Android Studio).
+  Guide: `docs/ANDROID.md`. `@capacitor/android` pinned to `^8.4.0` to match the
+  existing Capacitor packages.
+- **The native widget stays iOS-only** (WidgetKit). A native Android App Widget
+  (Glance/RemoteViews) is a tracked follow-up; it would reuse the pre-resolved
+  `votd.json` (`scripts/build-votd-widget.mjs`) rather than port the selection math.
+- **The free pledge** is now explicit in the README — masthead, a `free · forever`
+  badge, a Highlights row, and the refusal list — the FREE keyword beside the
+  standing no-accounts / no-tracking / no-data positioning, consistent with
+  standing rule §13.5 (no ads or in-app purchases, ever).
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
