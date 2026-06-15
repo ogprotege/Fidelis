@@ -6,9 +6,12 @@
  * `npm run lectionary` (fresh downloads key the cache by commit), then
  * review `git diff public/data data-report.txt` word by word before
  * committing. A diff here is a change to the sacred text and must be
- * explained, not assumed. Also bump DATA_CACHE in public/sw.js (the data
- * cache is cache-first forever, so installed PWAs only refetch the texts
- * and manifest when its name changes).
+ * explained, not assumed. If the diff changes the bytes of an EXISTING data
+ * file, also bump DATA_CACHE in public/sw.js so installed PWAs refetch it (the
+ * data cache is cache-first; the activate handler migrates the old cache
+ * forward, so a bump preserves a user's downloaded offline bundles). Merely
+ * adding new files or re-sealing manifest.json needs no bump — manifest.json is
+ * served network-first and new files miss the cache and fetch fresh.
  */
 export const PINS = {
   scrollmapper: {
@@ -25,7 +28,8 @@ export const PINS = {
     repo: "cmahte/ENG-B-Haydock1883-pd-PSFM",
     commit: "0332c84aedf35638a0d87b0185cc01eb14a65492"
   },
-  // Catena Aurea: OSIS edition of the Oxford 1842 translation, released CC0.
+  // Catena Aurea: OSIS edition of the Oxford 1841–1845 translation (Newman's
+  // editorship, the Library of the Fathers), released CC0.
   catena: {
     repo: "Isidore-Guild/catena",
     commit: "aebb0f6b2b313fd3732dab9b7f28714fbe967f40"

@@ -4,7 +4,13 @@
  * behavior there comes from dist/ shipping in the app bundle (see docs/IOS.md).
  */
 const SHELL_CACHE = "fidelis-shell-v3";
-const DATA_CACHE = "fidelis-data-v2"; // v2: commentary layer added (Haydock + Catena), manifest re-sealed
+// Cache-first store for the immutable corpus. Bump ONLY when an existing data
+// file's bytes change (a deliberate pin bump to scripture/lectionary). On
+// activate the prior data cache is migrated forward first, so a bump never
+// discards the translations a user downloaded for offline reading. Adding new
+// files (e.g. the commentary layer) or re-sealing manifest.json needs NO bump:
+// new files miss and fetch fresh, and manifest.json is served network-first.
+const DATA_CACHE = "fidelis-data-v2";
 
 const ASSET_RE = /(?:src|href)="([^"]*assets\/[^"]+)"/g;
 const FONT_RE = /url\(\s*["']?([^"')]+\.woff2?)["']?\s*\)/g;
@@ -67,9 +73,32 @@ self.addEventListener("install", (event) => {
   );
 });
 
+/** Copy entries from any older data cache into the current one before the
+ *  stale-cache sweep deletes them, so bumping DATA_CACHE never discards the
+ *  scripture a user explicitly downloaded for offline reading (Settings → Data).
+ *  A current entry is never overwritten. */
+async function migrateDataCache() {
+  const dest = await caches.open(DATA_CACHE);
+  for (const name of await caches.keys()) {
+    if (name === DATA_CACHE || !name.startsWith("fidelis-data-")) continue;
+    const src = await caches.open(name);
+    for (const req of await src.keys()) {
+      if (await dest.match(req)) continue;
+      const res = await src.match(req);
+      if (res) await dest.put(req, res);
+    }
+  }
+}
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
+      // Preserve downloaded offline bundles across a data-cache name change.
+      try {
+        await migrateDataCache();
+      } catch {
+        // best effort — a failed migration must not block activation
+      }
       const keys = await caches.keys();
       await Promise.all(
         keys.filter((k) => k !== SHELL_CACHE && k !== DATA_CACHE).map((k) => caches.delete(k))
@@ -91,9 +120,24 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
 
   // Scripture data: cache-first (the texts never change between pin bumps).
+  // The manifest is the one exception — it is re-sealed every release, so it is
+  // served network-first (cache fallback when offline). That lets a new seal
+  // land without bumping — and wiping — the whole data cache.
   if (url.pathname.includes("/data/")) {
+    const isManifest = url.pathname.endsWith("/data/manifest.json");
     event.respondWith(
       caches.open(DATA_CACHE).then(async (cache) => {
+        if (isManifest) {
+          try {
+            const res = await fetch(event.request);
+            if (res.ok) cache.put(event.request, res.clone());
+            return res;
+          } catch {
+            const hit = await cache.match(event.request);
+            if (hit) return hit;
+            throw new Error("offline and manifest not cached");
+          }
+        }
         const hit = await cache.match(event.request);
         if (hit) return hit;
         const res = await fetch(event.request);
