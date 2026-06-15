@@ -5,6 +5,9 @@
  *
  * NOTE: Psalm references follow the traditional Vulgate/Septuagint numbering
  * used by all bundled translations (e.g. "The Lord is my shepherd" = Psalm 22).
+ * Unlike the lectionary (lectionary.ts, which stores MODERN psalm numbers and
+ * remaps them via hebrewSpanToVulgate), these refs are already Vulgate — they
+ * index the bundle directly and must NOT be passed through that mapper.
  */
 import { VerseRef } from "./storage";
 
