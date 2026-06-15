@@ -13,13 +13,13 @@ No algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.4.0%20·%20the%20daily%20soul-5B3A8E)
+![version](https://img.shields.io/badge/version-1.5.1%20·%20the%20kept%20promise-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
 ![texts](https://img.shields.io/badge/texts-public%20domain-2E7D32)
 
-![React](https://img.shields.io/badge/React-18-20232A?logo=react&logoColor=61DAFB)
+![React](https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB)
 &nbsp;
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 &nbsp;
@@ -177,7 +177,7 @@ piety, never gamification.
   so a lost device never takes your marginalia with it.
 - **Search** across any bundled translation, **accent-insensitive** (Latin `misericordia` and
   `cælum` both match), with reference jumping ("John 3:16", "1 Cor 13", "Apocalypsis 21").
-- **Commentary** — a small **gold dot** after a verse number marks a Haydock note; the verse
+- **Commentary** (the 1.5.0 "formation" release) — a small **gold dot** after a verse number marks a Haydock note; the verse
   actions gain a **Commentary** entry that opens a study sheet (a side panel on desktop, a bottom
   sheet on phones) with **Haydock** (the annotated Douay, whole canon) and **Catena Aurea**
   (Aquinas's chain of the Fathers on the Gospels, the Newman edition) tabs. The Catena tab filters
@@ -205,8 +205,8 @@ piety, never gamification.
   over Library, Translations, Settings, and About — not a route, so deep links are unchanged.
 - **One Settings screen** with a live Scripture preview (Genesis 1:1–2, re-rendering as you adjust
   the controls below): Bible version, text size, reading face, appearance, calendar region,
-  per-translation offline download with real sizes, the indulgence toggle, and JSON
-  export/import.
+  per-translation offline download with real sizes, the indulgence toggle, the commentary
+  controls (master switch, Haydock/Catena, Doctors-only), and JSON export/import.
 - **System / Day / Night** — System tracks the device's color-scheme preference live; a pre-paint
   boot script resolves the theme and reading face before first paint, so a night reader never sees
   a flash of day.

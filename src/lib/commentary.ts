@@ -68,6 +68,11 @@ const FATHERS: FatherDef[] = [
   { id: "peter-chrysologus", name: "Peter Chrysologus", aliases: ["chrysologus", "chrysolog", "chrysol"] },
   { id: "chrysostom", name: "Chrysostom", aliases: ["chrysostom", "chrysost", "chrys", "chyrs"] },
   { id: "augustine", name: "Augustine", aliases: ["augustine", "august", "aug"] },
+  // Ambrosiaster — the conventional name for an anonymous 4th-c. commentator on
+  // the Pauline epistles, NOT St. Ambrose and not a Doctor. Listed before Ambrose
+  // so the "ambros" startsWith never absorbs it. (Labels whose head is "Ambrose"
+  // with "Ambrosiaster" in the citation apparatus still resolve to Ambrose.)
+  { id: "ambrosiaster", name: "Ambrosiaster", aliases: ["ambrosiaster"] },
   { id: "ambrose", name: "Ambrose", aliases: ["ambrose", "ambros"] },
   { id: "jerome", name: "Jerome", aliases: ["jerome", "hieronymus", "hieron"] },
   { id: "john-damascene", name: "John Damascene", aliases: ["john damascene", "john of damascus", "damascene", "damascen", "damasc", "damas"] },

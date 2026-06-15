@@ -58,13 +58,13 @@ export default function Settings() {
   // ── Version cards: which non-bundled texts the user has imported ────────────
   const [imported, setImported] = useState<Set<string>>(new Set());
   useEffect(() => {
-    importedTranslations().then(setImported);
+    importedTranslations().then(setImported).catch(() => {});
   }, []);
 
   // ── Data: manifest (for real sizes), offline record, download progress ──────
   const [manifest, setManifest] = useState<ManifestDoc | null>(null);
   useEffect(() => {
-    loadManifest().then(setManifest);
+    loadManifest().then(setManifest).catch(() => {});
   }, []);
   const [offline, setOffline] = useState<string[]>(getOfflineTranslations);
   const [progress, setProgress] = useState<Record<string, { done: number; total: number }>>({});
@@ -428,7 +428,7 @@ export default function Settings() {
             style={{ display: "none" }}
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) doImport(f);
+              if (f) void doImport(f);
               e.target.value = "";
             }}
           />

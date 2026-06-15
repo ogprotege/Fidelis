@@ -64,7 +64,12 @@ export function sundayCycle(date: Date): SundayCycle {
   return (["C", "A", "B"] as const)[litYearEnd % 3];
 }
 
-/** Weekday lectionary cycle: Year I in odd civil years, Year II in even. */
+/** Weekday lectionary cycle: Year I in odd civil years, Year II in even.
+ *  Keying on the CIVIL year (not the liturgical year, which rolls at Advent) is
+ *  valid only because the `wd` suffix is appended exclusively to Ordinary Time
+ *  codes, and Ordinary Time never crosses the late-December Advent boundary —
+ *  so its civil-year parity always matches the liturgical year. Do not reuse
+ *  weekdayCycle for an Advent/Christmas weekday without revisiting this. */
 export function weekdayCycle(date: Date): "1" | "2" {
   return date.getFullYear() % 2 === 1 ? "1" : "2";
 }
@@ -461,6 +466,9 @@ const IRREGULAR: Record<number, { after?: [number, number]; wide?: number }> = {
  * counts verses English-style (superscriptions unnumbered); the bundles are
  * Vulgate-versified, with split chapters renumbered from 1. toVerse 999
  * (= end of the cited psalm) is preserved or resolved as the split requires.
+ *
+ * NOTE: this maps MODERN psalm numbers only. The Verse of the Day (votd.ts)
+ * already stores Vulgate numbers and must NOT be routed through here.
  */
 export function hebrewSpanToVulgate(ch: number, v1: number, v2: number): [number, number, number][] {
   // Joined: two modern psalms share one Vulgate chapter.

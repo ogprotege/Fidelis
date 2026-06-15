@@ -32,7 +32,7 @@ for (const book of BOOKS) {
 // A few common extras
 const EXTRA: Record<string, string> = {
   jn: "john", mt: "matthew", mk: "mark", lk: "luke", ps: "psalms", psalm: "psalms",
-  apoc: "revelation", rev: "revelation", canticles: "song-of-songs", songofsolomon: "song-of-songs",
+  apoc: "revelation", apocalypsis: "revelation", rev: "revelation", canticles: "song-of-songs", songofsolomon: "song-of-songs",
   qoheleth: "ecclesiastes", apocalypse: "revelation", acts: "acts", sir: "sirach", wis: "wisdom",
   dt: "deuteronomy", gn: "genesis", ex: "exodus", lv: "leviticus", nm: "numbers"
 };

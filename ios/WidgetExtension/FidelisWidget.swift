@@ -99,10 +99,14 @@ struct FidelisWidgetView: View {
     var entry: VotdEntry
     @Environment(\.widgetFamily) var family
 
-    private let parchment = Color(red: 0.965, green: 0.937, blue: 0.882)
-    private let ink = Color(red: 0.17, green: 0.13, blue: 0.09)
-    private let cardinal = Color(red: 0.54, green: 0.12, blue: 0.18)
-    private let gold = Color(red: 0.66, green: 0.52, blue: 0.17)
+    // Day-theme tokens from src/styles.css, so the widget matches the app's own
+    // surfaces: --bg-0 #F4F2EE, --text #26241F, --gold #A8862C, --text-muted
+    // #6E6A61 (the citation color). No off-token red — the two-accent grammar
+    // (gold honors) holds on the native surface too.
+    private let parchment = Color(red: 0.957, green: 0.949, blue: 0.933)
+    private let ink = Color(red: 0.149, green: 0.141, blue: 0.122)
+    private let muted = Color(red: 0.431, green: 0.416, blue: 0.380)
+    private let gold = Color(red: 0.659, green: 0.525, blue: 0.173)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -122,7 +126,7 @@ struct FidelisWidgetView: View {
             Spacer(minLength: 0)
             Text(entry.reference)
                 .font(.system(.caption2, design: .serif).weight(.semibold))
-                .foregroundColor(cardinal)
+                .foregroundColor(muted)
         }
         .padding(2)
         .containerBackground(parchment, for: .widget)

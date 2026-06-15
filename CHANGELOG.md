@@ -4,6 +4,56 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.5.1] — 2026-06-15 — the kept promise
+
+A review-driven hardening pass over the whole project: the texts a reader
+downloaded for offline use are kept across updates, a Father is attributed
+rightly, and the codebase gains the linter it never had. No new features — every
+change makes an existing promise more trustworthy.
+
+### Fixed
+
+- **Offline downloads survive a data-cache bump** (service worker): the v1→v2
+  `DATA_CACHE` bump in 1.5.0 deleted every translation a user had downloaded for
+  offline reading (Settings → Data). The activate handler now migrates a prior
+  data cache forward before its stale-cache sweep, and `manifest.json` is served
+  network-first, so a re-seal lands without a destructive bump. Web/PWA only; iOS
+  was never affected (no service worker in the Capacitor webview).
+- **Ambrosiaster is no longer mistaken for St. Ambrose** (commentary): the
+  anonymous 4th-century Pauline commentator was bucketed under Ambrose — and
+  flagged a Doctor of the Church — on six Matthew verses, because the matcher's
+  prefix rule absorbed it via the "ambros" alias. He is now a distinct,
+  non-Doctor Father; labels the Catena attributes to Ambrose proper are
+  unchanged. Asserted in the harness (§16).
+- **The Search reference parser resolves its own documented example**:
+  "Apocalypsis 21,4" (the Latin title of Revelation) now jumps to the passage
+  instead of returning nothing.
+
+### Added
+
+- **A linter** (the first one): ESLint 9 + typescript-eslint, type-aware and
+  scoped to `src/`, enforcing what `tsc` cannot — React-hooks dependency
+  correctness and no floating promises. `npm run lint`, folded into `npm test`
+  and run in CI. It immediately surfaced ten unhandled promises (mostly
+  react-router 7's now-promise-returning `navigate`), all fixed.
+- **A reduced-motion guard**: the few remaining CSS transitions are neutralized
+  under `prefers-reduced-motion: reduce`, so the app's no-motion ethos is
+  enforced rather than incidental.
+- **Harness coverage** for the reference parser, the canon/translation display
+  helpers, the First Sunday of Advent (a trap-year table), and the Catena
+  segment separator — closing the gaps the review found.
+
+### Changed
+
+- The iOS webview background and the Verse-of-the-Day widget's colors are aligned
+  to the exact day-theme tokens (`--bg-0`, `--text`, `--gold`, and `--text-muted`
+  for the citation), so the native surfaces match the app and stay inside the
+  two-accent rule.
+- Removed two unused (phantom) dependencies, `present` and `scripts`.
+- Documentation: the README version/React badges and the Settings inventory are
+  current; comments in `votd.ts` / `lectionary.ts` flag the Vulgate-vs-modern
+  Psalm-numbering divergence so the two subsystems can't be conflated.
+
 ## [1.5.0] — 2026-06-15 — formation
 
 The commentary layer — design-spec §4. Two public-domain monuments, **Haydock** (the

@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: "dist",
   ios: {
     contentInset: "automatic",
-    backgroundColor: "#f6efe1"
+    backgroundColor: "#f4f2ee" // matches the day --bg-0 token (src/styles.css)
   }
 };
 

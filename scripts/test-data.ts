@@ -31,7 +31,9 @@ import {
   LONG_VERSES,
   ReadingPlan
 } from "../src/lib/plans";
-import { BOOKS, getBook } from "../src/lib/canon";
+import { BOOKS, getBook, bookIndex, bookDisplayName } from "../src/lib/canon";
+import { parseReference } from "../src/lib/refparse";
+import { getTranslation, DEFAULT_TRANSLATION } from "../src/lib/translations";
 import { parseHaydockSfm } from "./build-haydock.mjs";
 import { parseCatenaOsis } from "./build-catena.mjs";
 import { normalizeFather, groupCatena, fathersOf, isDoctor } from "../src/lib/commentary";
@@ -1597,6 +1599,9 @@ console.log("");
       g1[0].text.includes("A") && g1[0].text.includes("B") && g1[0].text.includes("C") &&
       g1[1].father?.id === "augustine" && g1[1].text === "D"
   );
+  // Pin the exact inter-segment separator (a blank line) — it is the paragraph
+  // break the reader sees between a Father's quoted passages in CommentarySheet.
+  check("groupCatena joins a Father's merged segments with a blank line", g1[0].text === "A\n\nB\n\nC");
 
   // fathersOf is the distinct, in-order chip list — no Gloss, no duplicates.
   const g2 = groupCatena([
@@ -1616,6 +1621,10 @@ console.log("");
   check("'Dion. alex' is Dionysius of Alexandria (a Father, not the Areopagite, not a Doctor)",
     F("Dion. alex").id === "dionysius-of-alexandria" && F("Dion. alex").isDoctor === false && F("Dionysius ar").id === "pseudo-dionysius");
   check("'Clem. alex' is Clement of Alexandria", F("Clem. alex").id === "clement-of-alexandria");
+  check("'Ambrosiaster' is the anonymous Pauline commentator — NOT St. Ambrose, not a Doctor",
+    F("Ambrosiaster Comm. in 1 Cor 12, 3").id === "ambrosiaster" &&
+    F("Ambrosiaster Comm. in 1 Cor 12, 3").isDoctor === false &&
+    F("Ambrose, Ambrosiaster, in Luc. 3. 30").id === "ambrose");
 
   // Transcription typos in the pinned corpus heal to the right Father.
   check("typo 'Origin, in Matt.' → Origen", F("Origin, in Matt., XV, 7").id === "origen");
@@ -1650,6 +1659,35 @@ console.log("");
   }
   check("Catena normaliser: ≥93% of all entries resolve to a Father", fatherEntries / totalEntries >= 0.93, `${((100 * fatherEntries) / totalEntries).toFixed(2)}% of ${totalEntries}`);
   check("Catena normaliser: the 'source' fallback hides no real Father (only anonymous/council sources)", leaked.length === 0, leaked.slice(0, 6).join(" | "));
+}
+
+// §17 — reference parser (Search "jump to verse") and the canon/translation
+// display helpers. Pure input-handling that ships to users with no other guard.
+{
+  const ref = (s: string) => {
+    const r = parseReference(s);
+    return r ? `${r.book.slug}/${r.chapter ?? "-"}/${r.verse ?? "-"}` : null;
+  };
+  check("parseReference: 'John 3:16' → john 3:16", ref("John 3:16") === "john/3/16");
+  check("parseReference: '1 Cor 13' → 1-corinthians 13, no verse", ref("1 Cor 13") === "1-corinthians/13/-");
+  check("parseReference: roman numeral 'II Timothy 2' → 2-timothy 2", ref("II Timothy 2") === "2-timothy/2/-");
+  check("parseReference: 'ps 22' → psalms 22 (extra alias)", ref("ps 22") === "psalms/22/-");
+  check("parseReference: '.' separator 'Mt 5.3' → matthew 5:3", ref("Mt 5.3") === "matthew/5/3");
+  check("parseReference: ',' separator 'apoc 21,4' → revelation 21:4", ref("apoc 21,4") === "revelation/21/4");
+  check("parseReference: the docstring's own 'Apocalypsis 21,4' resolves (Latin title)", ref("Apocalypsis 21,4") === "revelation/21/4");
+  check("parseReference: over-range chapter clamps to the book's count ('Genesis 999' → 50)", ref("Genesis 999") === "genesis/50/-");
+  check("parseReference: a non-book string → null", parseReference("zzz") === null);
+
+  const rev = getBook("revelation")!;
+  check("bookDisplayName: vulgate → Latin title", bookDisplayName(rev, "vulgate") === rev.latin);
+  check("bookDisplayName: drc/cpdv → Douay name", bookDisplayName(rev, "drc") === rev.douay && bookDisplayName(rev, "cpdv") === rev.douay);
+  check("bookDisplayName: other translations → common name", bookDisplayName(rev, "rsv2ce") === rev.name);
+  check("bookIndex: genesis is first, an unknown slug is -1", bookIndex("genesis") === 0 && bookIndex("nope") === -1);
+
+  check("getTranslation: bundled flag is honest (drc bundled, rsv2ce not)",
+    getTranslation("drc")?.bundled === true && getTranslation("rsv2ce")?.bundled === false);
+  check("getTranslation: unknown id → undefined; DEFAULT_TRANSLATION is drc",
+    getTranslation("zzz") === undefined && DEFAULT_TRANSLATION === "drc");
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

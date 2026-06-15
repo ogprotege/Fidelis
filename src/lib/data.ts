@@ -193,7 +193,7 @@ export function loadCommentary(corpus: string, book: string): Promise<Commentary
 
 /** Save a bundled translation for offline reading (spec §2.2 Data): fetch every
  *  file the manifest lists under `${translation}/`, which the service worker's
- *  cache-first /data/ handler persists into `fidelis-data-v1`. The manifest is
+ *  cache-first /data/ handler persists into its data cache. The manifest is
  *  the authoritative file list, so this exactly mirrors what ships. Returns the
  *  number of files fetched; `onProgress` reports as each completes. */
 export async function downloadBundle(

@@ -12,6 +12,9 @@
  *  calling getSettings() directly: update() writes localStorage synchronously,
  *  so a lazy currentRegion() read sees the new value on the very next render. */
 
+/* eslint-disable react-refresh/only-export-components -- a context module: the
+   provider component and its hooks (useSettings/useUpdateSettings) live together
+   by design; splitting them would not improve the app. */
 import { ReactNode, createContext, useCallback, useContext, useState } from "react";
 import { Settings, getSettings, saveSettings } from "./lib/storage";
 

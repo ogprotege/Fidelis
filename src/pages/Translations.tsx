@@ -36,9 +36,9 @@ export default function Translations() {
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingId = useRef<string>("");
 
-  const refresh = () => importedTranslations().then(setImported);
+  const refresh = () => importedTranslations().then(setImported).catch(() => {});
   useEffect(() => {
-    refresh();
+    void refresh();
   }, []);
 
   const startImport = (id: string) => {
