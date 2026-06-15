@@ -131,8 +131,29 @@ export default function About() {
         checked against printed copies before being marked verified; the corpus
         and its verification state live in the repository in the open.
       </p>
+      <p className="small">
+        The commentary is two public-domain monuments. <strong>Haydock</strong> —
+        the classic annotated Douay, notes by Haydock, Challoner, Calmet, Witham,
+        and others across the whole canon — is the 1883 Dunigan edition as the{" "}
+        <a href="https://github.com/cmahte/ENG-B-Haydock1883-pd-PSFM" target="_blank" rel="noreferrer">
+          cmahte
+        </a>{" "}
+        USFM transcription. The <strong>Catena Aurea</strong> — St. Thomas
+        Aquinas's chain of the Church Fathers on the four Gospels, in the
+        Newman&nbsp;/&nbsp;Oxford translation (1841–45) that St. John Henry Newman
+        edited — is the CC0{" "}
+        <a href="https://github.com/Isidore-Guild/catena" target="_blank" rel="noreferrer">
+          Isidore-Guild
+        </a>{" "}
+        OSIS. Both are reproduced verbatim — no summaries, no paraphrase — and
+        their per-Father attributions are normalized only to group and label the
+        Fathers, never to alter a word. Where the Gospel Catena names a Father
+        ambiguously, the historic identity is kept: &ldquo;Isidore&rdquo; is
+        Isidore of Pelusium, not the Doctor of Seville; &ldquo;Dionysius&rdquo; the
+        Areopagite is the pseudonymous corpus.
+      </p>
       <p className="small muted" id="integrity">
-        Both sources are fetched at commits pinned by hash — never a moving
+        All sources are fetched at commits pinned by hash — never a moving
         branch — and every bundled data file is sealed by a SHA-256 manifest
         that the project's data harness verifies on every run.
         {integrity && (

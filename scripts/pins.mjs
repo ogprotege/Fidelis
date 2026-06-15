@@ -18,5 +18,16 @@ export const PINS = {
   lectionary: {
     repo: "jayarathina/Tamil-Catholic-Lectionary",
     commit: "c6c9d79d0f56721f6cc17fb8370d089f0dcd5fd2"
+  },
+  // Commentary layer (spec §4.1; see docs/review/Commentary_Sources_Survey.md).
+  // Haydock: USFM transcription of the 1883 Dunigan edition, public domain by age.
+  haydock: {
+    repo: "cmahte/ENG-B-Haydock1883-pd-PSFM",
+    commit: "0332c84aedf35638a0d87b0185cc01eb14a65492"
+  },
+  // Catena Aurea: OSIS edition of the Oxford 1842 translation, released CC0.
+  catena: {
+    repo: "Isidore-Guild/catena",
+    commit: "aebb0f6b2b313fd3732dab9b7f28714fbe967f40"
   }
 };

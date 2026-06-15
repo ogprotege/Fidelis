@@ -67,7 +67,8 @@ items (A1–A6) on the `v1.1-identity` branch:
 daily-readings notification (off by default; bounded by standing rule 3 — no
 notification pressure). §3 (Quote of the Day) and the §6 Today recomposition
 shipped in 1.2.0; §6 card 4, §6.1, and §7 in 1.4.0 (the daily soul, below). The §4
-commentary layer, §5, and §8–§12 remain the open roadmap (§13 is the binding refusal
+commentary layer shipped in v1.5.0 (the formation release, below). §5 (the CCC
+citation index) and §8–§12 remain the open roadmap (§13 is the binding refusal
 list, in the standing rules).
 
 ## The daily soul release — design spec §6 card 4, §6.1, §7 (v1.4.0)
@@ -107,8 +108,52 @@ The spec's devotional layer shipped in v1.4.0 "the daily soul" — three work it
   index, not a calendar streak. Arithmetic asserted in `test-data.ts` §13 (preset totals
   from real data, pace, completion advance, the weighted order).
 
-The new `Sheet` primitive is built to host the deferred §4 commentary layer. The single
-optional daily-readings notification stays deferred and off (no notification pressure).
+The new `Sheet` primitive is built to host the §4 commentary layer (shipped in v1.5.0,
+below). The single optional daily-readings notification stays deferred and off (no
+notification pressure).
+
+## The formation release — design spec §4 (v1.5.0)
+
+The commentary layer shipped in v1.5.0 "formation" on the `v1.5-formation` branch:
+the §4.1 data pipeline (commits C1/C2 — the source survey and the pinned, sealed
+Haydock + Catena build) and the §4.2 Reader integration. Spec:
+`docs/superpowers/specs/2026-06-15-commentary-reader-layer-design.md`; source survey:
+`docs/review/Commentary_Sources_Survey.md`.
+
+- **§4.1 — the data** (C1/C2): `scripts/build-haydock.mjs` + `scripts/build-catena.mjs`
+  emit per-book JSON under `public/data/commentary/{haydock,catena}/`. Haydock is the
+  1883 Dunigan USFM (`cmahte`, pin `0332c84`), keyed `"ch:v"` → `[{src,text}]`, all 73
+  books; the Catena is the Newman/Oxford translation as the Isidore-Guild OSIS (CC0, pin
+  `aebb0f6`), keyed `"ch:v"` → `[{father,text}]`, the four Gospels only. Both pins live in
+  `scripts/pins.mjs` and seal into `manifest.json`; book slugs equal the app's DRC slugs
+  (the five textless appendix books have no Haydock). Parser + key-coordinate + incipit
+  assertions are `test-data.ts` §14–§15.
+- **§4.2 — the Reader UI** (this release): a Haydock note gives a verse a **gold dot**
+  after its number, drawn absolutely inside the `.vnum` margin so it never reflows the
+  page (`.cmt-dot`; zero layout shift verified in a real browser). The verse action bar
+  gains a **Commentary** action (union presence: Haydock note, or any Gospel verse since
+  the Catena covers ~99%). It opens `CommentarySheet` via the `Sheet` primitive's new
+  `variant="panel"` (bottom sheet on phones, right-docked side panel ≥640px): **Haydock**
+  and **Catena Aurea** tabs, the Catena tab carrying per-Father chips + a **Doctors only**
+  toggle. Commentary loads lazily — Haydock on book open (dots), the heavy Catena Gospel
+  files only when a sheet opens. **No inline interleaving** (spec-mandated).
+- **§2.2 item 7 — settings**: a Commentary section in `Settings.tsx` with a master
+  `commentaryEnabled` (default on; off ⇒ no dots, no action), `commentaryHaydock`,
+  `commentaryCatena`, and `commentaryDoctorsOnly` (default off) in `storage.ts`. Turning
+  Haydock off also hides the dots (they mark Haydock), noted in the UI.
+- **`src/lib/commentary.ts`** is the pure, asserted heart: `normalizeFather` canonicalises
+  the Catena's 1,198 attribution labels (citation forms, transcription typos, the Glossa,
+  Pseudo-*, and "It goes on" connectives), `groupCatena` folds connectives into the prior
+  Father, `fathersOf` builds the chip list, `isDoctor` drives the filter. `test-data.ts`
+  §16 asserts the identity calls (Gregory the Great vs Nyssa; Isidore of **Pelusium**, not
+  the Doctor of Seville; Dionysius of Alexandria vs the pseudonymous Areopagite; Newman a
+  Doctor) and a corpus-wide guard that ≥93% resolve to a Father and the "source" fallback
+  hides none. **Versification caveat:** commentary keys are Douay/DRC coordinates; under
+  Vulgate Psalm numbering a few Psalm dots may sit one verse off (documented, unmapped).
+
+Deferred from §4 and after: §5 (the CCC citation index — verse→paragraph links, the
+Catechism text never bundled) is the next PR; commentary offline-download (Settings →
+Data) and per-Father "by era" filtering remain open.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

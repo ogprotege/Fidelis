@@ -300,7 +300,82 @@ export default function Settings() {
         </div>
       </section>
 
-      {/* 7 ── Data */}
+      {/* 7 ── Commentary (spec §2.2 item 7 / §4.2) */}
+      <section className="card">
+        <h2>Commentary</h2>
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">Show commentary</div>
+            <p className="catechesis muted small">
+              Mark verses that carry Haydock or the Catena Aurea with a small gold dot, and
+              offer them from the verse actions. Off leaves the bare page.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.commentaryEnabled}
+            aria-label="Show commentary"
+            className="switch"
+            onClick={() => update({ commentaryEnabled: !settings.commentaryEnabled })}
+          />
+        </div>
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">Haydock</div>
+            <p className="catechesis muted small">
+              The classic annotated Douay, across the whole canon. Off also hides the gold
+              commentary dots on the page.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.commentaryHaydock}
+            aria-label="Haydock commentary"
+            className="switch"
+            disabled={!settings.commentaryEnabled}
+            onClick={() => update({ commentaryHaydock: !settings.commentaryHaydock })}
+          />
+        </div>
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">Catena Aurea</div>
+            <p className="catechesis muted small">
+              St. Thomas Aquinas's chain of the Church Fathers on the four Gospels.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.commentaryCatena}
+            aria-label="Catena Aurea commentary"
+            className="switch"
+            disabled={!settings.commentaryEnabled}
+            onClick={() => update({ commentaryCatena: !settings.commentaryCatena })}
+          />
+        </div>
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">Doctors of the Church only</div>
+            <p className="catechesis muted small">
+              Open the Catena filtered to the Doctors of the Church; you can change it within
+              the sheet.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.commentaryDoctorsOnly}
+            aria-label="Doctors of the Church only"
+            className="switch"
+            disabled={!settings.commentaryEnabled || !settings.commentaryCatena}
+            onClick={() => update({ commentaryDoctorsOnly: !settings.commentaryDoctorsOnly })}
+          />
+        </div>
+      </section>
+
+      {/* 8 ── Data */}
       <section className="card">
         <h2>Data</h2>
 

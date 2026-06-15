@@ -496,10 +496,23 @@ h1.page-title {
   vertical-align: super;
   margin-right: 0.28em;
   font-weight: 700;
+  position: relative;
 }
 /* Apparatus marks — chosen, so gold honors. */
 .verse .note-mark { color: var(--gold); font-size: 0.8em; margin-left: 0.2em; }
 .verse .bm-mark { color: var(--gold); font-size: 0.8em; margin-left: 0.2em; }
+/* §4.2 commentary dot — gold honors; marks a Haydock note. Absolutely positioned
+   inside the verse-number's existing right-margin gutter, so it never reflows the
+   sacred text — even when it arrives after the async Haydock load (zero layout shift). */
+.cmt-dot {
+  position: absolute;
+  top: 0.05em;
+  right: -0.16em;
+  width: 0.34em;
+  height: 0.34em;
+  border-radius: 50%;
+  background: var(--gold);
+}
 
 .parallel-grid {
   display: grid;
@@ -883,6 +896,7 @@ body.widget-mode { background: transparent; }
 }
 .switch[aria-checked="true"] { background: var(--purple-strong); border-color: var(--purple-strong); }
 .switch[aria-checked="true"]::after { left: calc(100% - 1.33rem); background: var(--on-accent); }
+.switch:disabled { opacity: 0.4; cursor: not-allowed; }
 .switch:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 
 /* §2.2 Data: per-translation offline-download rows. */
@@ -1076,7 +1090,93 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 @media (min-width: 640px) {
   .sheet-backdrop { align-items: center; }
   .sheet { border-radius: 0.9rem; max-height: 80vh; }
+  /* §4.2 panel variant: a right-docked, full-height study panel on desktop. On
+     phones it stays the plain bottom sheet (the base rules above 640px). */
+  .sheet-backdrop.panel { align-items: stretch; justify-content: flex-end; }
+  .sheet.panel {
+    width: 32rem;
+    max-width: 32rem;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+  }
 }
+
+/* §4.2 commentary sheet. Tabs and chips ACT (purple); the source credit and the
+   Father attributions HONOR (gold). No motion (the Sheet primitive forbids it). */
+.cmt-title { margin: 0 3rem 0.6rem 0; }
+.cmt-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+.cmt-tab {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  padding: 0.4rem 0.2rem;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+}
+.cmt-tab:hover { color: var(--purple); }
+.cmt-tab.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 600; }
+.cmt-credit {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.7rem;
+}
+.cmt-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+.cmt-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; flex: 1; }
+.cmt-chip,
+.cmt-doctors {
+  font-family: var(--sans);
+  font-size: 0.76rem;
+  cursor: pointer;
+  padding: 0.18rem 0.62rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg-1);
+  color: var(--text);
+}
+.cmt-chip:hover,
+.cmt-doctors:hover { border-color: var(--purple); }
+.cmt-chip.active,
+.cmt-doctors.on {
+  background: var(--purple-strong);
+  border-color: var(--purple-strong);
+  color: var(--on-accent);
+}
+.cmt-chip.plain { font-style: italic; color: var(--text-muted); }
+.cmt-doctors { color: var(--text-muted); }
+.cmt-chip-sep { width: 1px; align-self: stretch; min-height: 1.2rem; background: var(--border); margin: 0 0.2rem; }
+.cmt-block { margin: 0 0 1.1rem; }
+.cmt-attr {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.2rem;
+}
+.cmt-attr.plain { color: var(--text-muted); font-style: italic; text-transform: none; letter-spacing: 0; }
+.cmt-text { margin: 0 0 0.5rem; line-height: 1.62; }
+.cmt-loading { margin: 0.5rem 0; }
 
 /* The reading-time indulgence line (spec §6.1). Gold honor; the only act is the
    tap that opens the conditions sheet. Gold-on-interactive is spec-mandated. */

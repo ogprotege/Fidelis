@@ -160,6 +160,37 @@ export async function getVerseText(
   return data.chapters[chapter - 1]?.[verse - 1];
 }
 
+/** One Catena/Haydock note (spec §4.1): Haydock carries a `src` attribution,
+ *  the Catena a `father`. Keyed "chapter:verse". */
+export interface CommentaryNote {
+  src?: string;
+  father?: string;
+  text: string;
+}
+export type CommentaryBook = Record<string, CommentaryNote[]>;
+
+const commentaryCache = new Map<string, Promise<CommentaryBook>>();
+
+/** Lazy-load a book's commentary (spec §4.2), riding the same promise-deduped
+ *  cache as loadBook and the service worker's /data/ handler. `corpus` is
+ *  "haydock" | "catena". A 404 — an appendix book with no Haydock, a non-Gospel
+ *  with no Catena — resolves to {}, never an error the Reader must handle. */
+export function loadCommentary(corpus: string, book: string): Promise<CommentaryBook> {
+  const key = `${corpus}/${book}`;
+  let p = commentaryCache.get(key);
+  if (!p) {
+    p = (async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}data/commentary/${corpus}/${book}.json`);
+      if (res.status === 404) return {};
+      if (!res.ok) throw new Error(`Could not load commentary ${corpus}/${book} (HTTP ${res.status})`);
+      return (await res.json()) as CommentaryBook;
+    })();
+    p.catch(() => commentaryCache.delete(key));
+    commentaryCache.set(key, p);
+  }
+  return p;
+}
+
 /** Save a bundled translation for offline reading (spec §2.2 Data): fetch every
  *  file the manifest lists under `${translation}/`, which the service worker's
  *  cache-first /data/ handler persists into `fidelis-data-v1`. The manifest is

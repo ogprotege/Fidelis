@@ -4,6 +4,60 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.5.0] — 2026-06-15 — formation
+
+The commentary layer — design-spec §4. Two public-domain monuments, **Haydock** (the
+annotated Douay, the whole canon) and the **Catena Aurea** (St. Thomas Aquinas's chain
+of the Fathers on the four Gospels, the Newman edition), built into the app beside the
+sacred text — Catholic formation without a server, an account, or a word of machine
+paraphrase. Scripture stays Scripture; study is one tap away.
+
+### Added
+
+- **The commentary data pipeline** (§4.1): `scripts/build-haydock.mjs` and
+  `scripts/build-catena.mjs` parse the pinned upstream sources into per-book JSON under
+  `public/data/commentary/{haydock,catena}/` — Haydock keyed `"ch:v"` → `{src,text}`
+  across all 73 books; the Catena keyed `"ch:v"` → `{father,text}` for Matthew, Mark,
+  Luke, and John. Both upstreams are fetched at commits pinned by hash and sealed into
+  the SHA-256 manifest, exactly like the Scripture corpus; the harness pins key
+  coordinates and five incipits per source against the page-scan-backed text.
+- **The gold dot** (§4.2): in the Reader, a verse that carries a Haydock note gains one
+  small gold dot after its number — the entire footprint on the sacred page. It is drawn
+  absolutely inside the verse number's own margin, so it never moves a letter of
+  Scripture, even as it arrives after the commentary loads (zero layout shift, verified
+  in a real browser). A Settings switch turns the dots off for the bare page.
+- **The commentary sheet** (§4.2): a verse's new **Commentary** action opens a study
+  surface — a bottom sheet on phones, a right-docked side panel on desktop — with
+  **Haydock** and **Catena Aurea** tabs. It reuses the §6 `Sheet` primitive, so it traps
+  focus and returns it, dims a scrim, dismisses on Escape / backdrop / ✕, and never
+  animates. The Catena tab carries per-Father **filter chips** and a **Doctors of the
+  Church only** toggle — filter by Chrysostom, by Augustine, by the Doctors. No inline
+  interleaving: the page is never doubled, the reading rhythm never broken.
+- **The Father normaliser** (`src/lib/commentary.ts`, pure and asserted): the Catena's
+  1,198 distinct attribution labels — clean names, citation forms ("Chrys., Hom. in
+  Matt., 56"), transcription typos ("Theophyact", "Origin", "Psuedo-"), the Glossa, and
+  the source's "It goes on" connectives — are canonicalised into clean per-Father chips,
+  the connectives folded back into the Father they belong to. 93.9% of the corpus
+  resolves to a named Father; a corpus-wide harness guard proves no real Father hides in
+  the small "source" remainder (the Glossa Ordinaria, an anonymous Greek expositor, two
+  councils, Josephus). The Doctors-only filter rests on a curated Doctors set with the
+  identity calls the Gospel Catena demands: bare "Gregory" is Gregory the Great;
+  "Isidore" is Isidore of Pelusium, **not** the Doctor of Seville; "Dion. alex" is
+  Dionysius of Alexandria, **not** the Areopagite; every Pseudo-* stays distinct; and
+  John Henry Newman — who edited this Catena — is named among the Doctors.
+- **The Commentary settings section** (§2.2 item 7): a master switch (the dots and the
+  action, default on), per-source Haydock and Catena switches, and a Doctors-only
+  default — the commentary controls the spec asks for.
+
+### Notes
+
+- Commentary loads lazily per book: Haydock (≤1 MB) when the book opens, for the dots;
+  the heavier Catena Gospel files only when a sheet first opens — the sacred page never
+  waits on it.
+- Commentary keys follow Douay/DRC coordinates; under the Clementine Vulgate's Psalm
+  numbering a few Psalm dots may sit one verse off. Documented; a versification map is
+  left for a later release.
+
 ## [1.4.0] — 2026-06-14 — the daily soul
 
 Design-spec §6 (card 4), §6.1, and §7 in one release: the app grows a quiet devotional life

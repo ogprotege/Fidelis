@@ -4,7 +4,7 @@
  * behavior there comes from dist/ shipping in the app bundle (see docs/IOS.md).
  */
 const SHELL_CACHE = "fidelis-shell-v3";
-const DATA_CACHE = "fidelis-data-v1";
+const DATA_CACHE = "fidelis-data-v2"; // v2: commentary layer added (Haydock + Catena), manifest re-sealed
 
 const ASSET_RE = /(?:src|href)="([^"]*assets\/[^"]+)"/g;
 const FONT_RE = /url\(\s*["']?([^"')]+\.woff2?)["']?\s*\)/g;

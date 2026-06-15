@@ -32,6 +32,9 @@ import {
   ReadingPlan
 } from "../src/lib/plans";
 import { BOOKS, getBook } from "../src/lib/canon";
+import { parseHaydockSfm } from "./build-haydock.mjs";
+import { parseCatenaOsis } from "./build-catena.mjs";
+import { normalizeFather, groupCatena, fathersOf, isDoctor } from "../src/lib/commentary";
 import { getSettings } from "../src/lib/storage";
 import {
   DEFAULT_FONT_SIZE,
@@ -721,23 +724,25 @@ check(
 // Source pins: both build scripts must fetch pinned commits, never a branch.
 const pinsSrc = readFileSync(join(ROOT, "scripts/pins.mjs"), "utf8");
 const declaredPins = [...pinsSrc.matchAll(/commit:\s*"([0-9a-f]{40})"/g)].map((m) => m[1]);
-check("two 40-hex upstream pins declared in scripts/pins.mjs", declaredPins.length === 2, `${declaredPins.length}`);
-const buildDataSrc = readFileSync(join(ROOT, "scripts/build-data.mjs"), "utf8");
-const buildLectSrc = readFileSync(join(ROOT, "scripts/build-lectionary.mjs"), "utf8");
-const pinnedFetch =
-  !buildDataSrc.includes("/master/") &&
-  !buildLectSrc.includes("/master/") &&
-  buildDataSrc.includes("PINS.") &&
-  buildLectSrc.includes("PINS.");
+check("four 40-hex upstream pins declared in scripts/pins.mjs", declaredPins.length === 4, `${declaredPins.length}`);
+const buildSrcs = ["build-data", "build-lectionary", "build-haydock", "build-catena"].map((s) =>
+  readFileSync(join(ROOT, `scripts/${s}.mjs`), "utf8")
+);
+const pinnedFetch = buildSrcs.every((s) => !s.includes("/master/") && s.includes("PINS."));
 check(
   "build scripts fetch only the pinned commits",
   pinnedFetch,
   pinnedFetch ? "" : "a build script still fetches a moving branch"
 );
-const manifestPins = [manifest.sources?.scrollmapper?.commit, manifest.sources?.lectionary?.commit];
+const manifestPins = [
+  manifest.sources?.scrollmapper?.commit,
+  manifest.sources?.lectionary?.commit,
+  manifest.sources?.haydock?.commit,
+  manifest.sources?.catena?.commit
+];
 check(
   "manifest records the declared source pins",
-  manifestPins.every((c) => typeof c === "string" && declaredPins.includes(c)),
+  manifestPins.length === 4 && manifestPins.every((c) => typeof c === "string" && declaredPins.includes(c)),
   `manifest: ${manifestPins.map((c) => String(c).slice(0, 7)).join(", ")}`
 );
 const dotfileEntries = Object.keys(manifest.files).filter((p) =>
@@ -1348,6 +1353,303 @@ console.log("");
   // formatPortion range collapsing.
   check("formatPortion collapses a same-book run", formatPortion(["genesis/3", "genesis/4"], "drc") === "Genesis 3–4");
   check("formatPortion joins mixed books with a middot", formatPortion(["genesis/3", "psalms/7"], "drc") === "Genesis 3 · Psalms 7");
+}
+
+// 14. Commentary parsers (spec §4.1): the Haydock SFM and Catena OSIS parsers
+//     are pinned by fixture so a future re-pin or parser change that drops or
+//     mis-keys a note turns the harness red. Pure functions, no network.
+console.log("");
+{
+  // -- Haydock SFM footnote parser (fixtures are verbatim 3 John / Genesis forms) --
+  const hfix = [
+    "\\id 3JN ENG",
+    "\\c 1",
+    "\\v 1 The ancient to the dearly beloved Gaius.",
+    "\\f + \\fr 1:4\\ft No greater grace. That is, nothing that gives me greater joy and satisfaction. (Challoner)\\f*",
+    "\\f + \\fr 1:9-10\\ft Diotrephes....doth not receive us, nor those we recommend. (Witham) --- It seemeth, saith Ven. Bede, that he was an arch heretic. (Ven. Bede)\\f*",
+    "\\f + \\fr 2:1\\ft proud sect master---upomneso, an obscure word. (Ven. Bede)\\f*",
+    "\\f + \\fr 1:1 \\ft Year of the World 1, Year before Christ 4004.\\f*",
+    "\\f + \\fr 0:0\\ft Book introduction, not keyed to a verse.\\f*"
+  ].join("\n");
+  const H = parseHaydockSfm(hfix);
+  check(
+    "haydock parser: single-attribution note keyed by 'ch:verse'",
+    JSON.stringify(H["1:4"]) ===
+      JSON.stringify([
+        { src: "Challoner", text: "No greater grace. That is, nothing that gives me greater joy and satisfaction." }
+      ])
+  );
+  check(
+    "haydock parser: ' --- ' splits commentator segments, trailing (author) -> src",
+    H["1:9"]?.length === 2 && H["1:9"][0].src === "Witham" && H["1:9"][1].src === "Ven. Bede"
+  );
+  check(
+    "haydock parser: a verse-range note broadcasts to every verse in the span",
+    JSON.stringify(H["1:9"]) === JSON.stringify(H["1:10"])
+  );
+  check(
+    "haydock parser: bare '---' (no surrounding spaces) is not a segment boundary",
+    H["2:1"]?.length === 1 && H["2:1"][0].text.includes("master---upomneso")
+  );
+  check(
+    "haydock parser: tolerates the '\\fr N:N \\ft' space variant (Genesis form)",
+    H["1:1"]?.some((e) => e.text === "Year of the World 1, Year before Christ 4004.")
+  );
+  check("haydock parser: chapter/verse-0 intro sentinels are skipped", !("0:0" in H));
+
+  // -- Catena OSIS parser (fixture mirrors the Matt 5 / John 3 block shape) --
+  const cfix =
+    '<osis><osisText><div type="bookGroup">' +
+    '<div annotateRef="Matt.5.1-Matt.5.2" annotateType="commentary" type="section">' +
+    '<p osisID="Matt.5.1 Matt.5.2"><hi type="italic">Ver. 1. And seeing the multitudes, He went up.</hi></p>' +
+    '<p><hi type="bold">Pseudo-Chrysostom:</hi> Every man in his own trade rejoices, &amp; so on.</p>' +
+    '<p><hi type="bold">Chrysostom:</hi> He ascended a mountain, to fulfil the prophecy of Esaias, [<reference osisRef="Isa.40.9">Isa 40:9</reference>]<note type="x-footnote">editor aside</note></p>' +
+    "<p>Or, He ascended into the mountain to shew the Church.</p>" +
+    "</div>" +
+    '<div annotateRef="John.3.5" annotateType="commentary" type="section">' +
+    '<p osisID="John.3.5"><hi type="italic">Ver. 5. lemma</hi></p>' +
+    '<p><hi type="bold">Augustine:</hi> Born of water and the Spirit.</p>' +
+    "</div></div></osisText></osis>";
+  const C = parseCatenaOsis(cfix);
+  check(
+    "catena parser: Gospel comment keyed by 'ch:verse' with father attribution",
+    C.matthew["5:1"]?.[0]?.father === "Pseudo-Chrysostom" &&
+      C.matthew["5:1"][0].text === "Every man in his own trade rejoices, & so on."
+  );
+  check(
+    "catena parser: entities decoded, <reference> unwrapped, <note> dropped",
+    C.matthew["5:1"]?.[1]?.text.includes("to fulfil the prophecy of Esaias, [Isa 40:9]") &&
+      !C.matthew["5:1"][1].text.includes("editor aside") &&
+      !C.matthew["5:1"][1].text.includes("&amp;")
+  );
+  check(
+    "catena parser: a no-bold <p> continues the previous father's comment",
+    C.matthew["5:1"]?.length === 2 &&
+      C.matthew["5:1"][1].text.includes("Or, He ascended into the mountain to shew the Church")
+  );
+  check(
+    "catena parser: the <p osisID> lemma is never emitted as commentary",
+    !C.matthew["5:1"].some((e) => /seeing the multitudes/.test(e.text))
+  );
+  check(
+    "catena parser: a span broadcasts to every verse it covers",
+    JSON.stringify(C.matthew["5:1"]) === JSON.stringify(C.matthew["5:2"])
+  );
+  check("catena parser: comment lands under the right Gospel", C.john["3:5"]?.[0]?.father === "Augustine");
+}
+
+// 15. Commentary data (spec §4.1): every committed Haydock/Catena key lands on a
+//     real coordinate in OUR DRC grid (Vulgate Psalm numbering, Douay slugs), and
+//     the incipit of five sampled notes per source is pinned against the
+//     page-scan-verified source text. Manifest sync is covered by §10's walk.
+console.log("");
+{
+  const drcGrid = (slug: string): string[][] =>
+    JSON.parse(readFileSync(join(ROOT, `public/data/drc/${slug}.json`), "utf8")).chapters;
+  const readLayer = (sub: string) => {
+    const dir = join(ROOT, "public/data/commentary", sub);
+    const out: Record<string, Record<string, { src?: string; father?: string; text: string }[]>> = {};
+    for (const f of readdirSync(dir)) {
+      if (f.endsWith(".json")) out[f.replace(/\.json$/, "")] = JSON.parse(readFileSync(join(dir, f), "utf8"));
+    }
+    return out;
+  };
+  const haydock = readLayer("haydock");
+  const catena = readLayer("catena");
+
+  const keyFaults: string[] = [];
+  const countKeys = (data: typeof haydock) => {
+    let n = 0;
+    for (const [slug, book] of Object.entries(data)) {
+      const grid = drcGrid(slug);
+      for (const key of Object.keys(book)) {
+        n++;
+        const [ch, v] = key.split(":").map(Number);
+        const ok = ch >= 1 && ch <= grid.length && v >= 1 && v <= (grid[ch - 1]?.length ?? 0);
+        if (!ok) keyFaults.push(`${slug} ${key}`);
+      }
+    }
+    return n;
+  };
+  const haydockKeys = countKeys(haydock);
+  const catenaKeys = countKeys(catena);
+  check("every Haydock & Catena key lands on a real DRC coordinate", keyFaults.length === 0, keyFaults.slice(0, 6).join(", "));
+  check(
+    "Haydock covers the whole canon, densely keyed",
+    Object.keys(haydock).length === 73 && haydockKeys > 20000,
+    `${Object.keys(haydock).length} books, ${haydockKeys} keys`
+  );
+  check(
+    "Catena covers exactly the four Gospels",
+    JSON.stringify(Object.keys(catena).sort()) === JSON.stringify(["john", "luke", "mark", "matthew"]) && catenaKeys > 3000,
+    `${Object.keys(catena).length} books, ${catenaKeys} keys`
+  );
+
+  // Spec §4.1 shape: Haydock entries are {src,text}; Catena entries are {father,text}.
+  const sampleH = haydock["genesis"]["1:1"][0];
+  check("Haydock entries are { src, text }", typeof sampleH.text === "string" && "src" in sampleH);
+  const sampleC = catena["matthew"]["5:3"][0];
+  check("Catena entries are { father, text }", typeof sampleC.text === "string" && "father" in sampleC);
+
+  // Five incipit spot-checks per source (verified against the page-scan-backed source).
+  const hHas = (slug: string, key: string, sub: string) => (haydock[slug]?.[key] ?? []).some((e) => e.text.includes(sub));
+  check("Haydock incipit · Gen 1:1 'the Book of the Generation'", hHas("genesis", "1:1", "the Book of the Generation, or Genesis"));
+  check("Haydock incipit · Ps 50:3 Miserere 'Hebrew chasdec'", hHas("psalms", "50:3", "the purport of the Hebrew chasdec"));
+  check("Haydock incipit · John 3:5 'giving baptism to infants'", hHas("john", "3:5", "giving baptism to infants"));
+  check("Haydock incipit · Ps 115:1 (remapped from authentic-Douay 115:10)", hHas("psalms", "115:1", "Alleluia is not in Hebrew"));
+  check("Haydock incipit · Ps 147:1 (remapped from authentic-Douay 147:12)", hHas("psalms", "147:1", "This word is not in Hebrew"));
+
+  const cHas = (slug: string, key: string, sub: string) => (catena[slug]?.[key] ?? []).some((e) => (e.text || "").includes(sub));
+  const cFather = (slug: string, key: string, f: string) => (catena[slug]?.[key] ?? []).some((e) => e.father === f);
+  check("Catena incipit · Matt 5:3 Pseudo-Chrysostom on the Beatitudes", cFather("matthew", "5:3", "Pseudo-Chrysostom") && cHas("matthew", "5:3", "poor in spirit"));
+  check("Catena incipit · Mark 9:1 Transfiguration (AV→Douay −1 remap)", cHas("mark", "9:1", "glory of the resurrection"));
+  check("Catena incipit · Mark 8:39 carries AV Mark 9:1 after the boundary remap", (catena["mark"]["8:39"] ?? []).length > 0);
+  check("Catena incipit · Matt 17:14 lunatic-boy block after the 17:14–15 merge", (catena["matthew"]["17:14"] ?? []).length > 0);
+  check("Catena incipit · John 3:5 Chrysostom on being born of water", cFather("john", "3:5", "Chrysostom") && cHas("john", "3:5", "water"));
+
+  // Sacred-page guard: the Catena's Gospel lemma must never leak into a comment.
+  check(
+    "Catena drops the Gospel lemma ('Ver. N.' headers never enter comments)",
+    !catena["matthew"]["5:3"].some((e) => /^Ver\.? \d/.test(e.text))
+  );
+}
+
+// 16. Commentary UI layer (spec §4.2): the pure Catena father-normalisation that
+//     drives the per-Father chips, the Doctors-only filter, and the grouping that
+//     folds the source's "It goes on" connectives back into a Father's block.
+console.log("");
+{
+  const F = (raw: string) => normalizeFather(raw);
+
+  // The top-15 raw Catena labels by corpus frequency (pinned; from §15's data).
+  // Every one must resolve to a Father, never the graceful "source" fallback.
+  const TOP15 = [
+    "Chrysostom", "Augustine", "Theophylact", "Bede", "Jerome", "Origen",
+    "Ambrose", "Gregory", "Cyril", "Pseudo-Chrysostom", "Hilary", "Remigius",
+    "Pseudo-Jerome", "Rabanus", "Alcuin"
+  ];
+  check(
+    "every top-15 Catena label normalises to a Father (no fallback)",
+    TOP15.every((l) => F(l).kind === "father"),
+    TOP15.filter((l) => F(l).kind !== "father").join(", ") || "all father"
+  );
+
+  // Doctors of the Church, both ways — the Doctors-only filter rests on this.
+  const DOCTORS = ["Chrysostom","Augustine","Jerome","Ambrose","Gregory","Basil","Athanasius","Bede","Hilary","Cyril","Leo"];
+  const NON_DOCTORS = ["Theophylact","Origen","Remigius","Rabanus","Alcuin","Eusebius","Gregory of Nyssa","Maximus","Titus of Bostra","Didymus","Isidore"];
+  check(
+    "Doctors of the Church flagged isDoctor=true",
+    DOCTORS.every((l) => F(l).kind === "father" && F(l).isDoctor === true),
+    DOCTORS.filter((l) => !(F(l).kind === "father" && F(l).isDoctor)).join(", ") || "all doctors"
+  );
+  check(
+    "non-Doctor Fathers flagged isDoctor=false",
+    NON_DOCTORS.every((l) => F(l).kind === "father" && F(l).isDoctor === false),
+    NON_DOCTORS.filter((l) => !(F(l).kind === "father" && F(l).isDoctor === false)).join(", ") || "all non-doctors"
+  );
+
+  // Newman edited this Catena edition and is a Doctor; he is never a per-verse label.
+  check("John Henry Newman is in the Doctors set", isDoctor("newman") === true);
+
+  // The ambiguous Gregory disambiguates by label; citation forms match by prefix.
+  check("bare 'Gregory' is Gregory the Great (Doctor)", F("Gregory").id === "gregory-the-great" && F("Gregory").isDoctor === true);
+  check("'Gregory of Nyssa' is distinct, not a Doctor", F("Gregory of Nyssa").id === "gregory-of-nyssa" && F("Gregory of Nyssa").isDoctor === false);
+  check("'Gregory Naz.' is Gregory Nazianzen (Doctor)", F("Gregory Naz.").id === "gregory-nazianzen" && F("Gregory Naz.").isDoctor === true);
+  check("citation 'Chrys., Hom. in Matt., 56' → Chrysostom", F("Chrys., Hom. in Matt., 56").id === "chrysostom");
+  check("citation 'Aug., Serm. 351, 8' → Augustine", F("Aug., Serm. 351, 8").id === "augustine");
+
+  // Pseudonymous authors stay distinct and are never Doctors.
+  check(
+    "'Pseudo-Chrysostom' is distinct from Chrysostom, not a Doctor",
+    F("Pseudo-Chrysostom").id === "pseudo-chrysostom" && F("Pseudo-Chrysostom").isDoctor === false
+  );
+  check(
+    "every Dionysius label → Pseudo-Dionysius (not a Doctor)",
+    ["Dionysius ar", "Dionys.", "Dionys., de Divin., Nom. i", "Pseudo-Dionysius, Dion. De Cael. Hierarch. 4"]
+      .every((l) => F(l).id === "pseudo-dionysius" && F(l).isDoctor === false)
+  );
+
+  // Gloss is the Glossa Ordinaria: a source, clearly not a Father.
+  check(
+    "'Gloss' variants → Glossa Ordinaria, not a Father",
+    ["Gloss", "Gloss. interlin.", "Gloss., non occ.", "Gloss. ord."]
+      .every((l) => F(l).kind === "gloss" && F(l).name === "Glossa Ordinaria")
+  );
+
+  // The connective phrases (and the empty label) are continuations, not chips.
+  check(
+    "connective phrases and '' are continuations",
+    ["", "It goes on", "There follows", "Wherefore it goes on", "He adds", "What follows"]
+      .every((l) => F(l).kind === "continuation")
+  );
+
+  // groupCatena folds a continuation back into the preceding Father's block.
+  const g1 = groupCatena([
+    { father: "Chrysostom", text: "A" },
+    { father: "", text: "B" },
+    { father: "It goes on", text: "C" },
+    { father: "Augustine", text: "D" }
+  ]);
+  check(
+    "groupCatena merges continuations into the prior Father's block",
+    g1.length === 2 &&
+      g1[0].father?.id === "chrysostom" &&
+      g1[0].text.includes("A") && g1[0].text.includes("B") && g1[0].text.includes("C") &&
+      g1[1].father?.id === "augustine" && g1[1].text === "D"
+  );
+
+  // fathersOf is the distinct, in-order chip list — no Gloss, no duplicates.
+  const g2 = groupCatena([
+    { father: "Augustine", text: "1" },
+    { father: "Chrysostom", text: "2" },
+    { father: "Augustine", text: "3" },
+    { father: "Gloss", text: "4" }
+  ]);
+  check(
+    "fathersOf returns distinct Fathers in first-appearance order, excluding Gloss",
+    JSON.stringify(fathersOf(g2).map((f) => f.id)) === JSON.stringify(["augustine", "chrysostom"])
+  );
+
+  // Identity disambiguations that matter for the Doctors-only filter:
+  check("'Isidore' is Isidore of Pelusium — NOT a Doctor", F("Isidore").id === "isidore-pelusium" && F("Isidore").isDoctor === false);
+  check("'Isid. Hisp.' is Isidore of Seville — a Doctor", F("Isid. Hisp. Orig. 8. 4").id === "isidore-of-seville" && F("Isid. Hisp. Orig. 8. 4").isDoctor === true);
+  check("'Dion. alex' is Dionysius of Alexandria (a Father, not the Areopagite, not a Doctor)",
+    F("Dion. alex").id === "dionysius-of-alexandria" && F("Dion. alex").isDoctor === false && F("Dionysius ar").id === "pseudo-dionysius");
+  check("'Clem. alex' is Clement of Alexandria", F("Clem. alex").id === "clement-of-alexandria");
+
+  // Transcription typos in the pinned corpus heal to the right Father.
+  check("typo 'Origin, in Matt.' → Origen", F("Origin, in Matt., XV, 7").id === "origen");
+  check("typo 'Psuedo-Chrys.' → Pseudo-Chrysostom", F("Psuedo-Chrys., Vict. Ant. e Cat. in Marc.").id === "pseudo-chrysostom");
+  check("typo 'Theophyact' → Theophylact", F("Theophyact").id === "theophylact");
+  check("abbrev 'Hil.' → Hilary (Doctor), 'Max' → Maximus, 'Tit. bos' → Titus of Bostra",
+    F("Hil.").id === "hilary" && F("Hil.").isDoctor === true && F("Max").id === "maximus" && F("Tit. bos").id === "titus-of-bostra");
+
+  // Genuine non-person sources stay 'source'; a lemma sentence is a continuation.
+  check("'A Greek expositor' and a council are sources, not Fathers",
+    F("A Greek expositor").kind === "source" && F("Second Council of Constantinople, Concil. Con. ii. Collat. 8").kind === "source");
+  check("a lemma-sentence label is a continuation, not a chip",
+    F("Thus we find Jesus partook of a banquet at Bethany").kind === "continuation");
+
+  // Corpus-wide guard (pinned data): classify EVERY Catena label and prove the
+  // graceful "source" fallback hides no real Father, and coverage stays high.
+  const cdir = join(ROOT, "public/data/commentary/catena");
+  const labelCounts: Record<string, number> = {};
+  for (const fn of readdirSync(cdir)) {
+    if (!fn.endsWith(".json")) continue;
+    const bk: Record<string, { father?: string }[]> = JSON.parse(readFileSync(join(cdir, fn), "utf8"));
+    for (const notes of Object.values(bk)) for (const n of notes) labelCounts[n.father ?? ""] = (labelCounts[n.father ?? ""] ?? 0) + 1;
+  }
+  const sourceOk = (l: string) => ["A Greek expositor", "Josephus", "Faustus"].includes(l) || /council|concil/i.test(l);
+  let fatherEntries = 0, totalEntries = 0;
+  const leaked: string[] = [];
+  for (const [lbl, c] of Object.entries(labelCounts)) {
+    totalEntries += c;
+    const k = normalizeFather(lbl).kind;
+    if (k === "father") fatherEntries += c;
+    if (k === "source" && !sourceOk(lbl)) leaked.push(lbl);
+  }
+  check("Catena normaliser: ≥93% of all entries resolve to a Father", fatherEntries / totalEntries >= 0.93, `${((100 * fatherEntries) / totalEntries).toFixed(2)}% of ${totalEntries}`);
+  check("Catena normaliser: the 'source' fallback hides no real Father (only anonymous/council sources)", leaked.length === 0, leaked.slice(0, 6).join(" | "));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

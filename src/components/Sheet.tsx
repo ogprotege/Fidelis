@@ -5,15 +5,20 @@ interface Props {
   titleId: string;
   onClose: () => void;
   children: ReactNode;
+  /** "sheet" (default) is a bottom sheet at every width. "panel" stays a bottom
+   *  sheet on phones but docks to the right as a full-height side panel on
+   *  desktop (≥640px) — the commentary study surface (spec §4.2). */
+  variant?: "sheet" | "panel";
 }
 
 /**
  * A bottom-sheet modal: dimmed backdrop, Escape / backdrop-click / close button
  * to dismiss, focus moved into the panel and returned to the opener on close,
  * body scroll locked, focus trapped within. No motion — a prayer book, not a
- * toy (standing rule 3). Reusable for future deep surfaces (§4 commentary).
+ * toy (standing rule 3). The "panel" variant becomes a desktop side panel; all
+ * dialog/focus behavior is identical (§4 commentary).
  */
-export default function Sheet({ titleId, onClose, children }: Props) {
+export default function Sheet({ titleId, onClose, children, variant = "sheet" }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const opener = useRef<HTMLElement | null>(null);
 
@@ -54,9 +59,9 @@ export default function Sheet({ titleId, onClose, children }: Props) {
   }, [onClose]);
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div className={variant === "panel" ? "sheet-backdrop panel" : "sheet-backdrop"} onClick={onClose}>
       <div
-        className="sheet"
+        className={variant === "panel" ? "sheet panel" : "sheet"}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

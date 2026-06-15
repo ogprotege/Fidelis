@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { BOOKS, bookDisplayName, bookIndex, getBook } from "../lib/canon";
-import { BookData, loadBook } from "../lib/data";
+import { BookData, CommentaryBook, loadBook, loadCommentary } from "../lib/data";
+import { GOSPELS } from "../lib/commentary";
 import {
   HighlightColor,
   VerseRef,
@@ -18,6 +19,8 @@ import {
 import { TRANSLATIONS, getTranslation } from "../lib/translations";
 import Icon from "../components/Icon";
 import IndulgenceNotice from "../components/IndulgenceNotice";
+import Sheet from "../components/Sheet";
+import CommentarySheet from "../components/CommentarySheet";
 import { clampFontSize } from "../lib/typography";
 import { useSettings, useUpdateSettings } from "../SettingsContext";
 import { activePlan, updatePlan } from "../lib/storage";
@@ -48,6 +51,11 @@ export default function Reader() {
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [marksVersion, setMarksVersion] = useState(0);
+  // §4.2 commentary: the book's Haydock notes drive the gold dots (and feed the
+  // sheet); commentaryFor is the verse whose commentary sheet is open.
+  const [haydockBook, setHaydockBook] = useState<CommentaryBook | null>(null);
+  const [commentaryFor, setCommentaryFor] = useState<number | null>(null);
+  const wantHaydockDots = settings.commentaryEnabled && settings.commentaryHaydock;
 
   const bookmarks = useMemo(
     () => new Set(getBookmarks().map(refKey)),
@@ -94,6 +102,22 @@ export default function Reader() {
     };
   }, [parallel, translation, bookSlug]);
 
+  // §4.2: load the book's Haydock notes for the gold dots. Book-level (not per
+  // chapter), after the sacred text paints; a 404 (appendix book) yields {}.
+  useEffect(() => {
+    if (!book || !wantHaydockDots) {
+      setHaydockBook(null);
+      return;
+    }
+    let alive = true;
+    loadCommentary("haydock", bookSlug)
+      .then((b) => alive && setHaydockBook(b))
+      .catch(() => alive && setHaydockBook(null));
+    return () => {
+      alive = false;
+    };
+  }, [bookSlug, book, wantHaydockDots]);
+
   useEffect(() => {
     if (book) {
       saveLastRead({ translation, book: bookSlug, chapter });
@@ -103,6 +127,7 @@ export default function Reader() {
     }
     setSelected(null);
     setNoteOpen(false);
+    setCommentaryFor(null);
     window.scrollTo(0, 0);
   }, [translation, bookSlug, chapter, book]);
 
@@ -153,6 +178,15 @@ export default function Reader() {
   const selRef: VerseRef | null = selected ? { book: bookSlug, chapter, verse: selected } : null;
   const selKey = selRef ? refKey(selRef) : "";
 
+  // §4.2: the gold dot marks Haydock notes; the Commentary action appears when
+  // any enabled source has a note (Catena covers ~99% of Gospel verses, so the
+  // Gospel action shows without loading the heavy Catena file first).
+  const isGospel = GOSPELS.has(bookSlug);
+  const haydockHas = (v: number) => !!haydockBook?.[`${chapter}:${v}`]?.length;
+  const commentaryAvailable = (v: number) =>
+    settings.commentaryEnabled &&
+    ((settings.commentaryHaydock && haydockHas(v)) || (settings.commentaryCatena && isGospel));
+
   const go = (t: string, b: string, c: number) => navigate(`/read/${t}/${b}/${c}`);
 
   const onSelectVerse = (v: number) => {
@@ -192,7 +226,14 @@ export default function Reader() {
             className={cls}
             onClick={interactive ? () => onSelectVerse(v) : undefined}
           >
-            {settings.showVerseNumbers && <sup className="vnum">{v}</sup>}
+            {settings.showVerseNumbers && (
+              <sup className="vnum">
+                {v}
+                {interactive && wantHaydockDots && haydockHas(v) && (
+                  <span className="cmt-dot" aria-hidden="true" />
+                )}
+              </sup>
+            )}
             {text}
             {interactive && bookmarks.has(key) && <span className="bm-mark"><Icon name="bookmark" title="Bookmarked" /></span>}
             {interactive && notedKeys.has(key) && <span className="note-mark"><Icon name="note" title="Has a note" /></span>}{" "}
@@ -397,6 +438,11 @@ export default function Reader() {
           <button className="icon-btn" onClick={copySelected}>
             <Icon name="share" /> Copy
           </button>
+          {commentaryAvailable(selRef.verse) && (
+            <button className="icon-btn" onClick={() => setCommentaryFor(selRef.verse)}>
+              <Icon name="commentary" /> Commentary
+            </button>
+          )}
           <button className="icon-btn" onClick={() => setSelected(null)} title="Close">
             ✕
           </button>
@@ -420,6 +466,23 @@ export default function Reader() {
             </div>
           )}
         </div>
+      )}
+
+      {commentaryFor != null && (
+        <Sheet variant="panel" titleId="cmt-title" onClose={() => setCommentaryFor(null)}>
+          <CommentarySheet
+            book={bookSlug}
+            chapter={chapter}
+            verse={commentaryFor}
+            refLabel={`${displayName} ${chapter}:${commentaryFor}`}
+            titleId="cmt-title"
+            isGospel={isGospel}
+            hasHaydock={haydockHas(commentaryFor)}
+            showHaydock={settings.commentaryHaydock}
+            showCatena={settings.commentaryCatena}
+            doctorsOnlyDefault={settings.commentaryDoctorsOnly}
+          />
+        </Sheet>
       )}
     </div>
   );
