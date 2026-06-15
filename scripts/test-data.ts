@@ -32,6 +32,8 @@ import {
   ReadingPlan
 } from "../src/lib/plans";
 import { BOOKS, getBook } from "../src/lib/canon";
+import { parseHaydockSfm } from "./build-haydock.mjs";
+import { parseCatenaOsis } from "./build-catena.mjs";
 import { getSettings } from "../src/lib/storage";
 import {
   DEFAULT_FONT_SIZE,
@@ -721,23 +723,25 @@ check(
 // Source pins: both build scripts must fetch pinned commits, never a branch.
 const pinsSrc = readFileSync(join(ROOT, "scripts/pins.mjs"), "utf8");
 const declaredPins = [...pinsSrc.matchAll(/commit:\s*"([0-9a-f]{40})"/g)].map((m) => m[1]);
-check("two 40-hex upstream pins declared in scripts/pins.mjs", declaredPins.length === 2, `${declaredPins.length}`);
-const buildDataSrc = readFileSync(join(ROOT, "scripts/build-data.mjs"), "utf8");
-const buildLectSrc = readFileSync(join(ROOT, "scripts/build-lectionary.mjs"), "utf8");
-const pinnedFetch =
-  !buildDataSrc.includes("/master/") &&
-  !buildLectSrc.includes("/master/") &&
-  buildDataSrc.includes("PINS.") &&
-  buildLectSrc.includes("PINS.");
+check("four 40-hex upstream pins declared in scripts/pins.mjs", declaredPins.length === 4, `${declaredPins.length}`);
+const buildSrcs = ["build-data", "build-lectionary", "build-haydock", "build-catena"].map((s) =>
+  readFileSync(join(ROOT, `scripts/${s}.mjs`), "utf8")
+);
+const pinnedFetch = buildSrcs.every((s) => !s.includes("/master/") && s.includes("PINS."));
 check(
   "build scripts fetch only the pinned commits",
   pinnedFetch,
   pinnedFetch ? "" : "a build script still fetches a moving branch"
 );
-const manifestPins = [manifest.sources?.scrollmapper?.commit, manifest.sources?.lectionary?.commit];
+const manifestPins = [
+  manifest.sources?.scrollmapper?.commit,
+  manifest.sources?.lectionary?.commit,
+  manifest.sources?.haydock?.commit,
+  manifest.sources?.catena?.commit
+];
 check(
   "manifest records the declared source pins",
-  manifestPins.every((c) => typeof c === "string" && declaredPins.includes(c)),
+  manifestPins.length === 4 && manifestPins.every((c) => typeof c === "string" && declaredPins.includes(c)),
   `manifest: ${manifestPins.map((c) => String(c).slice(0, 7)).join(", ")}`
 );
 const dotfileEntries = Object.keys(manifest.files).filter((p) =>
@@ -1348,6 +1352,165 @@ console.log("");
   // formatPortion range collapsing.
   check("formatPortion collapses a same-book run", formatPortion(["genesis/3", "genesis/4"], "drc") === "Genesis 3–4");
   check("formatPortion joins mixed books with a middot", formatPortion(["genesis/3", "psalms/7"], "drc") === "Genesis 3 · Psalms 7");
+}
+
+// 14. Commentary parsers (spec §4.1): the Haydock SFM and Catena OSIS parsers
+//     are pinned by fixture so a future re-pin or parser change that drops or
+//     mis-keys a note turns the harness red. Pure functions, no network.
+console.log("");
+{
+  // -- Haydock SFM footnote parser (fixtures are verbatim 3 John / Genesis forms) --
+  const hfix = [
+    "\\id 3JN ENG",
+    "\\c 1",
+    "\\v 1 The ancient to the dearly beloved Gaius.",
+    "\\f + \\fr 1:4\\ft No greater grace. That is, nothing that gives me greater joy and satisfaction. (Challoner)\\f*",
+    "\\f + \\fr 1:9-10\\ft Diotrephes....doth not receive us, nor those we recommend. (Witham) --- It seemeth, saith Ven. Bede, that he was an arch heretic. (Ven. Bede)\\f*",
+    "\\f + \\fr 2:1\\ft proud sect master---upomneso, an obscure word. (Ven. Bede)\\f*",
+    "\\f + \\fr 1:1 \\ft Year of the World 1, Year before Christ 4004.\\f*",
+    "\\f + \\fr 0:0\\ft Book introduction, not keyed to a verse.\\f*"
+  ].join("\n");
+  const H = parseHaydockSfm(hfix);
+  check(
+    "haydock parser: single-attribution note keyed by 'ch:verse'",
+    JSON.stringify(H["1:4"]) ===
+      JSON.stringify([
+        { src: "Challoner", text: "No greater grace. That is, nothing that gives me greater joy and satisfaction." }
+      ])
+  );
+  check(
+    "haydock parser: ' --- ' splits commentator segments, trailing (author) -> src",
+    H["1:9"]?.length === 2 && H["1:9"][0].src === "Witham" && H["1:9"][1].src === "Ven. Bede"
+  );
+  check(
+    "haydock parser: a verse-range note broadcasts to every verse in the span",
+    JSON.stringify(H["1:9"]) === JSON.stringify(H["1:10"])
+  );
+  check(
+    "haydock parser: bare '---' (no surrounding spaces) is not a segment boundary",
+    H["2:1"]?.length === 1 && H["2:1"][0].text.includes("master---upomneso")
+  );
+  check(
+    "haydock parser: tolerates the '\\fr N:N \\ft' space variant (Genesis form)",
+    H["1:1"]?.some((e) => e.text === "Year of the World 1, Year before Christ 4004.")
+  );
+  check("haydock parser: chapter/verse-0 intro sentinels are skipped", !("0:0" in H));
+
+  // -- Catena OSIS parser (fixture mirrors the Matt 5 / John 3 block shape) --
+  const cfix =
+    '<osis><osisText><div type="bookGroup">' +
+    '<div annotateRef="Matt.5.1-Matt.5.2" annotateType="commentary" type="section">' +
+    '<p osisID="Matt.5.1 Matt.5.2"><hi type="italic">Ver. 1. And seeing the multitudes, He went up.</hi></p>' +
+    '<p><hi type="bold">Pseudo-Chrysostom:</hi> Every man in his own trade rejoices, &amp; so on.</p>' +
+    '<p><hi type="bold">Chrysostom:</hi> He ascended a mountain, to fulfil the prophecy of Esaias, [<reference osisRef="Isa.40.9">Isa 40:9</reference>]<note type="x-footnote">editor aside</note></p>' +
+    "<p>Or, He ascended into the mountain to shew the Church.</p>" +
+    "</div>" +
+    '<div annotateRef="John.3.5" annotateType="commentary" type="section">' +
+    '<p osisID="John.3.5"><hi type="italic">Ver. 5. lemma</hi></p>' +
+    '<p><hi type="bold">Augustine:</hi> Born of water and the Spirit.</p>' +
+    "</div></div></osisText></osis>";
+  const C = parseCatenaOsis(cfix);
+  check(
+    "catena parser: Gospel comment keyed by 'ch:verse' with father attribution",
+    C.matthew["5:1"]?.[0]?.father === "Pseudo-Chrysostom" &&
+      C.matthew["5:1"][0].text === "Every man in his own trade rejoices, & so on."
+  );
+  check(
+    "catena parser: entities decoded, <reference> unwrapped, <note> dropped",
+    C.matthew["5:1"]?.[1]?.text.includes("to fulfil the prophecy of Esaias, [Isa 40:9]") &&
+      !C.matthew["5:1"][1].text.includes("editor aside") &&
+      !C.matthew["5:1"][1].text.includes("&amp;")
+  );
+  check(
+    "catena parser: a no-bold <p> continues the previous father's comment",
+    C.matthew["5:1"]?.length === 2 &&
+      C.matthew["5:1"][1].text.includes("Or, He ascended into the mountain to shew the Church")
+  );
+  check(
+    "catena parser: the <p osisID> lemma is never emitted as commentary",
+    !C.matthew["5:1"].some((e) => /seeing the multitudes/.test(e.text))
+  );
+  check(
+    "catena parser: a span broadcasts to every verse it covers",
+    JSON.stringify(C.matthew["5:1"]) === JSON.stringify(C.matthew["5:2"])
+  );
+  check("catena parser: comment lands under the right Gospel", C.john["3:5"]?.[0]?.father === "Augustine");
+}
+
+// 15. Commentary data (spec §4.1): every committed Haydock/Catena key lands on a
+//     real coordinate in OUR DRC grid (Vulgate Psalm numbering, Douay slugs), and
+//     the incipit of five sampled notes per source is pinned against the
+//     page-scan-verified source text. Manifest sync is covered by §10's walk.
+console.log("");
+{
+  const drcGrid = (slug: string): string[][] =>
+    JSON.parse(readFileSync(join(ROOT, `public/data/drc/${slug}.json`), "utf8")).chapters;
+  const readLayer = (sub: string) => {
+    const dir = join(ROOT, "public/data/commentary", sub);
+    const out: Record<string, Record<string, { src?: string; father?: string; text: string }[]>> = {};
+    for (const f of readdirSync(dir)) {
+      if (f.endsWith(".json")) out[f.replace(/\.json$/, "")] = JSON.parse(readFileSync(join(dir, f), "utf8"));
+    }
+    return out;
+  };
+  const haydock = readLayer("haydock");
+  const catena = readLayer("catena");
+
+  const keyFaults: string[] = [];
+  const countKeys = (data: typeof haydock) => {
+    let n = 0;
+    for (const [slug, book] of Object.entries(data)) {
+      const grid = drcGrid(slug);
+      for (const key of Object.keys(book)) {
+        n++;
+        const [ch, v] = key.split(":").map(Number);
+        const ok = ch >= 1 && ch <= grid.length && v >= 1 && v <= (grid[ch - 1]?.length ?? 0);
+        if (!ok) keyFaults.push(`${slug} ${key}`);
+      }
+    }
+    return n;
+  };
+  const haydockKeys = countKeys(haydock);
+  const catenaKeys = countKeys(catena);
+  check("every Haydock & Catena key lands on a real DRC coordinate", keyFaults.length === 0, keyFaults.slice(0, 6).join(", "));
+  check(
+    "Haydock covers the whole canon, densely keyed",
+    Object.keys(haydock).length === 73 && haydockKeys > 20000,
+    `${Object.keys(haydock).length} books, ${haydockKeys} keys`
+  );
+  check(
+    "Catena covers exactly the four Gospels",
+    JSON.stringify(Object.keys(catena).sort()) === JSON.stringify(["john", "luke", "mark", "matthew"]) && catenaKeys > 3000,
+    `${Object.keys(catena).length} books, ${catenaKeys} keys`
+  );
+
+  // Spec §4.1 shape: Haydock entries are {src,text}; Catena entries are {father,text}.
+  const sampleH = haydock["genesis"]["1:1"][0];
+  check("Haydock entries are { src, text }", typeof sampleH.text === "string" && "src" in sampleH);
+  const sampleC = catena["matthew"]["5:3"][0];
+  check("Catena entries are { father, text }", typeof sampleC.text === "string" && "father" in sampleC);
+
+  // Five incipit spot-checks per source (verified against the page-scan-backed source).
+  const hHas = (slug: string, key: string, sub: string) => (haydock[slug]?.[key] ?? []).some((e) => e.text.includes(sub));
+  check("Haydock incipit · Gen 1:1 'the Book of the Generation'", hHas("genesis", "1:1", "the Book of the Generation, or Genesis"));
+  check("Haydock incipit · Ps 50:3 Miserere 'Hebrew chasdec'", hHas("psalms", "50:3", "the purport of the Hebrew chasdec"));
+  check("Haydock incipit · John 3:5 'giving baptism to infants'", hHas("john", "3:5", "giving baptism to infants"));
+  check("Haydock incipit · Ps 115:1 (remapped from authentic-Douay 115:10)", hHas("psalms", "115:1", "Alleluia is not in Hebrew"));
+  check("Haydock incipit · Ps 147:1 (remapped from authentic-Douay 147:12)", hHas("psalms", "147:1", "This word is not in Hebrew"));
+
+  const cHas = (slug: string, key: string, sub: string) => (catena[slug]?.[key] ?? []).some((e) => (e.text || "").includes(sub));
+  const cFather = (slug: string, key: string, f: string) => (catena[slug]?.[key] ?? []).some((e) => e.father === f);
+  check("Catena incipit · Matt 5:3 Pseudo-Chrysostom on the Beatitudes", cFather("matthew", "5:3", "Pseudo-Chrysostom") && cHas("matthew", "5:3", "poor in spirit"));
+  check("Catena incipit · Mark 9:1 Transfiguration (AV→Douay −1 remap)", cHas("mark", "9:1", "glory of the resurrection"));
+  check("Catena incipit · Mark 8:39 carries AV Mark 9:1 after the boundary remap", (catena["mark"]["8:39"] ?? []).length > 0);
+  check("Catena incipit · Matt 17:14 lunatic-boy block after the 17:14–15 merge", (catena["matthew"]["17:14"] ?? []).length > 0);
+  check("Catena incipit · John 3:5 Chrysostom on being born of water", cFather("john", "3:5", "Chrysostom") && cHas("john", "3:5", "water"));
+
+  // Sacred-page guard: the Catena's Gospel lemma must never leak into a comment.
+  check(
+    "Catena drops the Gospel lemma ('Ver. N.' headers never enter comments)",
+    !catena["matthew"]["5:3"].some((e) => /^Ver\.? \d/.test(e.text))
+  );
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

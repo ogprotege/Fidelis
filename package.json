@@ -20,6 +20,9 @@
     "manifest": "node scripts/build-manifest.mjs",
     "verify-data": "node scripts/build-manifest.mjs --verify",
     "lectionary": "node scripts/build-lectionary.mjs",
+    "haydock": "tsx scripts/build-haydock.mjs",
+    "catena": "node scripts/build-catena.mjs",
+    "commentary": "npm run haydock && npm run catena",
     "votd-widget": "node scripts/build-votd-widget.mjs"
   },
   "dependencies": {
