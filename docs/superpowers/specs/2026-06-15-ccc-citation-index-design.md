@@ -3,10 +3,10 @@
 **Date:** 2026-06-15
 **Spec section:** Feature Design Spec §5 (Scripture-to-Magisterium links)
 **Branch:** TBD (proposed: `v1.7-ccc-index`)
-**Status:** 📝 **Proposed — awaiting product-owner sign-off.** No code yet. This is
-step 2 of the agreed order (finish Android PR #12 → **spec §5** → build & verify vs.
-the USCCB 2nd Ed PDF). Sign off / amend the **Open questions (§13)** and the
-**Decisions (§4)** before any implementation.
+**Status:** ✅ **Signed off — decisions resolved 2026-06-15.** No code yet; building
+next (step 3) the moment the USCCB 2nd Ed *Index of Citations* is reachable here (§13).
+This is step 2 of the agreed order (Android PR #12 merged → **spec §5** → build & verify
+vs. the PDF). Resolved decisions are folded into §4 / §7 / §13.
 
 When the Church's Catechism reads a verse, show where. A quiet row in the verse
 action bar — **CCC ¶219 · ¶444 · ¶458** — each number opening that paragraph on
@@ -85,7 +85,7 @@ Paragraph values are integers, **deduplicated and sorted ascending**.
 | **A4** | **Indicator** | **Action-bar row only — no page dot.** (Spec §5 wording; keeps the page bare. Re-open later if you want a marginal mark.) |
 | **A5** | **Psalm versification** | **Map at build time.** The CCC indexes Psalms in **Hebrew/modern** numbering; the app's bundles are **Vulgate/Septuagint**. Reuse the existing, tested `hebrewSpanToVulgate()` (`src/lib/lectionary.ts`) so a CCC "Ps 23:1" keys to the app's `psalms 22:1`. This makes §5 *more* correct than the commentary layer (which only documented the offset). Non-Psalm divergences (a few Joel/Malachi/3 Kings chapter splits) are passed through and **documented**. |
 | **A6** | **Scope** | **CCC only.** Conciliar documents (Dei Verbum, Lumen Gentium) follow the identical pattern in a **later** PR (spec §5: "explicitly deferred"). |
-| **A7** | **What the toggle gates** | One setting `cccLinksEnabled` (default on) — off ⇒ no CCC row anywhere. Sits in the existing **Commentary** Settings section (it is the same "study, one tap away" family), under a shared heading or its own row. |
+| **A7** | **What the toggle gates / where it lives** | One setting `cccLinksEnabled` (default on) — off ⇒ no CCC row anywhere. Lives in §5's **own new "Magisterium" reference section** (§7), not folded into Commentary. **✅ confirmed.** |
 
 ---
 
@@ -143,14 +143,20 @@ npm run ccc                           # alias; then re-seal: npm run manifest
 
 ---
 
-## 7. Settings (`src/pages/Settings.tsx`, `src/lib/storage.ts`)
+## 7. Settings — a new "Magisterium" reference section
+
+§5 gets its **own quiet "Magisterium" section** in Settings (not folded into Commentary)
+— a *reference* area the later conciliar-citation tier will also live in. Fidelis stays
+**first a Bible app** — the daily readings, the Verse of the Day, the Father/Doctor/
+Pope/Saint quote — so this section is understated and additive, never a second center of
+gravity (and §5 adds nothing to the Today page; the five-card rule holds).
 
 - `cccLinksEnabled: boolean` (default `true`) added to the `Settings` interface +
-  defaults (merge-safe via the existing `...read("settings", {})` — no migration), and
-  flowed through `SettingsContext` (type-only import where needed).
-- A row in the existing **Commentary** section: **"Catechism cross-references"** —
-  *"Show CCC paragraph links in the verse actions. Links open vatican.va."* The
-  vatican.va note doubles as the honest disclosure that the text isn't bundled.
+  defaults (merge-safe via `...read("settings", {})` — no migration), flowed through
+  `SettingsContext` (type-only import where needed).
+- The section's one row today: **"Catechism cross-references"** — *"Show CCC paragraph
+  links in the verse actions. Links open vatican.va."* The vatican.va note doubles as the
+  honest disclosure that the text isn't bundled. (The conciliar tier later adds rows here.)
 
 ---
 
@@ -222,21 +228,20 @@ one Settings row. The five-card invariant and the two-accent rule both hold.
 
 ---
 
-## 13. Open questions for sign-off
+## 13. Sign-off — resolved 2026-06-15
 
-1. **Index source (A1):** OK to treat the **USCCB 2nd Ed** *Index of Citations* as the
-   authority and the Ascension PDF as cross-check only? And how will you make the pages
-   reachable here — a path/URL the PDF viewer can open, or a committed text/CSV export of
-   just the *Index of Citations* appendix? (I never need the body text.)
-2. **URL target (A3):** vatican.va is the spec's stated target. Confirmed? (It paginates
-   the CCC as `__PXX.HTM`, so deep links land on the paragraph's *page*; a per-¶ anchor
-   is used only where the archive exposes one. The alternative — an official per-paragraph
-   host — would be cleaner but is not vatican.va.)
-3. **Settings placement (A7):** fold "Catechism cross-references" into the existing
-   **Commentary** section, or give §5 its own **"Magisterium"** section (room for the
-   later conciliar-links tier)?
-4. **Release framing:** ship §5 as **v1.7.0** with a name (in keeping with the others),
-   or fold differently? (Recommend its own minor release.)
+1. **Index source / handoff (A1):** ✅ **USCCB 2nd Ed** authoritative; Ascension a
+   cross-check. The product owner provides the *Index of Citations* via a **direct HTTPS
+   URL the PDF viewer can open** (raw PDF bytes, not a preview page — e.g. a Dropbox
+   `?dl=1` link or a no-account temp-host direct link), ideally **only the appendix
+   pages** so no body text travels. I read it with the PDF viewer and parse the facts.
+2. **URL target (A3):** ✅ **vatican.va** confirmed.
+3. **Settings placement (A7):** ✅ §5 gets its **own "Magisterium" reference section** (§7).
+4. **Release framing:** ✅ its own **v1.7.0** — proposed name **"the deposit"**
+   (*depositum fidei*, the deposit of faith the Catechism guards); trivial to rename.
+
+**Remaining gate before step 3:** the Index-of-Citations handoff (item 1). Everything
+else is locked.
 
 ---
 
