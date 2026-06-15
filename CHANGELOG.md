@@ -4,6 +4,39 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.6.0] — 2026-06-15 — freely given
+
+> *"Gratis accepistis, gratis date."* — "Freely you have received; freely give." (Matthew 10:8)
+
+A distribution release: Fidelis gains a native **Android** shell beside the iOS
+one, and the app's oldest promise — that it costs nothing and never will — is
+made explicit. No Scripture, liturgy, or app behavior changed; the web bundle is
+byte-identical to 1.5.1.
+
+### Added
+
+- **Android (Capacitor).** A native Android shell (`android/`, scaffolded by
+  `npx cap add android`) runs the same web build, offline by construction — the
+  whole `dist/` ships inside the APK, exactly as on iOS, so no service worker is
+  needed in the WebView. Application id `app.fidelis.bible`; the background uses
+  the day `--bg-0` token. Build with
+  `npm run build && npx cap sync android && npx cap open android`; full guide in
+  [docs/ANDROID.md](docs/ANDROID.md). The committed `android/` mirrors the iOS
+  convention: the Gradle project and resources are tracked; the synced web assets
+  (`app/src/main/assets/public`) and the build output are gitignored.
+- **The free pledge, in writing.** The README now states plainly that Fidelis is
+  **free, forever** — no price, no ads, no in-app purchases, no subscription — in
+  the masthead, a badge, the Highlights, and the refusal list, beside the existing
+  no-accounts / no-tracking / no-data stance.
+
+### Notes
+
+- The native **home-screen widget remains iOS-only** (WidgetKit); a native Android
+  App Widget is a tracked follow-up (the offline `votd.json` it would read already
+  exists, so it would reuse the data rather than port the selection math).
+- `@capacitor/android` was added at `^8.4.0`, matching the existing Capacitor
+  packages.
+
 ## [1.5.1] — 2026-06-15 — the kept promise
 
 A review-driven hardening pass over the whole project: the texts a reader

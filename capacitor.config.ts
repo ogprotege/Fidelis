@@ -7,6 +7,9 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: "automatic",
     backgroundColor: "#f4f2ee" // matches the day --bg-0 token (src/styles.css)
+  },
+  android: {
+    backgroundColor: "#f4f2ee" // matches the day --bg-0 token (src/styles.css)
   }
 };
 

@@ -6,18 +6,20 @@
 
 A Catholic Bible app built on one conviction — **the text is not ours to edit.**
 The full 73-book canon, three unaltered translations, the daily Mass, the liturgical
-year in color, and a quiet devotional life around the Word. No accounts. No tracking.
-No algorithm. Just the text, kept.
+year in color, and a quiet devotional life around the Word. **Free, forever** — no
+accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 <br />
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.5.1%20·%20the%20kept%20promise-5B3A8E)
+![version](https://img.shields.io/badge/version-1.6.0%20·%20freely%20given-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
 ![texts](https://img.shields.io/badge/texts-public%20domain-2E7D32)
+&nbsp;
+![free](https://img.shields.io/badge/free-forever-2E7D32)
 
 ![React](https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB)
 &nbsp;
@@ -28,6 +30,8 @@ No algorithm. Just the text, kept.
 ![PWA](https://img.shields.io/badge/PWA-offline-5A0FC8?logo=pwa&logoColor=white)
 &nbsp;
 ![iOS](https://img.shields.io/badge/iOS-Capacitor%20+%20WidgetKit-000000?logo=apple&logoColor=white)
+&nbsp;
+![Android](https://img.shields.io/badge/Android-Capacitor-3DDC84?logo=android&logoColor=white)
 &nbsp;
 ![telemetry](https://img.shields.io/badge/telemetry-none-26241F)
 
@@ -73,7 +77,8 @@ No algorithm. Just the text, kept.
 | **The daily soul** | A tappable rosary with the traditional prayers, a quiet half-hour reading indulgence, and citation-only reading plans — devotion that never nags. |
 | **The Fathers, one tap away** | Haydock across the whole canon and the Catena Aurea on the Gospels — a small gold dot marks a commented verse, a sheet opens the commentary with per-Father chips and a Doctors-only filter. Scripture stays Scripture; study stays study. |
 | **Yours, on your device** | Bookmarks, highlights, notes, and reading plans live in your browser. No account, no server, no telemetry. Export/import as JSON. |
-| **Everywhere** | Installable PWA with offline reading, a native iOS WidgetKit home-screen widget, and an embeddable Verse-of-the-Day iframe. |
+| **Everywhere** | Installable PWA with offline reading, native **iOS and Android** shells (Capacitor) with a WidgetKit home-screen widget on iOS, and an embeddable Verse-of-the-Day iframe. |
+| **Free, forever** | No price, no ads, no in-app purchases, no subscription, no telemetry. The product is the text, not your attention. |
 
 ---
 
@@ -221,6 +226,9 @@ piety, never gamification.
   deploys), so the app opens offline, with offline reading of any book you have opened.
 - **iOS** — via Capacitor, including a native **WidgetKit home-screen widget** (Verse of the Day;
   small / medium / large; offline). See [docs/IOS.md](docs/IOS.md).
+- **Android** — via Capacitor: the full app in a native shell, offline by construction (the whole
+  build ships inside the APK, exactly as on iOS). The home-screen widget is iOS-only for now — a
+  native Android App Widget is a tracked follow-up. See [docs/ANDROID.md](docs/ANDROID.md).
 - **Embeddable widget** — drop the Verse of the Day into any site:
   `<iframe src="https://your-domain/#/widget/votd">` (options: `?t=vulgate&theme=night`).
 
@@ -235,7 +243,8 @@ A short, binding list — the product is defined as much by what it will not do:
 - **No social layer**, no comments, no sharing-for-engagement.
 - **No streaks, badges, or progress theater.** The reading indulgence is the only acknowledgment
   the app makes, and it is the Church's, not ours.
-- **No ads, no in-app purchases, no telemetry.**
+- **Free, forever — no ads, no in-app purchases, no telemetry.** Nothing to buy, nothing to
+  upgrade; the app costs nothing and never will.
 - **No notification pressure** — at most a single, optional, off-by-default daily-readings note
   (still deferred).
 - **No red-letter text and no inspirational stock imagery.** The Word is not decorated.
@@ -284,7 +293,7 @@ harnesses are the product; everything else is chrome.
 | Local persistence (settings, marginalia, plans) | `src/lib/storage.ts` |
 | Data pipeline & integrity (build, pins, manifest, report) | `scripts/*.mjs` |
 | Assertion harnesses & golden snapshots | `scripts/test-*.ts`, `scripts/golden/` |
-| Native shell & widget | `ios/` (Capacitor + WidgetKit) |
+| Native shells & widget | `ios/` (Capacitor + WidgetKit), `android/` (Capacitor) |
 
 Design constants are encoded once and asserted: the liturgical day never exceeds **five cards**,
 the chrome speaks in **two accents**, and the Word is **never printed in red**.
@@ -308,7 +317,8 @@ npm run golden       # re-bless golden-year calendar snapshots after a deliberat
 ```
 
 For iOS: `npm run build && npx cap sync ios && npx cap open ios` (macOS + Xcode required; see
-[docs/IOS.md](docs/IOS.md)).
+[docs/IOS.md](docs/IOS.md)). For Android: `npm run build && npx cap sync android && npx cap open android`
+(Android Studio required; see [docs/ANDROID.md](docs/ANDROID.md)).
 
 > **Convention:** bump `package.json` and add a `CHANGELOG.md` entry together; re-bless golden
 > snapshots only after a *deliberate* engine change you can justify in the diff.
