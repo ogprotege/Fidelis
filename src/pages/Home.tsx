@@ -111,7 +111,7 @@ export default function Home() {
 
         <div className="card">
           <h2>Quote of the Day</h2>
-          {!quote && <p className="muted small">…</p>}
+          {!quote && <p className="loading-inline small">Loading today's quote…</p>}
           {quote && (
             <>
               <p className="qotd-text">{quote.text}</p>

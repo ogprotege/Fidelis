@@ -58,7 +58,7 @@ export default function Antiphon({ season }: { season: Season }) {
   return (
     <details className="antiphon">
       <summary className="sans small">
-        🕊 {name} <span className="muted">— the hour's Marian prayer</span>
+        {name} <span className="muted">— the hour's Marian prayer</span>
       </summary>
       <div className="antiphon-body">
         {verses.map((v, i) => (

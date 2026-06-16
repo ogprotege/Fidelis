@@ -617,6 +617,7 @@ h1.page-title {
   cursor: pointer;
 }
 .search-bar button.primary { background: var(--purple-strong); color: var(--on-accent); border-color: var(--purple-strong); font-weight: 600; }
+.search-bar button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
 .search-progress { font-family: var(--sans); font-size: 0.85rem; color: var(--text-muted); margin: 0.6rem 0; }
 .result {
   padding: 0.7rem 0;
@@ -942,6 +943,7 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 .footer .motto { font-family: var(--serif); font-style: italic; font-size: 0.95rem; color: var(--gold); }
 
 .loading { text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0; }
+.loading-inline { color: var(--text-muted); font-style: italic; }
 
 /* ── Tab bar on phones (spec §2.1) ───────────────────────────────────────────
    The five-tab nav drops to the bottom edge; the header keeps the brand and the

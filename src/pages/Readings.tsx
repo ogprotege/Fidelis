@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ReadingText from "../components/ReadingText";
 import {
   DayReadings,
@@ -126,8 +126,8 @@ export default function Readings() {
       {readings === "loading" && <p className="loading">Finding the readings…</p>}
       {readings === null && (
         <p className="notice">
-          No readings found for this date — this should not happen; please use the
-          reader directly.
+          Readings for this date aren't available here.{" "}
+          <Link to="/read">Open the reader</Link>.
         </p>
       )}
       {readings !== "loading" && readings && readings.primaryLabel && (

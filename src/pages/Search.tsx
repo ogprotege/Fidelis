@@ -113,6 +113,8 @@ export default function Search() {
     );
   };
 
+  const tooShort = query.trim().length < 2;
+
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
       <h1 className="page-title">Search the Scriptures</h1>
@@ -125,7 +127,7 @@ export default function Search() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && run()}
+          onKeyDown={(e) => e.key === "Enter" && !tooShort && run()}
           placeholder="Word, phrase, or reference…"
           autoFocus
         />
@@ -136,7 +138,7 @@ export default function Search() {
             </option>
           ))}
         </select>
-        <button className="primary" onClick={run}>
+        <button className="primary" onClick={run} disabled={tooShort}>
           Search
         </button>
       </div>

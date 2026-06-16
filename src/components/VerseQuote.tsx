@@ -32,7 +32,7 @@ export default function VerseQuote({ translation, book, chapter, verse, endVerse
   }, [translation, book, chapter, verse, endVerse]);
 
   if (error) return <p className={className}>—</p>;
-  if (text === null) return <p className={`${className ?? ""} muted`}>…</p>;
+  if (text === null) return <p className="loading-inline">Loading…</p>;
   if (!text.trim()) return <p className={className}>—</p>;
   // The quotation marks are gold (sacred); the verse text is not (spec §1.2).
   return (
