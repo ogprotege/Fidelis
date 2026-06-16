@@ -67,13 +67,33 @@ where `ios/App/App/public/` is generated.
 
 ## 5. The home-screen widget
 
-The native **WidgetKit** Verse-of-the-Day widget is iOS-only (see
-[docs/IOS.md](IOS.md) §2). The equivalent on Android is a native **App Widget**
-(Kotlin + Glance/RemoteViews), which is **not yet built** — it is a tracked
-follow-up. The pre-resolved data pattern that would feed it already exists
-(`scripts/build-votd-widget.mjs` emits the same offline `votd.json` the iOS
-widget reads), so an Android widget would reuse that bundle rather than port the
-selection math.
+A native **Verse of the Day App Widget** ships in the Android project —
+`android/app/src/main/java/app/fidelis/bible/VotdWidget.java` plus
+`res/layout/widget_votd.xml`, `res/xml/votd_widget_info.xml`, and the bundled
+`res/raw/votd.json`. It is the Android counterpart of the iOS WidgetKit widget
+(see [docs/IOS.md](IOS.md) §2) and shows the **same verse**: both read the
+pre-resolved `votd.json` (emitted by `scripts/build-votd-widget.mjs`) and apply
+the web app's formula — `index = (dayOfYear + year) mod count`, Gregorian, device
+time zone — so the widget, the iOS widget, and the app never disagree. It draws
+the gold cross natively (the §1.5 icon, not an emoji), matches the day-theme
+colors, refreshes at local midnight via an inexact `AlarmManager`, opens the app
+when tapped, and is fully offline.
+
+**Add it:** long-press the home screen ▸ **Widgets** ▸ **Fidelis** ▸ *Verse of the
+Day*, then drag it out. No Xcode-style manual target step is needed — unlike iOS,
+an Android App Widget is just a receiver + resources already declared in
+`AndroidManifest.xml`, so it is built into the committed project.
+
+After editing the curated cycle in `src/lib/votd.ts`, regenerate the bundled data
+for **both** platforms:
+
+```bash
+npm run votd-widget
+```
+
+> **Caveat:** the midnight refresh is rescheduled on each widget update; after a
+> reboot it re-arms the next time the launcher refreshes the widget. A
+> `BOOT_COMPLETED` receiver to re-arm immediately is a small future refinement.
 
 ## 6. Service worker note
 

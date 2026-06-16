@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Generates ios/WidgetExtension/votd.json — the Verse of the Day cycle with
- * pre-resolved Douay-Rheims text, for the iOS WidgetKit extension. The entry
- * order and selection algorithm must match src/lib/votd.ts.
+ * Generates the Verse of the Day cycle with pre-resolved Douay-Rheims text for
+ * the native widgets — ios/WidgetExtension/votd.json (WidgetKit) and
+ * android/app/src/main/res/raw/votd.json (App Widget). The entry order and
+ * selection algorithm must match src/lib/votd.ts.
  */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
@@ -65,7 +66,13 @@ for (const ref of refs) {
 }
 
 void NAMES;
-const dest = join(ROOT, "ios", "WidgetExtension", "votd.json");
-await mkdir(dirname(dest), { recursive: true });
-await writeFile(dest, JSON.stringify(out, null, 1));
-console.log(`wrote ${dest} (${out.length} entries)`);
+const json = JSON.stringify(out, null, 1);
+const dests = [
+  join(ROOT, "ios", "WidgetExtension", "votd.json"),
+  join(ROOT, "android", "app", "src", "main", "res", "raw", "votd.json")
+];
+for (const dest of dests) {
+  await mkdir(dirname(dest), { recursive: true });
+  await writeFile(dest, json);
+  console.log(`wrote ${dest} (${out.length} entries)`);
+}

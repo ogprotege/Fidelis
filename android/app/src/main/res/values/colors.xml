@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Day-theme tokens from src/styles.css, matching ios/WidgetExtension/FidelisWidget.swift,
+     so the Android widget shows the same surface as the app and the iOS widget.
+     --bg-0 #F4F2EE, --text #26241F, --text-muted #6E6A61 (citation), --gold #A8862C.
+     The two-accent grammar holds natively: gold honors, nothing off-token. -->
+<resources>
+    <color name="fidelis_parchment">#F4F2EE</color>
+    <color name="fidelis_ink">#26241F</color>
+    <color name="fidelis_muted">#6E6A61</color>
+    <color name="fidelis_gold">#A8862C</color>
+</resources>

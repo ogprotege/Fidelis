@@ -4,6 +4,38 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.7.0] — 2026-06-15 — the lampstand
+
+> *"Neither do men light a candle and put it under a bushel, but upon a candlestick, that it may shine to all that are in the house."* (Matthew 5:15)
+
+The Android **Verse of the Day home-screen widget** — the native counterpart of the iOS
+WidgetKit widget, and the tracked follow-up from 1.6.0. The day's verse now shines on the
+Android home screen, offline, agreeing exactly with the app and the iOS widget.
+
+### Added
+
+- **Android Verse-of-the-Day App Widget.** A native widget (`VotdWidget`, RemoteViews +
+  resources under `android/app/src/main/res/`) reads the pre-resolved `res/raw/votd.json`
+  and selects the day's verse with the same formula as the web app and the iOS widget —
+  `index = (dayOfYear + year) mod count`, Gregorian, device time zone — so the three never
+  disagree. It draws the gold cross natively (the §1.5 icon, never an emoji), matches the
+  day-theme tokens (`--bg-0` / `--text` / `--text-muted` / `--gold`), refreshes at local
+  midnight via an inexact `AlarmManager`, opens the app when tapped, and is fully offline.
+  Unlike the iOS widget (which needs an Xcode target created by hand), this is wired
+  entirely in the committed project — a receiver + resources in `AndroidManifest.xml`.
+- `scripts/build-votd-widget.mjs` now emits the cycle to **both** native widgets
+  (`ios/WidgetExtension/votd.json` and `android/app/src/main/res/raw/votd.json`).
+
+### Docs
+
+- The **§5 (CCC citation index) design spec** and a **local-build runbook** (a paste-and-run
+  prompt + commands) under `docs/superpowers/specs/`. The spec is signed off; the build runs
+  locally, where the Catechism PDF is readable and vatican.va is reachable (the cloud sandbox
+  403-blocks both). §5 ships as a later release ("the deposit").
+- `docs/IOS.md` gains a step-by-step **"Run it in the Simulator"** section (GUI + terminal
+  routes); the iOS pipeline was re-verified (`npm run build && npx cap sync ios` clean,
+  iOS 15.0+, Swift Package Manager).
+
 ## [1.6.0] — 2026-06-15 — freely given
 
 > *"Gratis accepistis, gratis date."* — "Freely you have received; freely give." (Matthew 10:8)
