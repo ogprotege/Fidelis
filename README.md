@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.7.0%20·%20the%20lampstand-5B3A8E)
+![version](https://img.shields.io/badge/version-1.8.1%20·%20the%20open%20door-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -78,7 +78,8 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 | **The Fathers, one tap away** | Haydock across the whole canon and the Catena Aurea on the Gospels — a small gold dot marks a commented verse, a sheet opens the commentary with per-Father chips and a Doctors-only filter. Scripture stays Scripture; study stays study. |
 | **Sow a verse** | Any verse — or the daily quote — renders to a clean card (EB Garamond on a warm field, the gold cross) and goes out through your device's native share sheet. A seed and a citation at once; Scripture goes out, nothing comes back. |
 | **Yours, on your device** | Bookmarks, highlights, notes, and reading plans live in your browser. No account, no server, no telemetry. Export/import as JSON. |
-| **Everywhere** | Installable PWA with offline reading, native **iOS and Android** shells (Capacitor) each with a native **Verse-of-the-Day home-screen widget**, and an embeddable Verse-of-the-Day iframe. |
+| **Reachable by everyone** | Every action the mouse can reach, the keyboard and screen reader can too — verses, the version picker, the chapter grid, all operable; loading is quiet text, and motion honors your system's reduce-motion setting. |
+| **Everywhere** | Installable PWA with offline reading (texts **and** the Fathers' commentary), native **iOS and Android** shells (Capacitor) each with a native **Verse-of-the-Day home-screen widget**, and an embeddable Verse-of-the-Day iframe. |
 | **Free, forever** | No price, no ads, no in-app purchases, no subscription, no telemetry. The product is the text, not your attention. |
 
 ---

@@ -75,7 +75,7 @@ export default function ReadingText({ row, translation, label }: Props) {
         )}
       </div>
       {error && <p className="muted small">Text unavailable in this translation.</p>}
-      {!error && verses === null && <p className="muted small">…</p>}
+      {!error && verses === null && <p className="loading-inline small">Loading…</p>}
       {verses && (
         <p className="reading-body">
           {verses.map(({ ch, v, text }) => (

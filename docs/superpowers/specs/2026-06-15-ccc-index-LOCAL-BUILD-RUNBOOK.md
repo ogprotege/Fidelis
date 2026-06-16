@@ -105,7 +105,7 @@ SETTINGS (its OWN new "Magisterium" reference section — NOT folded into Commen
   open vatican.va." Off ⇒ no CCC row anywhere. (This section will host the later conciliar
   tier; keep it understated — Fidelis is first a Bible app.)
 
-TESTS (scripts/test-data.ts, new §17) — all HARD assertions:
+TESTS (scripts/test-data.ts, new §19 — §17 reference parser and §18 search group-filters already exist) — all HARD assertions:
 - index values: non-empty, sorted+deduped int arrays, each ¶ in [1,2865].
 - every key resolves to a real slug + verse in src/generated/bookMeta.json (no danglers).
 - Psalm mapping: a known CCC Psalm citation lands on the VULGATE key.
@@ -144,7 +144,7 @@ Before merging, the agent prints **20 random `verse → [¶…]` rows** from the
 node scripts/build-ccc.mjs        # parse index + resolve URLs -> public/data/ccc/*.json
 npm run manifest                  # re-seal manifest.json (or: npm run data re-seals too)
 npm run verify-data               # SHA-256 check
-npm test                          # harnesses incl. new §17 + lint + manifest verify
+npm test                          # harnesses incl. new §19 + lint + manifest verify
 npm run build                     # tsc + vite
 npm run dev                       # eyeball the CCC row in a browser
 # then: bump version, CHANGELOG "the deposit", README badge, draft PR
@@ -160,7 +160,7 @@ Add `"ccc": "node scripts/build-ccc.mjs"` to `package.json` scripts while you're
 - [ ] Every index key resolves to a real verse; Psalms mapped Hebrew→Vulgate.
 - [ ] Verse action bar shows the purple `CCC ¶…` row (no dot, no inline text); links open vatican.va.
 - [ ] New **Magisterium** Settings section with `cccLinksEnabled` (default on).
-- [ ] `scripts/test-data.ts` §17 added; `npm test` + `npm run build` green.
+- [ ] `scripts/test-data.ts` §19 added (§17–§18 already exist: reference parser, search group-filters); `npm test` + `npm run build` green.
 - [ ] 20-sample verified against the PDF; famous anchors correct.
 - [ ] v1.9.0 "the deposit" — CHANGELOG, CLAUDE.md, README badge; **draft PR** opened.
 

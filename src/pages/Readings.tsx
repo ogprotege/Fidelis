@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ReadingText from "../components/ReadingText";
 import {
   DayReadings,
@@ -98,7 +98,7 @@ export default function Readings() {
         </select>
       </div>
 
-      <div className="card" style={{ margin: "1rem 0" }}>
+      <div className="card card-spaced">
         <h2>
           {date.toLocaleDateString(undefined, {
             weekday: "long",
@@ -118,7 +118,7 @@ export default function Readings() {
             {c.name}
           </div>
         ))}
-        <p className="muted small sans" style={{ marginBottom: 0 }}>
+        <p className="muted small sans mb-0">
           {cycleLabel}
         </p>
       </div>
@@ -126,8 +126,8 @@ export default function Readings() {
       {readings === "loading" && <p className="loading">Finding the readings…</p>}
       {readings === null && (
         <p className="notice">
-          No readings found for this date — this should not happen; please use the
-          reader directly.
+          Readings for this date aren't available here.{" "}
+          <Link to="/read">Open the reader</Link>.
         </p>
       )}
       {readings !== "loading" && readings && readings.primaryLabel && (

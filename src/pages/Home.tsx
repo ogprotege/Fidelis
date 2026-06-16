@@ -111,7 +111,7 @@ export default function Home() {
 
         <div className="card">
           <h2>Quote of the Day</h2>
-          {!quote && <p className="muted small">…</p>}
+          {!quote && <p className="loading-inline small">Loading today's quote…</p>}
           {quote && (
             <>
               <p className="qotd-text">{quote.text}</p>
@@ -245,7 +245,7 @@ export default function Home() {
               </Link>
             </>
           )}
-          <p className="small sans muted" style={{ marginTop: "0.9rem" }}>
+          <p className="small sans muted browse-links">
             <Link to="/read">Browse all books</Link> ·{" "}
             <Link to="/search">Search the Scriptures</Link>
           </p>

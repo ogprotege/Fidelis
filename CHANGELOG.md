@@ -4,6 +4,65 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.8.1] — 2026-06-16 — the open door
+
+A quality pass that finishes the design language already in place — "close the quiet
+loops." The headline is accessibility: every action the mouse can reach is now reachable
+by keyboard and screen reader. Plus two touch-first reader/search refinements and the
+commentary offline-download. No new visual language; everything routes through the existing
+day/night tokens, the §1.5 icon set, and the two-accent rule.
+
+### Added
+
+- **Search filter chips** (spec §8.2): Old Testament / New Testament / Gospels chips with
+  live per-section counts over the result set; the active chip (purple) filters the list.
+  Pure book-group membership lives in `src/lib/search.ts`, asserted in the harness (§18).
+- **Chapter tap-grid** (spec §8.1): the chapter number in the Reader title opens a numbered
+  grid via the `Sheet` primitive — faster on touch than the dropdown (which stays). The
+  current chapter is marked gold; cells act purple on hover/focus.
+- **Commentary offline download** (Settings → Data): a Commentary row (Haydock whole-canon
+  + Catena on the Gospels) saves for offline reading, reusing the existing `downloadBundle`
+  over the manifest's `commentary/` bundle.
+- Three new `Icon` marks (`copy`, `download`, `upload`) so Copy and Export/Import stop
+  borrowing the share glyph and join the §1.5 icon grammar.
+
+### Fixed — accessibility
+
+- **Verses are keyboard- and screen-reader-operable**: the verse spans gained
+  `role="button"`, `tabIndex`, `aria-pressed`, and Enter/Space handling — the whole
+  marginalia layer (bookmark/highlight/note/copy/share/commentary) was mouse-only.
+- **The Bible-version radiogroup** gains ARIA-APG roving-tabindex arrow-key navigation
+  (only the checked card is tabbable; arrows move selection + focus, wrapping).
+- **The active highlight swatch** now shows a gold-ring selected state plus hover/focus and
+  `aria-pressed`, so it's clear which color a verse carries.
+- A **deep-linked verse** (`?v=`) gets a transient (~3s) gold rule instead of staying
+  permanently selected and popping the action bar (spec §8.1); reduced-motion-safe.
+
+### Changed — quiet quality
+
+- Today-card loading uses a dignified italic line instead of a bare ellipsis.
+- The **Search** button is disabled below two characters — no more silent dead-click.
+- The **Readings** null-state reads in the app's calm voice with a real reader link
+  (was developer-voice "this should not happen").
+- Dropped the lone dove emoji from the antiphon summary (§1.5 monochrome discipline).
+- The reader toolbar compacts on phones so it stops crowding the sacred text.
+- The cold `rgba(0,0,0)` switch-knob and tab-bar shadows now route through warm
+  `--shadow-soft` / `--shadow-tabbar` tokens; stray inline magic numbers folded into named
+  classes (the §1.1 "no raw values outside the token block" rule).
+- A single ~110ms Sheet entrance, fully neutralized by `prefers-reduced-motion`.
+
+### Notes
+
+- Housekeeping rode in: the README version badge, the 1.2.1 CHANGELOG date, the B.x wording,
+  a dev-tag-collision note on the 1.3.0 entry, and the §5 CCC spec/runbook test-numbering
+  (`§17` → `§18`, since `§17` already exists in `scripts/test-data.ts`).
+- The DOM/canvas surfaces (chips, chapter grid, verse focus) are browser-verified like the
+  share card and the gold dot; the pure search helpers are node-tested (§18). `npm test`
+  (incl. the emoji guard and manifest verify) and `npm run build` stay green.
+- Deferred: the Vulgate-Psalm commentary-dot mapping (pairs with the §5 CCC build, which
+  establishes the same Hebrew→Vulgate mapping), per-Father "by era" filtering, and the
+  optional single daily-readings notification (still off — no notification pressure).
+
 ## [1.8.0] — 2026-06-16 — the sower
 
 > *"Semen est verbum Dei."* — "The seed is the word of God." (Luke 8:11)
@@ -266,6 +325,11 @@ hand-drawn icon set, the seven-link header becomes a five-tab bar, and every con
 gathers into a single live Settings screen. Six work items (A1–A6); the Word is still
 never printed in red.
 
+> Historical note: while this work was in progress its six items were tagged in
+> per-step increments (dev tags v1.4.0–v1.7.0); those tags were superseded by this
+> single consolidated v1.3.0 release. The v1.4.0–v1.8.0 entries below are entirely
+> unrelated, later shipped releases that reused those numbers.
+
 ### Added
 
 - **The token system and the two-accent rule** (A1, §1.1–§1.2): every paint color now
@@ -371,7 +435,7 @@ never printed in red.
   the open roadmap — §3 (Quote of the Day) and the §6 Today recomposition already
   shipped in 1.2.0.
 
-## [1.2.1] — 2026-06-11 — continuous integration
+## [1.2.1] — 2026-06-12 — continuous integration
 
 Closes the last open repair-manual item, §B.3: the harnesses now run in CI, not
 just on a developer's machine.
@@ -509,7 +573,7 @@ adversarial-review findings are recorded in the commit messages.
   are the printed Clementine appendix; Psalm 151 and Laodiceans come down in the wider
   Vulgate manuscript tradition (P2-1).
 
-### Added — testing and audit (B.1, B.2)
+### Added — testing and audit (B.1, B.2, B.4)
 
 - `npm test`: both harnesses as pure assertion suites (181 checks — trap years, USA
   region, psalm incipits, Vigil labels, memorial propers, manifest, VOTD parity) plus the
