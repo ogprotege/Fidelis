@@ -219,8 +219,8 @@ export default function Reader() {
     }
   };
 
-  const renderVerses = (vs: string[], interactive: boolean) => (
-    <div className="verses" style={{ fontSize: `${fontSize}px` }}>
+  const renderVerses = (vs: string[], interactive: boolean, transId: string) => (
+    <div className="verses" style={{ fontSize: `${fontSize}px` }} lang={getTranslation(transId)?.language === "la" ? "la" : undefined}>
       {vs.map((text, i) => {
         // Grid-empty slot (see data-report.txt): no text in this translation.
         if (!text || !text.trim()) return null;
@@ -334,7 +334,7 @@ export default function Reader() {
         </div>
       </div>
 
-      <h1 className="chapter-title">
+      <h1 className="chapter-title" lang={trans?.language === "la" ? "la" : undefined}>
         {displayName}{" "}
         {chapterCount > 1 && (
           <button
@@ -380,16 +380,16 @@ export default function Reader() {
         </p>
       )}
 
-      {verses && !chapterEmpty && !parallelData && renderVerses(verses, true)}
+      {verses && !chapterEmpty && !parallelData && renderVerses(verses, true, translation)}
       {verses && !chapterEmpty && parallelData && (
         <div className="parallel-grid">
           <div>
             <div className="col-label">{trans?.abbrev}</div>
-            {renderVerses(verses, true)}
+            {renderVerses(verses, true, translation)}
           </div>
           <div>
             <div className="col-label">{getTranslation(parallel!)?.abbrev}</div>
-            {renderVerses(parallelData.chapters[chapter - 1] ?? [], false)}
+            {renderVerses(parallelData.chapters[chapter - 1] ?? [], false, parallel ?? translation)}
           </div>
         </div>
       )}

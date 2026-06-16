@@ -44,7 +44,7 @@ export default function MysterySheet({ mystery, translation, titleId }: Props) {
         <details className="prayer" key={p.id}>
           <summary className="sans small">{p.title}</summary>
           <div className="prayer-body">
-            <p className="prayer-la">{p.la}</p>
+            <p className="prayer-la" lang="la">{p.la}</p>
             <p className="prayer-en">{p.en}</p>
           </div>
         </details>
