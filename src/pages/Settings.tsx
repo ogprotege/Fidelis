@@ -401,7 +401,8 @@ export default function Settings() {
 
         <div className="setting-label">Download for offline</div>
         <p className="catechesis muted small">
-          Save a bundled translation's full text to this device so it reads with no connection.
+          Save a bundled translation's full text — or the Fathers' commentary — to this device
+          so it reads with no connection.
         </p>
         {TRANSLATIONS.filter((t) => t.bundled).map((t) => {
           const bytes = manifest?.bundles?.[t.id]?.bytes;
@@ -425,6 +426,30 @@ export default function Settings() {
             </div>
           );
         })}
+        {(() => {
+          const bytes = manifest?.bundles?.commentary?.bytes;
+          const prog = progress.commentary;
+          const saved = offline.includes("commentary");
+          return (
+            <div className="download-row">
+              <span>
+                <span className="download-name">Commentary</span>{" "}
+                <span className="muted small sans">
+                  Haydock + Catena · {bytes != null ? formatBytes(bytes) : "—"}
+                </span>
+              </span>
+              {prog ? (
+                <span className="muted small sans">
+                  {prog.total ? `Saving… ${prog.done}/${prog.total}` : "Saving…"}
+                </span>
+              ) : (
+                <button className="pill" onClick={() => download("commentary")}>
+                  {saved ? "Saved ✓ · Update" : "Download"}
+                </button>
+              )}
+            </div>
+          );
+        })()}
         {downloadError && <p className="notice small">{downloadError}</p>}
 
         <hr className="rule" />
