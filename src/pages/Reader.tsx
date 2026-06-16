@@ -48,6 +48,7 @@ export default function Reader() {
   const [parallelData, setParallelData] = useState<BookData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [focusedVerse, setFocusedVerse] = useState<number | null>(null);
   const [plan, setPlan] = useState(activePlan);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
@@ -57,6 +58,7 @@ export default function Reader() {
   const [haydockBook, setHaydockBook] = useState<CommentaryBook | null>(null);
   const [commentaryFor, setCommentaryFor] = useState<number | null>(null);
   const [shareFor, setShareFor] = useState<number | null>(null);
+  const [chapterPickerOpen, setChapterPickerOpen] = useState(false);
   const wantHaydockDots = settings.commentaryEnabled && settings.commentaryHaydock;
 
   const bookmarks = useMemo(
@@ -131,18 +133,25 @@ export default function Reader() {
     setNoteOpen(false);
     setCommentaryFor(null);
     setShareFor(null);
+    setChapterPickerOpen(false);
     window.scrollTo(0, 0);
     // Runs on navigation only; settings.translation/update are read to persist
     // the chosen translation, not to re-fire this effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [translation, bookSlug, chapter, book]);
 
+  // A deep-linked verse (?v=) gets a transient gold rule for ~3s — gold honors
+  // a scripture-focus mark — rather than staying permanently selected (which
+  // also popped the action bar). The 3s timer works regardless of motion
+  // settings, so the indicator is never invisible to reduced-motion users.
   useEffect(() => {
     if (focusVerse && data) {
       const el = document.getElementById(`v-${focusVerse}`);
       if (el) {
         el.scrollIntoView({ block: "center" });
-        setSelected(focusVerse);
+        setFocusedVerse(focusVerse);
+        const t = setTimeout(() => setFocusedVerse(null), 3000);
+        return () => clearTimeout(t);
       }
     }
   }, [focusVerse, data]);
@@ -221,6 +230,7 @@ export default function Reader() {
         const cls = [
           "verse",
           interactive && selected === v ? "selected" : "",
+          interactive && focusedVerse === v ? "verse-focused" : "",
           hl ? `hl-${hl}` : ""
         ]
           .filter(Boolean)
@@ -325,7 +335,18 @@ export default function Reader() {
       </div>
 
       <h1 className="chapter-title">
-        {displayName} {chapterCount > 1 ? chapter : ""}
+        {displayName}{" "}
+        {chapterCount > 1 && (
+          <button
+            type="button"
+            className="chapter-pick"
+            aria-haspopup="dialog"
+            onClick={() => setChapterPickerOpen(true)}
+            title="Choose a chapter"
+          >
+            {chapter}
+          </button>
+        )}
       </h1>
       <p className="chapter-subtitle">
         {trans?.name}
@@ -519,6 +540,30 @@ export default function Reader() {
             }`}
             filename={`fidelis-${bookSlug}-${chapter}-${shareFor}`}
           />
+        </Sheet>
+      )}
+
+      {chapterPickerOpen && (
+        <Sheet titleId="chapter-grid-title" onClose={() => setChapterPickerOpen(false)}>
+          <h2 id="chapter-grid-title" className="chapter-grid-title">
+            {displayName} — chapters
+          </h2>
+          <div className="chapter-grid">
+            {Array.from({ length: chapterCount }, (_, i) => i + 1).map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={c === chapter ? "chapter-cell current" : "chapter-cell"}
+                aria-current={c === chapter ? "true" : undefined}
+                onClick={() => {
+                  setChapterPickerOpen(false);
+                  void go(translation, bookSlug, c);
+                }}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
         </Sheet>
       )}
     </div>
