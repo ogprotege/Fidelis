@@ -33,6 +33,21 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Verse of the Day home-screen widget. The AppWidget framework delivers
+             APPWIDGET_UPDATE to this (non-exported) receiver; VOTD_MIDNIGHT is the
+             app's own daily-rollover alarm. -->
+        <receiver
+            android:name=".VotdWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="app.fidelis.bible.VOTD_MIDNIGHT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/votd_widget_info" />
+        </receiver>
     </application>
 
     <!-- Permissions -->

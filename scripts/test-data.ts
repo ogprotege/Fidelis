@@ -551,6 +551,25 @@ check(
   votdJson[0]?.reference === "John 3:16",
   `got "${votdJson[0]?.reference}"`
 );
+const androidVotd = readFileSync(join(ROOT, "android/app/src/main/res/raw/votd.json"), "utf8");
+check(
+  "Android widget votd.json is byte-identical to the iOS one (both widgets read one cycle)",
+  androidVotd === readFileSync(join(ROOT, "ios/WidgetExtension/votd.json"), "utf8"),
+  "android res/raw/votd.json differs from ios/WidgetExtension/votd.json — re-run npm run votd-widget"
+);
+const javaWidget = readFileSync(
+  join(ROOT, "android/app/src/main/java/app/fidelis/bible/VotdWidget.java"),
+  "utf8"
+);
+const javaFormulaAgrees =
+  javaWidget.includes("dayOfYear + year") &&
+  javaWidget.includes("GregorianCalendar") &&
+  javaWidget.includes("Calendar.DAY_OF_YEAR");
+check(
+  "Android widget selects by the same Gregorian (dayOfYear + year) formula",
+  javaFormulaAgrees,
+  javaFormulaAgrees ? "" : "selection formula or Gregorian calendar pin missing from VotdWidget.java"
+);
 
 // 8. Empty-slot audit (P1-4): data-report.txt must stay in sync with the
 //    bundles, no canonical chapter may be fully empty, and every scattered

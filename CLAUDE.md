@@ -171,13 +171,39 @@ iOS, and the README states the free-forever pledge explicitly.
   `npm run build && npx cap sync android && npx cap open android` (Android Studio).
   Guide: `docs/ANDROID.md`. `@capacitor/android` pinned to `^8.4.0` to match the
   existing Capacitor packages.
-- **The native widget stays iOS-only** (WidgetKit). A native Android App Widget
-  (Glance/RemoteViews) is a tracked follow-up; it would reuse the pre-resolved
-  `votd.json` (`scripts/build-votd-widget.mjs`) rather than port the selection math.
+- **The native widget was iOS-only at 1.6.0**; the Android App Widget shipped in
+  **1.7.0 "the lampstand"** (below), reusing the pre-resolved `votd.json`
+  (`scripts/build-votd-widget.mjs`) rather than porting the selection math.
 - **The free pledge** is now explicit in the README — masthead, a `free · forever`
   badge, a Highlights row, and the refusal list — the FREE keyword beside the
   standing no-accounts / no-tracking / no-data positioning, consistent with
   standing rule §13.5 (no ads or in-app purchases, ever).
+
+## The lampstand release — the Android home-screen widget (v1.7.0)
+
+The Android **Verse of the Day App Widget** (`v1.7.0` "the lampstand", Matt 5:15) — the
+native counterpart of the iOS WidgetKit widget and the tracked follow-up from 1.6.0:
+
+- **`VotdWidget`** (`android/app/src/main/java/app/fidelis/bible/VotdWidget.java`, a
+  RemoteViews `AppWidgetProvider`) reads the bundled `res/raw/votd.json` and selects the
+  day's verse with the **same formula** as `src/lib/votd.ts` and the iOS widget —
+  `index = (dayOfYear + year) mod count`, Gregorian, device tz — so the three never disagree.
+  Resources: `res/layout/widget_votd.xml`, `res/xml/votd_widget_info.xml`,
+  `res/drawable/{ic_cross_gold,widget_bg}.xml`, `res/values/colors.xml` (the day tokens). The
+  gold cross is drawn natively (the §1.5 icon, never an emoji); refresh is an inexact
+  local-midnight `AlarmManager` (no exact-alarm permission); tap opens the app. Offline.
+- **Wired entirely in the committed project** — unlike iOS (where the Widget Extension target
+  must be created in Xcode by hand), an Android App Widget is just a `<receiver>` + resources
+  in `AndroidManifest.xml`, so there is no manual IDE step.
+- **`scripts/build-votd-widget.mjs` now emits both** `ios/WidgetExtension/votd.json` and
+  `android/app/src/main/res/raw/votd.json` (`npm run votd-widget`).
+- Reboot caveat: the midnight alarm re-arms on the next widget update after a reboot; a
+  `BOOT_COMPLETED` receiver is a small future refinement.
+
+Also rode in on this release (docs only): the **§5 CCC citation index** design spec + a
+**local-build runbook** (`docs/superpowers/specs/2026-06-15-ccc-*`) — signed off, built
+locally (the cloud sandbox 403-blocks vatican.va and can't read the Catechism PDF), shipping
+later as **v1.8.0 "the deposit"**; and a step-by-step **iOS Simulator** guide in `docs/IOS.md`.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.6.0%20·%20freely%20given-5B3A8E)
+![version](https://img.shields.io/badge/version-1.7.0%20·%20the%20lampstand-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -77,7 +77,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 | **The daily soul** | A tappable rosary with the traditional prayers, a quiet half-hour reading indulgence, and citation-only reading plans — devotion that never nags. |
 | **The Fathers, one tap away** | Haydock across the whole canon and the Catena Aurea on the Gospels — a small gold dot marks a commented verse, a sheet opens the commentary with per-Father chips and a Doctors-only filter. Scripture stays Scripture; study stays study. |
 | **Yours, on your device** | Bookmarks, highlights, notes, and reading plans live in your browser. No account, no server, no telemetry. Export/import as JSON. |
-| **Everywhere** | Installable PWA with offline reading, native **iOS and Android** shells (Capacitor) with a WidgetKit home-screen widget on iOS, and an embeddable Verse-of-the-Day iframe. |
+| **Everywhere** | Installable PWA with offline reading, native **iOS and Android** shells (Capacitor) each with a native **Verse-of-the-Day home-screen widget**, and an embeddable Verse-of-the-Day iframe. |
 | **Free, forever** | No price, no ads, no in-app purchases, no subscription, no telemetry. The product is the text, not your attention. |
 
 ---
@@ -227,8 +227,9 @@ piety, never gamification.
 - **iOS** — via Capacitor, including a native **WidgetKit home-screen widget** (Verse of the Day;
   small / medium / large; offline). See [docs/IOS.md](docs/IOS.md).
 - **Android** — via Capacitor: the full app in a native shell, offline by construction (the whole
-  build ships inside the APK, exactly as on iOS). The home-screen widget is iOS-only for now — a
-  native Android App Widget is a tracked follow-up. See [docs/ANDROID.md](docs/ANDROID.md).
+  build ships inside the APK, exactly as on iOS), now with its own native **Verse-of-the-Day
+  home-screen widget** (App Widget) that shows the same verse as the app and the iOS widget. See
+  [docs/ANDROID.md](docs/ANDROID.md).
 - **Embeddable widget** — drop the Verse of the Day into any site:
   `<iframe src="https://your-domain/#/widget/votd">` (options: `?t=vulgate&theme=night`).
 

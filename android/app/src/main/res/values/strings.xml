@@ -4,4 +4,6 @@
     <string name="title_activity_main">Fidelis</string>
     <string name="package_name">app.fidelis.bible</string>
     <string name="custom_url_scheme">app.fidelis.bible</string>
+    <string name="widget_votd_label">VERSE OF THE DAY</string>
+    <string name="widget_votd_description">The day\'s verse from the Douay-Rheims Bible — unaltered, every day.</string>
 </resources>

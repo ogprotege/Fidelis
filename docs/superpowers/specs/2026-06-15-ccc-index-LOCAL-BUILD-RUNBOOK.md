@@ -32,7 +32,7 @@ vatican.va is reachable. The design is already **signed off** in
 # fresh clone (or your existing one), on a branch off the latest main
 git clone https://github.com/ogprotege/Fidelis && cd Fidelis
 git checkout main && git pull
-git checkout -b v1.7-ccc-index
+git checkout -b v1.8-ccc-index
 npm install
 npm test            # confirm a green baseline before you start
 ```
@@ -116,7 +116,7 @@ TESTS (scripts/test-data.ts, new §17) — all HARD assertions:
 
 GREEN BAR: `npm test` and `npm run build` must pass. Then run a real browser check
 (/verify or npm run dev) to see the CCC row render, wrap, and open the right vatican.va
-page. Then bump package.json to 1.7.0, add a CHANGELOG entry named "the deposit"
+page. Then bump package.json to 1.8.0, add a CHANGELOG entry named "the deposit"
 (Matthew 10:8 is taken by 1.6.0 — use depositum fidei / 2 Timothy 1:14 "Guard the good
 deposit"), record it in CLAUDE.md, update the README (Platforms/Highlights as needed and
 the version badge), and open a DRAFT PR.
@@ -162,7 +162,7 @@ Add `"ccc": "node scripts/build-ccc.mjs"` to `package.json` scripts while you're
 - [ ] New **Magisterium** Settings section with `cccLinksEnabled` (default on).
 - [ ] `scripts/test-data.ts` §17 added; `npm test` + `npm run build` green.
 - [ ] 20-sample verified against the PDF; famous anchors correct.
-- [ ] v1.7.0 "the deposit" — CHANGELOG, CLAUDE.md, README badge; **draft PR** opened.
+- [ ] v1.8.0 "the deposit" — CHANGELOG, CLAUDE.md, README badge; **draft PR** opened.
 
 ---
 
