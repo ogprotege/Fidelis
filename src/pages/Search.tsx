@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { BOOKS, bookDisplayName, getBook } from "../lib/canon";
 import { loadBook } from "../lib/data";
 import { parseReference } from "../lib/refparse";
+import { GroupFilter, inFilter } from "../lib/search";
 import { TRANSLATIONS } from "../lib/translations";
 import { useSettings } from "../SettingsContext";
 
@@ -14,6 +15,13 @@ interface Result {
 }
 
 const MAX_RESULTS = 300;
+
+const CHIPS: { key: GroupFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "ot", label: "Old Testament" },
+  { key: "nt", label: "New Testament" },
+  { key: "gospels", label: "Gospels" }
+];
 
 /** Case- and accent-insensitive (æ→ae) normalization, so Latin searches just work. */
 function fold(s: string): string {
@@ -32,6 +40,7 @@ export default function Search() {
   const [results, setResults] = useState<Result[]>([]);
   const [progress, setProgress] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+  const [group, setGroup] = useState<GroupFilter>("all");
   const runId = useRef(0);
   const navigate = useNavigate();
 
@@ -114,6 +123,7 @@ export default function Search() {
   };
 
   const tooShort = query.trim().length < 2;
+  const shown = results.filter((r) => inFilter(r.book, group));
 
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
@@ -150,7 +160,25 @@ export default function Search() {
             : `${results.length}${results.length >= MAX_RESULTS ? "+" : ""} verses found.`}
         </div>
       )}
-      {results.map((r) => {
+      {!progress && results.length > 0 && (
+        <div className="search-chips" role="group" aria-label="Filter results by section">
+          {CHIPS.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              className={group === c.key ? "chip active" : "chip"}
+              aria-pressed={group === c.key}
+              onClick={() => setGroup(c.key)}
+            >
+              {c.label}{" "}
+              <span className="chip-count">
+                {results.filter((r) => inFilter(r.book, c.key)).length}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      {shown.map((r) => {
         const b = getBook(r.book)!;
         return (
           <div className="result" key={`${r.book}-${r.chapter}-${r.verse}`}>
@@ -163,6 +191,9 @@ export default function Search() {
           </div>
         );
       })}
+      {!progress && results.length > 0 && shown.length === 0 && (
+        <div className="search-progress">No verses in this section.</div>
+      )}
     </div>
   );
 }

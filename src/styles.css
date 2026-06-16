@@ -628,6 +628,21 @@ h1.page-title {
 }
 .search-bar button.primary { background: var(--purple-strong); color: var(--on-accent); border-color: var(--purple-strong); font-weight: 600; }
 .search-bar button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.search-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.2rem 0 0.9rem; font-family: var(--sans); }
+.chip {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.chip:hover { border-color: var(--purple); }
+.chip:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.chip.active { background: var(--purple-strong); border-color: var(--purple-strong); color: var(--on-accent); }
+.chip-count { opacity: 0.7; font-variant-numeric: tabular-nums; }
 .search-progress { font-family: var(--sans); font-size: 0.85rem; color: var(--text-muted); margin: 0.6rem 0; }
 .result {
   padding: 0.7rem 0;
