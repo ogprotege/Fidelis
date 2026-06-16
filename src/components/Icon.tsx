@@ -21,7 +21,9 @@ export type IconName =
   | "commentary"
   | "sun"
   | "moon"
-  | "cross";
+  | "cross"
+  | "download"
+  | "upload";
 
 const PATHS: Record<IconName, ReactNode> = {
   bookmark: <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />,
@@ -53,7 +55,21 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   moon: <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" />,
-  cross: <path d="M12 3v18M6.5 8.5h11" />
+  cross: <path d="M12 3v18M6.5 8.5h11" />,
+  download: (
+    <>
+      <path d="M12 3v12" />
+      <path d="M7 10l5 5 5-5" />
+      <path d="M5 21h14" />
+    </>
+  ),
+  upload: (
+    <>
+      <path d="M12 21V9" />
+      <path d="M7 14l5-5 5 5" />
+      <path d="M5 3h14" />
+    </>
+  )
 };
 
 interface IconProps {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import Icon from "../components/Icon";
 import {
   ManifestDoc,
   downloadBundle,
@@ -117,6 +118,11 @@ export default function Settings() {
     }
   };
 
+  // The version radiogroup uses roving tabindex (ARIA APG): only the checked
+  // radio is tabbable; arrow keys move selection + focus across the available
+  // versions, wrapping at the ends.
+  const availableIds = TRANSLATIONS.filter((t) => t.bundled || imported.has(t.id)).map((t) => t.id);
+
   return (
     <div className="page-narrow settings">
       <h1 className="page-title">Settings</h1>
@@ -144,10 +150,11 @@ export default function Settings() {
             return (
               <div
                 key={t.id}
+                id={available ? `ver-${t.id}` : undefined}
                 className={`version-card ${selected ? "active" : ""} ${available ? "" : "locked"}`}
                 role={available ? "radio" : undefined}
                 aria-checked={available ? selected : undefined}
-                tabIndex={available ? 0 : undefined}
+                tabIndex={available ? (selected ? 0 : -1) : undefined}
                 onClick={available ? () => update({ translation: t.id }) : undefined}
                 onKeyDown={
                   available
@@ -155,6 +162,19 @@ export default function Settings() {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
                           update({ translation: t.id });
+                        } else if (
+                          e.key === "ArrowDown" ||
+                          e.key === "ArrowRight" ||
+                          e.key === "ArrowUp" ||
+                          e.key === "ArrowLeft"
+                        ) {
+                          e.preventDefault();
+                          const i = availableIds.indexOf(t.id);
+                          const delta = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1;
+                          const nextId =
+                            availableIds[(i + delta + availableIds.length) % availableIds.length];
+                          update({ translation: nextId });
+                          document.getElementById(`ver-${nextId}`)?.focus();
                         }
                       }
                     : undefined
@@ -416,10 +436,10 @@ export default function Settings() {
         </p>
         <div className="pill-row">
           <button className="pill" onClick={doExport}>
-            ↓ Export (JSON)
+            <Icon name="download" /> Export (JSON)
           </button>
           <button className="pill" onClick={() => fileRef.current?.click()}>
-            ↑ Import
+            <Icon name="upload" /> Import
           </button>
           <input
             ref={fileRef}

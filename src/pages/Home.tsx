@@ -245,7 +245,7 @@ export default function Home() {
               </Link>
             </>
           )}
-          <p className="small sans muted" style={{ marginTop: "0.9rem" }}>
+          <p className="small sans muted browse-links">
             <Link to="/read">Browse all books</Link> ·{" "}
             <Link to="/search">Search the Scriptures</Link>
           </p>

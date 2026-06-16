@@ -87,6 +87,8 @@
 
   --on-accent: #FFFFFF;     /* text/icon on a filled purple control */
   --shadow: 0 1px 3px rgba(38, 36, 31, 0.08), 0 8px 24px -12px rgba(38, 36, 31, 0.18);
+  --shadow-soft: 0 1px 2px rgba(38, 36, 31, 0.22);
+  --shadow-tabbar: 0 -1px 3px rgba(38, 36, 31, 0.08), 0 -8px 24px -12px rgba(38, 36, 31, 0.18);
   --scrim: rgba(38, 36, 31, 0.45); /* modal backdrop (warm dark) */
 
   /* User highlight washes ("gold" is highlight color one, the sacred one). */
@@ -114,6 +116,8 @@
 
   --on-accent: #FFFFFF;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-tabbar: 0 -1px 3px rgba(0, 0, 0, 0.4), 0 -8px 24px -12px rgba(0, 0, 0, 0.5);
   --scrim: rgba(0, 0, 0, 0.6); /* modal backdrop */
 
   --hl-gold: #4A3D1D;
@@ -460,6 +464,12 @@ h1.page-title {
   max-width: 14rem;
 }
 .toolbar-right { margin-left: auto; display: flex; gap: 0.4rem; align-items: center; }
+@media (max-width: 640px) {
+  .reader-toolbar { gap: 0.35rem; padding: 0.45rem 0; }
+  .reader-toolbar select { max-width: 9rem; padding: 0.3rem 0.4rem; font-size: 0.85rem; }
+  .toolbar-right { gap: 0.3rem; }
+  .reader-toolbar .icon-btn { padding: 0.3rem 0.45rem; }
+}
 
 .chapter-title {
   text-align: center;
@@ -896,7 +906,7 @@ body.widget-mode { background: transparent; }
   border-radius: 50%;
   background: var(--bg-1);
   transform: translateY(-50%);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-soft);
   transition: left 0.15s, background 0.15s;
 }
 .switch[aria-checked="true"] { background: var(--purple-strong); border-color: var(--purple-strong); }
@@ -944,6 +954,10 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 
 .loading { text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0; }
 .loading-inline { color: var(--text-muted); font-style: italic; }
+.browse-links { margin-top: 0.9rem; }
+.card-spaced { margin: 1rem 0; }
+.mb-0 { margin-bottom: 0; }
+.hl-dot.lib-swatch { display: inline-block; vertical-align: -0.3rem; margin-right: 0.5rem; }
 
 /* ── Tab bar on phones (spec §2.1) ───────────────────────────────────────────
    The five-tab nav drops to the bottom edge; the header keeps the brand and the
@@ -977,7 +991,7 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
     flex-wrap: nowrap;
     background: var(--bg-1);
     border-top: 1px solid var(--border);
-    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.08), 0 -8px 24px -12px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--shadow-tabbar);
     padding: 0.25rem 0.25rem calc(0.25rem + env(safe-area-inset-bottom));
   }
   .tabbar > a,
@@ -1054,6 +1068,13 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   border-radius: 0.9rem 0.9rem 0 0;
   box-shadow: var(--shadow);
   padding: 1.3rem 1.3rem calc(1.3rem + env(safe-area-inset-bottom));
+  animation: sheet-in 110ms ease-out;
+}
+/* A single restrained entrance so the sheet doesn't pop in on phones; the
+   global prefers-reduced-motion block neutralizes it to ~instant. */
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
 }
 .sheet-close {
   position: absolute;

@@ -76,14 +76,14 @@ export default function Library() {
         ))}
         <span className="spacer" />
         <button className="icon-btn" onClick={doExport} title="Download bookmarks, highlights, and notes as JSON">
-          ↓ Export
+          <Icon name="download" /> Export
         </button>
         <button
           className="icon-btn"
           onClick={() => fileRef.current?.click()}
           title="Merge a previously exported Fidelis library file"
         >
-          ↑ Import
+          <Icon name="upload" /> Import
         </button>
         <input
           ref={fileRef}
@@ -131,7 +131,7 @@ export default function Library() {
         ) : (
           highlights.map((h) => (
             <div className="lib-item" key={`${h.book}-${h.chapter}-${h.verse}`}>
-              <span className={`hl-dot ${h.color}`} style={{ display: "inline-block", verticalAlign: "-0.3rem", marginRight: "0.5rem" }} />
+              <span className={`hl-dot ${h.color} lib-swatch`} />
               {refLink(h.book, h.chapter, h.verse)}{" "}
               <span className="when">added {when(h.createdAt)}</span>
               <div className="actions">

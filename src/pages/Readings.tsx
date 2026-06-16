@@ -98,7 +98,7 @@ export default function Readings() {
         </select>
       </div>
 
-      <div className="card" style={{ margin: "1rem 0" }}>
+      <div className="card card-spaced">
         <h2>
           {date.toLocaleDateString(undefined, {
             weekday: "long",
@@ -118,7 +118,7 @@ export default function Readings() {
             {c.name}
           </div>
         ))}
-        <p className="muted small sans" style={{ marginBottom: 0 }}>
+        <p className="muted small sans mb-0">
           {cycleLabel}
         </p>
       </div>
