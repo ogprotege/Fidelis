@@ -169,7 +169,7 @@ gravity (and §5 adds nothing to the Today page; the five-card rule holds).
 
 ---
 
-## 9. Test plan (`scripts/test-data.ts`, new §18 after §17)
+## 9. Test plan (`scripts/test-data.ts`, new §19 after §18)
 
 Reading the committed `ccc/{index,url}.json` and importing the pure key helpers:
 1. **Shape** — `index.json` values are non-empty integer arrays, sorted+deduped, each
@@ -203,7 +203,7 @@ CCC row render, wrap, and open the right vatican.va page in a real browser.
 | `src/pages/Reader.tsx` | the action-bar CCC row |
 | `src/lib/storage.ts`, `src/SettingsContext.tsx`, `src/pages/Settings.tsx` | `cccLinksEnabled` |
 | `src/styles.css` | `.ccc-row`/`.ccc-ref`/`.ccc-label` (purple links) |
-| `scripts/test-data.ts` | `+ §18` assertions (§17 is the existing reference-parser block) |
+| `scripts/test-data.ts` | `+ §19` assertions (§17 reference parser and §18 search group-filters already exist) |
 | `package.json` (`ccc` script + version), `CHANGELOG.md`, `CLAUDE.md`, `README.md`, About | record the release |
 
 ---

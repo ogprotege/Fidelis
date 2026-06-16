@@ -238,6 +238,46 @@ lampstand" shipped in parallel and merged first).
   arithmetic), browser-verified like the §4.2 gold dot. `tsc`, `npm run build`,
   and the existing harnesses (incl. the §1.5 emoji guard over `.tsx`) stay green.
 
+## The open door — a11y + polish release (v1.8.1)
+
+A quality/polish release on the `quality/close-the-quiet-loops` branch — "close the
+quiet loops": finish the design language already in place rather than add a new one.
+No new dependency; everything routes through the day/night tokens, the §1.5 `Icon` set,
+the two-accent rule, the five-card Today limit, and the `prefers-reduced-motion` guard.
+Plan: `docs/superpowers/plans/2026-06-16-close-the-quiet-loops.md`.
+
+- **Accessibility (the headline):** the Reader verse spans are now operable
+  (`role="button"`/`tabIndex`/`aria-pressed`/Enter+Space) — the marginalia layer was
+  mouse-only; the Settings version `radiogroup` gained ARIA-APG roving-tabindex arrow
+  keys; the highlight swatches expose `aria-pressed` + a gold-ring selected state. All
+  reuse the existing purple `:focus-visible` ring (no visual change at rest).
+- **§8.2 Search** filter chips (OT/NT/Gospels) with live per-group counts. The pure
+  membership helpers are `src/lib/search.ts` (`inFilter`/`bookGroupKind`), asserted in
+  `test-data.ts` **§18** (note: §17 is the pre-existing reference-parser block — the CCC
+  layer's tests must therefore be §19+, not §17/§18). The "exact-phrase ranking" half of
+  §8.2 was intentionally dropped: Search already requires the full query as a contiguous
+  substring, so every hit is already a phrase match (ranking would be dead code, and naive
+  all-words matching would flood results with stopwords).
+- **§8.1 Reader:** a chapter tap-grid via the `Sheet` primitive (opened from the chapter
+  number in the title; the dropdown stays), and the deep-linked `?v=` verse now gets a
+  transient (~3s, JS-timed so it's reduced-motion-safe) gold rule instead of permanent
+  selection that popped the action bar.
+- **Commentary offline download** (Settings → Data): reuses the generic `downloadBundle`
+  over the manifest's `commentary/` bundle (Haydock whole-canon + Catena Gospels, ~42 MB);
+  the SW caches `/data/commentary` like any other `/data/` path.
+- **Quiet quality:** dignified italic loading lines (no bare ellipsis), distinct
+  `copy`/`download`/`upload` `Icon` marks, the dove emoji dropped from the antiphon, the
+  Search button disabled below 2 chars, a calm Readings null-state with a real link, a
+  phone-compacted reader toolbar, warm `--shadow-soft`/`--shadow-tabbar` tokens replacing
+  cold `rgba(0,0,0)` shadows, inline magic numbers folded into named classes, and a single
+  ~110ms reduced-motion-gated `Sheet` entrance.
+- **Housekeeping** that rode in: README badge reconciled, the 1.2.1 CHANGELOG date
+  inversion, the B.x wording, a dev-tag-collision note on the 1.3.0 entry, and the CCC
+  spec/runbook test-numbering fix. Five stale merged branches deleted/pruned.
+- **Deferred** (recorded): the Vulgate-Psalm commentary-dot mapping pairs with the §5 CCC
+  build (one Hebrew→Vulgate mapping effort); per-Father "by era" filtering; the optional
+  daily-readings notification stays off.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
