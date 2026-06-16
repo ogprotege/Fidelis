@@ -63,7 +63,7 @@ export default function Antiphon({ season }: { season: Season }) {
       <div className="antiphon-body">
         {verses.map((v, i) => (
           <div className="antiphon-verse" key={i}>
-            <p className="antiphon-la">{v.la}</p>
+            <p className="antiphon-la" lang="la">{v.la}</p>
             <p className="antiphon-en">{v.en}</p>
           </div>
         ))}

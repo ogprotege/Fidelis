@@ -251,6 +251,10 @@ Plan: `docs/superpowers/plans/2026-06-16-close-the-quiet-loops.md`.
   mouse-only; the Settings version `radiogroup` gained ARIA-APG roving-tabindex arrow
   keys; the highlight swatches expose `aria-pressed` + a gold-ring selected state. All
   reuse the existing purple `:focus-visible` ring (no visual change at rest).
+  **v1.8.2 "every tongue"** followed up with `lang="la"` on every Latin text node
+  (Reader verse column + parallel Latin side, Mass reading bodies, Verse/Quote and
+  rosary passages, the antiphon and the five prayers' Latin, the Vulgate chapter
+  title) so screen readers stop applying English phonetics to the Clementine Vulgate.
 - **§8.2 Search** filter chips (OT/NT/Gospels) with live per-group counts. The pure
   membership helpers are `src/lib/search.ts` (`inFilter`/`bookGroupKind`), asserted in
   `test-data.ts` **§18** (note: §17 is the pre-existing reference-parser block — the CCC

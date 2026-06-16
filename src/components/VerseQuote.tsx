@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { loadBook } from "../lib/data";
 import { passageText } from "../lib/passage";
+import { getTranslation } from "../lib/translations";
 
 interface Props {
   translation: string;
@@ -35,8 +36,9 @@ export default function VerseQuote({ translation, book, chapter, verse, endVerse
   if (text === null) return <p className="loading-inline">Loading…</p>;
   if (!text.trim()) return <p className={className}>—</p>;
   // The quotation marks are gold (sacred); the verse text is not (spec §1.2).
+  const isLatin = getTranslation(translation)?.language === "la";
   return (
-    <p className={className}>
+    <p className={className} lang={isLatin ? "la" : undefined}>
       <span className="quote-mark">“</span>
       {text}
       <span className="quote-mark">”</span>

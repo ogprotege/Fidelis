@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { bookDisplayName, getBook } from "../lib/canon";
 import { loadBook } from "../lib/data";
 import { LectionaryRow, formatCitation, hebrewSpanToVulgate } from "../lib/lectionary";
+import { getTranslation } from "../lib/translations";
 
 interface Props {
   row: LectionaryRow;
@@ -77,7 +78,7 @@ export default function ReadingText({ row, translation, label }: Props) {
       {error && <p className="muted small">Text unavailable in this translation.</p>}
       {!error && verses === null && <p className="loading-inline small">Loading…</p>}
       {verses && (
-        <p className="reading-body">
+        <p className="reading-body" lang={getTranslation(translation)?.language === "la" ? "la" : undefined}>
           {verses.map(({ ch, v, text }) => (
             <span key={`${ch}-${v}`}>
               <sup className="vnum">{v}</sup>

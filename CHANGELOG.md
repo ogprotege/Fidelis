@@ -4,6 +4,24 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.8.2] — 2026-06-16 — every tongue
+
+Continues the accessibility work of "the open door": Latin Scripture now carries
+`lang="la"`, so screen readers stop applying English phonetics to the Vulgate.
+
+### Fixed — accessibility
+
+- **`lang="la"` on every Latin text node**: the Reader's verse column (and the Latin
+  side of the parallel view), the daily-Mass reading bodies, the Verse-of-the-Day and
+  Quote passages, the rosary mystery passages, the Marian antiphon's Latin lines, the
+  five rosary prayers' Latin, and the Vulgate chapter title. A screen reader now
+  pronounces the Clementine Vulgate as Latin instead of mis-reading it as English.
+
+### Notes
+
+- No visual change; `npm test` (incl. eslint + manifest verify) and `npm run build`
+  stay green. A DOM/screen-reader surface, verified like the rest of the a11y layer.
+
 ## [1.8.1] — 2026-06-16 — the open door
 
 A quality pass that finishes the design language already in place — "close the quiet
