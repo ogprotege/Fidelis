@@ -266,6 +266,11 @@ hand-drawn icon set, the seven-link header becomes a five-tab bar, and every con
 gathers into a single live Settings screen. Six work items (A1–A6); the Word is still
 never printed in red.
 
+> Historical note: while this work was in progress its six items were tagged in
+> per-step increments (dev tags v1.4.0–v1.7.0); those tags were superseded by this
+> single consolidated v1.3.0 release. The v1.4.0–v1.8.0 entries below are entirely
+> unrelated, later shipped releases that reused those numbers.
+
 ### Added
 
 - **The token system and the two-accent rule** (A1, §1.1–§1.2): every paint color now
@@ -371,7 +376,7 @@ never printed in red.
   the open roadmap — §3 (Quote of the Day) and the §6 Today recomposition already
   shipped in 1.2.0.
 
-## [1.2.1] — 2026-06-11 — continuous integration
+## [1.2.1] — 2026-06-12 — continuous integration
 
 Closes the last open repair-manual item, §B.3: the harnesses now run in CI, not
 just on a developer's machine.
@@ -509,7 +514,7 @@ adversarial-review findings are recorded in the commit messages.
   are the printed Clementine appendix; Psalm 151 and Laodiceans come down in the wider
   Vulgate manuscript tradition (P2-1).
 
-### Added — testing and audit (B.1, B.2)
+### Added — testing and audit (B.1, B.2, B.4)
 
 - `npm test`: both harnesses as pure assertion suites (181 checks — trap years, USA
   region, psalm incipits, Vigil labels, memorial propers, manifest, VOTD parity) plus the
