@@ -1087,6 +1087,41 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 .prayer-la { margin: 0; font-style: italic; color: var(--text); line-height: 1.5; }
 .prayer-en { margin: 0.2rem 0 0; line-height: 1.5; }
 
+/* §8.3 the share card — the chrome around the rendered canvas. The canvas is
+   1080×1350 internally; height:auto scales the preview while keeping the ratio. */
+.share-sheet h2 { margin: 0 3rem 0.7rem 0; }
+.share-canvas {
+  display: block;
+  width: 100%;
+  max-width: 17rem;
+  height: auto;
+  margin: 0 auto 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow);
+}
+.share-styles { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 0.9rem; }
+.share-actions { display: flex; gap: 0.6rem; align-items: center; justify-content: center; }
+.share-actions .continue-cta { margin-top: 0; }
+.icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.icon-btn:disabled:hover { border-color: var(--border); }
+.share-note { text-align: center; margin: 0.7rem 0 0; min-height: 1.1rem; }
+/* The share affordance on the Today cards — purple acts (§1.2). */
+.card-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  color: var(--purple);
+}
+.card-share:hover { text-decoration: underline; }
+
 @media (min-width: 640px) {
   .sheet-backdrop { align-items: center; }
   .sheet { border-radius: 0.9rem; max-height: 80vh; }

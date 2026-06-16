@@ -4,6 +4,37 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.8.0] — 2026-06-16 — the sower
+
+> *"Semen est verbum Dei."* — "The seed is the word of God." (Luke 8:11)
+
+The share card (design spec §8.3) — the evangelization vector. Any verse, or the
+Quote of the Day, renders to a 1080×1350 image: a warm-gray field, the text in EB
+Garamond, the gold cross and a small "FIDELIS" wordmark, and the citation with its
+translation abbreviation. Two styles only, Day and Night. The native share sheet
+carries it out (the Web Share API, with a plain image download where sharing files
+isn't supported). No imagery, no red-letter — typography on a field (standing rule
+3 / §13). Scripture goes out; nothing comes back.
+
+### Added
+
+- **The share card.** A **Share** action on the Reader's verse bar, and a **Share**
+  affordance on the Today page's Verse of the Day and Quote of the Day cards, open a
+  sheet with a live preview, a Day/Night toggle, and share / save-image actions. The
+  card is drawn on a `<canvas>` by `src/lib/shareCard.ts` (pure over its inputs and
+  the bundled font); the sheet is `src/components/ShareSheet.tsx`, on the existing
+  `Sheet` primitive.
+- **The two-accent rule holds on the card.** Gold honors (the cross, the wordmark,
+  the citation); the ink carries the text; nothing is purple, because nothing on the
+  card is interactive. The cross is the §1.5 mark, drawn natively on the canvas —
+  never an emoji.
+
+### Notes
+
+- The card is a visual surface — like the §4.2 commentary dot, it is verified in a
+  real browser rather than the node harness; the liturgical engines and the bundled
+  texts are unchanged.
+
 ## [1.7.0] — 2026-06-15 — the lampstand
 
 > *"Neither do men light a candle and put it under a bushel, but upon a candlestick, that it may shine to all that are in the house."* (Matthew 5:15)

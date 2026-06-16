@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-15
 **Spec section:** Feature Design Spec §5 (Scripture-to-Magisterium links)
-**Branch:** TBD (proposed: `v1.8-ccc-index`)
+**Branch:** TBD (proposed: `v1.9-ccc-index`)
 **Status:** ✅ **Signed off — decisions resolved 2026-06-15.** No code yet; building
 next (step 3) the moment the USCCB 2nd Ed *Index of Citations* is reachable here (§13).
 This is step 2 of the agreed order (Android PR #12 merged → **spec §5** → build & verify
@@ -237,7 +237,7 @@ one Settings row. The five-card invariant and the two-accent rule both hold.
    pages** so no body text travels. I read it with the PDF viewer and parse the facts.
 2. **URL target (A3):** ✅ **vatican.va** confirmed.
 3. **Settings placement (A7):** ✅ §5 gets its **own "Magisterium" reference section** (§7).
-4. **Release framing:** ✅ its own **v1.8.0** — proposed name **"the deposit"**
+4. **Release framing:** ✅ its own **v1.9.0** — proposed name **"the deposit"**
    (*depositum fidei*, the deposit of faith the Catechism guards); trivial to rename.
 
 **Remaining gate before step 3:** the Index-of-Citations handoff (item 1). Everything

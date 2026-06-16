@@ -76,6 +76,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 | **The liturgical year, in color** | The working accent takes the day's liturgical color; the sacred marks stay gold. The calendar catechizes without a word. |
 | **The daily soul** | A tappable rosary with the traditional prayers, a quiet half-hour reading indulgence, and citation-only reading plans — devotion that never nags. |
 | **The Fathers, one tap away** | Haydock across the whole canon and the Catena Aurea on the Gospels — a small gold dot marks a commented verse, a sheet opens the commentary with per-Father chips and a Doctors-only filter. Scripture stays Scripture; study stays study. |
+| **Sow a verse** | Any verse — or the daily quote — renders to a clean card (EB Garamond on a warm field, the gold cross) and goes out through your device's native share sheet. A seed and a citation at once; Scripture goes out, nothing comes back. |
 | **Yours, on your device** | Bookmarks, highlights, notes, and reading plans live in your browser. No account, no server, no telemetry. Export/import as JSON. |
 | **Everywhere** | Installable PWA with offline reading, native **iOS and Android** shells (Capacitor) each with a native **Verse-of-the-Day home-screen widget**, and an embeddable Verse-of-the-Day iframe. |
 | **Free, forever** | No price, no ads, no in-app purchases, no subscription, no telemetry. The product is the text, not your attention. |
@@ -142,6 +143,9 @@ Five cards, always exactly five — a standing rule, so the page never sprawls:
 4. **The Holy Rosary** — the day's mysteries, now **tappable** (see below).
 5. **Continue Reading** — picks up where you left off, and surfaces your active reading plan.
 
+The Verse of the Day and Quote of the Day each carry a **Share** affordance — a card for the
+native share sheet (see *Reading &amp; study*).
+
 ---
 
 ## The daily soul — devotion around the text
@@ -189,6 +193,11 @@ piety, never gamification.
   **by Father** and to the **Doctors of the Church**. Commentary never interleaves into the page —
   it is a tap away, and a single Settings switch removes the dots entirely. No AI, no paraphrase:
   the Fathers in their own words.
+- **Share** (the 1.8.0 "the sower" release) — the verse actions gain a **Share** entry that
+  renders the verse to a card, Day or Night, for the native share sheet (Web Share API, with a
+  plain-image download fallback). The same affordance sits on the Today page's Verse of the Day
+  and Quote of the Day. Typography on a warm field — the gold cross and a small wordmark, no
+  imagery, no red-letter.
 
 ---
 
