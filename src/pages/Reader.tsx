@@ -21,6 +21,7 @@ import Icon from "../components/Icon";
 import IndulgenceNotice from "../components/IndulgenceNotice";
 import Sheet from "../components/Sheet";
 import CommentarySheet from "../components/CommentarySheet";
+import ShareSheet from "../components/ShareSheet";
 import { clampFontSize } from "../lib/typography";
 import { useSettings, useUpdateSettings } from "../SettingsContext";
 import { activePlan, updatePlan } from "../lib/storage";
@@ -55,6 +56,7 @@ export default function Reader() {
   // sheet); commentaryFor is the verse whose commentary sheet is open.
   const [haydockBook, setHaydockBook] = useState<CommentaryBook | null>(null);
   const [commentaryFor, setCommentaryFor] = useState<number | null>(null);
+  const [shareFor, setShareFor] = useState<number | null>(null);
   const wantHaydockDots = settings.commentaryEnabled && settings.commentaryHaydock;
 
   const bookmarks = useMemo(
@@ -128,6 +130,7 @@ export default function Reader() {
     setSelected(null);
     setNoteOpen(false);
     setCommentaryFor(null);
+    setShareFor(null);
     window.scrollTo(0, 0);
     // Runs on navigation only; settings.translation/update are read to persist
     // the chosen translation, not to re-fire this effect.
@@ -441,6 +444,9 @@ export default function Reader() {
           <button className="icon-btn" onClick={copySelected}>
             <Icon name="share" /> Copy
           </button>
+          <button className="icon-btn" onClick={() => setShareFor(selRef.verse)}>
+            <Icon name="share" /> Share
+          </button>
           {commentaryAvailable(selRef.verse) && (
             <button className="icon-btn" onClick={() => setCommentaryFor(selRef.verse)}>
               <Icon name="commentary" /> Commentary
@@ -484,6 +490,19 @@ export default function Reader() {
             showHaydock={settings.commentaryHaydock}
             showCatena={settings.commentaryCatena}
             doctorsOnlyDefault={settings.commentaryDoctorsOnly}
+          />
+        </Sheet>
+      )}
+
+      {shareFor != null && verses && (
+        <Sheet titleId="share-title" onClose={() => setShareFor(null)}>
+          <ShareSheet
+            titleId="share-title"
+            text={verses[shareFor - 1]}
+            citation={`${displayName} ${chapter}:${shareFor}${
+              trans?.abbrev ? ` · ${trans.abbrev}` : ""
+            }`}
+            filename={`fidelis-${bookSlug}-${chapter}-${shareFor}`}
           />
         </Sheet>
       )}

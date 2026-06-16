@@ -5,7 +5,11 @@ import Icon from "../components/Icon";
 import VerseQuote from "../components/VerseQuote";
 import Sheet from "../components/Sheet";
 import MysterySheet from "../components/MysterySheet";
+import ShareSheet from "../components/ShareSheet";
 import { getBook, bookDisplayName } from "../lib/canon";
+import { loadBook } from "../lib/data";
+import { passageText } from "../lib/passage";
+import { getTranslation } from "../lib/translations";
 import {
   DayReadings,
   READING_LABELS,
@@ -39,6 +43,9 @@ export default function Home() {
   const [mass, setMass] = useState<DayReadings | null>(null);
   const [quote, setQuote] = useState<DailyQuote | null>(null);
   const [openMystery, setOpenMystery] = useState<Mystery | null>(null);
+  const [share, setShare] = useState<
+    { text: string; citation: string; source?: string; filename: string } | null
+  >(null);
   useEffect(() => {
     readingsForDate(new Date()).then(setMass).catch(() => setMass(null));
     loadQuotes()
@@ -54,6 +61,28 @@ export default function Home() {
 
   const readerLink = (book: string, chapter: number, verse?: number) =>
     `/read/${translation}/${book}/${chapter}${verse ? `?v=${verse}` : ""}`;
+
+  async function shareVotd() {
+    const data = await loadBook(translation, votd.book);
+    const text = passageText(data, votd.chapter, votd.verse, votd.endVerse);
+    const ref = formatVotdRef(votd, bookDisplayName(votdBook, translation));
+    const abbrev = getTranslation(translation)?.abbrev;
+    setShare({
+      text,
+      citation: abbrev ? `${ref} · ${abbrev}` : ref,
+      filename: `fidelis-${votd.book}-${votd.chapter}-${votd.verse}`
+    });
+  }
+
+  function shareQuote(q: DailyQuote) {
+    const work =
+      q.work && q.work !== "—"
+        ? q.locus && q.locus !== "—"
+          ? `${q.work}, ${q.locus}`
+          : q.work
+        : undefined;
+    setShare({ text: q.text, citation: q.author, source: work, filename: "fidelis-quote" });
+  }
 
   return (
     <>
@@ -75,6 +104,9 @@ export default function Home() {
             </Link>
             {votd.book === "psalms" && " · Vulgate Psalm numbering"}
           </div>
+          <button type="button" className="card-share" onClick={() => void shareVotd()}>
+            <Icon name="share" /> Share
+          </button>
         </div>
 
         <div className="card">
@@ -93,6 +125,9 @@ export default function Home() {
                 <em>{quote.work}</em>
                 {quote.locus !== "—" && <> {quote.locus}</>} · {quote.sourceEdition}
               </div>
+              <button type="button" className="card-share" onClick={() => shareQuote(quote)}>
+                <Icon name="share" /> Share
+              </button>
             </>
           )}
         </div>
@@ -222,6 +257,18 @@ export default function Home() {
               mystery={openMystery}
               translation={translation}
               titleId="mystery-sheet-title"
+            />
+          </Sheet>
+        )}
+
+        {share && (
+          <Sheet titleId="share-sheet-title" onClose={() => setShare(null)}>
+            <ShareSheet
+              titleId="share-sheet-title"
+              text={share.text}
+              citation={share.citation}
+              source={share.source}
+              filename={share.filename}
             />
           </Sheet>
         )}

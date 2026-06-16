@@ -67,9 +67,10 @@ items (A1–A6) on the `v1.1-identity` branch:
 daily-readings notification (off by default; bounded by standing rule 3 — no
 notification pressure). §3 (Quote of the Day) and the §6 Today recomposition
 shipped in 1.2.0; §6 card 4, §6.1, and §7 in 1.4.0 (the daily soul, below). The §4
-commentary layer shipped in v1.5.0 (the formation release, below). §5 (the CCC
-citation index) and §8–§12 remain the open roadmap (§13 is the binding refusal
-list, in the standing rules).
+commentary layer shipped in v1.5.0 (the formation release, below); the §8.3 share
+card in v1.8.0 (the sower, below). §5 (the CCC citation index) and the rest of
+§8–§12 remain the open roadmap (§13 is the binding refusal list, in the standing
+rules).
 
 ## The daily soul release — design spec §6 card 4, §6.1, §7 (v1.4.0)
 
@@ -203,7 +204,39 @@ native counterpart of the iOS WidgetKit widget and the tracked follow-up from 1.
 Also rode in on this release (docs only): the **§5 CCC citation index** design spec + a
 **local-build runbook** (`docs/superpowers/specs/2026-06-15-ccc-*`) — signed off, built
 locally (the cloud sandbox 403-blocks vatican.va and can't read the Catechism PDF), shipping
-later as **v1.8.0 "the deposit"**; and a step-by-step **iOS Simulator** guide in `docs/IOS.md`.
+later as **v1.9.0 "the deposit"** (renumbered from 1.8.0, which the share card took); and a
+step-by-step **iOS Simulator** guide in `docs/IOS.md`.
+
+## The share card — design spec §8.3 (v1.8.0)
+
+The spec's evangelization vector shipped in v1.8.0 "the sower" — the §8.3 share
+card — on the `claude/share-card` branch (cut from `main`/1.6.0; v1.7.0 "the
+lampstand" shipped in parallel and merged first).
+
+- **`src/lib/shareCard.ts`** renders a verse or a quote to a 1080×1350 PNG on a
+  `<canvas>` — `renderShareCard(canvas, {text, citation, source?, theme})`: the
+  warm-gray field, the text auto-fit and wrapped in EB Garamond italic, the §1.5
+  cross drawn natively in gold, the gold citation (carrying the translation
+  abbreviation), an optional muted source line, and a small letterspaced
+  "FIDELIS" wordmark. Two themes only — Day/Night — from the styles.css day/night
+  tokens, frozen in `PALETTE` so the card matches the app. The two-accent rule
+  holds: **gold honors** (cross, wordmark, citation), the ink carries the text,
+  nothing is purple (nothing on the card is interactive). No imagery, no
+  red-letter (§13) — typography on a field.
+- **`src/components/ShareSheet.tsx`** is the chrome on the shared `Sheet`
+  primitive: a live canvas preview, a Day/Night pill toggle (default = the app's
+  current `<html data-theme>`), and the two exits — the native share sheet via the
+  **Web Share API** (`navigator.share` with the PNG file; works in Capacitor on
+  iOS/Android) and a plain image **download** fallback where sharing files isn't
+  supported.
+- **Three entry points** (spec: "from the verse action bar and the quote card"):
+  a **Share** action on the Reader's verse bar (`Reader.tsx`, beside Copy/
+  Commentary), and a **Share** affordance on the Today page's Verse of the Day and
+  Quote of the Day cards (`Home.tsx`). The verse text comes from the shared
+  `passageText()`, so the card can't drift from the Reader.
+- **No harness test:** the card is a canvas/DOM surface (no node-testable pure
+  arithmetic), browser-verified like the §4.2 gold dot. `tsc`, `npm run build`,
+  and the existing harnesses (incl. the §1.5 emoji guard over `.tsx`) stay green.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
