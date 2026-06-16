@@ -230,7 +230,20 @@ export default function Reader() {
             key={v}
             id={interactive ? `v-${v}` : undefined}
             className={cls}
+            role={interactive ? "button" : undefined}
+            tabIndex={interactive ? 0 : undefined}
+            aria-pressed={interactive ? selected === v : undefined}
             onClick={interactive ? () => onSelectVerse(v) : undefined}
+            onKeyDown={
+              interactive
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelectVerse(v);
+                    }
+                  }
+                : undefined
+            }
           >
             {settings.showVerseNumbers && (
               <sup className="vnum">
@@ -414,6 +427,8 @@ export default function Reader() {
               key={c}
               className={`hl-dot ${c}`}
               title={`Highlight ${c}`}
+              aria-label={`Highlight ${c}`}
+              aria-pressed={highlights.get(selKey) === c}
               onClick={() => {
                 setHighlight(selRef, c);
                 setMarksVersion((x) => x + 1);
@@ -442,7 +457,7 @@ export default function Reader() {
             <Icon name="note" /> Note
           </button>
           <button className="icon-btn" onClick={copySelected}>
-            <Icon name="share" /> Copy
+            <Icon name="copy" /> Copy
           </button>
           <button className="icon-btn" onClick={() => setShareFor(selRef.verse)}>
             <Icon name="share" /> Share
