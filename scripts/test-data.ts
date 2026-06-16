@@ -1709,5 +1709,26 @@ console.log("");
     getTranslation("zzz") === undefined && DEFAULT_TRANSLATION === "drc");
 }
 
+// §18 — Search group filters (src/lib/search.ts). Pure book-group membership
+// that ships to users behind the Search filter chips, with no other guard.
+{
+  const { inFilter, bookGroupKind } = await import("../src/lib/search");
+  check("bookGroupKind: genesis is OT", bookGroupKind("genesis") === "ot", bookGroupKind("genesis"));
+  check("bookGroupKind: romans is NT", bookGroupKind("romans") === "nt", bookGroupKind("romans"));
+  check("bookGroupKind: a Gospel counts as NT", bookGroupKind("matthew") === "nt", bookGroupKind("matthew"));
+  check(
+    "inFilter: 'gospels' keeps John, drops Romans and Genesis",
+    inFilter("john", "gospels") && !inFilter("romans", "gospels") && !inFilter("genesis", "gospels")
+  );
+  check("inFilter: 'all' keeps everything", inFilter("genesis", "all") && inFilter("revelation", "all"));
+  check(
+    "inFilter: ot/nt partition is clean",
+    inFilter("genesis", "ot") &&
+      !inFilter("genesis", "nt") &&
+      inFilter("romans", "nt") &&
+      !inFilter("romans", "ot")
+  );
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;
