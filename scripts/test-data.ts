@@ -1793,5 +1793,16 @@ console.log("");
   check("ccc/index.json + ccc/url.json are sealed in the manifest", !!man.files["ccc/index.json"] && !!man.files["ccc/url.json"]);
 }
 
+// §20 — the Mass-readings translation preference (src/lib/storage.ts). Pure: an
+// explicit choice wins; otherwise the NABRE for the USA region (the U.S.
+// lectionary text), and the general reading translation elsewhere.
+{
+  const { massTranslationFor } = await import("../src/lib/storage");
+  const base = { translation: "drc", calendarRegion: "universal", massTranslation: "" } as unknown as Parameters<typeof massTranslationFor>[0];
+  check("massTranslationFor: USA region (auto) → nabre", massTranslationFor({ ...base, calendarRegion: "usa" }) === "nabre");
+  check("massTranslationFor: universal (auto) → the reading translation", massTranslationFor({ ...base, translation: "cpdv" }) === "cpdv");
+  check("massTranslationFor: an explicit choice wins over the region", massTranslationFor({ ...base, calendarRegion: "usa", massTranslation: "drc" }) === "drc");
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

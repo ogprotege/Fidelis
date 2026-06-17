@@ -10,6 +10,8 @@ import {
 } from "../lib/lectionary";
 import { COLOR_HEX, liturgicalDay } from "../lib/liturgical";
 import { TRANSLATIONS } from "../lib/translations";
+import { massTranslationFor } from "../lib/storage";
+import { importedTranslations } from "../lib/data";
 import { useSettings } from "../SettingsContext";
 
 function toISO(d: Date): string {
@@ -34,7 +36,13 @@ export default function Readings() {
   // reading translation stays a local switcher on this toolbar.
   const settings = useSettings();
   const region = settings.calendarRegion;
-  const [translation, setTranslation] = useState(settings.translation);
+  // Default the readings to the Mass translation — the NABRE for the USA region
+  // (the U.S. lectionary text) — and let the toolbar swap it for this visit.
+  const [translation, setTranslation] = useState(() => massTranslationFor(settings));
+  const [imported, setImported] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    importedTranslations().then(setImported).catch(() => {});
+  }, []);
   const [readings, setReadings] = useState<DayReadings | null | "loading">("loading");
   const lit = liturgicalDay(date, region);
 
@@ -89,10 +97,15 @@ export default function Readings() {
         <button className="icon-btn" onClick={() => shift(1)}>
           Next →
         </button>
-        <select value={translation} onChange={(e) => setTranslation(e.target.value)}>
-          {TRANSLATIONS.filter((t) => t.bundled).map((t) => (
+        <select
+          value={translation}
+          onChange={(e) => setTranslation(e.target.value)}
+          title="Reading translation"
+        >
+          {TRANSLATIONS.filter((t) => t.bundled || imported.has(t.id) || t.id === "nabre").map((t) => (
             <option key={t.id} value={t.id}>
               {t.abbrev}
+              {!t.bundled && !imported.has(t.id) ? " (import)" : ""}
             </option>
           ))}
         </select>
@@ -178,7 +191,12 @@ export default function Readings() {
           Lectionary; psalms are shown with both modern and Vulgate chapter numbers,
           e.g. Psalm 23(22), with verse numbers following the Vulgate text as
           rendered. Where the lectionary subdivides verses (e.g. “12b”), whole
-          verses are shown — the text itself is never altered.
+          verses are shown — the text itself is never altered. The official U.S. daily
+          readings (NABRE) are published at the{" "}
+          <a href="https://bible.usccb.org/daily-bible-reading" target="_blank" rel="noopener noreferrer">
+            USCCB
+          </a>
+          .
         </p>
       )}
     </div>

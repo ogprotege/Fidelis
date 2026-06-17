@@ -100,6 +100,11 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 - **RSV-2CE and NABRE support** — these are copyrighted (Ignatius Press / CCD), so their text
   is *not* shipped; you can import a licensed copy you own on the Translations page, stored only
   in your browser via IndexedDB.
+- **NABRE as the U.S. Mass default** — the NABRE is the translation of the U.S. lectionary, so
+  when the calendar **Region** is *United States* the Daily Readings screen prefers it. Until you
+  import your licensed copy it falls back to the bundled Douay-Rheims (with a pointer to import),
+  and you can swap the readings translation at any time. Set an explicit default under
+  Settings → Calendar → *Mass readings*.
 
 > Because the bundles follow the Vulgate, the **Psalms use the traditional Septuagint
 > numbering** (the "Lord is my shepherd" psalm is Psalm 22, not 23) and the Douay names

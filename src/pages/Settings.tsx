@@ -318,6 +318,30 @@ export default function Settings() {
             <option value="usa">United States</option>
           </select>
         </div>
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">Mass readings</div>
+            <p className="catechesis muted small">
+              The translation the Daily Readings screen shows. <strong>Match region</strong> uses
+              the NABRE — the translation of the U.S. lectionary — for the United States, and the
+              Douay-Rheims elsewhere. The NABRE is under copyright and not bundled; import your
+              licensed copy on the <Link to="/translations">Translations</Link> page and it appears
+              here automatically.
+            </p>
+          </div>
+          <select
+            value={settings.massTranslation}
+            aria-label="Mass readings translation"
+            onChange={(e) => update({ massTranslation: e.target.value })}
+          >
+            <option value="">Match region</option>
+            {TRANSLATIONS.filter((t) => t.bundled || t.id === "nabre" || t.id === "rsv2ce").map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.abbrev}
+              </option>
+            ))}
+          </select>
+        </div>
       </section>
 
       {/* 7 ── Commentary (spec §2.2 item 7 / §4.2) */}

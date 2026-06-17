@@ -62,7 +62,9 @@ export default function About() {
         <li>
           <strong>RSV-2CE and NABRE</strong> — supported, but under copyright; see{" "}
           <Link to="/translations">Translations</Link> for how to import a licensed
-          copy.
+          copy. The NABRE is the translation of the U.S. lectionary, so the Daily
+          Readings prefer it when your calendar region is the United States (falling
+          back to the Douay-Rheims until you import it).
         </li>
       </ul>
       <p className="muted small">
