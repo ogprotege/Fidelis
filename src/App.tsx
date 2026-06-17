@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Header from "./components/Header";
+import ScrollManager from "./components/ScrollManager";
 import Home from "./pages/Home";
 import BookList from "./pages/BookList";
 import Reader from "./pages/Reader";
@@ -15,6 +16,8 @@ import About from "./pages/About";
 import WidgetVotd from "./pages/WidgetVotd";
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
+import { App as CapApp } from "@capacitor/app";
+import { closeTopOverlay } from "./lib/overlays";
 import { useSettings } from "./SettingsContext";
 import { accentFor, liturgicalDay } from "./lib/liturgical";
 import { resolveTheme } from "./lib/theme";
@@ -75,6 +78,37 @@ export default function App() {
     });
   }, [effectiveTheme]);
 
+  // Native hardware Back (Android): close the topmost open overlay first, else go
+  // back in history, else (at the app root) exit — never strand or surprise the user.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const handle = CapApp.addListener("backButton", ({ canGoBack }) => {
+      if (closeTopOverlay()) return;
+      if (canGoBack) window.history.back();
+      else void CapApp.exitApp();
+    });
+    return () => {
+      void handle.then((h) => h.remove());
+    };
+  }, []);
+
+  // Move focus to the main content region on every route change (WCAG 2.4.3), so
+  // keyboard and screen-reader users land in the new page — except on a ?v= deep
+  // link, where the Reader owns focus (the targeted verse).
+  useEffect(() => {
+    if (widgetMode) return;
+    if (new URLSearchParams(location.search).has("v")) return; // the Reader owns ?v=
+    // Don't steal focus the new page already placed (e.g. Search's autofocused
+    // box) or a control the user just operated on an in-place param update — only
+    // pull focus to the content when nothing meaningful holds it.
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== document.documentElement) return;
+    document.getElementById("main")?.focus({ preventScroll: true });
+    // Fire on a genuine route change (location.key); search/widgetMode are read
+    // from the current render's closure.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
+
   // Scripture face (spec §1.4): drive the global --scripture token from the
   // saved choice by naming it in <html data-font>. Reactive now, so a change on
   // the Settings screen reskins the preview and the Reader instantly.
@@ -104,8 +138,19 @@ export default function App() {
 
   return (
     <div className="app">
+      <a
+        className="skip-link"
+        href="#main"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+      >
+        Skip to content
+      </a>
+      <ScrollManager />
       <Header />
-      <main className="page">
+      <main className="page" id="main" tabIndex={-1}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/read" element={<BookList />} />

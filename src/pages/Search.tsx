@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { BOOKS, bookDisplayName, getBook } from "../lib/canon";
 import { loadBook } from "../lib/data";
 import { parseReference } from "../lib/refparse";
@@ -34,28 +34,37 @@ function fold(s: string): string {
 }
 
 export default function Search() {
-  const [query, setQuery] = useState("");
   const settings = useSettings();
-  const [translation, setTranslation] = useState(settings.translation);
+  const [params, setParams] = useSearchParams();
+  const [query, setQuery] = useState(() => params.get("q") ?? "");
+  const [translation, setTranslation] = useState(() => params.get("t") || settings.translation);
   const [results, setResults] = useState<Result[]>([]);
   const [progress, setProgress] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
-  const [group, setGroup] = useState<GroupFilter>("all");
+  const [group, setGroup] = useState<GroupFilter>(() => {
+    const g = params.get("g");
+    return g === "ot" || g === "nt" || g === "gospels" ? g : "all";
+  });
   const runId = useRef(0);
   const navigate = useNavigate();
 
-  const run = async () => {
-    const q = query.trim();
+  const run = async (qArg?: string, tArg?: string) => {
+    const t = tArg ?? translation;
+    const q = (qArg ?? query).trim();
     if (q.length < 2) return;
 
     // "John 3:16"-style input jumps straight to the passage.
     const ref = parseReference(q);
     if (ref && ref.chapter) {
       void navigate(
-        `/read/${translation}/${ref.book.slug}/${ref.chapter}${ref.verse ? `?v=${ref.verse}` : ""}`
+        `/read/${t}/${ref.book.slug}/${ref.chapter}${ref.verse ? `?v=${ref.verse}` : ""}`
       );
       return;
     }
+
+    // Reflect the search in the URL (replace, not push) so pressing Back from a
+    // result returns here with the query and results intact, not a blank page.
+    setParams({ q, t, g: group }, { replace: true });
 
     const id = ++runId.current;
     const needle = fold(q);
@@ -67,7 +76,7 @@ export default function Search() {
       const b = BOOKS[i];
       setProgress(`Searching ${b.name}… (${i + 1}/${BOOKS.length})`);
       try {
-        const data = await loadBook(translation, b.slug);
+        const data = await loadBook(t, b.slug);
         data.chapters.forEach((ch, ci) => {
           ch.forEach((text, vi) => {
             if (!text) return; // grid-empty slot (see data-report.txt)
@@ -122,6 +131,17 @@ export default function Search() {
     );
   };
 
+  // On mount (including Back into this page), re-run a query carried in the URL
+  // so a returned-to search shows its results instead of a blank page.
+  useEffect(() => {
+    const q0 = params.get("q");
+    if (q0 && q0.trim().length >= 2) {
+      void run(q0, params.get("t") || settings.translation);
+    }
+    // Run once on mount; user searches manage their own state thereafter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const tooShort = query.trim().length < 2;
   const shown = results.filter((r) => inFilter(r.book, group));
 
@@ -148,7 +168,7 @@ export default function Search() {
             </option>
           ))}
         </select>
-        <button className="primary" onClick={run} disabled={tooShort}>
+        <button className="primary" onClick={() => run()} disabled={tooShort}>
           Search
         </button>
       </div>
@@ -168,7 +188,14 @@ export default function Search() {
               type="button"
               className={group === c.key ? "chip active" : "chip"}
               aria-pressed={group === c.key}
-              onClick={() => setGroup(c.key)}
+              onClick={() => {
+                setGroup(c.key);
+                if (params.get("q")) {
+                  const next = new URLSearchParams(params);
+                  next.set("g", c.key);
+                  setParams(next, { replace: true });
+                }
+              }}
             >
               {c.label}{" "}
               <span className="chip-count">

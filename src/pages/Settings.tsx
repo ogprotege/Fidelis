@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
+import SectionNav from "../components/SectionNav";
 import {
   ManifestDoc,
   downloadBundle,
@@ -126,6 +127,18 @@ export default function Settings() {
   return (
     <div className="page-narrow settings">
       <h1 className="page-title">Settings</h1>
+      <SectionNav
+        sections={[
+          { id: "version", label: "Version" },
+          { id: "text-size", label: "Text size" },
+          { id: "font", label: "Font" },
+          { id: "appearance", label: "Appearance" },
+          { id: "calendar", label: "Calendar" },
+          { id: "commentary", label: "Commentary" },
+          { id: "magisterium", label: "Magisterium" },
+          { id: "data", label: "Data" }
+        ]}
+      />
 
       {/* 1 ── Scripture preview (the living proof of every choice below) */}
       <section className="card preview-card">
@@ -141,7 +154,7 @@ export default function Settings() {
       </section>
 
       {/* 2 ── Bible version */}
-      <section className="card">
+      <section className="card" id="version">
         <h2>Bible version</h2>
         <div className="version-cards" role="radiogroup" aria-label="Bible version">
           {TRANSLATIONS.map((t) => {
@@ -209,7 +222,7 @@ export default function Settings() {
       </section>
 
       {/* 3 ── Text size */}
-      <section className="card">
+      <section className="card" id="text-size">
         <h2>Text size</h2>
         <div className="pill-row" role="group" aria-label="Text size">
           {FONT_SIZE_PRESETS.map((p) => (
@@ -228,7 +241,7 @@ export default function Settings() {
       </section>
 
       {/* 4 ── Font (each pill rendered in its own face) */}
-      <section className="card">
+      <section className="card" id="font">
         <h2>Font</h2>
         <div className="pill-row" role="group" aria-label="Scripture font">
           {SCRIPTURE_FONTS.map((f) => (
@@ -249,7 +262,7 @@ export default function Settings() {
       </section>
 
       {/* 5 ── Appearance */}
-      <section className="card">
+      <section className="card" id="appearance">
         <h2>Appearance</h2>
         <div className="pill-row" role="group" aria-label="Theme">
           {THEME_OPTIONS.map((o) => (
@@ -299,7 +312,7 @@ export default function Settings() {
       </section>
 
       {/* 6 ── Calendar (region moved here from the Readings toolbar, spec §2.2) */}
-      <section className="card">
+      <section className="card" id="calendar">
         <h2>Calendar</h2>
         <div className="setting-row">
           <div>
@@ -345,7 +358,7 @@ export default function Settings() {
       </section>
 
       {/* 7 ── Commentary (spec §2.2 item 7 / §4.2) */}
-      <section className="card">
+      <section className="card" id="commentary">
         <h2>Commentary</h2>
         <div className="setting-row">
           <div>
@@ -420,7 +433,7 @@ export default function Settings() {
       </section>
 
       {/* 8 ── Magisterium (spec §5 — the CCC citation links) */}
-      <section className="card">
+      <section className="card" id="magisterium">
         <h2>Magisterium</h2>
         <div className="setting-row">
           <div>
@@ -442,7 +455,7 @@ export default function Settings() {
       </section>
 
       {/* 8 ── Data */}
-      <section className="card">
+      <section className="card" id="data">
         <h2>Data</h2>
 
         <div className="setting-label">Download for offline</div>

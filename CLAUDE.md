@@ -10,10 +10,11 @@ its §6 card 4 / §6.1 / §7 devotional layer in v1.4.0, the daily soul; the §4
 commentary layer in v1.5.0; the §8.3 share card in v1.8.0; §8.1/§8.2 Reader & Search
 refinements in v1.8.1; §3.4 quote verification in v1.8.3; the buildable half of §9
 in v1.8.4; the §5 CCC citation index in v1.9.0; an iOS crispness pass (safe areas,
-touch feel, the gold-contrast split, CCC discoverability) in v1.10.0; and NABRE as
-the U.S. Mass-readings default (import-only; never bundled) in v1.11.0 — all recorded
-below), and `CHANGELOG.md` (release history; bump `package.json` version and add a
-CHANGELOG entry together).
+touch feel, the gold-contrast split, CCC discoverability) in v1.10.0; NABRE as the U.S.
+Mass-readings default (import-only; never bundled) in v1.11.0; and a navigation & IA pass
+(scroll restoration, in-page SectionNav jump bars, native-Back handling, focus) in v1.12.0
+— all recorded below), and `CHANGELOG.md` (release history; bump `package.json` version and
+add a CHANGELOG entry together).
 
 ## Commands
 
@@ -431,6 +432,42 @@ their own licensed copy via the existing on-device JSON import (`Translations.ts
   (Match region / DRB / CPDV / VUL / NABRE / RSV-2CE), writing `massTranslation`.
 - **Docs updated** (owner request): README, About, the `translations.ts` NABRE blurb, and this
   file all describe the import-aware default. The two-accent / §13 / five-card rules are untouched.
+
+## The straight paths — navigation & IA (v1.12.0)
+
+A whole-app navigation/information-architecture pass on `feature/navigation-ia` so every screen is
+"a single readable, navigable page" with seamless forward/back and no broken state in any nav
+combination (the owner's bar). Driven by a verified nav audit (29 findings) + an adversarial review
+(6 fixes folded in). Spec: `docs/superpowers/specs/2026-06-17-navigation-ia-design.md`. No identity
+change (two-accent, §13, five-card, tokens all hold). One new dep: `@capacitor/app@^8`.
+
+- **Scroll authority** — `src/components/ScrollManager.tsx` (mounted once in `App`, outside
+  `<Routes>`) + pure `src/lib/scroll.ts` (`decideScroll`/`hasScrollTarget`, tested `test-data.ts`
+  §21). `decideScroll` precedence (review-corrected): **target (`?v=`/`#hash`) → skip; REPLACE →
+  skip; POP → restore; PUSH → top**. Saves `scrollY` per `location.key` (throttled listener,
+  50-entry cap), restores on POP with a bounded rAF retry that **stops on user scroll or when the
+  page stops growing**. `main.tsx` sets `history.scrollRestoration = "manual"`. Reader's old
+  `scrollTo(0,0)` removed; Readings day-stepper uses `replace`.
+- **SectionNav** — `src/components/SectionNav.tsx`: a sticky purple jump bar (scrollIntoView, no
+  URL change → HashRouter-safe) on Readings/Settings/About/BookList; targets carry `id`s; tokens
+  `--header-h` (≈2.9rem, the real header height — browser-measured) and `--anchor-offset` (header +
+  bar) drive `scroll-margin-top`. Cross-page `#fragment` links (e.g. `/translations#rsv2ce`) handled
+  by ScrollManager's skip-branch.
+- **Overlay-back** — `src/lib/overlays.ts` module singleton (push/remove/closeTop, tested). `Sheet`
+  and the `TabBar` More popover register a closer on open. `App.tsx` registers ONE `@capacitor/app`
+  `backButton` listener (native-guarded): close topmost overlay → else `history.back()` → else
+  `App.exitApp()`. (iOS edge-swipe is off by default, so no history-routing of overlays — see spec.)
+- **Focus/skip** — `App.tsx` moves focus to `#main` on route change (keyed on `location.key`),
+  **but not when `?v=` is present or when something already holds focus** (so Search's autofocus and
+  in-place filter/day-step controls keep focus — review fix). A `.skip-link`; the More popover
+  focuses its first item.
+- **Search URL-state** — `src/pages/Search.tsx` reflects `q`/`t`/`g` in the URL (`replace`) and
+  re-runs on mount, so Back into Search restores it instead of a blank page.
+- **Consistency** — Home titled "Today" + date subtitle; Reader "← All books" crumb; Readings
+  null-state `.continue-cta`; Translations `h3`→`h2`; brand uses `Link` (no duplicate `aria-current`);
+  About copy "CCC"→"Catechism".
+- **Deferred** (in the spec): scroll-spy current-section highlight; verse-action-bar occlusion
+  padding; PlanCreator sticky Start; Reader selected-verse in the URL.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

@@ -5,6 +5,12 @@ import App from "./App";
 import { SettingsProvider } from "./SettingsContext";
 import "./styles.css";
 
+// The app's ScrollManager owns scroll position on navigation (top on forward,
+// restore on Back); turn off the browser's own restoration so the two don't fight.
+if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+  window.history.scrollRestoration = "manual";
+}
+
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <HashRouter>

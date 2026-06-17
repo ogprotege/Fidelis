@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ReadingText from "../components/ReadingText";
+import SectionNav from "../components/SectionNav";
 import {
   DayReadings,
   displayReadings,
@@ -57,7 +58,9 @@ export default function Readings() {
     };
   }, [date, region]);
 
-  const go = (d: Date) => setParams({ date: toISO(d) });
+  // Day-stepping is a view change, not a destination — replace the entry so a
+  // single Back leaves the Mass page instead of unwinding each day visited.
+  const go = (d: Date) => setParams({ date: toISO(d) }, { replace: true });
   const shift = (days: number) =>
     go(new Date(date.getFullYear(), date.getMonth(), date.getDate() + days));
 
@@ -78,6 +81,18 @@ export default function Readings() {
         : [],
     [readings]
   );
+  // The in-page jump bar: one entry per reading (the Vigil runs long), plus the
+  // secondary ferial set when present. Each id matches a ReadingText below.
+  const navItems = useMemo(() => {
+    const items: { id: string; label: string }[] = [];
+    sections.forEach((sec, si) =>
+      sec.forEach(({ label }, i) => items.push({ id: `r-${si}-${i}`, label }))
+    );
+    if (readings !== "loading" && readings?.secondary) {
+      items.push({ id: "secondary", label: readings.secondary.label });
+    }
+    return items;
+  }, [sections, readings]);
 
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
@@ -89,7 +104,7 @@ export default function Readings() {
         <input
           type="date"
           value={toISO(date)}
-          onChange={(e) => e.target.value && setParams({ date: e.target.value })}
+          onChange={(e) => e.target.value && setParams({ date: e.target.value }, { replace: true })}
         />
         <button className="icon-btn" onClick={() => go(new Date())}>
           Today
@@ -136,12 +151,18 @@ export default function Readings() {
         </p>
       </div>
 
+      {navItems.length >= 3 && <SectionNav sections={navItems} />}
+
       {readings === "loading" && <p className="loading">Finding the readings…</p>}
       {readings === null && (
-        <p className="notice">
-          Readings for this date aren't available here.{" "}
-          <Link to="/read">Open the reader</Link>.
-        </p>
+        <div className="notice">
+          Readings for this date aren't available here.
+          <div className="browse-links">
+            <Link className="continue-cta" to="/read">
+              Open the Reader →
+            </Link>
+          </div>
+        </div>
       )}
       {readings !== "loading" && readings && readings.primaryLabel && (
         <h2 className="testament-title">{readings.primaryLabel}</h2>
@@ -153,6 +174,7 @@ export default function Readings() {
             {sec.map(({ label, row }, i) => (
               <ReadingText
                 key={`${row.t}-${row.b}-${i}`}
+                id={`r-${si}-${i}`}
                 row={row}
                 translation={translation}
                 label={label}
@@ -162,7 +184,7 @@ export default function Readings() {
         ))}
       {readings !== "loading" && readings && readings.secondary && (
         <>
-          <h2 className="testament-title">{readings.secondary.label}</h2>
+          <h2 className="testament-title" id="secondary">{readings.secondary.label}</h2>
           {secondarySections.map((sec, si) => (
             <section key={`f-${si}`} className="reading-group">
               {sec.map(({ label, row }, i) => (

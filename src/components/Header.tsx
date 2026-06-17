@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Icon from "./Icon";
 import TabBar from "./TabBar";
 
@@ -12,11 +12,11 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-inner">
-        <NavLink to="/" style={{ textDecoration: "none" }}>
+        <Link to="/" style={{ textDecoration: "none" }} aria-label="Fidelis — home">
           <span className="brand">
             <span className="cross"><Icon name="cross" /></span> Fidelis <small>Catholic Bible</small>
           </span>
-        </NavLink>
+        </Link>
         <TabBar />
       </div>
     </header>

@@ -153,7 +153,8 @@ export default function Reader() {
     setCommentaryFor(null);
     setShareFor(null);
     setChapterPickerOpen(false);
-    window.scrollTo(0, 0);
+    // Scroll position is owned by <ScrollManager> now (top on a fresh chapter,
+    // your place restored on Back); the ?v= effect below still wins when present.
     // Runs on navigation only; settings.translation/update are read to persist
     // the chosen translation, not to re-fire this effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -376,6 +377,10 @@ export default function Reader() {
           </button>
         </div>
       </div>
+
+      <p className="reader-crumb">
+        <Link to="/read">← All books</Link>
+      </p>
 
       <h1 className="chapter-title" lang={trans?.language === "la" ? "la" : undefined}>
         {displayName}{" "}

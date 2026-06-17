@@ -98,7 +98,7 @@ export default function Translations() {
       {message && <div className="notice" style={{ marginBottom: "1rem" }}>{message}</div>}
       {TRANSLATIONS.map((t) => (
         <div className="card trans-card" id={t.id} key={t.id}>
-          <h3 className="trans-name">
+          <h2 className="trans-name">
             {t.name}
             {t.bundled ? (
               <span className="badge pd">Public domain · bundled</span>
@@ -107,7 +107,7 @@ export default function Translations() {
             ) : (
               <span className="badge copyright">Copyrighted · not bundled</span>
             )}
-          </h3>
+          </h2>
           <p className="trans-meta">
             {t.abbrev} · {t.language === "la" ? "Latin" : "English"} · {t.year}
             {t.copyright ? ` · ${t.copyright}` : ""}
