@@ -106,3 +106,70 @@ nothing on iOS — the entire `dist/` output ships inside the app bundle, so
 the shell and the bundled texts are offline by construction. Only books a
 user *imports* (RSV-2CE/NABRE via IndexedDB) and the lectionary fetches go
 through the webview, and those read from local bundle paths as well.
+
+## 5. The Mass & Quote widgets, App Intents, Dynamic Type (spec — wire in Xcode)
+
+The Android counterparts of these ship in v1.8.4 "the doorposts" (the data
+pipeline + `CalendarWidget`/`QuoteWidget` are fully committed). The iOS side
+needs the same one-time Xcode work as the VOTD widget (the target and Swift
+cannot be scripted from this repo), so this is the runbook.
+
+**Shared data — already generated.** `scripts/build-calendar-widget.ts`
+(`npm run calendar-widget`, also part of `npm run widgets`) pre-resolves, from
+the *same* `resolveReadings()` / `liturgicalDay()` / `quoteOfTheDay()` the web
+app uses, a rolling ~2-year window to:
+
+- `ios/WidgetExtension/calendar.json`
+
+It is a JSON **object keyed by local ISO date** (`"YYYY-MM-DD"`), each value:
+
+```json
+{
+  "season": "Ordinary Time",
+  "seasonLabel": "Tuesday of the Eleventh Week in Ordinary Time",
+  "colorHex": "#2e7d32",
+  "celebration": "",
+  "readings": [{ "label": "First Reading", "cite": "3 Kings 21:17-29" }, … ],
+  "quote": { "text": "…", "author": "St. Polycarp of Smyrna" }
+}
+```
+
+So no engine is ported: the widget reads the device's local date, looks up that
+key, and renders it (falling back calmly past the window's end). Regenerate
+after any calendar/lectionary/quote change with `npm run calendar-widget`.
+
+**Two new widgets (in the existing `FidelisWidget` extension):**
+
+1. Drag `ios/WidgetExtension/calendar.json` into the `FidelisWidget` group with
+   **Target membership: FidelisWidget** (Copy Bundle Resources).
+2. Add two `Widget` structs mirroring the VOTD `FidelisWidget.swift` pattern,
+   and register all three in a `@main struct FidelisWidgets: WidgetBundle`:
+   - **`MassWidget`** — load `calendar.json`, key by
+     `DateFormatter` (`yyyy-MM-dd`, `Calendar(identifier: .gregorian)`, device
+     `TimeZone.current` — match the Android `GregorianCalendar` key exactly);
+     show `celebration` (else `seasonLabel`) as the title and the `readings`
+     citations beneath. Gold cross + "TODAY AT MASS" label, serif body, the day
+     tokens (`#F4F2EE` / `#26241F` / `#6E6A61` / `#A8862C`).
+   - **`QuoteWidget`** — same lookup, render `quote.text` (italic serif, curly
+     quotes) + `quote.author` (muted). "QUOTE OF THE DAY" label.
+   - Timeline: one entry per day, `.after` next local midnight (reuse the VOTD
+     provider's midnight logic), fully offline.
+
+**App Intent — "What's today's Gospel?" (Siri / Shortcuts):**
+
+Add an `AppIntent` (App Intents framework) to the **app** target that reads the
+same `calendar.json` (or the in-app data), finds today's `Gospel` reading, and
+returns its `cite` as the dialog; give it an `openAppWhenRun = false` variant
+for the citation and a deep-link variant that opens the Mass tab. Expose it via
+`AppShortcutsProvider` with the phrase "today's Gospel in Fidelis."
+
+**Dynamic Type:** map the four in-app size presets
+(`src/lib/typography.ts` → 17/19/22/25) onto the iOS content-size categories so
+the system setting and the in-app setting cooperate. In the Capacitor webview,
+honor `-apple-system-body` scaling by gating the app's `--scripture` size on
+`@media` / the `AppleLanguages`-driven category, or read
+`UIApplication.preferredContentSizeCategory` in the shell and pass it to the web
+layer as the initial preset. Keep the in-app pills as the override.
+
+All three remain offline and pin `Calendar(identifier: .gregorian)` so a
+non-Gregorian device calendar can never disagree with the web app or Android.

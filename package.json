@@ -1,7 +1,7 @@
 {
   "name": "fidelis-catholic-bible",
   "private": true,
-  "version": "1.8.3",
+  "version": "1.8.4",
   "type": "module",
   "description": "Fidelis — a Catholic Bible app with unaltered public-domain texts: Douay-Rheims, Catholic Public Domain Version, and the Clementine Latin Vulgate.",
   "repository": {
@@ -24,7 +24,9 @@
     "haydock": "tsx scripts/build-haydock.mjs",
     "catena": "node scripts/build-catena.mjs",
     "commentary": "npm run haydock && npm run catena",
-    "votd-widget": "node scripts/build-votd-widget.mjs"
+    "votd-widget": "node scripts/build-votd-widget.mjs",
+    "calendar-widget": "tsx scripts/build-calendar-widget.ts",
+    "widgets": "npm run votd-widget && npm run calendar-widget"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
