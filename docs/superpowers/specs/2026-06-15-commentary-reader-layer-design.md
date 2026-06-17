@@ -38,7 +38,7 @@ of commentary into the sacred page. Scripture stays Scripture; study is one tap 
 | # | Decision | Choice |
 |---|----------|--------|
 | B1 | When to load the heavy Catena file (6–10 MB/Gospel) | **Lazy** — only when a sheet first opens. The Commentary action shows on *all* Gospel verses (Catena covers ~99%); the ~1% with no note get an honest empty state. |
-| B2 | Vulgate Psalm versification | **Document as a v1 limitation.** Lookups use displayed `chapter:verse`; correct for DRC (default) and CPDV; Vulgate Psalm numbering may offset a few dots. Mapping deferred. |
+| B2 | Vulgate Psalm versification | **Done (shipped v1.5.0).** `build-haydock.mjs` remaps Haydock psalm keys onto the bundle's Vulgate grid — `remapPsalmKey` via `hebrewSpanToVulgate` for the renumbered second-halves (Ps 115/147); the joined psalms (9/113) already align — so dots land on the right verse, verified incl. the title-offset Miserere (`test-data.ts` §15). |
 | C1 | Is the gold dot interactive | **Indicator-only** (for now). Commentary opens via the action bar. |
 | D1 | Desktop layout | **Responsive** — bottom sheet on phones, right side-panel on desktop. |
 | E1 | Doctors-of-the-Church set | **Approved list + John Henry Newman** (see §6). |
