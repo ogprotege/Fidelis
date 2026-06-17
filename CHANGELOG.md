@@ -4,6 +4,59 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.12.0] — 2026-06-17 — the straight paths
+
+A navigation & information-architecture pass so every screen is "a single readable, navigable
+page" and movement is seamless forward and backward — no endless scrolling, no broken state in
+any combination of nav moves. "Make straight the paths" (Mark 1:3). Driven by a verified nav
+audit (29 findings) and an adversarial review (6 fixes folded in). Spec:
+`docs/superpowers/specs/2026-06-17-navigation-ia-design.md`.
+
+### Added
+
+- **One scroll authority** (`src/components/ScrollManager.tsx`, pure logic + tests in
+  `src/lib/scroll.ts`): a fresh navigation lands at the top, **Back/Forward restores your place**
+  (per history entry, with a bounded retry for async-growing pages that stops the moment you
+  scroll), and a navigation targeting a verse (`?v=`) or anchor (`#id`) is left to its owner.
+  `history.scrollRestoration` is set to `manual`.
+- **In-page section jump bars** (`src/components/SectionNav.tsx`): a sticky bar of purple anchor
+  links on the long pages — **Daily Readings** (Reading I · Psalm · … · Gospel), **Settings** (the
+  nine sections), **About**, and **The Books** (Old/New Testament · Appendix) — so a long page is
+  navigable by tapping a header, not by scrolling forever. A shared `--anchor-offset` clears the
+  sticky header.
+- **Native hardware Back that behaves** (`@capacitor/app` + a small overlay stack,
+  `src/lib/overlays.ts`): on Android, Back closes the topmost open sheet/popover first, then goes
+  back in history, then exits at the root — never stranding you or exiting with a sheet open.
+- **A skip-to-content link** and **focus-to-content on route change** (WCAG 2.4.3), so keyboard and
+  screen-reader users land in the new page; the More popover now moves focus into its menu.
+
+### Changed
+
+- **Search survives Back.** The query, translation, and filter are reflected in the URL, so
+  returning from a result restores your search instead of a blank page.
+- **Clearer titles & orientation:** Today is titled **"Today"** with the date as a subtitle; the
+  Reader gains a **"← All books"** breadcrumb; the Daily-Readings null state offers a real "Open the
+  Reader →" button; the day-stepper uses `replace` so browsing days doesn't flood the Back stack.
+- **Heading hygiene:** Translations version names are `h2` (no `h1→h3` skip); the brand link no
+  longer claims `aria-current` (only the Today tab does); About's copy says "Catechism" to match
+  the Reader.
+
+### Fixed
+
+- Adversarial-review fixes: a target (`?v=`/`#hash`) now owns its scroll on Back/Forward (no
+  fight with the verse-focus glide); the restore loop stops when you scroll or the page settles
+  (no jank, no spin on short pages); the route-change focus no longer steals focus from an
+  autofocused box or an in-place filter/day-step; the Search filter chip no longer jumps to the
+  top; the offset map is bounded for the long-lived native shell; and the section-bar offset was
+  corrected to the real header height (browser-measured) so jumped-to headings aren't clipped.
+
+### Notes
+
+- New dependency: `@capacitor/app@^8` (native back-button handling; native-guarded, a no-op on web).
+- Deferred (recorded in the spec): scroll-spy "current section" highlight; padding the Reader when
+  the verse-action bar is open; a sticky "Start" in the plan creator; encoding the Reader's selected
+  verse in the URL. `npm test` and `npm run build` are green.
+
 ## [1.11.0] — 2026-06-17 — the proper of the day
 
 The Daily Readings default to the **NABRE** — the translation of the U.S. lectionary — when the

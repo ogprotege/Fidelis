@@ -1,13 +1,20 @@
 import { Link } from "react-router-dom";
+import SectionNav from "../components/SectionNav";
 import { BOOKS, GROUPS, OT_GROUPS, NT_GROUPS, bookDisplayName } from "../lib/canon";
 import { useSettings } from "../SettingsContext";
+
+const SECTIONS = [
+  { id: "ot", label: "Old Testament" },
+  { id: "nt", label: "New Testament" },
+  { id: "appendix", label: "Appendix" }
+];
 
 export default function BookList() {
   const translation = useSettings().translation;
 
-  const section = (title: string, groups: readonly string[]) => (
+  const section = (title: string, groups: readonly string[], id: string) => (
     <>
-      <h2 className="testament-title">{title}</h2>
+      <h2 className="testament-title" id={id}>{title}</h2>
       {groups.map((g) => {
         const books = BOOKS.filter((b) => b.group === g);
         if (!books.length) return null;
@@ -44,9 +51,10 @@ export default function BookList() {
       <p className="plans-link">
         <Link to="/plans">Reading plans →</Link>
       </p>
-      {section("The Old Testament", OT_GROUPS)}
-      {section("The New Testament", NT_GROUPS)}
-      {section("The Vulgate Appendix", GROUPS.filter((g) => g === "Appendix"))}
+      <SectionNav sections={SECTIONS} />
+      {section("The Old Testament", OT_GROUPS, "ot")}
+      {section("The New Testament", NT_GROUPS, "nt")}
+      {section("The Vulgate Appendix", GROUPS.filter((g) => g === "Appendix"), "appendix")}
       <p className="muted small sans" style={{ marginTop: "1rem" }}>
         The appendix books are not part of the canon. Printed editions of the
         Clementine Vulgate carried the Prayer of Manasses and 3–4 Esdras "lest

@@ -9,13 +9,15 @@ interface Props {
   row: LectionaryRow;
   translation: string;
   label?: string;
+  /** Anchor id, so the Readings SectionNav can jump to this reading. */
+  id?: string;
 }
 
 /** Renders one lectionary reading: citation, verbatim text, link into the reader.
  *  If the chosen translation is import-only (e.g. the NABRE) and the user has not
  *  imported it, the reading falls back to the bundled Douay-Rheims so it stays
  *  readable, with a pointer to import the licensed text. */
-export default function ReadingText({ row, translation, label }: Props) {
+export default function ReadingText({ row, translation, label, id }: Props) {
   const [verses, setVerses] = useState<{ ch: number; v: number; text: string }[] | null>(null);
   const [error, setError] = useState(false);
   // The translation actually rendered (may differ from `translation` after a
@@ -91,7 +93,7 @@ export default function ReadingText({ row, translation, label }: Props) {
   const [firstCh, firstV] = isPsalm ? hebrewSpanToVulgate(...row.s[0])[0] : row.s[0];
 
   return (
-    <div className="reading">
+    <div className="reading" id={id}>
       {label && <div className="reading-label">{label}</div>}
       <div className="reading-citation">
         <Link to={`/read/${shownTranslation}/${row.b}/${firstCh}?v=${firstV}`}>

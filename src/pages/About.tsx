@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import SectionNav from "../components/SectionNav";
 import { ManifestDoc, loadManifest } from "../lib/data";
+
+const SECTIONS = [
+  { id: "canon", label: "Canon" },
+  { id: "texts", label: "Texts" },
+  { id: "embed", label: "Embed" },
+  { id: "privacy", label: "Privacy" },
+  { id: "sources", label: "Sources" }
+];
 
 const WIDGET_SNIPPET = `<iframe
   src="https://YOUR-DOMAIN/#/widget/votd"
@@ -21,6 +30,7 @@ export default function About() {
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
       <h1 className="page-title">About Fidelis</h1>
+      <SectionNav sections={SECTIONS} />
       <p>
         <strong>Fidelis</strong> (Latin: <em>faithful</em>) is a Catholic Bible app
         built on one conviction: <em>the text is not ours to edit</em>. Every
@@ -29,7 +39,7 @@ export default function About() {
         the fashion of the moment. What the translators wrote is what you read.
       </p>
 
-      <h2 className="testament-title">The Canon</h2>
+      <h2 className="testament-title" id="canon">The Canon</h2>
       <p>
         Fidelis carries the complete Catholic canon of <strong>73 books</strong>,
         including the seven deuterocanonical books (Tobit, Judith, Wisdom,
@@ -43,7 +53,7 @@ export default function About() {
         bundled source corpus does not yet include the text of these books.
       </p>
 
-      <h2 className="testament-title">The Texts</h2>
+      <h2 className="testament-title" id="texts">The Texts</h2>
       <ul>
         <li>
           <strong>Douay-Rheims (Challoner)</strong> — the historic English Catholic
@@ -82,14 +92,14 @@ export default function About() {
         (data-report.txt) maintained with the app's source code.
       </p>
 
-      <h2 className="testament-title">Embed the Verse of the Day</h2>
+      <h2 className="testament-title" id="embed">Embed the Verse of the Day</h2>
       <p>
         Every install of Fidelis exposes an embeddable Verse-of-the-Day widget at{" "}
         <Link to="/widget/votd">/#/widget/votd</Link>. Drop it into any site:
       </p>
       <pre className="embed-snippet">{WIDGET_SNIPPET}</pre>
 
-      <h2 className="testament-title">Privacy &amp; Offline</h2>
+      <h2 className="testament-title" id="privacy">Privacy &amp; Offline</h2>
       <p>
         There is no account, no tracking, and no server: your bookmarks,
         highlights, and notes live only in your browser. Once a book has been
@@ -97,7 +107,7 @@ export default function About() {
         your home screen as a PWA.
       </p>
 
-      <h2 className="testament-title">Sources</h2>
+      <h2 className="testament-title" id="sources">Sources</h2>
       <p className="small">
         Scripture texts are drawn from the public-domain corpus collected by the{" "}
         <a href="https://github.com/scrollmapper/bible_databases" target="_blank" rel="noreferrer">
@@ -158,8 +168,8 @@ export default function About() {
       </p>
       <p className="small">
         Where the <strong>Catechism of the Catholic Church</strong> cites a verse,
-        the verse actions show a quiet <span className="ccc-label">CCC</span>{" "}
-        paragraph row that links to that paragraph on{" "}
+        the verse actions show a quiet Catechism paragraph row that links to that
+        paragraph on{" "}
         <a href="https://www.vatican.va/archive/ENG0015/_INDEX.HTM" target="_blank" rel="noreferrer">
           vatican.va
         </a>

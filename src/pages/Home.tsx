@@ -86,7 +86,8 @@ export default function Home() {
 
   return (
     <>
-      <h1 className="page-title">{dateLabel}</h1>
+      <h1 className="page-title">Today</h1>
+      <p className="subtitle">{dateLabel}</p>
       <div className="widget-grid">
         <div className="card">
           <h2>

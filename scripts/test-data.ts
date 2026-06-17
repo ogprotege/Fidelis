@@ -1804,5 +1804,31 @@ console.log("");
   check("massTranslationFor: an explicit choice wins over the region", massTranslationFor({ ...base, calendarRegion: "usa", massTranslation: "drc" }) === "drc");
 }
 
+// §21 — navigation scroll authority + the overlay back-stack (nav/IA redesign).
+{
+  const { decideScroll, hasScrollTarget } = await import("../src/lib/scroll");
+  // A target (?v=/#hash) owns its own scroll — checked first, so Back to a verse
+  // glides to it instead of fighting a restore.
+  check("decideScroll: a target → skip (any nav type)", decideScroll("PUSH", true) === "skip" && decideScroll("POP", true) === "skip" && decideScroll("REPLACE", true) === "skip");
+  // REPLACE is an in-place update (day-stepper, search filter) → leave scroll be.
+  check("decideScroll: REPLACE without a target → skip", decideScroll("REPLACE", false) === "skip");
+  // POP (Back/Forward) restores the saved place; a genuine new PUSH goes to top.
+  check("decideScroll: POP without a target → restore", decideScroll("POP", false) === "restore");
+  check("decideScroll: PUSH without a target → top", decideScroll("PUSH", false) === "top");
+  check("hasScrollTarget: ?v= verse is a target", hasScrollTarget("?v=16", "") === true);
+  check("hasScrollTarget: #anchor is a target", hasScrollTarget("", "#rsv2ce") === true);
+  check("hasScrollTarget: plain location is not", hasScrollTarget("?date=2026-06-17", "") === false && hasScrollTarget("", "") === false);
+
+  const { pushOverlay, closeTopOverlay, overlayCount, removeOverlay } = await import("../src/lib/overlays");
+  const closed: string[] = [];
+  pushOverlay(() => closed.push("a"));
+  pushOverlay(() => closed.push("b"));
+  check("overlay stack: count tracks opens", overlayCount() === 2);
+  check("overlay stack: closeTop closes the newest first", closeTopOverlay() === true && closed.join() === "b");
+  check("overlay stack: closeTop then closes the next", closeTopOverlay() === true && closed.join() === "b,a");
+  check("overlay stack: closeTop on empty is a no-op", closeTopOverlay() === false && overlayCount() === 0);
+  removeOverlay(999); // removing an absent id is harmless
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

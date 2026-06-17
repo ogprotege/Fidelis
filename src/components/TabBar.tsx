@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { pushOverlay, removeOverlay } from "../lib/overlays";
 
 /**
  * Spec §2.1 — the five-tab navigation.
@@ -41,6 +42,11 @@ export default function TabBar() {
   // to the trigger so keyboard users are not stranded.
   useEffect(() => {
     if (!open) return;
+    // Register as an overlay so the Android Back button closes the popover first.
+    const overlayId = pushOverlay(() => setOpen(false));
+    // Move focus into the menu (mirrors the Sheet's initial focus) for keyboard
+    // and screen-reader users.
+    moreRef.current?.querySelector<HTMLElement>(".more-menu a")?.focus();
     const onPointer = (e: PointerEvent) => {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) setOpen(false);
     };
@@ -53,6 +59,7 @@ export default function TabBar() {
     document.addEventListener("pointerdown", onPointer);
     document.addEventListener("keydown", onKey);
     return () => {
+      removeOverlay(overlayId);
       document.removeEventListener("pointerdown", onPointer);
       document.removeEventListener("keydown", onKey);
     };

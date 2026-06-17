@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useRef } from "react";
+import { pushOverlay, removeOverlay } from "../lib/overlays";
 
 interface Props {
   /** id of the heading inside `children` that labels the dialog. */
@@ -30,6 +31,9 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
 
   useEffect(() => {
     opener.current = document.activeElement as HTMLElement | null;
+    // Register with the overlay stack so the Android hardware Back button (and the
+    // app-root exit decision) closes this sheet first, before touching navigation.
+    const overlayId = pushOverlay(() => onCloseRef.current());
     // iOS WKWebView ignores body overflow:hidden for touch dragging, so the page
     // behind the scrim still rubber-bands. Pin the body and offset it by the
     // current scroll to truly freeze it; restore the scroll on close.
@@ -71,6 +75,7 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
     };
     document.addEventListener("keydown", onKey);
     return () => {
+      removeOverlay(overlayId);
       document.removeEventListener("keydown", onKey);
       body.style.overflow = prev.overflow;
       body.style.position = prev.position;
