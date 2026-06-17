@@ -149,8 +149,13 @@ Haydock + Catena build) and the §4.2 Reader integration. Spec:
   §16 asserts the identity calls (Gregory the Great vs Nyssa; Isidore of **Pelusium**, not
   the Doctor of Seville; Dionysius of Alexandria vs the pseudonymous Areopagite; Newman a
   Doctor) and a corpus-wide guard that ≥93% resolve to a Father and the "source" fallback
-  hides none. **Versification caveat:** commentary keys are Douay/DRC coordinates; under
-  Vulgate Psalm numbering a few Psalm dots may sit one verse off (documented, unmapped).
+  hides none. **Psalm versification (mapped):** Haydock keys are remapped onto the
+  bundle's Vulgate grid in `build-haydock.mjs` — `remapPsalmKey` routes the renumbered
+  second-halves (Ps 115/147) through `hebrewSpanToVulgate`, and the joined psalms (9/113)
+  already align — so the gold dots land on the right verse. Verified incl. the title-offset
+  Miserere (`test-data.ts` §15 asserts `Ps 50:3`, `115:1`, `147:1` incipits), and a
+  key-fault guard asserts every Haydock/Catena key lands on a real DRC coordinate. (The
+  earlier "may sit one verse off" caveat predated this mapping; it is closed.)
 
 Deferred from §4 and after: §5 (the CCC citation index — verse→paragraph links, the
 Catechism text never bundled) is the next PR; commentary offline-download (Settings →
