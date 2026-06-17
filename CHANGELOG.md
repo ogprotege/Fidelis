@@ -186,9 +186,9 @@ day/night tokens, the §1.5 icon set, and the two-accent rule.
 - The DOM/canvas surfaces (chips, chapter grid, verse focus) are browser-verified like the
   share card and the gold dot; the pure search helpers are node-tested (§18). `npm test`
   (incl. the emoji guard and manifest verify) and `npm run build` stay green.
-- Deferred: the Vulgate-Psalm commentary-dot mapping (pairs with the §5 CCC build, which
-  establishes the same Hebrew→Vulgate mapping), per-Father "by era" filtering, and the
-  optional single daily-readings notification (still off — no notification pressure).
+- Deferred: per-Father "by era" filtering, and the optional single daily-readings notification
+  (still off — no notification pressure). (The Vulgate-Psalm commentary-dot mapping listed here
+  in earlier drafts turned out to be already implemented in v1.5.0 — see that release's note.)
 
 ## [1.8.0] — 2026-06-16 — the sower
 
@@ -386,9 +386,11 @@ paraphrase. Scripture stays Scripture; study is one tap away.
 - Commentary loads lazily per book: Haydock (≤1 MB) when the book opens, for the dots;
   the heavier Catena Gospel files only when a sheet first opens — the sacred page never
   waits on it.
-- Commentary keys follow Douay/DRC coordinates; under the Clementine Vulgate's Psalm
-  numbering a few Psalm dots may sit one verse off. Documented; a versification map is
-  left for a later release.
+- Haydock Psalm keys are remapped onto the bundle's Vulgate grid: `remapPsalmKey` in
+  `build-haydock.mjs` routes the renumbered second-halves (Ps 115/147) through
+  `hebrewSpanToVulgate`, the joined psalms (9/113) already align, and the title-offset cases
+  hold (verified incl. the Miserere). Asserted in `test-data.ts` §15; the gold dots land on
+  the right verse.
 
 ## [1.4.0] — 2026-06-14 — the daily soul
 

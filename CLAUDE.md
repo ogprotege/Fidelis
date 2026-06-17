@@ -5,10 +5,13 @@ daily Mass readings. Companion documents:
 `docs/review/Fidelis_Code_Review_V1_2026-06-11.md` (the repair manual — every
 P0/P1/P2 item plus hygiene B.1/B.2/B.4 done as of v1.1.0 and §B.3, CI, closed in
 v1.2.1 — the manual is fully implemented), `docs/review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md`
-(the growth plan; its §1–§2 identity layer shipped in v1.3.0, the identity release,
-and its §6 card 4 / §6.1 / §7 devotional layer in v1.4.0, the daily soul — both
-recorded below), and `CHANGELOG.md` (release history; bump `package.json` version
-and add a CHANGELOG entry together).
+(the growth plan; its §1–§2 identity layer shipped in v1.3.0, the identity release;
+its §6 card 4 / §6.1 / §7 devotional layer in v1.4.0, the daily soul; the §4
+commentary layer in v1.5.0; the §8.3 share card in v1.8.0; §8.1/§8.2 Reader & Search
+refinements in v1.8.1; §3.4 quote verification in v1.8.3; the buildable half of §9
+in v1.8.4; and the §5 CCC citation index in v1.9.0 — all recorded below), and
+`CHANGELOG.md` (release history; bump `package.json` version and add a CHANGELOG
+entry together).
 
 ## Commands
 
@@ -68,9 +71,13 @@ daily-readings notification (off by default; bounded by standing rule 3 — no
 notification pressure). §3 (Quote of the Day) and the §6 Today recomposition
 shipped in 1.2.0; §6 card 4, §6.1, and §7 in 1.4.0 (the daily soul, below). The §4
 commentary layer shipped in v1.5.0 (the formation release, below); the §8.3 share
-card in v1.8.0 (the sower, below). §5 (the CCC citation index) and the rest of
-§8–§12 remain the open roadmap (§13 is the binding refusal list, in the standing
-rules).
+card in v1.8.0 (the sower, below); §8.1/§8.2 Reader & Search refinements in v1.8.1
+(the open door, below); §3.4 quote verification in v1.8.3; the buildable half of §9
+(widget data pipeline + Android Mass/Quote widgets) in v1.8.4 (the doorposts); and
+§5 (the CCC citation index) in v1.9.0 (the deposit, below). The remaining open
+roadmap is the iOS half of §9 (WidgetKit Mass/Quote widgets + App Intents + Dynamic
+Type, spec'd in docs/IOS.md §5, needs Xcode) and the rest of §10–§12 (§13 is the
+binding refusal list, in the standing rules).
 
 ## The daily soul release — design spec §6 card 4, §6.1, §7 (v1.4.0)
 
@@ -158,8 +165,9 @@ Haydock + Catena build) and the §4.2 Reader integration. Spec:
   earlier "may sit one verse off" caveat predated this mapping; it is closed.)
 
 Deferred from §4 and after: §5 (the CCC citation index — verse→paragraph links, the
-Catechism text never bundled) is the next PR; commentary offline-download (Settings →
-Data) and per-Father "by era" filtering remain open.
+Catechism text never bundled) shipped in v1.9.0 "the deposit" (see "The deposit" section
+below); commentary offline-download (Settings → Data) shipped in v1.8.1 "the open door".
+Per-Father "by era" filtering remains open.
 
 ## The Android shell — the "freely given" release (v1.6.0)
 

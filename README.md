@@ -200,6 +200,11 @@ piety, never gamification.
   plain-image download fallback). The same affordance sits on the Today page's Verse of the Day
   and Quote of the Day. Typography on a warm field — the gold cross and a small wordmark, no
   imagery, no red-letter.
+- **Catechism cross-references** (the 1.9.0 "the deposit" release) — where the Catechism cites a
+  verse, a quiet purple `CCC ¶…` row in the verse actions links to that paragraph on vatican.va
+  (4,613 verses mapped from the official *Index of Citations*; Psalms remapped to the Vulgate
+  numbering the bundles use). Only the citation facts ship — the Catechism text is never bundled,
+  the links open the official text — and a single Settings switch removes the row.
 
 ---
 
@@ -221,8 +226,9 @@ piety, never gamification.
   over Library, Translations, Settings, and About — not a route, so deep links are unchanged.
 - **One Settings screen** with a live Scripture preview (Genesis 1:1–2, re-rendering as you adjust
   the controls below): Bible version, text size, reading face, appearance, calendar region,
-  per-translation offline download with real sizes, the indulgence toggle, the commentary
-  controls (master switch, Haydock/Catena, Doctors-only), and JSON export/import.
+  offline download (per translation **and** the Fathers' commentary, with real sizes), the
+  indulgence toggle, the commentary controls (master switch, Haydock/Catena, Doctors-only), the
+  **Magisterium** CCC-links toggle, and JSON export/import.
 - **System / Day / Night** — System tracks the device's color-scheme preference live; a pre-paint
   boot script resolves the theme and reading face before first paint, so a night reader never sees
   a flash of day.
@@ -236,10 +242,13 @@ piety, never gamification.
 - **PWA** — installable; the app shell is precached on install (and stale assets purged on
   deploys), so the app opens offline, with offline reading of any book you have opened.
 - **iOS** — via Capacitor, including a native **WidgetKit home-screen widget** (Verse of the Day;
-  small / medium / large; offline). See [docs/IOS.md](docs/IOS.md).
+  small / medium / large; offline). The Mass &amp; Quote WidgetKit widgets, a "today's Gospel"
+  App Intent (Siri/Shortcuts), and Dynamic Type are specified for an Xcode session in
+  [docs/IOS.md §5](docs/IOS.md). See [docs/IOS.md](docs/IOS.md).
 - **Android** — via Capacitor: the full app in a native shell, offline by construction (the whole
-  build ships inside the APK, exactly as on iOS), now with its own native **Verse-of-the-Day
-  home-screen widget** (App Widget) that shows the same verse as the app and the iOS widget. See
+  build ships inside the APK, exactly as on iOS), now with **three native home-screen widgets**
+  (App Widgets) — **Verse of the Day**, **Today at Mass**, and **Quote of the Day** — each showing
+  the same content as the app and refreshing at local midnight, fully offline. See
   [docs/ANDROID.md](docs/ANDROID.md).
 - **Embeddable widget** — drop the Verse of the Day into any site:
   `<iframe src="https://your-domain/#/widget/votd">` (options: `?t=vulgate&theme=night`).
@@ -303,9 +312,10 @@ harnesses are the product; everything else is chrome.
 | Pure devotional logic (VOTD, rosary, reading-time, reading plans) | `src/lib/votd.ts`, `rosary.ts`, `reading.ts`, `plans.ts` |
 | Canon metadata (chapter/verse counts from the real corpus) | `src/lib/canon.ts`, `src/generated/bookMeta.json` |
 | Local persistence (settings, marginalia, plans) | `src/lib/storage.ts` |
+| Commentary & the Magisterium (Haydock, Catena, the CCC citation index) | `src/lib/commentary.ts`, `src/lib/ccc.ts`, `scripts/build-haydock.mjs`, `build-catena.mjs`, `build-ccc*.mjs` |
 | Data pipeline & integrity (build, pins, manifest, report) | `scripts/*.mjs` |
 | Assertion harnesses & golden snapshots | `scripts/test-*.ts`, `scripts/golden/` |
-| Native shells & widget | `ios/` (Capacitor + WidgetKit), `android/` (Capacitor) |
+| Native shells & widgets | `ios/` (Capacitor + WidgetKit), `android/` (Capacitor + App Widgets), `scripts/build-*-widget.*` |
 
 Design constants are encoded once and asserted: the liturgical day never exceeds **five cards**,
 the chrome speaks in **two accents**, and the Word is **never printed in red**.
@@ -321,8 +331,13 @@ npm test             # liturgical + data harnesses (hard assertions) + manifest 
 npm run build        # type-check (tsc) + production build to dist/
 npm run preview      # serve the production build
 
+npm run lint         # type-aware ESLint over src (also part of npm test)
 npm run data         # rebuild public/data/ from the pinned upstream commits
 npm run lectionary   # rebuild the lectionary citation tables (pinned)
+npm run quotes       # rebuild the Quote-of-the-Day corpus (re-seals the manifest)
+npm run commentary   # rebuild Haydock + Catena from the pinned upstreams
+npm run widgets      # rebuild the native widget data (VOTD + Mass/Quote calendar)
+npm run ccc          # rebuild the CCC citation index from a local Catechism PDF (CCC_PDF=…) + vatican.va, then re-seal
 npm run report       # regenerate data-report.txt (also runs after npm run data)
 npm run verify-data  # SHA-256 manifest check of public/data
 npm run golden       # re-bless golden-year calendar snapshots after a deliberate engine change
@@ -339,9 +354,10 @@ For iOS: `npm run build && npx cap sync ios && npx cap open ios` (macOS + Xcode 
 
 ## Testing
 
-`npm test` runs two assertion harnesses and the manifest check — **every expectation is a hard
-assertion; any failure exits non-zero.** CI (`.github/workflows/ci.yml`) runs `npm ci`,
-`npm test`, and `npm run build` on Node 22 for every push and pull request.
+`npm test` runs two assertion harnesses, the SHA-256 manifest check, and a type-aware ESLint
+pass — **every expectation is a hard assertion; any failure exits non-zero.** CI
+(`.github/workflows/ci.yml`) runs `npm ci`, `npm test`, and `npm run build` on Node 22 for every
+push and pull request.
 
 - **`scripts/test-liturgical.ts`** — the Easter computus against the known table; trap-year
   precedence/transfer acceptance (Annunciation on Good Friday 2016, Immaculate Conception 2024,
@@ -351,7 +367,9 @@ assertion; any failure exits non-zero.** CI (`.github/workflows/ci.yml`) runs `n
   translation, the empty-slot report in sync, VOTD web/iOS parity, the SHA-256 manifest, the
   rosary passages matching the Reader, the reading-time accumulator (gap reset + midnight
   rollover), the reading-plan arithmetic (preset totals from the real canon counts, pace,
-  completion, and the weighted Whole-Canon order), and **golden-year snapshots**: the full
+  completion, and the weighted Whole-Canon order), the Search book-group filters, the **CCC
+  citation index** (every key resolving to a real verse, the Hebrew→Vulgate Psalm mapping, the
+  pinned famous anchors, and full vatican.va URL coverage), and **golden-year snapshots**: the full
   computed calendar and readings for every day of 2024–2027 in both regions (`scripts/golden/`),
   so any engine change that silently moves a feast is a red test run.
 
