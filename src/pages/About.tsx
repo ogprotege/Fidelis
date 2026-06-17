@@ -129,9 +129,9 @@ export default function About() {
         <em>Story of a Soul</em>, and the like). Every quotation carries its full
         source citation — work, locus, and translation — because the Catholic
         internet is a sea of apocryphal saint quotes, and the attribution is part
-        of the gift. Entries are drafted from the named editions and individually
-        checked against printed copies before being marked verified; the corpus
-        and its verification state live in the repository in the open.
+        of the gift. Every entry has now been checked against its public-domain
+        source and marked verified; the corpus and its verification state live in
+        the repository in the open.
       </p>
       <p className="small">
         The commentary is two public-domain monuments. <strong>Haydock</strong> —
