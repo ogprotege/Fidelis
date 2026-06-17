@@ -9,10 +9,11 @@ v1.2.1 — the manual is fully implemented), `docs/review/Fidelis_Feature_Design
 its §6 card 4 / §6.1 / §7 devotional layer in v1.4.0, the daily soul; the §4
 commentary layer in v1.5.0; the §8.3 share card in v1.8.0; §8.1/§8.2 Reader & Search
 refinements in v1.8.1; §3.4 quote verification in v1.8.3; the buildable half of §9
-in v1.8.4; the §5 CCC citation index in v1.9.0; and an iOS crispness pass (safe
-areas, touch feel, the gold-contrast split, CCC discoverability) in v1.10.0 — all
-recorded below), and `CHANGELOG.md` (release history; bump `package.json` version
-and add a CHANGELOG entry together).
+in v1.8.4; the §5 CCC citation index in v1.9.0; an iOS crispness pass (safe areas,
+touch feel, the gold-contrast split, CCC discoverability) in v1.10.0; and NABRE as
+the U.S. Mass-readings default (import-only; never bundled) in v1.11.0 — all recorded
+below), and `CHANGELOG.md` (release history; bump `package.json` version and add a
+CHANGELOG entry together).
 
 ## Commands
 
@@ -405,6 +406,31 @@ used as the iOS **checklist** only — its style/color generator is off-identity
 - **Still open** (unchanged): the iOS WidgetKit / App-Intents / Dynamic-Type Xcode session
   (`docs/IOS.md §5`). Device step for this release: after `npx cap sync ios`, verify the safe-area
   insets (no doubled gap) and the Night status bar on a notched simulator.
+
+## NABRE as the U.S. Mass default (v1.11.0)
+
+The Daily Readings now default to the **NABRE** — the translation of the U.S. lectionary —
+when the calendar region is the United States, honoring the owner's "be consistent with the
+USA" intent. **The legal posture is unchanged and binding:** the NABRE is © Confraternity of
+Christian Doctrine and is **never bundled** (`translations.ts` `bundled:false`). This release
+builds only the *mechanism* that prefers it; no NABRE text lives in the repo. The owner imports
+their own licensed copy via the existing on-device JSON import (`Translations.tsx` → IndexedDB).
+
+- **`massTranslationFor(settings)`** in `src/lib/storage.ts` (pure, tested — `test-data.ts` §20):
+  an explicit `settings.massTranslation` wins; otherwise `nabre` for `calendarRegion === "usa"`,
+  else the general reading translation. New `massTranslation: string` setting (default `""` =
+  auto; merge-safe).
+- **Readings page** (`src/pages/Readings.tsx`) defaults its translation to `massTranslationFor`
+  and the toolbar `<select>` lists bundled + imported + always-NABRE (a `(import)` hint when not
+  yet imported); swaps are per-visit. A discreet USCCB official-readings link sits in the footer.
+- **Graceful fallback** (`src/components/ReadingText.tsx`): if the chosen translation is
+  import-only and absent, it renders the bundled **Douay-Rheims** instead (so the reading stays
+  readable offline) and shows a one-line "import your licensed NABRE" pointer; the citation link
+  and `lang` follow the translation actually shown.
+- **Settings → Calendar → Mass readings** (`src/pages/Settings.tsx`): a select to pin the default
+  (Match region / DRB / CPDV / VUL / NABRE / RSV-2CE), writing `massTranslation`.
+- **Docs updated** (owner request): README, About, the `translations.ts` NABRE blurb, and this
+  file all describe the import-aware default. The two-accent / §13 / five-card rules are untouched.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

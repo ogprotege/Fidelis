@@ -4,6 +4,43 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.11.0] — 2026-06-17 — the proper of the day
+
+The Daily Readings default to the **NABRE** — the translation of the U.S. lectionary — when the
+calendar region is the United States, so the in-app readings match what is proclaimed at Mass in
+the USA. The legal posture is unchanged: the NABRE is © Confraternity of Christian Doctrine and is
+**never bundled**; this release builds only the *mechanism* that prefers it, and the user imports
+their own licensed copy on the existing (on-device) Translations import.
+
+### Added
+
+- **A Mass-readings translation preference.** `massTranslationFor()` (`src/lib/storage.ts`, pure
+  and tested) resolves the readings translation: an explicit choice wins, otherwise the NABRE for
+  the USA region and the general reading translation elsewhere. New `massTranslation` setting
+  (default "" = auto; merge-safe).
+- **Settings → Calendar → Mass readings**: a select to pin the default (Match region / DRB / CPDV /
+  Vulgate / NABRE / RSV-2CE).
+- **A discreet USCCB link** to the official U.S. daily readings in the Readings footer.
+
+### Changed
+
+- **The Daily Readings screen defaults to the Mass translation** (NABRE for the USA region) and its
+  toolbar now lists bundled + imported translations, plus NABRE with an "(import)" hint when it
+  hasn't been imported yet. Swaps are per-visit.
+
+### Fixed
+
+- **Graceful fallback** when an import-only translation (e.g. NABRE) is the preference but hasn't
+  been imported: the reading renders the bundled **Douay-Rheims** so it stays readable offline, with
+  a one-line pointer to import the licensed copy; the citation link and `lang` follow the text shown
+  (previously a non-imported translation surfaced a bare "not bundled" error).
+
+### Notes
+
+- No NABRE (or any copyrighted) text is committed. The import flow stores a user's own licensed copy
+  in the browser (IndexedDB) only. `test-data.ts` §20 covers the preference logic; `npm test` and
+  `npm run build` are green.
+
 ## [1.10.0] — 2026-06-17 — made plain
 
 An iOS crispness pass: the app now sits correctly in the iPhone's frame and feels native to

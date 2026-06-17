@@ -71,6 +71,12 @@ export interface Settings {
   /** Magisterium layer (spec §5): show the CCC paragraph links in the verse
    *  actions. Off ⇒ no CCC row anywhere. Links open vatican.va. */
   cccLinksEnabled: boolean;
+  /** Preferred translation for the Mass / Daily-Readings surfaces. "" = auto:
+   *  the NABRE for the USA region (it is the translation of the U.S. lectionary),
+   *  otherwise the general reading translation. The NABRE is import-only (it is
+   *  under copyright and never bundled), so when it is the preference but not yet
+   *  imported the readings fall back to a bundled public-domain text. */
+  massTranslation: string;
 }
 
 const PREFIX = "fidelis:";
@@ -110,6 +116,7 @@ export function getSettings(): Settings {
     commentaryCatena: true,
     commentaryDoctorsOnly: false,
     cccLinksEnabled: true,
+    massTranslation: "",
     ...read<Partial<Settings>>("settings", {})
   };
   // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored
@@ -129,6 +136,15 @@ export function saveSettings(patch: Partial<Settings>): Settings {
   const next = { ...getSettings(), ...patch };
   write("settings", next);
   return next;
+}
+
+/** The translation the Mass / Daily-Readings surfaces should use. An explicit
+ *  `massTranslation` wins; otherwise it is the NABRE for the USA region (the
+ *  translation of the U.S. lectionary) and the general reading translation
+ *  elsewhere. Pure — the caller handles the import-not-present fallback. */
+export function massTranslationFor(s: Settings): string {
+  if (s.massTranslation) return s.massTranslation;
+  return s.calendarRegion === "usa" ? "nabre" : s.translation;
 }
 
 /** Which bundled translations the user has explicitly saved for offline
