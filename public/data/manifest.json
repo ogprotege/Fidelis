@@ -18,9 +18,13 @@
    "commit": "aebb0f6b2b313fd3732dab9b7f28714fbe967f40"
   }
  },
- "fileCount": 316,
- "rootHash": "5b3e342fa64c28e6daabf63b87f418fb031684e07f7c8b4d9b4bf17e9239415b",
+ "fileCount": 318,
+ "rootHash": "235f1097ee5d09112a31952de8e7e65837fc95e2744fd5fea26a0cab7e557e22",
  "bundles": {
+  "ccc": {
+   "files": 2,
+   "bytes": 186631
+  },
   "commentary": {
    "files": 77,
    "bytes": 41684626
@@ -39,6 +43,8 @@
   }
  },
  "files": {
+  "ccc/index.json": "62dac7d9952260c33a15b9d389a9f9397088474a9578cb0deae3aea7f3d2a179",
+  "ccc/url.json": "d0e0b9e89c575c779eb65188f2dac963e7c7ec72773d94e251d3c77106ec7964",
   "commentary/catena/john.json": "65381ec0cf4a9b73c6423a95ed4d9d2dd0b34ff25944a41f096ac2ae6d8f9458",
   "commentary/catena/luke.json": "d5f7e52e131fc052d8eec06eb0928a2e2b18eda74ff23425358ef21a210881a2",
   "commentary/catena/mark.json": "0d7c689e53bf456a93e6825dec4c2a2d442eeeefff0d38d83bab7bef2fc6d637",

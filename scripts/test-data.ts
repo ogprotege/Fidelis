@@ -1730,5 +1730,63 @@ console.log("");
   );
 }
 
+// §19 — the CCC citation index (src/lib/ccc.ts + public/data/ccc). FACTS ONLY:
+// verse → CCC ¶ numbers, ¶ → vatican.va URL. The Catechism text is never bundled.
+// Anchors pinned from the USCCB 2nd-Ed Index of Citations (verified against the PDF).
+{
+  const { cccKey, cccParagraphs, capParagraphs } = await import("../src/lib/ccc");
+  const ci = JSON.parse(readFileSync(join(ROOT, "public/data/ccc/index.json"), "utf8")) as Record<string, number[]>;
+  const cu = JSON.parse(readFileSync(join(ROOT, "public/data/ccc/url.json"), "utf8")) as Record<string, string>;
+  const meta = JSON.parse(readFileSync(join(ROOT, "src/generated/bookMeta.json"), "utf8")) as Record<string, { verses: number[] }>;
+  const man = JSON.parse(readFileSync(join(ROOT, "public/data/manifest.json"), "utf8")) as { files: Record<string, string> };
+  const keys = Object.keys(ci);
+
+  check("CCC index is substantial", keys.length > 3000, `${keys.length} verse keys`);
+
+  let badVal = 0;
+  for (const k of keys) {
+    const a = ci[k];
+    if (!Array.isArray(a) || a.length === 0) { badVal++; continue; }
+    for (let i = 0; i < a.length; i++) {
+      if (!Number.isInteger(a[i]) || a[i] < 1 || a[i] > 2865) badVal++;
+      if (i > 0 && a[i] <= a[i - 1]) badVal++; // strictly increasing ⇒ sorted + deduped
+    }
+  }
+  check("CCC index values are non-empty, sorted, deduped, ¶∈[1,2865]", badVal === 0, `${badVal} bad`);
+
+  let dangling = 0;
+  const danglers: string[] = [];
+  for (const k of keys) {
+    const m = k.match(/^(\S+) (\d+):(\d+)$/);
+    if (!m) { dangling++; continue; }
+    const vc = meta[m[1]]?.verses?.[+m[2] - 1];
+    if (!vc || +m[3] < 1 || +m[3] > vc) { dangling++; if (danglers.length < 8) danglers.push(k); }
+  }
+  check("every CCC index key resolves to a real verse (no danglers)", dangling === 0, `${dangling}: ${danglers.join(", ")}`);
+
+  // Psalm mapping: the CCC's Hebrew Ps 22:1 ("My God, my God", ¶603) → Vulgate 21:2.
+  check("CCC Psalms are Vulgate-keyed (Heb 22:1 → psalms 21:2, ¶603)", (ci["psalms 21:2"] ?? []).includes(603), (ci["psalms 21:2"] ?? []).join(","));
+
+  // famous anchors, verified against the PDF
+  check("CCC anchor john 3:16 ⊇ {219,444,458}", [219, 444, 458].every((p) => (ci["john 3:16"] ?? []).includes(p)), (ci["john 3:16"] ?? []).join(","));
+  check("CCC anchor genesis 1:1 ⊇ {268,279,290}", [268, 279, 290].every((p) => (ci["genesis 1:1"] ?? []).includes(p)), (ci["genesis 1:1"] ?? []).join(","));
+  check("CCC anchor matthew 16:18 ⊇ {552,881}", [552, 881].every((p) => (ci["matthew 16:18"] ?? []).includes(p)), (ci["matthew 16:18"] ?? []).join(","));
+
+  // url.json covers every ¶ used; all official vatican.va links
+  const used = new Set<string>();
+  for (const a of Object.values(ci)) for (const p of a) used.add(String(p));
+  const missingUrl = [...used].filter((p) => !cu[p]);
+  check("url.json covers every ¶ used in the index", missingUrl.length === 0, `${missingUrl.length} missing`);
+  check("every CCC url is an https://www.vatican.va/ ENG0015 link", Object.values(cu).every((u) => typeof u === "string" && u.startsWith("https://www.vatican.va/archive/ENG0015/")));
+
+  // ccc.ts pure helpers
+  check("cccKey builds '<slug> ch:v'", cccKey("john", 3, 16) === "john 3:16");
+  check("cccParagraphs reads the index", cccParagraphs(ci, "john", 3, 16).includes(444));
+  const cap = capParagraphs([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  check("capParagraphs caps at 8 with a remainder", cap.shown.length === 8 && cap.more === 2);
+
+  check("ccc/index.json + ccc/url.json are sealed in the manifest", !!man.files["ccc/index.json"] && !!man.files["ccc/url.json"]);
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

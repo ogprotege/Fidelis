@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { BOOKS, bookDisplayName, bookIndex, getBook } from "../lib/canon";
-import { BookData, CommentaryBook, loadBook, loadCommentary } from "../lib/data";
+import { BookData, CCCData, CommentaryBook, loadBook, loadCCC, loadCommentary } from "../lib/data";
 import { GOSPELS } from "../lib/commentary";
+import { cccParagraphs, capParagraphs } from "../lib/ccc";
 import {
   HighlightColor,
   VerseRef,
@@ -59,6 +60,9 @@ export default function Reader() {
   const [commentaryFor, setCommentaryFor] = useState<number | null>(null);
   const [shareFor, setShareFor] = useState<number | null>(null);
   const [chapterPickerOpen, setChapterPickerOpen] = useState(false);
+  // §5 CCC links: the small index+url maps, loaded once when enabled.
+  const [ccc, setCcc] = useState<CCCData | null>(null);
+  const [cccExpanded, setCccExpanded] = useState(false);
   const wantHaydockDots = settings.commentaryEnabled && settings.commentaryHaydock;
 
   const bookmarks = useMemo(
@@ -121,6 +125,21 @@ export default function Reader() {
       alive = false;
     };
   }, [bookSlug, book, wantHaydockDots]);
+
+  // §5: load the CCC index + url maps once (small, global) when links are on.
+  useEffect(() => {
+    if (!settings.cccLinksEnabled) {
+      setCcc(null);
+      return;
+    }
+    let alive = true;
+    loadCCC()
+      .then((d) => alive && setCcc(d))
+      .catch(() => alive && setCcc(null));
+    return () => {
+      alive = false;
+    };
+  }, [settings.cccLinksEnabled]);
 
   useEffect(() => {
     if (book) {
@@ -193,6 +212,13 @@ export default function Reader() {
   const selRef: VerseRef | null = selected ? { book: bookSlug, chapter, verse: selected } : null;
   const selKey = selRef ? refKey(selRef) : "";
 
+  // §5: the CCC paragraphs that cite the selected verse (empty unless enabled,
+  // loaded, and cited). The links open vatican.va; "CCC" is muted, the ¶ purple.
+  const cccParas =
+    ccc && settings.cccLinksEnabled && selRef
+      ? cccParagraphs(ccc.index, bookSlug, chapter, selRef.verse)
+      : [];
+
   // §4.2: the gold dot marks Haydock notes; the Commentary action appears when
   // any enabled source has a note (Catena covers ~99% of Gospel verses, so the
   // Gospel action shows without loading the heavy Catena file first).
@@ -207,6 +233,7 @@ export default function Reader() {
   const onSelectVerse = (v: number) => {
     setSelected(selected === v ? null : v);
     setNoteOpen(false);
+    setCccExpanded(false);
   };
 
   const copySelected = async () => {
@@ -491,6 +518,31 @@ export default function Reader() {
           <button className="icon-btn" onClick={() => setSelected(null)} title="Close">
             ✕
           </button>
+          {cccParas.length > 0 && (
+            <div className="ccc-row">
+              <span className="ccc-label">CCC</span>
+              {(cccExpanded ? cccParas : capParagraphs(cccParas).shown).map((p) =>
+                ccc?.url[String(p)] ? (
+                  <a
+                    key={p}
+                    className="ccc-ref"
+                    href={ccc.url[String(p)]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    ¶{p}
+                  </a>
+                ) : (
+                  <span key={p} className="ccc-ref muted">¶{p}</span>
+                )
+              )}
+              {!cccExpanded && capParagraphs(cccParas).more > 0 && (
+                <button type="button" className="ccc-more" onClick={() => setCccExpanded(true)}>
+                  +{capParagraphs(cccParas).more} more
+                </button>
+              )}
+            </div>
+          )}
           {noteOpen && (
             <div className="note-editor">
               <textarea

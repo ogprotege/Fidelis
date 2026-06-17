@@ -4,6 +4,43 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.9.0] — 2026-06-16 — the deposit
+
+Design-spec §5 — the CCC citation index ("Scripture-to-Magisterium" links). Where the
+Catechism cites a verse, the verse actions show a quiet purple `CCC ¶…` row linking to
+that paragraph on vatican.va. "Guard the good deposit" (2 Timothy 1:14). **Facts only:**
+the citation numbers and the public URLs ship; the Catechism text is never bundled.
+
+### Added
+
+- **The CCC citation index** (`public/data/ccc/index.json`, sealed in the manifest):
+  4,613 verse keys → CCC paragraph numbers, parsed from the USCCB 2nd-Ed *Index of
+  Citations* (`scripts/build-ccc.mjs`). Psalms are mapped from the Catechism's Hebrew
+  numbering to the bundle's Vulgate numbering with the existing tested `hebrewSpanToVulgate()`
+  (so the CCC's "Ps 22:1" keys to `psalms 21:2`). Verse ranges expand to each verse;
+  unmappable citations (a handful of NAB-vs-Douay versification differences) are dropped, not
+  mis-pointed.
+- **¶ → vatican.va URLs** (`public/data/ccc/url.json`, `scripts/build-ccc-urls.mjs`): every
+  cited paragraph (1,258 of them) resolved to its official ENG0015 page; all `https://www.vatican.va/…`.
+- **Reader CCC row** (`src/lib/ccc.ts` — pure, tested): below the Commentary action, a
+  `CCC ¶219 · ¶444 · …` row when the verse is cited and the setting is on. Links are
+  **purple** (interaction), the "CCC" label muted — no gold, no page dot (two-accent rule).
+  A `+N more` expander past the first eight. Loaded lazily and memoized like the commentary.
+- **A new "Magisterium" Settings section** with `cccLinksEnabled` (default on; merge-safe in
+  `storage.ts`). Off ⇒ no CCC row anywhere.
+
+### Notes
+
+- The PDF and vatican.va are **input and verification only** — neither the Catechism text nor
+  any scraped prose is committed. `npm run ccc` regenerates the facts from a local Catechism
+  PDF (`CCC_PDF=…`) + the Vatican crawl, then re-seals the manifest.
+- `scripts/test-data.ts` §19 asserts the index shape, that every key resolves to a real verse
+  (0 danglers), the Hebrew→Vulgate Psalm mapping (Heb 22:1 → `psalms 21:2`, ¶603), pinned
+  famous anchors (john 3:16 ⊇ 219/444/458; genesis 1:1 ⊇ 268/279/290; matthew 16:18 ⊇
+  552/881), full URL coverage, and the manifest seal. Anchors were verified directly against
+  the PDF (genesis 1:1 and john 1:1 match exactly, incl. range-anchored paragraphs).
+- `npm test` and `npm run build` green. The CCC row is a DOM surface, browser-verified.
+
 ## [1.8.4] — 2026-06-16 — the doorposts
 
 Design-spec §9 (iOS/Android depth), the buildable half: a pre-resolved widget data

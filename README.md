@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.8.4%20·%20the%20doorposts-5B3A8E)
+![version](https://img.shields.io/badge/version-1.9.0%20·%20the%20deposit-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -76,6 +76,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 | **The liturgical year, in color** | The working accent takes the day's liturgical color; the sacred marks stay gold. The calendar catechizes without a word. |
 | **The daily soul** | A tappable rosary with the traditional prayers, a quiet half-hour reading indulgence, and citation-only reading plans — devotion that never nags. |
 | **The Fathers, one tap away** | Haydock across the whole canon and the Catena Aurea on the Gospels — a small gold dot marks a commented verse, a sheet opens the commentary with per-Father chips and a Doctors-only filter. Scripture stays Scripture; study stays study. |
+| **The Catechism, cross-referenced** | Where the Catechism cites a verse, a quiet purple `CCC ¶…` row in the verse actions links straight to that paragraph on vatican.va — 4,600+ verses mapped from the official Index of Citations (Psalms mapped to Vulgate numbering). Only the citation facts ship; the Catechism text is never bundled. |
 | **Sow a verse** | Any verse — or the daily quote — renders to a clean card (EB Garamond on a warm field, the gold cross) and goes out through your device's native share sheet. A seed and a citation at once; Scripture goes out, nothing comes back. |
 | **Yours, on your device** | Bookmarks, highlights, notes, and reading plans live in your browser. No account, no server, no telemetry. Export/import as JSON. |
 | **Reachable by everyone** | Every action the mouse can reach, the keyboard and screen reader can too — verses, the version picker, the chapter grid, all operable; loading is quiet text, and motion honors your system's reduce-motion setting. |
