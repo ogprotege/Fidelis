@@ -264,6 +264,18 @@ passages from the same authors (fitting the same feast/season slots). Verificati
 PD sources directly (CCEL, New Advent, Gutenberg, Internet Archive); aggregator sites were
 not trusted. `scripts/quotes.corpus.json` is the source (then `npm run quotes` re-seals);
 About now states every quotation is verified, closing the §11 trust-surface residual.
+
+**v1.8.4 "the doorposts"** shipped the buildable half of §9 (iOS/Android depth): a
+pre-resolved widget data pipeline — `scripts/build-calendar-widget.ts`
+(`npm run calendar-widget` / `npm run widgets`) emits a date-keyed `calendar.json`
+(season/color + Mass-reading citations + Quote of the Day, ~2-year rolling window) to
+both native bundles from the web app's own `resolveReadings`/`liturgicalDay`/
+`quoteOfTheDay` (no engine ported) — plus two **Android** App Widgets (`CalendarWidget`
+"Today at Mass", `QuoteWidget` "Quote of the Day"), wired entirely in the committed
+project like the v1.7.0 VOTD widget. The iOS WidgetKit widgets + a "today's Gospel" App
+Intent + Dynamic Type are specified in `docs/IOS.md` §5 for an Xcode session (target
+creation can't be scripted). Regenerate the data after any calendar/quote change; the
+window depends on the build year.
 - **§8.2 Search** filter chips (OT/NT/Gospels) with live per-group counts. The pure
   membership helpers are `src/lib/search.ts` (`inFilter`/`bookGroupKind`), asserted in
   `test-data.ts` **§18** (note: §17 is the pre-existing reference-parser block — the CCC

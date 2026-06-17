@@ -6,4 +6,8 @@
     <string name="custom_url_scheme">app.fidelis.bible</string>
     <string name="widget_votd_label">VERSE OF THE DAY</string>
     <string name="widget_votd_description">The day\'s verse from the Douay-Rheims Bible — unaltered, every day.</string>
+    <string name="widget_calendar_label">TODAY AT MASS</string>
+    <string name="widget_calendar_description">The day\'s liturgical title and the Mass-reading citations.</string>
+    <string name="widget_quote_label">QUOTE OF THE DAY</string>
+    <string name="widget_quote_description">A daily saying from the Fathers, Doctors, and saints — public domain.</string>
 </resources>

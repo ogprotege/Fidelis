@@ -4,6 +4,44 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.8.4] — 2026-06-16 — the doorposts
+
+Design-spec §9 (iOS/Android depth), the buildable half: a pre-resolved widget data
+pipeline and two new **Android** home-screen widgets beside the Verse-of-the-Day one.
+The iOS WidgetKit counterparts + App Intents + Dynamic Type are specified for an Xcode
+session (they cannot be scripted from the repo). "Write them on the doorposts of your
+house" (Deut 6:9).
+
+### Added
+
+- **`scripts/build-calendar-widget.ts`** (`npm run calendar-widget`, also `npm run
+  widgets`): pre-resolves a rolling ~2-year window of the liturgical day — season/color,
+  the Mass-reading citations, and the Quote of the Day — to `calendar.json` for both
+  native bundles, from the *same* `resolveReadings()` / `liturgicalDay()` /
+  `quoteOfTheDay()` the web app uses. No engine is ported; the widget keys by local ISO
+  date. (730 days; falls back calmly past the window.)
+- **Android "Today at Mass" widget** (`CalendarWidget`): the day's liturgical title and
+  Mass-reading citations.
+- **Android "Quote of the Day" widget** (`QuoteWidget`): the day's saying from the
+  Fathers, Doctors, and saints.
+- Both follow the v1.7.0 "lampstand" pattern — RemoteViews, the gold cross drawn natively
+  (§1.5, never an emoji), the day-theme color tokens, an inexact local-midnight
+  `AlarmManager`, tap-opens-the-app, fully offline — and are wired entirely in the
+  committed project (`AndroidManifest.xml` receivers + `res/` resources), no IDE step.
+
+### Docs
+
+- **`docs/IOS.md` §5**: the runbook for the iOS Mass & Quote WidgetKit widgets, the
+  "What's today's Gospel?" App Intent (Siri/Shortcuts), and Dynamic Type — all reading the
+  same pre-resolved `calendar.json`, to wire in Xcode.
+
+### Notes
+
+- `npm test` and `npm run build` (incl. `tsc` over the new script) are green; the native
+  widget code mirrors the verified VOTD widget and is device-verified. Regenerate the
+  widget data after any calendar/lectionary/quote change with `npm run calendar-widget`
+  (it depends on the build year's window).
+
 ## [1.8.3] — 2026-06-16 — the cloud of witnesses
 
 Closes the design-spec §3.4 verification ledger: every Quote-of-the-Day entry is now

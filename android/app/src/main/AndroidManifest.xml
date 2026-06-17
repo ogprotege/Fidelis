@@ -48,6 +48,36 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/votd_widget_info" />
         </receiver>
+
+        <!-- Today at Mass widget — the day's liturgical title + reading citations,
+             from the pre-resolved res/raw/calendar.json. CALENDAR_MIDNIGHT is its
+             own daily-rollover alarm. -->
+        <receiver
+            android:name=".CalendarWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="app.fidelis.bible.CALENDAR_MIDNIGHT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/calendar_widget_info" />
+        </receiver>
+
+        <!-- Quote of the Day widget — the day's saying from the Fathers/Doctors/
+             saints, from the same res/raw/calendar.json. QUOTE_MIDNIGHT is its
+             own daily-rollover alarm. -->
+        <receiver
+            android:name=".QuoteWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="app.fidelis.bible.QUOTE_MIDNIGHT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/quote_widget_info" />
+        </receiver>
     </application>
 
     <!-- Permissions -->

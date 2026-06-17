@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- updatePeriodMillis=0: refreshes are driven by CalendarWidget's local-midnight
+     AlarmManager, not the battery-costly system poll. Wider default than the VOTD
+     widget to fit the reading citations. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_calendar_description"
+    android:initialLayout="@layout/widget_calendar"
+    android:minHeight="110dp"
+    android:minWidth="180dp"
+    android:previewImage="@mipmap/ic_launcher"
+    android:previewLayout="@layout/widget_calendar"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="3"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />
