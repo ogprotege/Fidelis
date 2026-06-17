@@ -255,6 +255,15 @@ Plan: `docs/superpowers/plans/2026-06-16-close-the-quiet-loops.md`.
   (Reader verse column + parallel Latin side, Mass reading bodies, Verse/Quote and
   rosary passages, the antiphon and the five prayers' Latin, the Vulgate chapter
   title) so screen readers stop applying English phonetics to the Clementine Vulgate.
+
+**v1.8.3 "the cloud of witnesses"** closed the §3.4 quote-verification ledger: all 47
+Quote-of-the-Day entries (flagged `verified: false` since 1.2.0) are now verified against
+accessible public-domain sources — 26 confirmed verbatim, 15 wording/edition corrections to
+the cited public-domain text, and 6 with no public-domain edition replaced by PD-verifiable
+passages from the same authors (fitting the same feast/season slots). Verification read the
+PD sources directly (CCEL, New Advent, Gutenberg, Internet Archive); aggregator sites were
+not trusted. `scripts/quotes.corpus.json` is the source (then `npm run quotes` re-seals);
+About now states every quotation is verified, closing the §11 trust-surface residual.
 - **§8.2 Search** filter chips (OT/NT/Gospels) with live per-group counts. The pure
   membership helpers are `src/lib/search.ts` (`inFilter`/`bookGroupKind`), asserted in
   `test-data.ts` **§18** (note: §17 is the pre-existing reference-parser block — the CCC

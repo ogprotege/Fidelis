@@ -4,6 +4,40 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.8.3] — 2026-06-16 — the cloud of witnesses
+
+Closes the design-spec §3.4 verification ledger: every Quote-of-the-Day entry is now
+checked against an accessible public-domain source. The 47 launch quotes were flagged
+`verified: false` since 1.2.0; all 47 are now `verified: true`.
+
+### Changed — quote corpus (spec §3.4)
+
+- **All 47 quotes verified against their public-domain sources.** 26 were confirmed
+  verbatim; 15 had their wording or edition corrected to match the cited public-domain
+  text (e.g. Augustine's *Confessions* to Pusey's actual rendering, Aquinas/Chrysostom/
+  à Kempis/Ambrose/Damascene to the NPNF text, the Suscipe to Mullan's 1914 translation);
+  and 6 whose cited editions did not actually exist in the public domain (Augustine
+  *Sermons 256* & *293*, Basil's social homily, Leo *Sermon 39*, Bernard *Advent 5*,
+  Bonaventure *Itinerarium*) were replaced with public-domain-verifiable passages by the
+  same authors, fitting the same feast/season slots — or, for Bonaventure, the same
+  passage in Thomas Davidson's genuinely public-domain 1887 translation.
+- False public-domain-edition claims were corrected (several Fathers' works are **not** in
+  NPNF/ANF; those now cite the Latin PL or the correct public-domain edition).
+
+### Fixed
+
+- **About** now states plainly that every quotation has been checked against its
+  public-domain source (closing the §11 trust-surface residual), rather than describing
+  the corpus as still being verified.
+
+### Notes
+
+- `npm run quotes` regenerated `public/data/quotes.json` and re-sealed the manifest; the
+  corpus↔emitted sync, schema, red-list, seasonal-pool, and determinism checks in
+  `npm test` all pass, and `npm run build` is green. Verification was done by reading the
+  public-domain sources directly (CCEL, New Advent, Project Gutenberg, the Internet
+  Archive); no aggregator sites were trusted as evidence.
+
 ## [1.8.2] — 2026-06-16 — every tongue
 
 Continues the accessibility work of "the open door": Latin Scripture now carries
