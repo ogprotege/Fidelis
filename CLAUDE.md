@@ -207,10 +207,9 @@ native counterpart of the iOS WidgetKit widget and the tracked follow-up from 1.
   `BOOT_COMPLETED` receiver is a small future refinement.
 
 Also rode in on this release (docs only): the **§5 CCC citation index** design spec + a
-**local-build runbook** (`docs/superpowers/specs/2026-06-15-ccc-*`) — signed off, built
-locally (the cloud sandbox 403-blocks vatican.va and can't read the Catechism PDF), shipping
-later as **v1.9.0 "the deposit"** (renumbered from 1.8.0, which the share card took); and a
-step-by-step **iOS Simulator** guide in `docs/IOS.md`.
+**local-build runbook** (`docs/superpowers/specs/2026-06-15-ccc-*`) — signed off; **now
+shipped as v1.9.0 "the deposit"** (built locally from the owner's USCCB PDF + vatican.va —
+see "The deposit" section below); and a step-by-step **iOS Simulator** guide in `docs/IOS.md`.
 
 ## The share card — design spec §8.3 (v1.8.0)
 
@@ -307,6 +306,39 @@ window depends on the build year.
 - **Deferred** (recorded): the Vulgate-Psalm commentary-dot mapping pairs with the §5 CCC
   build (one Hebrew→Vulgate mapping effort); per-Father "by era" filtering; the optional
   daily-readings notification stays off.
+
+## The deposit — design spec §5 (v1.9.0)
+
+The CCC citation index — "Scripture-to-Magisterium" links — shipped in v1.9.0 "the deposit"
+(2 Tim 1:14) on the `v1.9-ccc-index` branch. **Facts only:** the verse→¶ citation numbers and
+the ¶→vatican.va URLs ship; the Catechism text is never bundled (the bright line in the spec +
+runbook). Built locally from the owner's USCCB 2nd-Ed PDF + a vatican.va crawl — both are
+**input/verification only**.
+
+- **§5.1 the data** (`scripts/build-ccc.mjs`): parses the PDF's *Index of Citations / Sacred
+  Scripture* appendix (pdftotext column crops of pp.709–740) into `public/data/ccc/index.json`
+  — 4,613 verse keys → CCC ¶ numbers. Book names map Douay-ish CCC spellings (Ezechiel,
+  Zachariah, Song of Solomon) to app slugs; verse ranges expand to each verse; cross-chapter/
+  whole-chapter ranges anchor on the start verse. **Psalms**: the CCC numbers Hebrew, the
+  bundle is Vulgate, so every Psalm key is mapped via the tested `hebrewSpanToVulgate()`
+  (CCC "Ps 22:1" → `psalms 21:2`). ~21 NAB-vs-Douay-versification citations are dropped, not
+  mis-pointed (honesty rule). `scripts/build-ccc-urls.mjs` crawls vatican.va ENG0015
+  (`<p class=MsoNormal>N` marks each ¶) → `public/data/ccc/url.json` (1,258 ¶, all official
+  URLs; the page URL is the target — the archive exposes no per-¶ anchor). `npm run ccc` runs
+  both + re-seals the manifest. Neither script runs in CI (PDF is local, crawl is network); the
+  committed JSON is the sealed artifact.
+- **§5.2 the Reader** (`src/lib/ccc.ts` pure + tested; `src/lib/data.ts` `loadCCC()` memoized
+  like `loadCommentary`): below the Commentary action, a `CCC ¶… · ¶…` row when the verse is
+  cited and `cccLinksEnabled`. **Purple links, muted "CCC" label, no gold, no dot** (two-accent
+  rule); `+N more` past eight; links open vatican.va in a new tab. A new **Magisterium**
+  Settings section holds `cccLinksEnabled` (default on, merge-safe).
+- **Tests** (`test-data.ts` §19): index shape, 0 danglers, the Hebrew→Vulgate Psalm mapping
+  (Heb 22:1 → `psalms 21:2`, ¶603), pinned anchors (john 3:16 ⊇ 219/444/458; genesis 1:1 ⊇
+  268/279/290; matthew 16:18 ⊇ 552/881), full URL coverage, manifest seal. Anchors verified
+  directly against the PDF (genesis 1:1, john 1:1 match exactly incl. range-anchored ¶).
+- **Note for re-runs:** §19 is the CCC block; §17 (reference parser) and §18 (search filters)
+  precede it. Regenerating needs `CCC_PDF` pointed at the USCCB 2nd-Ed PDF; the URL crawl
+  depends on vatican.va being reachable.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

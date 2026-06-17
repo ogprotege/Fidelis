@@ -154,6 +154,18 @@ export default function About() {
         Isidore of Pelusium, not the Doctor of Seville; &ldquo;Dionysius&rdquo; the
         Areopagite is the pseudonymous corpus.
       </p>
+      <p className="small">
+        Where the <strong>Catechism of the Catholic Church</strong> cites a verse,
+        the verse actions show a quiet <span className="ccc-label">CCC</span>{" "}
+        paragraph row that links to that paragraph on{" "}
+        <a href="https://www.vatican.va/archive/ENG0015/_INDEX.HTM" target="_blank" rel="noreferrer">
+          vatican.va
+        </a>
+        . The links come from the Catechism's own Index of Citations (Psalm
+        references mapped to the Vulgate numbering the bundles use); only the
+        citation facts are stored — the Catechism text is never bundled, and the
+        links simply open the official text.
+      </p>
       <p className="small muted" id="integrity">
         All sources are fetched at commits pinned by hash — never a moving
         branch — and every bundled data file is sealed by a SHA-256 manifest

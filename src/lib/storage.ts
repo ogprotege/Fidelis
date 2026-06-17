@@ -68,6 +68,9 @@ export interface Settings {
   commentaryCatena: boolean;
   /** Seed the Catena tab's Doctors-only filter on (default off). */
   commentaryDoctorsOnly: boolean;
+  /** Magisterium layer (spec §5): show the CCC paragraph links in the verse
+   *  actions. Off ⇒ no CCC row anywhere. Links open vatican.va. */
+  cccLinksEnabled: boolean;
 }
 
 const PREFIX = "fidelis:";
@@ -106,6 +109,7 @@ export function getSettings(): Settings {
     commentaryHaydock: true,
     commentaryCatena: true,
     commentaryDoctorsOnly: false,
+    cccLinksEnabled: true,
     ...read<Partial<Settings>>("settings", {})
   };
   // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored

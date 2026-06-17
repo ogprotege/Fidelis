@@ -191,6 +191,27 @@ export function loadCommentary(corpus: string, book: string): Promise<Commentary
   return p;
 }
 
+/** Spec §5 — the CCC citation index (facts only): verse → CCC ¶ numbers, and
+ *  ¶ → its vatican.va page. The Catechism text is never bundled. */
+export interface CCCData {
+  index: Record<string, number[]>;
+  url: Record<string, string>;
+}
+let cccPromise: Promise<CCCData> | null = null;
+/** Load the small CCC index + url maps once, memoized like loadCommentary. A 404
+ *  (the layer isn't built) yields empty maps, never an error the Reader handles. */
+export function loadCCC(): Promise<CCCData> {
+  cccPromise ??= (async () => {
+    const base = import.meta.env.BASE_URL;
+    const [index, url] = await Promise.all([
+      fetch(`${base}data/ccc/index.json`).then((r) => (r.ok ? (r.json() as Promise<CCCData["index"]>) : {})),
+      fetch(`${base}data/ccc/url.json`).then((r) => (r.ok ? (r.json() as Promise<CCCData["url"]>) : {}))
+    ]);
+    return { index, url };
+  })().catch(() => ({ index: {}, url: {} }));
+  return cccPromise;
+}
+
 /** Save a bundled translation for offline reading (spec §2.2 Data): fetch every
  *  file the manifest lists under `${translation}/`, which the service worker's
  *  cache-first /data/ handler persists into its data cache. The manifest is

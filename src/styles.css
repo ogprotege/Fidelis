@@ -530,6 +530,39 @@ h1.page-title {
 /* The rule beside a selected verse — gold honors. */
 .verse.selected { outline: 2px solid var(--gold); }
 .verse-focused { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* §5 the CCC citation row in the verse-actions bar — purple links honor the
+   two-accent rule (interaction); "CCC" is a muted label; no gold, no dot. */
+.ccc-row {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+}
+.ccc-label {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ccc-ref { color: var(--purple); text-decoration: none; }
+.ccc-ref:hover { text-decoration: underline; }
+.ccc-ref:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.ccc-ref + .ccc-ref::before { content: "·"; margin-right: 0.4rem; color: var(--text-muted); }
+.ccc-more {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.ccc-more:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .verse.hl-gold { background: var(--hl-gold); }
 .verse.hl-rose { background: var(--hl-rose); }
 .verse.hl-sky { background: var(--hl-sky); }

@@ -395,6 +395,28 @@ export default function Settings() {
         </div>
       </section>
 
+      {/* 8 ── Magisterium (spec §5 — the CCC citation links) */}
+      <section className="card">
+        <h2>Magisterium</h2>
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">Catechism cross-references</div>
+            <p className="catechesis muted small">
+              Where the Catechism cites a verse, show its paragraph links in the verse
+              actions. The links open vatican.va; no Catechism text is stored in the app.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.cccLinksEnabled}
+            aria-label="Catechism cross-references"
+            className="switch"
+            onClick={() => update({ cccLinksEnabled: !settings.cccLinksEnabled })}
+          />
+        </div>
+      </section>
+
       {/* 8 ── Data */}
       <section className="card">
         <h2>Data</h2>
