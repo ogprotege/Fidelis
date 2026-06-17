@@ -4,6 +4,26 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.12.1] — 2026-06-17 — readable again
+
+Visual regressions and polish reported after v1.12.0.
+
+### Fixed
+
+- **Unreadable selects** — the Settings selects (Region, Mass readings) had no background, so on
+  the Night theme it was off-white text on the system-white control (white-on-white). All native
+  selects now carry the token background and border, readable on both themes.
+- **Stale-cache symptoms** — bumped the service-worker shell cache (`v3`→`v4`) so an installed/PWA
+  copy fetches the current build instead of serving old assets (the cause of "quotes don't load"
+  and "only Small/Medium size work" — both work in current code).
+
+### Changed
+
+- **The in-page section bar is now clean rounded chips** (was a cramped row of bare text links).
+- **Selected states wear the liturgical color as an outline** — the day's accent (green in Ordinary
+  Time, violet in Advent/Lent, rose on Gaudete/Laetare, gold for white feasts) rings the selected
+  pill/chip/tab/version-card, with the purple/gold identity intact and readable text.
+
 ## [1.12.0] — 2026-06-17 — the straight paths
 
 A navigation & information-architecture pass so every screen is "a single readable, navigable

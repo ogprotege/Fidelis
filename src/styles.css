@@ -252,6 +252,22 @@ a:hover { text-decoration: underline; }
 
 button, select, input, textarea { font-family: inherit; color: inherit; }
 
+/* Native selects read on BOTH themes — a token background instead of the system
+   white that left the off-white Night text invisible (white-on-white). Covers
+   every select, including the Settings ones that had no styling of their own. */
+select {
+  background: var(--bg-1);
+  color: var(--text);
+  border: var(--hairline) solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+select:focus-visible { outline: 2px solid var(--purple); outline-offset: 1px; }
+/* The dropdown list items, where the platform honors styling. */
+option { background: var(--bg-1); color: var(--text); }
+
 /* dvh tracks the dynamic viewport so the shell isn't over-tall behind the iOS
    URL bar / home indicator; 100vh stays as the fallback for old engines. */
 .app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
@@ -422,36 +438,35 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
   top: var(--header-h);
   z-index: 25;
   display: flex;
-  align-items: center;
-  gap: 0.2rem 1rem;
-  flex-wrap: wrap;
-  margin: 0 0 1.1rem;
-  padding: 0.5rem 0;
+  gap: 0.45rem;
+  margin: 0.2rem 0 1.4rem;
+  padding: 0.55rem 0;
   background: var(--bg-0);
-  border-bottom: var(--hairline) solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   font-family: var(--sans);
-  font-size: 0.85rem;
 }
+.section-nav::-webkit-scrollbar { display: none; }
 .section-nav-link {
-  background: none;
-  border: none;
-  padding: 0.25rem 0;
+  flex-shrink: 0;
+  background: var(--bg-1);
+  border: var(--hairline) solid var(--border);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
   cursor: pointer;
-  color: var(--purple);
-  font: inherit;
+  color: var(--text-muted);
+  font-size: 0.82rem;
   white-space: nowrap;
   text-decoration: none;
   touch-action: manipulation;
+  transition: border-color 120ms ease, color 120ms ease;
 }
-.section-nav-link:active { text-decoration: underline; }
+.section-nav-link:active { border-color: var(--purple); color: var(--purple); }
 .section-nav-link:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
-.section-nav-top { margin-left: auto; color: var(--text-muted); }
+.section-nav-top { color: var(--text-muted); }
 @media (hover: hover) {
-  .section-nav-link:hover { text-decoration: underline; }
-}
-@media (max-width: 640px) {
-  .section-nav { flex-wrap: nowrap; overflow-x: auto; gap: 0 1rem; -webkit-overflow-scrolling: touch; }
-  .section-nav-top { margin-left: 0; }
+  .section-nav-link:hover { border-color: var(--purple); color: var(--purple); }
 }
 
 h1.page-title {
@@ -905,7 +920,7 @@ h1.page-title {
 }
 @media (hover: hover) { .chip:hover { border-color: var(--purple); } }
 .chip:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
-.chip.active { background: var(--purple-strong); border-color: var(--purple-strong); color: var(--on-accent); }
+.chip.active { background: var(--bg-2); border-color: var(--purple); color: var(--text); box-shadow: inset 0 0 0 1px var(--purple); }
 .chip-count { opacity: 0.7; font-variant-numeric: tabular-nums; }
 .search-progress { font-family: var(--sans); font-size: 0.85rem; color: var(--text-muted); margin: 0.6rem 0; }
 .result {
@@ -925,7 +940,7 @@ h1.page-title {
   border-radius: 0.6rem;
   cursor: pointer;
 }
-.tabs button.active { background: var(--purple-strong); color: var(--on-accent); border-color: var(--purple-strong); }
+.tabs button.active { background: var(--bg-2); color: var(--text); border-color: var(--purple); box-shadow: inset 0 0 0 1px var(--purple); }
 .lib-item { padding: 0.75rem 0; border-bottom: var(--hairline) solid var(--border); }
 .lib-item .when { font-family: var(--sans); font-size: 0.75rem; color: var(--text-muted); }
 .lib-item .actions { margin-top: 0.3rem; }
@@ -1093,13 +1108,17 @@ body.widget-mode { background: transparent; }
   gap: 0.4rem;
 }
 @media (hover: hover) { .pill:hover { border-color: var(--purple); } }
+/* Selected = a liturgical-colored outline (the day's --purple: green in Ordinary
+   Time, violet in Advent/Lent, rose on Gaudete/Laetare, gold for white feasts),
+   with readable text — the "color outlining follows the proper liturgy" intent. */
 .pill.active {
-  background: var(--purple-strong);
-  color: var(--on-accent);
-  border-color: var(--purple-strong);
+  background: var(--bg-2);
+  color: var(--text);
+  border-color: var(--purple);
+  box-shadow: inset 0 0 0 1px var(--purple);
 }
 .pill-sub { font-family: var(--sans); font-size: 0.72rem; color: var(--text-muted); }
-.pill.active .pill-sub { color: var(--on-accent); opacity: 0.85; }
+.pill.active .pill-sub { color: var(--purple); }
 .settings-foot { margin-top: 0.5rem; }
 
 /* §2.2 Bible-version cards: a horizontally scrolling rail; the chosen card is
@@ -1528,9 +1547,10 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
 }
 .cmt-chip.active,
 .cmt-doctors.on {
-  background: var(--purple-strong);
-  border-color: var(--purple-strong);
-  color: var(--on-accent);
+  background: var(--bg-2);
+  border-color: var(--purple);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--purple);
 }
 .cmt-chip.plain { font-style: italic; color: var(--text-muted); }
 .cmt-doctors { color: var(--text-muted); }
