@@ -28,6 +28,18 @@ export function cccParagraphs(
   return index[cccKey(book, chapter, verse)] ?? [];
 }
 
+/** Whether a verse is cited at all in the Catechism — drives the quiet at-rest
+ *  marker the Reader paints in the verse-number gutter so a reader can see a
+ *  citation exists before tapping (spec §5; cheap, called per rendered verse). */
+export function isCited(
+  index: CCCIndex,
+  book: string,
+  chapter: number,
+  verse: number
+): boolean {
+  return (index[cccKey(book, chapter, verse)]?.length ?? 0) > 0;
+}
+
 /** Soft cap (spec §4.2/§5): show the first few, collapse the rest behind "+N more". */
 export const CCC_SOFT_CAP = 8;
 

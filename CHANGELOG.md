@@ -4,6 +4,73 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.10.0] — 2026-06-17 — made plain
+
+An iOS crispness pass: the app now sits correctly in the iPhone's frame and feels native to
+the touch — safe-area edges, tap feedback, comfortable targets, legible gold — without changing
+the devotional identity. "Write the vision, and make it plain upon tables, that he may run that
+readeth it" (Habakkuk 2:2). Driven by a six-dimension iOS audit and an adversarial review,
+filtered through the two-accent rule and the §13 refusals.
+
+### Added
+
+- **CCC citations are discoverable before you tap.** A verse cited in the Catechism now wears a
+  quiet purple underline beneath its verse number — the universal link affordance, in a new
+  **fixed** `--ccc-mark` brand purple that never follows the liturgical accent (so it can never
+  turn gold and collide with the gold Haydock commentary dot). Driven by the tested `isCited()`
+  (`src/lib/ccc.ts`; `scripts/test-data.ts` §19), shown whenever CCC links are enabled. The
+  action-bar row is relabeled **Catechism** (was "CCC").
+- **A `--gold-text` token** for gold used as running text — the small-caps section labels, the
+  Father attributions, the motto: `#8A6D1F` in Day (≈4.6:1, clears WCAG AA), while the gold
+  **marks** (the ✠, the verse/quote-of-the-day quote marks, the selected-verse rule, the
+  note/bookmark marks, the commentary dot) keep the exact luminous `#A8862C`. Night gold already
+  clears AA, so `--gold-text` equals `--gold` there. The white/rose liturgical link-accents are
+  deepened for AA in Day too.
+- **Native status bar** (`@capacitor/status-bar`): on iOS the clock/battery glyphs now follow the
+  theme — light on the Night field, dark on Day (iOS ignores the `theme-color` meta). `App.tsx`,
+  native-guarded, no-op on the web.
+- **A device-pixel hairline** (`--hairline`; 0.5px on Retina): structural separators are a crisp
+  single device-pixel line on @2x/@3x iPhones instead of the soft 2–3px line a CSS 1px paints.
+- **The iOS sheet idiom**: a grabber handle on the bottom sheet (phones), momentum scrolling, and
+  scroll containment so a flick can't chain to the page behind.
+
+### Changed
+
+- **On a phone, Today leads with "Today in the Church"** (liturgical season + today's Mass
+  readings) right under the date; Verse and Quote of the Day follow. Still exactly five cards.
+- **The Scripture size presets render in `rem`** so the reading text scales with the iOS
+  text-size / browser-zoom setting instead of being pinned to device pixels.
+- **The deep-linked (`?v=`) verse** lands with a smooth (reduced-motion-safe) scroll and a
+  transient gold wash, reading as a scripture-focus rather than a selection.
+
+### Fixed (iOS)
+
+- **Safe areas now actually apply.** Added `viewport-fit=cover` — without it every
+  `env(safe-area-inset-*)` resolved to 0, so the tab bar, verse-action bar, sheets, and footer
+  never cleared the notch / home indicator. Paired with a top inset on the header, left/right
+  insets on the tab bar and page gutters, and `ios.contentInset: "never"` so the CSS insets are
+  the single source of truth (no doubled inset).
+- **Native touch feel.** Removed the grey iOS tap-flash (`-webkit-tap-highlight-color`), added
+  `touch-action: manipulation` (no ~300ms delay), real `:active` press feedback + a 0.98
+  press-scale, and guarded `:hover` behind `@media (hover: hover)` so a tint can't stick after a tap.
+- **Comfortable 44pt targets**: the verse-action buttons, the Catechism ¶ links, the highlight
+  swatches (hit area expanded without enlarging the swatch or overlapping its neighbours), and the
+  A−/A+ steppers.
+- **Dynamic Type & layout**: `dvh` for the app shell and sheets (no clipping behind iOS chrome),
+  `-webkit-text-size-adjust: 100%`, tabular verse numbers (no margin shimmer), the note textarea at
+  16px (no focus auto-zoom), and the two devotional list line-heights raised to the 1.5 body floor.
+- **Sheets** pin the body with `position: fixed` so the page behind can't rubber-band on iOS
+  (restored on close).
+
+### Notes
+
+- The gold-contrast change revisits the documented "keep the luminous gold" tradeoff for outdoor
+  iPhone legibility, by **splitting mark-gold from text-gold** rather than darkening the brand hex —
+  an explicit owner decision. Accent-hex and prayers-label test assertions were updated for the split.
+- After `npx cap sync ios`, verify the safe-area insets and the Night status bar on a notched
+  simulator. The remaining iOS roadmap is the WidgetKit / App-Intents Xcode session (docs/IOS.md §5).
+- `npm test` (harness + manifest) and `npm run build` are green.
+
 ## [1.9.0] — 2026-06-16 — the deposit
 
 Design-spec §5 — the CCC citation index ("Scripture-to-Magisterium" links). Where the

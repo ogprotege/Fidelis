@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { BOOKS, bookDisplayName, bookIndex, getBook } from "../lib/canon";
 import { BookData, CCCData, CommentaryBook, loadBook, loadCCC, loadCommentary } from "../lib/data";
 import { GOSPELS } from "../lib/commentary";
-import { cccParagraphs, capParagraphs } from "../lib/ccc";
+import { cccParagraphs, capParagraphs, isCited } from "../lib/ccc";
 import {
   HighlightColor,
   VerseRef,
@@ -167,7 +167,13 @@ export default function Reader() {
     if (focusVerse && data) {
       const el = document.getElementById(`v-${focusVerse}`);
       if (el) {
-        el.scrollIntoView({ block: "center" });
+        // Smooth glide to the deep-linked verse, but only when the reader hasn't
+        // asked the system to reduce motion (then snap, no disorienting scroll).
+        const reduce =
+          typeof window !== "undefined" &&
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
         setFocusedVerse(focusVerse);
         const t = setTimeout(() => setFocusedVerse(null), 3000);
         return () => clearTimeout(t);
@@ -227,6 +233,11 @@ export default function Reader() {
   const commentaryAvailable = (v: number) =>
     settings.commentaryEnabled &&
     ((settings.commentaryHaydock && haydockHas(v)) || (settings.commentaryCatena && isGospel));
+  // §5: a verse cited in the Catechism wears a quiet purple gutter mark so the
+  // citation is discoverable before tapping (the CATECHISM links live in the
+  // action bar). Cheap per-verse index lookup; only when links are enabled.
+  const cccCited = (v: number) =>
+    settings.cccLinksEnabled && !!ccc && isCited(ccc.index, bookSlug, chapter, v);
 
   const go = (t: string, b: string, c: number) => navigate(`/read/${t}/${b}/${c}`);
 
@@ -247,7 +258,9 @@ export default function Reader() {
   };
 
   const renderVerses = (vs: string[], interactive: boolean, transId: string) => (
-    <div className="verses" style={{ fontSize: `${fontSize}px` }} lang={getTranslation(transId)?.language === "la" ? "la" : undefined}>
+    // Reading size in rem (the stored preset / 16) so it scales with the iOS
+    // text-size / browser-zoom setting instead of being pinned to device px.
+    <div className="verses" style={{ fontSize: `${fontSize / 16}rem` }} lang={getTranslation(transId)?.language === "la" ? "la" : undefined}>
       {vs.map((text, i) => {
         // Grid-empty slot (see data-report.txt): no text in this translation.
         if (!text || !text.trim()) return null;
@@ -287,6 +300,9 @@ export default function Reader() {
                 {v}
                 {interactive && wantHaydockDots && haydockHas(v) && (
                   <span className="cmt-dot" aria-hidden="true" />
+                )}
+                {interactive && cccCited(v) && (
+                  <span className="ccc-mark" aria-hidden="true" />
                 )}
               </sup>
             )}
@@ -520,7 +536,7 @@ export default function Reader() {
           </button>
           {cccParas.length > 0 && (
             <div className="ccc-row">
-              <span className="ccc-label">CCC</span>
+              <span className="ccc-label">Catechism</span>
               {(cccExpanded ? cccParas : capParagraphs(cccParas).shown).map((p) =>
                 ccc?.url[String(p)] ? (
                   <a
