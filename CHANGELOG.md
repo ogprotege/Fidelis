@@ -4,6 +4,25 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.12.3] — 2026-06-17 — the faithful record
+
+Documentation reconciliation — no app behavior change. The README, `CLAUDE.md`, and this file were
+brought into line with the current feature set after the v1.10–v1.12 run.
+
+### Changed
+
+- **README** — version badge → 1.12.3; the import section notes USFM/OSIS and the `build-nabre`
+  converter; the Today-page card order corrected (Today in the Church now leads); the Identity &
+  design section documents the navigation/IA work (scroll restoration, in-page section jump bars,
+  native-Back handling, focus management, the liturgical-outline selected state); the Architecture
+  table lists the new navigation and import modules; `npm run build-nabre` added to Development.
+- **`CLAUDE.md`** — added the v1.12.1 / v1.12.2 / v1.12.3 records and updated the companion-docs
+  summary line.
+
+### Added
+
+- First **git tags** and a detailed **GitHub release** for the v1.10–v1.12 work.
+
 ## [1.12.2] — 2026-06-17 — bring your own
 
 Make importing a translation you own (e.g. the NABRE for the U.S. Mass) actually practical.

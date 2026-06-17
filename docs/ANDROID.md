@@ -19,6 +19,11 @@ device with USB debugging on), and press **Run ▸ app**. Everything works
 offline — all three translations and the lectionary data are bundled inside the
 app, exactly as on iOS.
 
+> **Hardware Back (v1.12.0):** `App.tsx` registers a `@capacitor/app` `backButton`
+> listener so the Android Back button closes an open sheet or the "More" popover
+> first, then steps back through history, and only exits the app at the root —
+> rather than exiting while an overlay is open. Worth a quick check on a device.
+
 To run without opening the IDE, with an emulator already booted or a device
 attached:
 

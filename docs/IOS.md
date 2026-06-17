@@ -17,6 +17,17 @@ In Xcode select the **App** scheme, pick a simulator or device, and Run.
 Everything works offline — all three translations and the lectionary data are
 bundled inside the app.
 
+### iOS chrome & safe areas (v1.10.0)
+
+The WebView paints **edge-to-edge**: `index.html` sets `viewport-fit=cover` and
+`capacitor.config.ts` sets `ios.contentInset: "never"`, so the app's own CSS
+`env(safe-area-inset-*)` insets (header, tab bar, sheets, page gutters) are the
+single source of truth — there is no doubled native + CSS inset. The status-bar
+glyphs follow the theme via the `@capacitor/status-bar` plugin (driven from
+`App.tsx`): light in Night, dark in Day. When verifying on a notched simulator,
+confirm the header clears the status bar exactly once and the tab bar lifts above
+the home indicator.
+
 ### Run it in the Simulator (step by step)
 
 *Verified:* `npm run build && npx cap sync ios` runs clean and copies the web
