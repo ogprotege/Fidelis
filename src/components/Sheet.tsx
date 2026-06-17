@@ -14,25 +14,44 @@ interface Props {
 /**
  * A bottom-sheet modal: dimmed backdrop, Escape / backdrop-click / close button
  * to dismiss, focus moved into the panel and returned to the opener on close,
- * body scroll locked, focus trapped within. No motion — a prayer book, not a
- * toy (standing rule 3). The "panel" variant becomes a desktop side panel; all
- * dialog/focus behavior is identical (§4 commentary).
+ * the body pinned (iOS-safe) so the page behind can't rubber-band, focus trapped
+ * within. A single restrained entrance and an iOS grabber handle on phones (both
+ * in styles.css, reduced-motion-gated) — a prayer book, not a toy (standing rule
+ * 3). The "panel" variant becomes a desktop side panel; all dialog/focus
+ * behavior is identical (§4 commentary).
  */
 export default function Sheet({ titleId, onClose, children, variant = "sheet" }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const opener = useRef<HTMLElement | null>(null);
+  // Keep the latest onClose without re-running the lock effect — re-running it
+  // would re-pin the body and lose the saved scroll position on a parent render.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     opener.current = document.activeElement as HTMLElement | null;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // iOS WKWebView ignores body overflow:hidden for touch dragging, so the page
+    // behind the scrim still rubber-bands. Pin the body and offset it by the
+    // current scroll to truly freeze it; restore the scroll on close.
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width
+    };
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
     panelRef.current
       ?.querySelector<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])')
       ?.focus();
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== "Tab") return;
@@ -53,10 +72,16 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      window.scrollTo(0, scrollY);
       opener.current?.focus();
     };
-  }, [onClose]);
+    // Mount-once: the sheet locks the body and traps focus for its lifetime;
+    // onClose is read through a ref so a parent re-render can't re-pin the body.
+  }, []);
 
   return (
     <div className={variant === "panel" ? "sheet-backdrop panel" : "sheet-backdrop"} onClick={onClose}>

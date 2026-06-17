@@ -1241,8 +1241,9 @@ check(
   /\.sheet-close\s*\{[^}]*var\(--purple\)/.test(sheetCss)
 );
 check(
+  // --gold-text is gold (the AA-legible text variant); both honor in gold.
   "sheet prayers label honors in gold (two-accent §1.2)",
-  /\.mystery-sheet-prayers-label\s*\{[^}]*var\(--gold\)/.test(sheetCss)
+  /\.mystery-sheet-prayers-label\s*\{[^}]*var\(--gold(-text)?\)/.test(sheetCss)
 );
 check(
   "modal backdrop uses the --scrim token, no raw color",
@@ -1734,7 +1735,7 @@ console.log("");
 // verse → CCC ¶ numbers, ¶ → vatican.va URL. The Catechism text is never bundled.
 // Anchors pinned from the USCCB 2nd-Ed Index of Citations (verified against the PDF).
 {
-  const { cccKey, cccParagraphs, capParagraphs } = await import("../src/lib/ccc");
+  const { cccKey, cccParagraphs, capParagraphs, isCited } = await import("../src/lib/ccc");
   const ci = JSON.parse(readFileSync(join(ROOT, "public/data/ccc/index.json"), "utf8")) as Record<string, number[]>;
   const cu = JSON.parse(readFileSync(join(ROOT, "public/data/ccc/url.json"), "utf8")) as Record<string, string>;
   const meta = JSON.parse(readFileSync(join(ROOT, "src/generated/bookMeta.json"), "utf8")) as Record<string, { verses: number[] }>;
@@ -1782,6 +1783,10 @@ console.log("");
   // ccc.ts pure helpers
   check("cccKey builds '<slug> ch:v'", cccKey("john", 3, 16) === "john 3:16");
   check("cccParagraphs reads the index", cccParagraphs(ci, "john", 3, 16).includes(444));
+  // isCited drives the Reader's at-rest "cited in the Catechism" marker: true for
+  // a cited verse (john 3:16), false for an uncited one (genesis 1:2 is not cited).
+  check("isCited: john 3:16 is cited", isCited(ci, "john", 3, 16) === true);
+  check("isCited: a non-existent coordinate is false", isCited(ci, "john", 999, 999) === false);
   const cap = capParagraphs([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   check("capParagraphs caps at 8 with a remainder", cap.shown.length === 8 && cap.more === 2);
 

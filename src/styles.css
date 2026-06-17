@@ -64,6 +64,13 @@
      first paint and the no-JS case are already correct; <html data-font>
      overrides it below. */
   --scripture: var(--garamond);
+  /* Structural hairline. 1px everywhere, but a true single-device-pixel line on
+     Retina (@2x/@3x iPhone) so separators read as crisp as the system's own
+     (Settings/Mail) rather than the soft 2–3 physical-pixel line a CSS 1px paints. */
+  --hairline: 1px;
+}
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  :root { --hairline: 0.5px; }
 }
 
 /* The Scripture-face choice, written by App.tsx as <html data-font="…">. */
@@ -83,7 +90,17 @@
   --text-muted: #6E6A61;    /* metadata, citations */
   --purple: #5B3A8E;        /* interactive on light */
   --purple-strong: #4A2F74; /* filled buttons */
-  --gold: #A8862C;          /* sacred markers on light */
+  --gold: #A8862C;          /* sacred MARKS on light (✠, quote marks, the rule
+                               beside a selected verse) — the exact luminous brand
+                               hex, kept exact on purpose (spec §1.1). */
+  --gold-text: #8A6D1F;     /* gold as running TEXT — small-caps section labels,
+                               Father attributions, the motto. ~4.6:1 on bg-1/bg-2
+                               so gold reading text clears WCAG AA in Day mode while
+                               the mark gold above stays luminous. */
+  --ccc-mark: #6E58A6;      /* the quiet "cited in the Catechism" mark under a verse
+                               number — a FIXED brand purple that never follows the
+                               liturgical accent, so it can never turn gold and
+                               collide with the gold Haydock dot. */
 
   --on-accent: #FFFFFF;     /* text/icon on a filled purple control */
   --shadow: 0 1px 3px rgba(38, 36, 31, 0.08), 0 8px 24px -12px rgba(38, 36, 31, 0.18);
@@ -113,6 +130,8 @@
   --purple: #9B7BD4;        /* interactive on dark */
   --purple-strong: #6B46A8;
   --gold: #D4B254;          /* sacred markers on dark */
+  --gold-text: #D4B254;     /* night gold already clears AA as text — no split needed */
+  --ccc-mark: #8A6FC8;      /* the quiet Catechism mark, fixed brand purple on dark */
 
   --on-accent: #FFFFFF;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
@@ -141,9 +160,12 @@
    the app is brand purple year-round. */
 [data-accent="green"]  { --purple: #3E7C4F; }
 [data-accent="violet"] { --purple: #5B3A8E; } /* = brand purple — Advent & Lent */
-[data-accent="white"]  { --purple: #A8862C; } /* gold stands for white */
+[data-accent="white"]  { --purple: #8A6D1F; } /* gold stands for white — the AA-legible
+                                                 gold-text hue, since on a white feast
+                                                 this carries real link text. */
 [data-accent="red"]    { --purple: #A32638; }
-[data-accent="rose"]   { --purple: #C76A8A; } /* Gaudete & Laetare */
+[data-accent="rose"]   { --purple: #B14F73; } /* Gaudete & Laetare — deepened from
+                                                 #C76A8A so links clear AA in Day mode. */
 [data-accent="black"]  { --purple: #4A4A50; }
 
 [data-theme="night"][data-accent="green"]  { --purple: #5CA86E; }
@@ -162,6 +184,22 @@ html, body {
   color: var(--text);
   font-family: var(--serif);
   -webkit-font-smoothing: antialiased;
+  /* Keep the reader's chosen size honored: stop iOS WebKit silently inflating
+     text on rotation while still respecting the user's own browser/zoom size. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* No grey iOS tap-flash on a quiet prayer-book surface (inherited by all). The
+     deliberate press feedback is the :active states below. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Drop the ~300ms double-tap-zoom delay on the things you act on, while leaving
+   pinch-zoom of the page itself untouched (accessibility — never disable zoom). */
+a, button, summary,
+[role="button"],
+.verse, .chip, .pill, .hl-dot, .chapter-cell,
+.cmt-tab, .cmt-chip, .ccc-ref, .ccc-more {
+  touch-action: manipulation;
 }
 
 /* Purple acts: one focus signal for everything reachable. */
@@ -176,7 +214,9 @@ a:hover { text-decoration: underline; }
 
 button, select, input, textarea { font-family: inherit; color: inherit; }
 
-.app { min-height: 100vh; display: flex; flex-direction: column; }
+/* dvh tracks the dynamic viewport so the shell isn't over-tall behind the iOS
+   URL bar / home indicator; 100vh stays as the fallback for old engines. */
+.app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
 
 /* ---------- Header ---------- */
 .header {
@@ -184,13 +224,18 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
   top: 0;
   z-index: 30;
   background: var(--bg-1);
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--hairline) solid var(--border);
   box-shadow: var(--shadow);
+  /* viewport-fit=cover + ios.contentInset:"never" let the WebView paint under the
+     status bar; the bar's --bg-1 fills the notch strip and its content sits below
+     it. The single top inset lives here (env() = 0 on non-notched/desktop). */
+  padding-top: env(safe-area-inset-top);
 }
 .header-inner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 0.6rem 1rem;
+  /* Inset the row off the rounded-corner / notch sides in landscape. */
+  padding: 0.6rem max(1rem, env(safe-area-inset-right)) 0.6rem max(1rem, env(safe-area-inset-left));
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -260,7 +305,7 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
   display: flex;
   flex-direction: column;
   background: var(--bg-1);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.6rem;
   box-shadow: var(--shadow);
   padding: 0.3rem;
@@ -276,7 +321,7 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
 .more-menu a.active { color: var(--purple); font-weight: 600; }
 
 .icon-btn {
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   background: var(--bg-1);
   border-radius: 0.5rem;
   padding: 0.35rem 0.6rem;
@@ -286,9 +331,18 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
   /* The Settings gear is an <a> wearing this class; keep it from picking up the
      global link underline so the control cluster stays visually uniform. */
   text-decoration: none;
-  display: inline-block;
+  /* A 44pt touch box (iOS HIG); inline-flex centres the icon + label and honors
+     the min-height where inline-block would collapse it. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 44px;
 }
-.icon-btn:hover { border-color: var(--purple); text-decoration: none; }
+@media (hover: hover) {
+  .icon-btn:hover { border-color: var(--purple); text-decoration: none; }
+}
+.icon-btn:active { background: var(--bg-2); }
 /* The follow-the-liturgical-year toggle shows the day's accent: a filled dot
    in the live --purple when following (rose on Gaudete, gold on Easter), a
    hollow dot when off. Reads the same --purple the rest of the UI acts in. */
@@ -316,7 +370,8 @@ button, select, input, textarea { font-family: inherit; color: inherit; }
   width: 100%;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 1.25rem 1rem 4rem;
+  /* Side padding clears the landscape safe-area; never below the 1rem base. */
+  padding: 1.25rem max(1rem, env(safe-area-inset-right)) 4rem max(1rem, env(safe-area-inset-left));
   flex: 1;
 }
 .page-narrow { max-width: 780px; }
@@ -337,7 +392,7 @@ h1.page-title {
 }
 .card {
   background: var(--bg-1);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.9rem;
   box-shadow: var(--shadow);
   padding: 1.1rem 1.25rem;
@@ -349,7 +404,7 @@ h1.page-title {
   font-family: var(--sans);
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--gold);
+  color: var(--gold-text);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -373,7 +428,7 @@ h1.page-title {
   width: 0.8rem;
   height: 0.8rem;
   border-radius: 50%;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   vertical-align: -0.05rem;
 }
 .lit-season { font-size: 1.15rem; margin: 0.2rem 0; }
@@ -394,7 +449,7 @@ h1.page-title {
 }
 
 .rosary-list { margin: 0.3rem 0 0; padding-left: 1.4rem; }
-.rosary-list li { margin: 0.3rem 0; line-height: 1.45; }
+.rosary-list li { margin: 0.3rem 0; line-height: 1.5; }
 .rosary-list .mref { font-family: var(--sans); font-size: 0.78rem; color: var(--purple); margin-left: 0.4rem; }
 
 /* Filled CTA — purple acts. */
@@ -431,13 +486,13 @@ h1.page-title {
 /* Navigation chips read as neutral until touched; purple appears on hover. */
 .book-grid a {
   background: var(--bg-1);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   padding: 0.4rem 0.75rem;
   border-radius: 0.5rem;
   font-size: 0.95rem;
   color: var(--text);
 }
-.book-grid a:hover { border-color: var(--purple); text-decoration: none; }
+@media (hover: hover) { .book-grid a:hover { border-color: var(--purple); text-decoration: none; } }
 .book-grid a .deutero-mark { color: var(--text-muted); margin-left: 0.25rem; }
 
 /* ---------- Reader ---------- */
@@ -451,13 +506,13 @@ h1.page-title {
   align-items: center;
   background: var(--bg-0);
   padding: 0.6rem 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--hairline) solid var(--border);
   font-family: var(--sans);
   font-size: 0.9rem;
 }
 .reader-toolbar select {
   background: var(--bg-1);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.5rem;
   padding: 0.35rem 0.5rem;
   font-size: 0.9rem;
@@ -494,7 +549,7 @@ h1.page-title {
   align-items: center;
   justify-content: center;
   background: var(--bg-2);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.5rem;
   font-family: var(--sans);
   font-size: 0.95rem;
@@ -502,9 +557,9 @@ h1.page-title {
   cursor: pointer;
   transition: border-color 120ms ease, background 120ms ease;
 }
-.chapter-cell:hover { border-color: var(--purple); }
+@media (hover: hover) { .chapter-cell:hover { border-color: var(--purple); } }
 .chapter-cell:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
-.chapter-cell.current { border-color: var(--gold); color: var(--gold); font-weight: 600; }
+.chapter-cell.current { border-color: var(--gold); color: var(--gold-text); font-weight: 600; }
 .chapter-title {
   text-align: center;
   margin: 1.6rem 0 0.2rem;
@@ -529,7 +584,10 @@ h1.page-title {
 .verse:hover { background: var(--bg-2); }
 /* The rule beside a selected verse — gold honors. */
 .verse.selected { outline: 2px solid var(--gold); }
-.verse-focused { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* A deep-linked (?v=) verse lands lit: a transient gold wash + rule for ~3s so
+   the eye finds it, reading as a scripture-focus rather than a selection (which
+   has no wash). JS-timed, so it's visible to reduced-motion users too. */
+.verse-focused { background: var(--hl-gold); outline: 2px solid var(--gold); outline-offset: 2px; }
 
 /* §5 the CCC citation row in the verse-actions bar — purple links honor the
    two-accent rule (interaction); "CCC" is a muted label; no gold, no dot. */
@@ -537,29 +595,48 @@ h1.page-title {
   flex-basis: 100%;
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
+  align-items: center;
+  gap: 0.1rem 0.5rem;
+  /* A hairline lifts the Catechism row clear of the action cluster so it reads
+     as its own thing, not another toolbar button. */
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: var(--hairline) solid var(--border);
   font-family: var(--sans);
   font-size: 0.85rem;
 }
 .ccc-label {
+  flex-shrink: 0;
   color: var(--text-muted);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.ccc-ref { color: var(--purple); text-decoration: none; }
-.ccc-ref:hover { text-decoration: underline; }
+/* Each ¶ link carries a 44pt-tall tap target; the gap separates them, so no
+   tiny "·" between sub-8px targets. */
+.ccc-ref {
+  color: var(--purple);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.15rem;
+}
+@media (hover: hover) {
+  .ccc-ref:hover { text-decoration: underline; }
+}
+.ccc-ref:active { text-decoration: underline; }
 .ccc-ref:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
-.ccc-ref + .ccc-ref::before { content: "·"; margin-right: 0.4rem; color: var(--text-muted); }
 .ccc-more {
   background: none;
   border: none;
   color: var(--text-muted);
   font: inherit;
   cursor: pointer;
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.15rem;
   text-decoration: underline;
 }
 .ccc-more:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
@@ -575,6 +652,9 @@ h1.page-title {
   margin-right: 0.28em;
   font-weight: 700;
   position: relative;
+  /* Even advance widths so 1- vs 2-digit numbers don't nudge the following word
+     (a faint shimmer down the margin, worse in the parallel column). */
+  font-variant-numeric: tabular-nums lining-nums;
 }
 /* Apparatus marks — chosen, so gold honors. */
 .verse .note-mark { color: var(--gold); font-size: 0.8em; margin-left: 0.2em; }
@@ -591,6 +671,20 @@ h1.page-title {
   border-radius: 50%;
   background: var(--gold);
 }
+/* §5 the "cited in the Catechism" mark — a quiet purple underline beneath the
+   verse number, the universal link affordance, in the FIXED brand purple so it
+   never turns gold (and so never reads as the gold Haydock dot, which sits at the
+   top-right). Absolutely placed in the number's gutter → zero reflow of the
+   sacred text, even though it arrives only once the CCC index has loaded. */
+.ccc-mark {
+  position: absolute;
+  left: -0.12em;
+  right: -0.12em;
+  bottom: -0.18em;
+  height: 0.22em;
+  border-radius: 1px;
+  background: var(--ccc-mark);
+}
 
 .parallel-grid {
   display: grid;
@@ -603,7 +697,7 @@ h1.page-title {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--gold);
+  color: var(--gold-text);
   text-align: center;
   margin-bottom: 0.6rem;
 }
@@ -618,12 +712,12 @@ h1.page-title {
 }
 .chapter-nav a {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.6rem;
   background: var(--bg-1);
   color: var(--text);
 }
-.chapter-nav a:hover { border-color: var(--purple); text-decoration: none; }
+@media (hover: hover) { .chapter-nav a:hover { border-color: var(--purple); text-decoration: none; } }
 
 /* verse action bar */
 .verse-actions {
@@ -632,7 +726,7 @@ h1.page-title {
   bottom: 1.2rem;
   transform: translateX(-50%);
   background: var(--bg-1);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.8rem;
   box-shadow: var(--shadow);
   padding: 0.6rem 0.8rem;
@@ -650,17 +744,32 @@ h1.page-title {
   width: 1.35rem;
   height: 1.35rem;
   border-radius: 50%;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   cursor: pointer;
   padding: 0;
+  position: relative;
+  transition: transform 120ms ease, box-shadow 120ms ease;
 }
 .hl-dot.gold { background: var(--hl-gold); }
 .hl-dot.rose { background: var(--hl-rose); }
 .hl-dot.sky { background: var(--hl-sky); }
 .hl-dot.olive { background: var(--hl-olive); }
-.hl-dot.clear { background: transparent; position: relative; }
-.hl-dot { transition: transform 120ms ease, box-shadow 120ms ease; }
-.hl-dot:hover { transform: translateY(-1px); }
+.hl-dot.clear { background: transparent; }
+/* In the verse-action bar, grow each swatch's tap target to ~44pt tall without
+   enlarging the disc or eating into the 8px gap to its neighbours — the row of
+   five stays precise to the thumb (the height is what a thumb from below needs). */
+.verse-actions .hl-dot::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -11px;
+  bottom: -11px;
+}
+@media (hover: hover) {
+  .hl-dot:hover { transform: translateY(-1px); }
+}
+.hl-dot:active { transform: translateY(-1px); }
 .hl-dot:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .hl-dot[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--bg-1), 0 0 0 3px var(--gold); }
 
@@ -669,10 +778,12 @@ h1.page-title {
   width: 100%;
   min-height: 4rem;
   background: var(--bg-2);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.5rem;
   padding: 0.5rem;
-  font-size: 0.95rem;
+  /* 16px exactly: below it, iOS auto-zooms the page when the field is focused,
+     which would jerk the floating verse-action bar off-screen. */
+  font-size: 1rem;
 }
 
 /* ---------- Search ---------- */
@@ -681,14 +792,14 @@ h1.page-title {
   flex: 1;
   min-width: 14rem;
   padding: 0.55rem 0.8rem;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.6rem;
   background: var(--bg-1);
   font-size: 1rem;
 }
 .search-bar select, .search-bar button {
   padding: 0.5rem 0.8rem;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.6rem;
   background: var(--bg-1);
   font-size: 0.95rem;
@@ -699,7 +810,7 @@ h1.page-title {
 .search-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.2rem 0 0.9rem; font-family: var(--sans); }
 .chip {
   background: var(--bg-1);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 999px;
   padding: 0.25rem 0.7rem;
   font-size: 0.82rem;
@@ -707,14 +818,14 @@ h1.page-title {
   color: var(--text);
   transition: background 120ms ease, border-color 120ms ease;
 }
-.chip:hover { border-color: var(--purple); }
+@media (hover: hover) { .chip:hover { border-color: var(--purple); } }
 .chip:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .chip.active { background: var(--purple-strong); border-color: var(--purple-strong); color: var(--on-accent); }
 .chip-count { opacity: 0.7; font-variant-numeric: tabular-nums; }
 .search-progress { font-family: var(--sans); font-size: 0.85rem; color: var(--text-muted); margin: 0.6rem 0; }
 .result {
   padding: 0.7rem 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--hairline) solid var(--border);
   line-height: 1.6;
 }
 .result .ref { font-family: var(--sans); font-size: 0.82rem; font-weight: 700; }
@@ -724,13 +835,13 @@ h1.page-title {
 .tabs { display: flex; gap: 0.4rem; font-family: var(--sans); font-size: 0.9rem; margin-bottom: 1rem; }
 .tabs button {
   padding: 0.45rem 0.9rem;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   background: var(--bg-1);
   border-radius: 0.6rem;
   cursor: pointer;
 }
 .tabs button.active { background: var(--purple-strong); color: var(--on-accent); border-color: var(--purple-strong); }
-.lib-item { padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+.lib-item { padding: 0.75rem 0; border-bottom: var(--hairline) solid var(--border); }
 .lib-item .when { font-family: var(--sans); font-size: 0.75rem; color: var(--text-muted); }
 .lib-item .actions { margin-top: 0.3rem; }
 .lib-item .actions button {
@@ -769,7 +880,7 @@ body.widget-mode { background: transparent; }
 .widget-votd {
   font-family: var(--serif);
   background: var(--bg-1);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.8rem;
   padding: 1rem 1.2rem;
   max-width: 28rem;
@@ -780,7 +891,7 @@ body.widget-mode { background: transparent; }
   font-size: 0.7rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold-text);
   margin-bottom: 0.4rem;
 }
 
@@ -804,7 +915,7 @@ body.widget-mode { background: transparent; }
 }
 .readings-toolbar input[type="date"], .readings-toolbar select {
   padding: 0.4rem 0.6rem;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.5rem;
   background: var(--bg-1);
   font-size: 0.9rem;
@@ -816,12 +927,12 @@ body.widget-mode { background: transparent; }
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.13em;
-  color: var(--gold);
+  color: var(--gold-text);
 }
 .reading-citation { font-family: var(--sans); font-size: 0.92rem; font-weight: 600; margin: 0.15rem 0 0.3rem; }
 .reading-body { font-family: var(--scripture); line-height: 1.8; margin: 0; }
 .mass-list { margin: 0.2rem 0 0.8rem; padding-left: 1.2rem; }
-.mass-list li { margin: 0.25rem 0; line-height: 1.45; }
+.mass-list li { margin: 0.25rem 0; line-height: 1.5; }
 .mass-list .mass-label {
   font-family: var(--sans);
   font-size: 0.7rem;
@@ -886,7 +997,7 @@ body.widget-mode { background: transparent; }
 /* Pills: purple acts, so the chosen one fills purple (spec §1.2). */
 .pill-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
 .pill {
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   background: var(--bg-1);
   border-radius: 0.6rem;
   padding: 0.5rem 0.9rem;
@@ -896,7 +1007,7 @@ body.widget-mode { background: transparent; }
   align-items: baseline;
   gap: 0.4rem;
 }
-.pill:hover { border-color: var(--purple); }
+@media (hover: hover) { .pill:hover { border-color: var(--purple); } }
 .pill.active {
   background: var(--purple-strong);
   color: var(--on-accent);
@@ -921,13 +1032,13 @@ body.widget-mode { background: transparent; }
 .version-card {
   flex: 0 0 15rem;
   scroll-snap-align: start;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.7rem;
   background: var(--bg-1);
   padding: 0.7rem 0.85rem;
   cursor: pointer;
 }
-.version-card:hover { border-color: var(--purple); }
+@media (hover: hover) { .version-card:hover { border-color: var(--purple); } }
 .version-card.active { border-color: var(--purple); box-shadow: inset 0 0 0 1px var(--purple); }
 .version-card.locked { cursor: default; opacity: 0.82; }
 .version-card.locked:hover { border-color: var(--border); }
@@ -949,7 +1060,7 @@ body.widget-mode { background: transparent; }
   font-family: var(--sans);
   font-size: 0.72rem;
   color: var(--badge-import-text);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.4rem;
   padding: 0.05rem 0.35rem;
 }
@@ -962,7 +1073,7 @@ body.widget-mode { background: transparent; }
   gap: 1rem;
   margin-top: 0.5rem;
 }
-.setting-row + .setting-row { border-top: 1px solid var(--border); padding-top: 0.7rem; }
+.setting-row + .setting-row { border-top: var(--hairline) solid var(--border); padding-top: 0.7rem; }
 .setting-label { font-family: var(--sans); font-weight: 600; font-size: 0.92rem; }
 .catechesis { margin: 0.15rem 0 0; max-width: 34rem; }
 
@@ -972,7 +1083,7 @@ body.widget-mode { background: transparent; }
   width: 2.7rem;
   height: 1.55rem;
   border-radius: 1rem;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   background: var(--bg-2);
   position: relative;
   cursor: pointer;
@@ -1005,13 +1116,13 @@ body.widget-mode { background: transparent; }
   gap: 1rem;
   padding: 0.4rem 0;
 }
-.download-row + .download-row { border-top: 1px solid var(--border); }
+.download-row + .download-row { border-top: var(--hairline) solid var(--border); }
 .download-name { font-family: var(--sans); font-weight: 600; }
 
 /* ---------- Misc ---------- */
 .notice {
   background: var(--bg-2);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   color: var(--text);
   border-radius: 0.6rem;
   padding: 0.8rem 1rem;
@@ -1022,10 +1133,10 @@ body.widget-mode { background: transparent; }
 .muted { color: var(--text-muted); }
 .small { font-size: 0.85rem; }
 .sans { font-family: var(--sans); }
-hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin: 1.5rem 0; }
 
 .footer {
-  border-top: 1px solid var(--border);
+  border-top: var(--hairline) solid var(--border);
   padding: 1.2rem 1rem 2rem;
   text-align: center;
   font-family: var(--sans);
@@ -1033,7 +1144,7 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   color: var(--text-muted);
 }
 /* The Latin motto is sacred text — gold honors. */
-.footer .motto { font-family: var(--serif); font-style: italic; font-size: 0.95rem; color: var(--gold); }
+.footer .motto { font-family: var(--serif); font-style: italic; font-size: 0.95rem; color: var(--gold-text); }
 
 .loading { text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0; }
 .loading-inline { color: var(--text-muted); font-style: italic; }
@@ -1073,9 +1184,13 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
     gap: 0;
     flex-wrap: nowrap;
     background: var(--bg-1);
-    border-top: 1px solid var(--border);
+    border-top: var(--hairline) solid var(--border);
     box-shadow: var(--shadow-tabbar);
-    padding: 0.25rem 0.25rem calc(0.25rem + env(safe-area-inset-bottom));
+    /* Bottom inset clears the home indicator; left/right clear the rounded
+       corners in landscape. */
+    padding: 0.25rem max(0.25rem, env(safe-area-inset-right))
+             calc(0.25rem + env(safe-area-inset-bottom))
+             max(0.25rem, env(safe-area-inset-left));
   }
   .tabbar > a,
   .tabbar .more { flex: 1 1 0; }
@@ -1124,7 +1239,7 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   cursor: pointer;
   color: var(--text);
   font: inherit;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 .rosary-list .rosary-title { flex: 1; }
 .rosary-list .rosary-mystery:hover .rosary-title,
@@ -1145,13 +1260,32 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   width: 100%;
   max-width: 34rem;
   max-height: 85vh;
+  max-height: 85dvh; /* dvh so the ✕ and first lines never hide behind iOS chrome */
   overflow-y: auto;
+  /* Keep a flick inside the sheet from chaining to the page behind it (iOS does
+     not honor body overflow:hidden for touch); momentum for a native flick. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: var(--bg-1);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.9rem 0.9rem 0 0;
   box-shadow: var(--shadow);
-  padding: 1.3rem 1.3rem calc(1.3rem + env(safe-area-inset-bottom));
+  padding: 1.5rem 1.3rem calc(1.3rem + env(safe-area-inset-bottom));
   animation: sheet-in 110ms ease-out;
+}
+/* The iOS grabber pill — the universal "drag/dismiss" cue. Phones only (where the
+   sheet is bottom-anchored); hidden once it becomes a centered/side panel ≥640px.
+   Decoration-of-affordance, not ornament; aria-hidden by being a pseudo-element. */
+.sheet::before {
+  content: "";
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2.25rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--border);
 }
 /* A single restrained entrance so the sheet doesn't pop in on phones; the
    global prefers-reduced-motion block neutralizes it to ~instant. */
@@ -1189,9 +1323,9 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold-text);
 }
-.prayer { border-top: 1px solid var(--border); padding: 0.45rem 0; }
+.prayer { border-top: var(--hairline) solid var(--border); padding: 0.45rem 0; }
 .prayer summary { cursor: pointer; color: var(--purple); }
 .prayer-body { margin-top: 0.45rem; }
 .prayer-la { margin: 0; font-style: italic; color: var(--text); line-height: 1.5; }
@@ -1206,7 +1340,7 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   max-width: 17rem;
   height: auto;
   margin: 0 auto 0.9rem;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.6rem;
   box-shadow: var(--shadow);
 }
@@ -1234,7 +1368,9 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 
 @media (min-width: 640px) {
   .sheet-backdrop { align-items: center; }
-  .sheet { border-radius: 0.9rem; max-height: 80vh; }
+  .sheet { border-radius: 0.9rem; max-height: 80vh; max-height: 80dvh; padding-top: 1.3rem; }
+  /* Centered/side-docked at this width — the bottom-sheet grabber no longer reads. */
+  .sheet::before { display: none; }
   /* §4.2 panel variant: a right-docked, full-height study panel on desktop. On
      phones it stays the plain bottom sheet (the base rules above 640px). */
   .sheet-backdrop.panel { align-items: stretch; justify-content: flex-end; }
@@ -1242,7 +1378,9 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
     width: 32rem;
     max-width: 32rem;
     height: 100vh;
+    height: 100dvh; /* dvh: never overrun the iOS dynamic toolbar / home indicator */
     max-height: 100vh;
+    max-height: 100dvh;
     border-radius: 0;
     border-top: none;
     border-right: none;
@@ -1257,7 +1395,7 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   display: flex;
   gap: 0.4rem;
   margin-bottom: 0.8rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--hairline) solid var(--border);
 }
 .cmt-tab {
   background: none;
@@ -1270,14 +1408,14 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   margin-bottom: -1px;
   border-bottom: 2px solid transparent;
 }
-.cmt-tab:hover { color: var(--purple); }
+@media (hover: hover) { .cmt-tab:hover { color: var(--purple); } }
 .cmt-tab.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 600; }
 .cmt-credit {
   font-family: var(--sans);
   font-size: 0.72rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold-text);
   margin-bottom: 0.7rem;
 }
 .cmt-filters {
@@ -1295,12 +1433,14 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   cursor: pointer;
   padding: 0.18rem 0.62rem;
   border-radius: 1rem;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   background: var(--bg-1);
   color: var(--text);
 }
-.cmt-chip:hover,
-.cmt-doctors:hover { border-color: var(--purple); }
+@media (hover: hover) {
+  .cmt-chip:hover,
+  .cmt-doctors:hover { border-color: var(--purple); }
+}
 .cmt-chip.active,
 .cmt-doctors.on {
   background: var(--purple-strong);
@@ -1316,7 +1456,7 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   font-size: 0.72rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold-text);
   margin-bottom: 0.2rem;
 }
 .cmt-attr.plain { color: var(--text-muted); font-style: italic; text-transform: none; letter-spacing: 0; }
@@ -1336,8 +1476,8 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   text-align: center;
   font-family: var(--sans);
   font-size: 0.8rem;
-  line-height: 1.45;
-  color: var(--gold);
+  line-height: 1.5;
+  color: var(--gold-text);
 }
 .indulgence-line:hover,
 .indulgence-line:focus-visible { text-decoration: underline; }
@@ -1364,14 +1504,14 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 .preset-btn {
   text-align: left;
   background: var(--bg-2);
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.5rem;
   padding: 0.6rem 0.8rem;
   cursor: pointer;
   font: inherit;
   color: var(--text);
 }
-.preset-btn:hover { border-color: var(--purple); }
+@media (hover: hover) { .preset-btn:hover { border-color: var(--purple); } }
 .plan-book-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
@@ -1401,7 +1541,7 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
   margin: 0.4rem 0 0.8rem;
   padding: 0.5rem 0.6rem;
   font: inherit;
-  border: 1px solid var(--border);
+  border: var(--hairline) solid var(--border);
   border-radius: 0.5rem;
   background: var(--bg-1);
   color: var(--text);
@@ -1410,10 +1550,36 @@ hr.rule { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
    the :hover brightness so it never looks clickable. */
 .continue-cta:disabled { opacity: 0.5; cursor: not-allowed; filter: none; }
 
+/* ── Touch feedback (iOS has no hover) ───────────────────────────────────────
+   A restrained press acknowledgement within ~100ms so taps feel native instead
+   of inert: a wash on flat controls, a 0.98 depress on filled buttons and the
+   tab bar. Pairs with the removed tap-highlight; the reduced-motion block below
+   neutralizes the transitions for users who ask the system to still motion. */
+.chip:active,
+.pill:active,
+.chapter-cell:active,
+.book-grid a:active,
+.cmt-tab:active,
+.cmt-chip:active,
+.preset-btn:active,
+.version-card:active,
+.chapter-nav a:active { background: var(--bg-2); }
+
+.continue-cta,
+.tabbar > a,
+.tabbar .more-btn,
+.search-bar button.primary,
+.preset-btn { transition: transform 80ms ease; }
+.continue-cta:active,
+.tabbar > a:active,
+.tabbar .more-btn:active,
+.search-bar button.primary:not(:disabled):active,
+.preset-btn:active { transform: scale(0.98); }
+
 /* Honor the OS "reduce motion" preference. The app is near-motionless by design
-   (the Sheet never animates), but the few small transitions that remain — the
-   More caret, the settings switches — are neutralized for users who ask the
-   system to reduce motion, so the no-motion intent is enforced, not incidental. */
+   (the Sheet barely animates), but the few small transitions that remain — the
+   More caret, the settings switches, the press feedback above — are neutralized
+   for users who ask the system to reduce motion, so the intent is enforced. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

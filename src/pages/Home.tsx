@@ -27,9 +27,9 @@ import { verseOfTheDay, formatVotdRef } from "../lib/votd";
 import { useSettings } from "../SettingsContext";
 
 /* The Today page never exceeds five cards (CLAUDE.md standing rule):
-   1 Verse of the Day · 2 Quote of the Day · 3 Today in the Church
-   (liturgical day + Mass readings + Marian antiphon, merged per spec §6)
-   · 4 The Holy Rosary · 5 Continue Reading. */
+   1 Today in the Church (liturgical day + Mass readings + Marian antiphon, merged
+   per spec §6) — the time-sensitive card leads on a phone, right under the date ·
+   2 Verse of the Day · 3 Quote of the Day · 4 The Holy Rosary · 5 Continue Reading. */
 export default function Home() {
   const today = new Date();
   const votd = verseOfTheDay(today);
@@ -89,50 +89,6 @@ export default function Home() {
       <h1 className="page-title">{dateLabel}</h1>
       <div className="widget-grid">
         <div className="card">
-          <h2><span className="cross"><Icon name="cross" /></span> Verse of the Day</h2>
-          <VerseQuote
-            translation={translation}
-            book={votd.book}
-            chapter={votd.chapter}
-            verse={votd.verse}
-            endVerse={votd.endVerse}
-            className="votd-text"
-          />
-          <div className="votd-ref">
-            <Link to={readerLink(votd.book, votd.chapter, votd.verse)}>
-              {formatVotdRef(votd, bookDisplayName(votdBook, translation))}
-            </Link>
-            {votd.book === "psalms" && " · Vulgate Psalm numbering"}
-          </div>
-          <button type="button" className="card-share" onClick={() => void shareVotd()}>
-            <Icon name="share" /> Share
-          </button>
-        </div>
-
-        <div className="card">
-          <h2>Quote of the Day</h2>
-          {!quote && <p className="loading-inline small">Loading today's quote…</p>}
-          {quote && (
-            <>
-              <p className="qotd-text">{quote.text}</p>
-              <div className="qotd-author">
-                {quote.author}
-                {quote.authorTitle && (
-                  <span className="muted small sans"> · {quote.authorTitle}</span>
-                )}
-              </div>
-              <div className="qotd-source muted small sans">
-                <em>{quote.work}</em>
-                {quote.locus !== "—" && <> {quote.locus}</>} · {quote.sourceEdition}
-              </div>
-              <button type="button" className="card-share" onClick={() => shareQuote(quote)}>
-                <Icon name="share" /> Share
-              </button>
-            </>
-          )}
-        </div>
-
-        <div className="card">
           <h2>
             Today in the Church
             <span className="spacer" />
@@ -179,6 +135,50 @@ export default function Home() {
           <Link className="continue-cta" to="/readings">
             Read at Mass →
           </Link>
+        </div>
+
+        <div className="card">
+          <h2><span className="cross"><Icon name="cross" /></span> Verse of the Day</h2>
+          <VerseQuote
+            translation={translation}
+            book={votd.book}
+            chapter={votd.chapter}
+            verse={votd.verse}
+            endVerse={votd.endVerse}
+            className="votd-text"
+          />
+          <div className="votd-ref">
+            <Link to={readerLink(votd.book, votd.chapter, votd.verse)}>
+              {formatVotdRef(votd, bookDisplayName(votdBook, translation))}
+            </Link>
+            {votd.book === "psalms" && " · Vulgate Psalm numbering"}
+          </div>
+          <button type="button" className="card-share" onClick={() => void shareVotd()}>
+            <Icon name="share" /> Share
+          </button>
+        </div>
+
+        <div className="card">
+          <h2>Quote of the Day</h2>
+          {!quote && <p className="loading-inline small">Loading today's quote…</p>}
+          {quote && (
+            <>
+              <p className="qotd-text">{quote.text}</p>
+              <div className="qotd-author">
+                {quote.author}
+                {quote.authorTitle && (
+                  <span className="muted small sans"> · {quote.authorTitle}</span>
+                )}
+              </div>
+              <div className="qotd-source muted small sans">
+                <em>{quote.work}</em>
+                {quote.locus !== "—" && <> {quote.locus}</>} · {quote.sourceEdition}
+              </div>
+              <button type="button" className="card-share" onClick={() => shareQuote(quote)}>
+                <Icon name="share" /> Share
+              </button>
+            </>
+          )}
         </div>
 
         <div className="card">

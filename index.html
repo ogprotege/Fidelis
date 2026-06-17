@@ -2,7 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover lets the WebView paint edge-to-edge so the
+         env(safe-area-inset-*) variables the stylesheet already uses (tab bar,
+         verse-action bar, sheets, footer, header) resolve to real values on
+         notched iPhones instead of 0. Without it, all that inset work is inert. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- Pre-paint appearance (spec §2.2): resolve the saved theme (System →
          the OS preference) and Scripture face and write them to <html> before
          the stylesheet paints, so a Night/System user never flashes Day. This

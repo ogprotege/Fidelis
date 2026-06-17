@@ -13,6 +13,8 @@ import Translations from "./pages/Translations";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
 import WidgetVotd from "./pages/WidgetVotd";
+import { Capacitor } from "@capacitor/core";
+import { StatusBar, Style } from "@capacitor/status-bar";
 import { useSettings } from "./SettingsContext";
 import { accentFor, liturgicalDay } from "./lib/liturgical";
 import { resolveTheme } from "./lib/theme";
@@ -61,6 +63,17 @@ export default function App() {
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta && bg) meta.setAttribute("content", bg);
   }, [effectiveTheme, widgetMode]);
+
+  // Native status bar (iOS especially): iOS ignores the theme-color meta, so the
+  // clock/battery would stay dark on the near-black Night field. Flip the glyphs
+  // to match the resolved theme — Style.Dark = light glyphs for a dark bg,
+  // Style.Light = dark glyphs for the Day field. No-op (skipped) on the web.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    StatusBar.setStyle({ style: effectiveTheme === "night" ? Style.Dark : Style.Light }).catch(() => {
+      // best-effort: older OS, or the plugin not present in this shell
+    });
+  }, [effectiveTheme]);
 
   // Scripture face (spec §1.4): drive the global --scripture token from the
   // saved choice by naming it in <html data-font>. Reactive now, so a change on

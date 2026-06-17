@@ -227,9 +227,11 @@ const purpleOf = (selector: string): string | null => {
 const ACCENT_HEX: Record<string, [string, string]> = {
   green: ["#5CA86E", "#3E7C4F"],
   violet: ["#9B7BD4", "#5B3A8E"], // = brand purple (Advent & Lent)
-  white: ["#D4B254", "#A8862C"], // gold stands for white
+  white: ["#D4B254", "#8A6D1F"], // gold stands for white — the AA-legible gold-text
+                                 // hue in Day, since on a white feast this carries
+                                 // real link text (night gold already clears AA)
   red: ["#D45A6A", "#A32638"],
-  rose: ["#D98BA6", "#C76A8A"], // Gaudete & Laetare
+  rose: ["#D98BA6", "#B14F73"], // Gaudete & Laetare — deepened for AA in Day mode
   black: ["#8E8E96", "#4A4A50"]
 };
 for (const [accent, [night, day]] of Object.entries(ACCENT_HEX)) {
@@ -242,8 +244,10 @@ for (const [accent, [night, day]] of Object.entries(ACCENT_HEX)) {
     purpleOf(`[data-theme="night"][data-accent="${accent}"]`) === night.toUpperCase()
   );
 }
-// gold-for-white: the white accent must reuse the §1.1 --gold token values.
-expect("white accent borrows the gold day hex #A8862C", purpleOf('[data-accent="white"]') === "#A8862C");
+// gold-for-white: the white accent borrows the gold hue, but the AA-legible
+// gold-text value in Day (#8A6D1F, since here it carries link text) and the gold
+// value in Night (#D4B254, where gold already clears AA and gold-text == gold).
+expect("white accent borrows the gold-text day hex #8A6D1F", purpleOf('[data-accent="white"]') === "#8A6D1F");
 expect(
   "white accent borrows the gold night hex #D4B254",
   purpleOf('[data-theme="night"][data-accent="white"]') === "#D4B254"

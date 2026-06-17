@@ -9,9 +9,10 @@ v1.2.1 — the manual is fully implemented), `docs/review/Fidelis_Feature_Design
 its §6 card 4 / §6.1 / §7 devotional layer in v1.4.0, the daily soul; the §4
 commentary layer in v1.5.0; the §8.3 share card in v1.8.0; §8.1/§8.2 Reader & Search
 refinements in v1.8.1; §3.4 quote verification in v1.8.3; the buildable half of §9
-in v1.8.4; and the §5 CCC citation index in v1.9.0 — all recorded below), and
-`CHANGELOG.md` (release history; bump `package.json` version and add a CHANGELOG
-entry together).
+in v1.8.4; the §5 CCC citation index in v1.9.0; and an iOS crispness pass (safe
+areas, touch feel, the gold-contrast split, CCC discoverability) in v1.10.0 — all
+recorded below), and `CHANGELOG.md` (release history; bump `package.json` version
+and add a CHANGELOG entry together).
 
 ## Commands
 
@@ -347,6 +348,63 @@ runbook). Built locally from the owner's USCCB 2nd-Ed PDF + a vatican.va crawl �
 - **Note for re-runs:** §19 is the CCC block; §17 (reference parser) and §18 (search filters)
   precede it. Regenerating needs `CCC_PDF` pointed at the USCCB 2nd-Ed PDF; the URL crawl
   depends on vatican.va being reachable.
+
+## Made plain — the iOS crispness pass (v1.10.0)
+
+An iOS polish release on the `ios/crisp-and-clear` branch — "make it plain upon tables"
+(Hab 2:2). No new design language: every change routes through the day/night tokens, the
+two-accent rule, the §1.5 icon set, the five-card limit, and the §13 refusals. Driven by a
+six-dimension iOS audit (43 confirmed findings) and a three-reviewer adversarial pass; the
+four product/identity decisions were the owner's (the CCC marker form, the Today reorder,
+the gold-contrast split, and adding the status-bar plugin). The `ui-ux-pro-max` skill was
+used as the iOS **checklist** only — its style/color generator is off-identity for Fidelis
+(see the `design-skills-polish-verdict` memory).
+
+- **The keystone — safe areas actually apply.** `index.html` gained `viewport-fit=cover`;
+  without it every `env(safe-area-inset-*)` already in `styles.css` (tab bar, verse-action
+  bar, sheets, footer) resolved to **0** on notched iPhones, so all that inset work was inert.
+  Paired with `padding-top: env(safe-area-inset-top)` on the sticky `.header`, left/right
+  insets on the tab bar and `.page` gutters (landscape), `dvh` for `.app`/`.sheet`/`.sheet.panel`,
+  and **`ios.contentInset: "never"`** in `capacitor.config.ts` so the CSS insets are the single
+  source of truth (with `"automatic"` the native scroll-view inset + the CSS inset doubled — a
+  regression the review caught; re-`npx cap sync ios` to push the config to the native mirror).
+- **Native touch feel.** A global `-webkit-tap-highlight-color: transparent` (no grey iOS flash),
+  `touch-action: manipulation` (no ~300ms delay), real `:active` press states + a 0.98 press-scale,
+  and **`:hover` guarded behind `@media (hover: hover)`** for every toggle/persistent control so a
+  tint can't stick after a tap. 44pt targets: `.icon-btn` (inline-flex, `min-height: 44px`), the
+  Catechism ¶ links, the highlight swatches (a `.verse-actions .hl-dot::after` grows the tap box
+  vertically without enlarging the disc or overlapping neighbours), and the A−/A+ steppers.
+- **§5 CCC discoverability** (owner decision): a verse cited in the Catechism wears a quiet purple
+  **underline** under its verse number — `.ccc-mark`, drawn absolutely in the `.vnum` gutter (zero
+  reflow, like the gold `.cmt-dot`), in a new **fixed** `--ccc-mark` brand purple that never follows
+  the liturgical accent (so it can't turn gold and collide with the Haydock dot). `isCited()` in
+  `src/lib/ccc.ts` is the pure gate (tested in `test-data.ts` §19). The action-bar label is now
+  **Catechism** (was "CCC"), lifted off the action cluster by a hairline. The CCC *links* keep
+  `--purple` (they follow the accent like all interactive text); the *mark* is fixed — a deliberate
+  asymmetry (the mark is a structural hint, the links are the interaction).
+- **The gold-contrast split** (owner decision — revisits the documented "don't darken gold"
+  tradeoff in the `design-tokens-two-accent` memory): a new `--gold-text` token (Day `#8A6D1F`
+  ≈4.6:1, Night `#D4B254`) carries gold **as running text** — the small-caps section labels, the
+  Father attributions, the motto, the indulgence line — while the gold **marks** (✠, quote marks,
+  the selected-verse rule, note/bookmark marks, `.cmt-dot`, the testament rule) keep the exact
+  luminous `--gold #A8862C`. The white/rose `[data-accent]` Day values are deepened to clear AA
+  (white → `#8A6D1F`, rose → `#B14F73`). The `test-liturgical.ts` accent-hex table and the
+  `test-data.ts` prayers-label regex (`var(--gold(-text)?)`) were updated to match.
+- **The native status bar** (`@capacitor/status-bar@8`): `App.tsx` calls `StatusBar.setStyle`
+  to follow the resolved theme on native (iOS ignores `theme-color`); guarded by
+  `Capacitor.isNativePlatform()`, a no-op on the web. Registered in both native projects by
+  `npx cap sync`.
+- **Crispness + sheet idiom.** A `--hairline` token (1px; **0.5px on Retina** via a dpr media
+  query) replaces the literal `1px solid var(--border)` on every structural separator. The bottom
+  `Sheet` gained a grabber pill (`::before`, phones only), `overscroll-behavior: contain` +
+  `-webkit-overflow-scrolling: touch`, and an **iOS-safe body lock** (`position: fixed` + offset,
+  restored on close, effect run once with `onClose` via a ref so a parent re-render can't re-pin).
+  The Today page now leads on a phone with **"Today in the Church"** (still five cards); the
+  Scripture size presets render in `rem` (Dynamic Type); the deep-linked verse scrolls smoothly
+  (reduced-motion-safe) and lands with a transient gold wash.
+- **Still open** (unchanged): the iOS WidgetKit / App-Intents / Dynamic-Type Xcode session
+  (`docs/IOS.md §5`). Device step for this release: after `npx cap sync ios`, verify the safe-area
+  insets (no doubled gap) and the Night status bar on a notched simulator.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
