@@ -4,6 +4,30 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.12.2] — 2026-06-17 — bring your own
+
+Make importing a translation you own (e.g. the NABRE for the U.S. Mass) actually practical.
+The text is never bundled or committed — these are format parsers; you supply the file and it
+is stored only on your device (IndexedDB), exactly as the §2.2 import has always worked.
+
+### Added
+
+- **USFM and OSIS import** (`src/lib/import-formats.ts`, pure + tested §22): the Translations
+  importer now accepts standard structured Bible formats (`.usfm`/`.sfm`, `.osis`/`.xml`) in
+  addition to scrollmapper-style JSON, with a thorough USFM-code / OSIS-id / book-name → app-slug
+  resolver. A structured source drops in with one click.
+- **A NAB/NABRE PDF converter** (`scripts/build-nabre.mjs`, `npm run build-nabre`): point it at a
+  PDF you own and it emits a `nabre.local.json` (gitignored) you load via Translations → Import.
+  Inline verse numbers are split with the monotonic-verse heuristic; book/chapter detection is
+  heading-based. PDFs are messy — review the per-book counts it prints; a structured source parses
+  cleaner.
+
+### Notes
+
+- No scripture text lives in the repo or in these scripts. The converter's output and any imported
+  translation stay on the user's device and are gitignored (`*.local.json`), consistent with the
+  app's "copyrighted texts are never bundled" design.
+
 ## [1.12.1] — 2026-06-17 — readable again
 
 Visual regressions and polish reported after v1.12.0.

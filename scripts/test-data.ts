@@ -1830,5 +1830,29 @@ console.log("");
   removeOverlay(999); // removing an absent id is harmless
 }
 
+// §22 — the structured translation-import parsers (src/lib/import-formats.ts).
+// Synthetic placeholder text only; the importer parses a user's own licensed file.
+{
+  const { resolveBookSlug, detectFormat, parseImport } = await import("../src/lib/import-formats");
+  check("resolveBookSlug: USFM codes", resolveBookSlug("GEN") === "genesis" && resolveBookSlug("1CO") === "1-corinthians" && resolveBookSlug("REV") === "revelation");
+  check("resolveBookSlug: OSIS ids", resolveBookSlug("Gen") === "genesis" && resolveBookSlug("1Cor") === "1-corinthians" && resolveBookSlug("Song") === "song-of-songs");
+  check("resolveBookSlug: names + Douay", resolveBookSlug("Sirach") === "sirach" && resolveBookSlug("Apocalypse") === "revelation" && resolveBookSlug("1 Samuel") === "1-samuel");
+  check("resolveBookSlug: unknown → undefined", resolveBookSlug("Nonsense") === undefined);
+
+  check("detectFormat: by extension + sniff", detectFormat("x.usfm", "") === "usfm" && detectFormat("x.xml", "") === "osis" && detectFormat("x.json", "") === "json" && detectFormat("x.txt", "\\id GEN\n\\c 1") === "usfm");
+
+  const usfm = "\\id GEN\n\\c 1\n\\v 1 alpha alpha\n\\v 2 beta\n\\c 2\n\\v 1 gamma\n";
+  const u = parseImport("t.usfm", usfm);
+  check("parseImport USFM: book + chapters + verses", u.length === 1 && resolveBookSlug(u[0].name) === "genesis" && u[0].chapters[0][0] === "alpha alpha" && u[0].chapters[0][1] === "beta" && u[0].chapters[1][0] === "gamma");
+
+  const osis = '<osis><osisText><div type="book" osisID="John"><chapter osisID="John.1"><verse osisID="John.1.1">delta</verse><verse osisID="John.1.2">epsilon</verse></chapter></div></osisText></osis>';
+  const o = parseImport("t.xml", osis);
+  check("parseImport OSIS: verses by osisID", o.length === 1 && resolveBookSlug(o[0].name) === "john" && o[0].chapters[0][0] === "delta" && o[0].chapters[0][1] === "epsilon");
+
+  const json = '{"books":[{"name":"Mark","chapters":[{"verses":[{"text":"zeta"},{"text":"eta"}]}]}]}';
+  const j = parseImport("t.json", json);
+  check("parseImport JSON (scrollmapper): verses", j.length === 1 && resolveBookSlug(j[0].name) === "mark" && j[0].chapters[0][0] === "zeta" && j[0].chapters[0][1] === "eta");
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;
