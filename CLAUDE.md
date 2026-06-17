@@ -11,9 +11,11 @@ commentary layer in v1.5.0; the §8.3 share card in v1.8.0; §8.1/§8.2 Reader &
 refinements in v1.8.1; §3.4 quote verification in v1.8.3; the buildable half of §9
 in v1.8.4; the §5 CCC citation index in v1.9.0; an iOS crispness pass (safe areas,
 touch feel, the gold-contrast split, CCC discoverability) in v1.10.0; NABRE as the U.S.
-Mass-readings default (import-only; never bundled) in v1.11.0; and a navigation & IA pass
-(scroll restoration, in-page SectionNav jump bars, native-Back handling, focus) in v1.12.0
-— all recorded below), and `CHANGELOG.md` (release history; bump `package.json` version and
+Mass-readings default (import-only; never bundled) in v1.11.0; a navigation & IA pass
+(scroll restoration, in-page SectionNav jump bars, native-Back handling, focus) in v1.12.0;
+visual-regression fixes (readable selects, chip section-bar, liturgical-outline selections) in
+v1.12.1; USFM/OSIS import + a NAB-PDF converter in v1.12.2; and a documentation reconciliation
+in v1.12.3 — all recorded below), and `CHANGELOG.md` (release history; bump `package.json` version and
 add a CHANGELOG entry together).
 
 ## Commands
@@ -408,7 +410,7 @@ used as the iOS **checklist** only — its style/color generator is off-identity
   (`docs/IOS.md §5`). Device step for this release: after `npx cap sync ios`, verify the safe-area
   insets (no doubled gap) and the Night status bar on a notched simulator.
 
-## NABRE as the U.S. Mass default (v1.11.0)
+## NABRE as the U.S. Mass default — "the proper of the day" (v1.11.0)
 
 The Daily Readings now default to the **NABRE** — the translation of the U.S. lectionary —
 when the calendar region is the United States, honoring the owner's "be consistent with the
@@ -468,6 +470,26 @@ change (two-accent, §13, five-card, tokens all hold). One new dep: `@capacitor/
   About copy "CCC"→"Catechism".
 - **Deferred** (in the spec): scroll-spy current-section highlight; verse-action-bar occlusion
   padding; PlanCreator sticky Start; Reader selected-verse in the URL.
+
+**v1.12.1 "readable again"** — visual-regression fixes after the nav release, diagnosed live in a
+browser: a global `select` style (the Settings selects had no background → white-on-white in Night);
+the SectionNav redesigned from bare links into rounded chips; selected states (`.pill/.chip/.tabs
+button/.cmt-chip` active) changed from a filled `--purple-strong` to a **liturgical-colored outline**
+(`--purple` border + inset ring, readable text) so selections show the day's color; and a service-
+worker shell-cache bump (`v3`→`v4`) so installed/PWA copies fetch the current build (the cause of
+"quotes don't load" / "sizes stuck at Medium" — both already correct in code, just stale-cached).
+
+**v1.12.2 "bring your own"** — practical import of a translation the owner has a license to (e.g. the
+NABRE). `src/lib/import-formats.ts` (pure, tested §22) adds **USFM** and **OSIS** parsing beside the
+scrollmapper JSON, with a USFM-code / OSIS-id / book-name → slug resolver; `Translations.tsx` uses it.
+`scripts/build-nabre.mjs` (`npm run build-nabre "<pdf>"`) converts a NAB/NABRE PDF the owner owns into
+a gitignored `nabre.local.json` (monotonic-verse heuristic; rough on messy PDFs). **No scripture text
+is in the repo or these scripts** — the parsers are logic only, output is on-device and gitignored
+(`*.local.json`), preserving the "copyrighted texts are never bundled" design. The owner's NAB PDF is
+local; the converter is run by the owner, not committed.
+
+**v1.12.3 "the faithful record"** — documentation reconciliation (this pass): README badge/content,
+this file, and the CHANGELOG aligned to the current feature set; the first git tags + GitHub release.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

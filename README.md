@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.9.0%20·%20the%20deposit-5B3A8E)
+![version](https://img.shields.io/badge/version-1.12.3%20·%20the%20faithful%20record-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -99,7 +99,9 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
   - **Clementine Latin Vulgate** (1592)
 - **RSV-2CE and NABRE support** — these are copyrighted (Ignatius Press / CCD), so their text
   is *not* shipped; you can import a licensed copy you own on the Translations page, stored only
-  in your browser via IndexedDB.
+  in your browser via IndexedDB. The importer accepts **USFM**, **OSIS**, or scrollmapper-style
+  **JSON**; `npm run build-nabre` converts a NAB/NABRE PDF you own into an importable file (the
+  output stays on your device and is gitignored — never bundled or committed).
 - **NABRE as the U.S. Mass default** — the NABRE is the translation of the U.S. lectionary, so
   when the calendar **Region** is *United States* the Daily Readings screen prefers it. Until you
   import your licensed copy it falls back to the bundled Douay-Rheims (with a pointer to import),
@@ -140,13 +142,14 @@ verses are shown and the citation marked "(approx.)" — the text itself is neve
 
 ## The Today page
 
-Five cards, always exactly five — a standing rule, so the page never sprawls:
+Five cards, always exactly five — a standing rule, so the page never sprawls. On a phone the
+time-sensitive card leads, right under the date:
 
-1. **✠ Verse of the Day** — a fixed, curated cycle, deterministic by date (web and the iOS
-   widget select the same verse from the same calendar math).
-2. **Quote of the Day** — from the Fathers, Doctors, and saints; public-domain, attributed.
-3. **Today in the Church** — season, week, liturgical color, the principal celebrations of the
+1. **Today in the Church** — season, week, liturgical color, the principal celebrations of the
    General Roman Calendar, today's Mass citations, and the hour's Marian antiphon.
+2. **✠ Verse of the Day** — a fixed, curated cycle, deterministic by date (web and the iOS
+   widget select the same verse from the same calendar math).
+3. **Quote of the Day** — from the Fathers, Doctors, and saints; public-domain, attributed.
 4. **The Holy Rosary** — the day's mysteries, now **tappable** (see below).
 5. **Continue Reading** — picks up where you left off, and surfaces your active reading plan.
 
@@ -229,9 +232,15 @@ piety, never gamification.
 - **Five-tab navigation** — Today · Read · Search · Mass · More — a header row on wide screens, a
   thumb-friendly bottom bar on phones (honoring the iOS home-indicator inset). "More" is a popover
   over Library, Translations, Settings, and About — not a route, so deep links are unchanged.
+- **Seamless movement** — Back and Forward restore your scroll position; long pages (Mass readings,
+  Settings, About, the book list) carry a sticky in-page **section jump-bar**; the Android hardware
+  Back closes an open sheet before leaving the page; focus moves to the new page's content for
+  keyboard and screen-reader users, with a skip-to-content link; and Search survives a round-trip
+  (its query rides in the URL). Selected controls wear the day's **liturgical color as an outline**.
 - **One Settings screen** with a live Scripture preview (Genesis 1:1–2, re-rendering as you adjust
-  the controls below): Bible version, text size, reading face, appearance, calendar region,
-  offline download (per translation **and** the Fathers' commentary, with real sizes), the
+  the controls below): Bible version, text size, reading face, appearance, calendar region
+  (with the **Mass-readings translation** override — NABRE for the U.S. by default), offline
+  download (per translation **and** the Fathers' commentary, with real sizes), the
   indulgence toggle, the commentary controls (master switch, Haydock/Catena, Doctors-only), the
   **Magisterium** CCC-links toggle, and JSON export/import.
 - **System / Day / Night** — System tracks the device's color-scheme preference live; a pre-paint
@@ -317,6 +326,8 @@ harnesses are the product; everything else is chrome.
 | Pure devotional logic (VOTD, rosary, reading-time, reading plans) | `src/lib/votd.ts`, `rosary.ts`, `reading.ts`, `plans.ts` |
 | Canon metadata (chapter/verse counts from the real corpus) | `src/lib/canon.ts`, `src/generated/bookMeta.json` |
 | Local persistence (settings, marginalia, plans) | `src/lib/storage.ts` |
+| Navigation (scroll restore, in-page jump bar, overlay back-stack) | `src/lib/scroll.ts`, `src/lib/overlays.ts`, `src/components/ScrollManager.tsx`, `SectionNav.tsx` |
+| Translation import (USFM / OSIS / JSON parsers, on-device only) | `src/lib/import-formats.ts`, `scripts/build-nabre.mjs` |
 | Commentary & the Magisterium (Haydock, Catena, the CCC citation index) | `src/lib/commentary.ts`, `src/lib/ccc.ts`, `scripts/build-haydock.mjs`, `build-catena.mjs`, `build-ccc*.mjs` |
 | Data pipeline & integrity (build, pins, manifest, report) | `scripts/*.mjs` |
 | Assertion harnesses & golden snapshots | `scripts/test-*.ts`, `scripts/golden/` |
@@ -346,6 +357,7 @@ npm run ccc          # rebuild the CCC citation index from a local Catechism PDF
 npm run report       # regenerate data-report.txt (also runs after npm run data)
 npm run verify-data  # SHA-256 manifest check of public/data
 npm run golden       # re-bless golden-year calendar snapshots after a deliberate engine change
+npm run build-nabre  # convert a NAB/NABRE PDF you own → an importable file (on-device only, gitignored)
 ```
 
 For iOS: `npm run build && npx cap sync ios && npx cap open ios` (macOS + Xcode required; see
