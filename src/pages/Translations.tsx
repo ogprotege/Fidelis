@@ -1,33 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { idbClearTranslation, idbPut, importedTranslations } from "../lib/data";
 import { TRANSLATIONS } from "../lib/translations";
-
-// Source book name -> slug, for importing scrollmapper-format JSON of licensed texts.
-import { BOOKS } from "../lib/canon";
-
-const IMPORT_NAME_TO_SLUG = new Map<string, string>();
-for (const b of BOOKS) {
-  for (const alias of [b.name, b.douay, b.slug]) {
-    IMPORT_NAME_TO_SLUG.set(alias.toLowerCase(), b.slug);
-  }
-}
-// scrollmapper-style roman numeral names
-const ROMAN: [string, string][] = [
-  ["i ", "1 "], ["ii ", "2 "], ["iii ", "3 "], ["iv ", "4 "]
-];
-function toSlug(name: string): string | undefined {
-  const n = name.toLowerCase().trim();
-  if (IMPORT_NAME_TO_SLUG.has(n)) return IMPORT_NAME_TO_SLUG.get(n);
-  for (const [rom, ar] of ROMAN) {
-    if (n.startsWith(rom)) {
-      const alt = ar + n.slice(rom.length);
-      if (IMPORT_NAME_TO_SLUG.has(alt)) return IMPORT_NAME_TO_SLUG.get(alt);
-    }
-  }
-  if (n === "revelation of john" || n === "apocalypse of john") return "revelation";
-  if (n === "song of solomon") return "song-of-songs";
-  return undefined;
-}
+import { parseImport, resolveBookSlug } from "../lib/import-formats";
 
 export default function Translations() {
   const [imported, setImported] = useState<Set<string>>(new Set());
@@ -53,16 +27,13 @@ export default function Translations() {
     setBusy(id);
     setMessage(null);
     try {
-      const json = JSON.parse(await file.text());
-      const books: { name: string; chapters: { chapter: number; verses: { verse: number; text: string }[] }[] }[] =
-        json.books ?? json;
-      if (!Array.isArray(books)) throw new Error("Unrecognized format");
+      const books = parseImport(file.name, await file.text());
+      if (!books.length) throw new Error("No books found — expected a JSON, USFM, or OSIS Bible file.");
       let count = 0;
       for (const book of books) {
-        const slug = toSlug(book.name);
-        if (!slug) continue;
-        const chapters = book.chapters.map((ch) => ch.verses.map((v) => v.text.trim()));
-        await idbPut(`${id}/${slug}`, { translation: id, book: slug, chapters });
+        const slug = resolveBookSlug(book.name);
+        if (!slug || !book.chapters.length) continue;
+        await idbPut(`${id}/${slug}`, { translation: id, book: slug, chapters: book.chapters });
         count++;
       }
       if (count === 0) throw new Error("No recognizable books found");
@@ -91,7 +62,7 @@ export default function Translations() {
       <input
         ref={fileRef}
         type="file"
-        accept="application/json"
+        accept=".json,.usfm,.sfm,.osis,.xml,application/json,text/xml"
         style={{ display: "none" }}
         onChange={(e) => onFile(e.target.files?.[0])}
       />
@@ -122,10 +93,12 @@ export default function Translations() {
               ) : (
                 <>
                   <button className="icon-btn" onClick={() => startImport(t.id)} disabled={busy !== null}>
-                    {busy === t.id ? "Importing…" : `Import your licensed ${t.abbrev} (JSON)`}
+                    {busy === t.id ? "Importing…" : `Import your licensed ${t.abbrev}`}
                   </button>
                   <p className="muted small" style={{ marginTop: "0.4rem" }}>
-                    Expected format: <code>{"{ books: [{ name, chapters: [{ chapter, verses: [{ verse, text }] }] }] }"}</code>.
+                    Accepts <strong>USFM</strong> (.usfm), <strong>OSIS</strong> (.xml), or
+                    scrollmapper-style <strong>JSON</strong>
+                    (<code>{"{ books: [{ name, chapters: [{ verses: [{ text }] }] }] }"}</code>).
                     The file never leaves your device — it is stored in your browser only.
                   </p>
                 </>

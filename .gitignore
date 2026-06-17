@@ -2,3 +2,7 @@
 node_modules/
 dist/
 .DS_Store
+
+# Imported licensed translations (e.g. a NABRE you own) — on-device only, never committed.
+*.local.json
+nabre.local.json
