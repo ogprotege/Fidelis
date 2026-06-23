@@ -1,8 +1,11 @@
 # Building Fidelis for iOS
 
 Fidelis ships as a [Capacitor](https://capacitorjs.com) app: the same web code
-runs inside a native iOS shell, with a native WidgetKit home-screen widget on
-top. Building requires a Mac with Xcode 15+.
+runs inside a native iOS shell, with native WidgetKit home-screen widgets on
+top. Building requires a Mac with **Xcode 17+ (Swift 6.2+)** — Capacitor 8.4.x
+distributes its iOS framework as a binary `xcframework` built with Swift 6.2, and
+an older Xcode cannot read it (it fails with misleading "value of type 'any
+CAPBridgeProtocol' has no member 'webView'" errors).
 
 ## 1. Build the app
 
@@ -192,12 +195,14 @@ non-Gregorian device calendar can never disagree with the web app or Android.
 
 ## 6. macOS CI (builds the iOS App target)
 
-`.github/workflows/ios.yml` runs on a macOS runner and builds the **App** target
+`.github/workflows/ios.yml` runs on `macos-latest` and builds the **App** target
 for the iOS Simulator (signing disabled — no Apple account or secrets needed),
-after `npm ci && npm run build && npx cap sync ios`. It is the native counterpart
-to the Linux `CI` workflow and proves the Capacitor iOS shell still compiles after
-a web or native change. It triggers on demand (`workflow_dispatch`) and on
-push/PR that touch `ios/**`, `src/**`, `capacitor.config.ts`, or the lockfile.
+after `npm ci && npm run build && npx cap sync ios`. It **selects the newest
+installed Xcode** first, because Capacitor 8.4.x's binary framework requires a
+Swift ≥ 6.2 toolchain (see above). It is the native counterpart to the Linux `CI`
+workflow and proves the Capacitor iOS shell still compiles after a web or native
+change. It triggers on demand (`workflow_dispatch`) and on push/PR that touch
+`ios/**`, `src/**`, `capacitor.config.ts`, or the lockfile.
 
 The Widget Extension target is created by hand in Xcode (§2/§5), so it is **not**
 part of the CI build until it exists in the committed project — the App target

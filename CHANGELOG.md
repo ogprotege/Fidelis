@@ -4,6 +4,33 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.13.1] — 2026-06-23 — the second lampstand
+
+Bring the iOS home-screen widgets to parity with Android, prove the native iOS shell builds in
+CI, and reconcile the version strings and docs across the repo. No web app behavior change.
+
+### Added
+
+- **iOS Mass + Quote widgets (WidgetKit source)** — `ios/WidgetExtension/CalendarWidgets.swift`
+  adds `MassWidget` ("Today at Mass") and `QuoteWidget` ("Quote of the Day"), the iOS counterparts
+  of the Android `CalendarWidget`/`QuoteWidget`. They read the same bundled `calendar.json`
+  (produced by `scripts/build-calendar-widget.ts`, now USCCB-region), keyed by a Gregorian +
+  device-time-zone ISO date so iOS, Android, and the web app never disagree. `FidelisWidget.swift`'s
+  `@main` bundle registers all three widgets. The one remaining step is the GUI-only Widget
+  Extension target creation in Xcode (`docs/IOS.md` §5) — it cannot be scripted from the repo.
+- **macOS CI** — `.github/workflows/ios.yml` builds the iOS **App** target for the simulator
+  (unsigned, no secrets) on `macos-latest`, after `npm ci && npm run build && npx cap sync ios`.
+  It selects the newest installed Xcode so the toolchain can read Capacitor 8.4.x's binary
+  framework (built with Swift 6.2; an older Xcode fails with misleading "no member" errors).
+
+### Changed
+
+- **Capacitor 8.4.0 → 8.4.1** (`@capacitor/core`, `/ios`, `/android`, `/cli`; latest stable), and
+  re-synced — `ios/App/CapApp-SPM/Package.swift` now pins `capacitor-swift-pm` `8.4.1`.
+- **Version strings reconciled** to `1.13.1` across `package.json`, the README badge,
+  `android/app/build.gradle` (`versionName`/`versionCode`), and the iOS `MARKETING_VERSION`
+  (these native strings had lagged at `1.12.3`). `CLAUDE.md` now records v1.13.0 and v1.13.1.
+
 ## [1.13.0] — 2026-06-23 — the proper of the day, by default
 
 Align Fidelis with the **USCCB by default** — the U.S. (USCCB) liturgical calendar *and* the NABRE
