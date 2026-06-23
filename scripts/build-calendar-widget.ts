@@ -28,8 +28,11 @@ import { getBook, bookDisplayName } from "../src/lib/canon";
 import { DailyQuote, quoteOfTheDay } from "../src/lib/quotes";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const REGION = "universal" as const;
-const TRANSLATION = "drc"; // the bundled default the widgets read
+// The U.S. (USCCB) calendar — matches the app's default calendar region
+// (src/lib/storage.ts) so the home-screen "Today at Mass" widget never disagrees
+// with the app about the day's celebration, color, or reading citations.
+const REGION = "usa" as const;
+const TRANSLATION = "drc"; // the bundled default the widgets read for book names
 
 const lect: LectionaryData = JSON.parse(
   readFileSync(join(ROOT, "public/data/lectionary.json"), "utf8")

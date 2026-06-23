@@ -64,7 +64,14 @@ expect("First Sunday of Advent 2025 is violet", liturgicalDay(d(2025, 11, 30)).c
 expect("St. Andrew suppressed on 2025-11-30", !has(d(2025, 11, 30), "Andrew"));
 expect("Ash Wednesday 2024 stands alone", names(d(2024, 2, 14)).join("|") === "Ash Wednesday");
 expect("Christ the King 2026 shows no St. Cecilia", !has(d(2026, 11, 22), "Cecilia"));
-expect("St. Matthias suppressed on Ascension 2026", !has(d(2026, 5, 14), "Matthias"));
+// Universal-calendar case (Ascension on Thursday May 14 suppresses St. Matthias).
+// The default region is now the USA, where Ascension transfers to Sunday and
+// Matthias keeps May 14 — asserted explicitly in the region block below — so this
+// universal assertion must name its region rather than rely on the default.
+expect(
+  "St. Matthias suppressed on Ascension 2026 (universal)",
+  !liturgicalDay(d(2026, 5, 14), "universal").celebrations.some((c) => c.name.includes("Matthias"))
+);
 expect("Gaudete 2025: St. John of the Cross yields", !has(d(2025, 12, 14), "John of the Cross"));
 // P0-2: day codes follow the resolved governing celebration
 expect("Good Friday 2016 readings are the Passion", cand(d(2016, 3, 25)).startsWith('[["LW06-5Fri'));
