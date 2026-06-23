@@ -147,6 +147,8 @@ struct FidelisWidget: Widget {
 @main
 struct FidelisWidgetBundle: WidgetBundle {
     var body: some Widget {
-        FidelisWidget()
+        FidelisWidget()  // Verse of the Day (this file)
+        MassWidget()     // Today at Mass (CalendarWidgets.swift)
+        QuoteWidget()    // Quote of the Day (CalendarWidgets.swift)
     }
 }
