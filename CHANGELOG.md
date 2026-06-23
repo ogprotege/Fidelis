@@ -4,6 +4,25 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.13.0] — 2026-06-23 — the proper of the day, by default
+
+Make the **NABRE the default translation for the Daily Mass Readings**, honoring the intent to be
+consistent with the U.S. lectionary. The legal posture is unchanged and binding: the NABRE is ©
+Confraternity of Christian Doctrine (USCCB) and is **never bundled or committed** — this changes
+only the *default preference*. Until the owner imports a licensed copy (Translations → Import,
+USFM/OSIS/JSON), the readings gracefully fall back to the bundled Douay-Rheims with an in-line
+pointer to import, exactly as before.
+
+### Changed
+
+- **`src/lib/storage.ts`** — the `massTranslation` setting now defaults to `"nabre"` (was `""` =
+  match region), so a fresh install opens the Daily Readings in the NABRE preference rather than
+  resolving to the Douay-Rheims via the universal region. `massTranslationFor()` is unchanged (an
+  explicit choice still wins; `""` still means match region); the §20 harness assertions hold.
+- **`src/pages/Settings.tsx`** — the Calendar → Mass readings catechesis states that the NABRE is
+  the default and that **Match region** is the alternative that follows the calendar region, plus
+  the Douay-Rheims fallback note.
+
 ## [1.12.3] — 2026-06-17 — the faithful record
 
 Documentation reconciliation — no app behavior change. The README, `CLAUDE.md`, and this file were

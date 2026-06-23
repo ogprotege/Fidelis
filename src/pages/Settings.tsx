@@ -335,11 +335,12 @@ export default function Settings() {
           <div>
             <div className="setting-label">Mass readings</div>
             <p className="catechesis muted small">
-              The translation the Daily Readings screen shows. <strong>Match region</strong> uses
-              the NABRE — the translation of the U.S. lectionary — for the United States, and the
-              Douay-Rheims elsewhere. The NABRE is under copyright and not bundled; import your
+              The translation the Daily Readings screen shows. The default is the{" "}
+              <strong>NABRE</strong> — the translation of the U.S. lectionary. <strong>Match
+              region</strong> instead follows your calendar region (the NABRE for the United States,
+              the Douay-Rheims elsewhere). The NABRE is under copyright and not bundled; import your
               licensed copy on the <Link to="/translations">Translations</Link> page and it appears
-              here automatically.
+              here automatically. Until then the readings fall back to the bundled Douay-Rheims.
             </p>
           </div>
           <select
