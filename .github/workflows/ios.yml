@@ -1,0 +1,66 @@
+name: iOS build
+
+# macOS CI for the Capacitor iOS shell. This complements the Linux `CI` workflow
+# (lint + harnesses + web build) by proving the native iOS App target still
+# compiles after a web or native change. It builds the **App** target for the
+# iOS Simulator with signing disabled — no Apple developer account or secrets
+# needed. The "FidelisWidget" Widget Extension target is created by hand in Xcode
+# (it cannot be scripted from the repo, see docs/IOS.md §2/§5), so it is NOT part
+# of this build until it exists in the project; the App target build is the gate.
+#
+# Runs only when iOS-relevant files change (or on demand) to keep macOS minutes low.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "ios/**"
+      - "src/**"
+      - "capacitor.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ios.yml"
+  pull_request:
+    paths:
+      - "ios/**"
+      - "src/**"
+      - "capacitor.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ios.yml"
+
+jobs:
+  ios-build:
+    runs-on: macos-14 # ships Xcode 15+ (this project targets iOS 15.0+, SPM not CocoaPods)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      # Build the web bundle and copy it + the Capacitor plugins into the Xcode
+      # project (writes ios/App/App/public, which is gitignored and regenerated).
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync ios
+
+      # Surface the available schemes in the log (xcodebuild auto-creates the
+      # "App" scheme when none is shared), then resolve the local Swift package.
+      - name: List schemes
+        run: xcodebuild -list -project ios/App/App.xcodeproj
+      - name: Resolve Swift packages
+        run: xcodebuild -resolvePackageDependencies -project ios/App/App.xcodeproj -scheme App
+
+      # Build the App target for a generic simulator, signing disabled.
+      - name: Build App (iOS Simulator, unsigned)
+        run: |
+          xcodebuild build \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""

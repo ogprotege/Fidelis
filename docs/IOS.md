@@ -149,22 +149,27 @@ So no engine is ported: the widget reads the device's local date, looks up that
 key, and renders it (falling back calmly past the window's end). Regenerate
 after any calendar/lectionary/quote change with `npm run calendar-widget`.
 
-**Two new widgets (in the existing `FidelisWidget` extension):**
+**Two new widgets (in the existing `FidelisWidget` extension) — Swift now written.**
+The `MassWidget` and `QuoteWidget` are implemented in
+`ios/WidgetExtension/CalendarWidgets.swift`, and `FidelisWidget.swift`'s
+`@main FidelisWidgetBundle` already registers all three
+(`FidelisWidget()` + `MassWidget()` + `QuoteWidget()`). The only remaining work
+is the one-time Xcode wiring (it cannot be scripted from the repo):
 
-1. Drag `ios/WidgetExtension/calendar.json` into the `FidelisWidget` group with
-   **Target membership: FidelisWidget** (Copy Bundle Resources).
-2. Add two `Widget` structs mirroring the VOTD `FidelisWidget.swift` pattern,
-   and register all three in a `@main struct FidelisWidgets: WidgetBundle`:
-   - **`MassWidget`** — load `calendar.json`, key by
-     `DateFormatter` (`yyyy-MM-dd`, `Calendar(identifier: .gregorian)`, device
-     `TimeZone.current` — match the Android `GregorianCalendar` key exactly);
-     show `celebration` (else `seasonLabel`) as the title and the `readings`
-     citations beneath. Gold cross + "TODAY AT MASS" label, serif body, the day
-     tokens (`#F4F2EE` / `#26241F` / `#6E6A61` / `#A8862C`).
-   - **`QuoteWidget`** — same lookup, render `quote.text` (italic serif, curly
-     quotes) + `quote.author` (muted). "QUOTE OF THE DAY" label.
-   - Timeline: one entry per day, `.after` next local midnight (reuse the VOTD
-     provider's midnight logic), fully offline.
+1. Drag `ios/WidgetExtension/CalendarWidgets.swift` into the `FidelisWidget`
+   group with **Target membership: FidelisWidget** checked.
+2. Drag `ios/WidgetExtension/calendar.json` into the `FidelisWidget` group with
+   **Target membership: FidelisWidget** (it lands in Copy Bundle Resources).
+3. Build the `FidelisWidget` scheme, or run the app and add the widgets from the
+   home screen (long-press ▸ ➕ ▸ Fidelis ▸ "Today at Mass" / "Quote of the Day").
+
+What the implemented Swift does (for reference): it loads `calendar.json`, keys
+it by `DateFormatter` (`yyyy-MM-dd`, `Calendar(identifier: .gregorian)`, device
+`TimeZone.current` — matching the Android `GregorianCalendar` key exactly), shows
+`celebration` (else `seasonLabel`) plus the `readings` citations for Mass and the
+`quote.text` / `quote.author` for the Quote, in the day tokens (`#F4F2EE` /
+`#26241F` / `#6E6A61` / `#A8862C`) with the gold cross. Timelines emit one entry
+per day for the next week (`.atEnd`), fully offline.
 
 **App Intent — "What's today's Gospel?" (Siri / Shortcuts):**
 
@@ -184,3 +189,18 @@ layer as the initial preset. Keep the in-app pills as the override.
 
 All three remain offline and pin `Calendar(identifier: .gregorian)` so a
 non-Gregorian device calendar can never disagree with the web app or Android.
+
+## 6. macOS CI (builds the iOS App target)
+
+`.github/workflows/ios.yml` runs on a macOS runner and builds the **App** target
+for the iOS Simulator (signing disabled — no Apple account or secrets needed),
+after `npm ci && npm run build && npx cap sync ios`. It is the native counterpart
+to the Linux `CI` workflow and proves the Capacitor iOS shell still compiles after
+a web or native change. It triggers on demand (`workflow_dispatch`) and on
+push/PR that touch `ios/**`, `src/**`, `capacitor.config.ts`, or the lockfile.
+
+The Widget Extension target is created by hand in Xcode (§2/§5), so it is **not**
+part of the CI build until it exists in the committed project — the App target
+build is the gate. Once you have created and committed the `FidelisWidget` target,
+extend the workflow with a second `xcodebuild` step that builds the
+`FidelisWidgetExtension` scheme the same way.
