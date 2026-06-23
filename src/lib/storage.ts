@@ -110,7 +110,12 @@ export function getSettings(): Settings {
     scriptureFont: DEFAULT_SCRIPTURE_FONT,
     theme: DEFAULT_THEME,
     showVerseNumbers: true,
-    calendarRegion: "universal",
+    // Default to the U.S. (USCCB) calendar so the liturgical day and the Daily
+    // Readings stay consistent with the NABRE U.S. lectionary default below
+    // (Epiphany on the Sunday of Jan 2–8, Ascension on the Seventh Sunday of
+    // Easter, and the U.S. proper memorials). A user can switch to Universal in
+    // Settings → Calendar.
+    calendarRegion: "usa",
     followLiturgicalYear: true,
     showIndulgence: true,
     commentaryEnabled: true,

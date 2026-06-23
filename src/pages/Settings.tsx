@@ -318,8 +318,10 @@ export default function Settings() {
           <div>
             <div className="setting-label">Region</div>
             <p className="catechesis muted small">
-              Governs the dates of Epiphany and the Ascension and the U.S. proper days. (Boston,
-              Hartford, New York, Omaha, and Philadelphia keep Ascension Thursday.)
+              Governs the dates of Epiphany and the Ascension and the U.S. proper days. The default
+              is the <strong>United States</strong> (USCCB), to match the NABRE U.S.-lectionary
+              readings. (Boston, Hartford, New York, Omaha, and Philadelphia keep Ascension
+              Thursday.)
             </p>
           </div>
           <select

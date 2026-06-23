@@ -6,19 +6,28 @@ product — changes to any of them are release-worthy.
 
 ## [1.13.0] — 2026-06-23 — the proper of the day, by default
 
-Make the **NABRE the default translation for the Daily Mass Readings**, honoring the intent to be
-consistent with the U.S. lectionary. The legal posture is unchanged and binding: the NABRE is ©
-Confraternity of Christian Doctrine (USCCB) and is **never bundled or committed** — this changes
-only the *default preference*. Until the owner imports a licensed copy (Translations → Import,
-USFM/OSIS/JSON), the readings gracefully fall back to the bundled Douay-Rheims with an in-line
-pointer to import, exactly as before.
+Align Fidelis with the **USCCB by default** — the U.S. (USCCB) liturgical calendar *and* the NABRE
+U.S.-lectionary translation for the Daily Mass Readings — so the calendar, the readings, and the
+home-screen widgets are consistent and on-target out of the box. The legal posture is unchanged and
+binding: the NABRE is © Confraternity of Christian Doctrine (USCCB) and is **never bundled or
+committed** — this changes only *defaults*. Until the owner imports a licensed copy (Translations →
+Import, USFM/OSIS/JSON), the readings gracefully fall back to the bundled Douay-Rheims with an
+in-line pointer to import, exactly as before. Either default can be switched back in Settings →
+Calendar (Region → Universal; Mass readings → Match region / DRB / …).
 
 ### Changed
 
-- **`src/lib/storage.ts`** — the `massTranslation` setting now defaults to `"nabre"` (was `""` =
-  match region), so a fresh install opens the Daily Readings in the NABRE preference rather than
-  resolving to the Douay-Rheims via the universal region. `massTranslationFor()` is unchanged (an
-  explicit choice still wins; `""` still means match region); the §20 harness assertions hold.
+- **`src/lib/storage.ts`** — the `calendarRegion` setting now defaults to `"usa"` (the USCCB
+  calendar: Epiphany on the Sunday of Jan 2–8, Ascension on the Seventh Sunday of Easter, and the
+  U.S. proper memorials — Seton, Neumann, Kateri, Claver, Brébeuf/Jogues, Cabrini, Guadalupe). The
+  `massTranslation` setting now defaults to `"nabre"` (was `""` = match region), so the Daily
+  Readings open in the NABRE preference. `massTranslationFor()` is unchanged (an explicit choice
+  still wins; `""` still means match region); the §20 harness assertions and golden snapshots
+  (which pin both regions explicitly) hold.
+- **`scripts/build-calendar-widget.ts`** — the pre-resolved native widget data now uses the U.S.
+  (USCCB) region so the home-screen "Today at Mass" widget never disagrees with the app about the
+  day's celebration, color, or reading citations. Regenerated `calendar.json` for both the iOS and
+  Android bundles (`npm run calendar-widget`).
 - **`src/pages/Settings.tsx`** — the Calendar → Mass readings catechesis states that the NABRE is
   the default and that **Match region** is the alternative that follows the calendar region, plus
   the Douay-Rheims fallback note.
