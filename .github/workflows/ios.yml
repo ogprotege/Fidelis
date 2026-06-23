@@ -31,9 +31,21 @@ on:
 
 jobs:
   ios-build:
-    runs-on: macos-14 # ships Xcode 15+ (this project targets iOS 15.0+, SPM not CocoaPods)
+    # Capacitor 8.4.x ships its iOS framework as a binary xcframework built with
+    # Apple Swift 6.2; an older toolchain cannot read its .swiftinterface (it fails
+    # with misleading "no member" errors). Use the newest runner image and select
+    # the newest installed Xcode so the Swift version is >= the framework's.
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select newest Xcode
+        run: |
+          latest="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)"
+          if [ -n "$latest" ]; then sudo xcode-select -s "$latest/Contents/Developer"; fi
+          xcodebuild -version
+          swift --version
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
