@@ -8,7 +8,7 @@
 #
 # The Swift sources, JSON data, and Info.plist live in ios/WidgetExtension/.
 # This replaces the previously manual "create a Widget Extension target in
-# Xcode" step (docs/IOS.md §5), which is why the widgets never appeared before.
+# Xcode" step (docs/guides/IOS.md §5), which is why the widgets never appeared before.
 
 require "xcodeproj"
 

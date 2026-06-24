@@ -260,15 +260,15 @@ piety, never gamification.
 - **iOS** — via Capacitor, with native **WidgetKit home-screen widgets**: **Verse of the Day**,
   **Today at Mass**, and **Quote of the Day** (small / medium / large; offline). The Swift sources
   for all three live in `ios/WidgetExtension/`; creating the Widget Extension target is a one-time
-  Xcode step (it can't be scripted), per [docs/IOS.md §5](docs/IOS.md). The iOS App target is built
+  Xcode step (it can't be scripted), per [docs/guides/IOS.md §5](docs/guides/IOS.md). The iOS App target is built
   in CI on macOS ([`.github/workflows/ios.yml`](.github/workflows/ios.yml)). A "today's Gospel" App
   Intent (Siri/Shortcuts) and Dynamic Type remain specified for that Xcode session. Build requires
-  **Xcode 17+ (Swift 6.2)**. See [docs/IOS.md](docs/IOS.md).
+  **Xcode 17+ (Swift 6.2)**. See [docs/guides/IOS.md](docs/guides/IOS.md).
 - **Android** — via Capacitor: the full app in a native shell, offline by construction (the whole
   build ships inside the APK, exactly as on iOS), now with **three native home-screen widgets**
   (App Widgets) — **Verse of the Day**, **Today at Mass**, and **Quote of the Day** — each showing
   the same content as the app and refreshing at local midnight, fully offline. See
-  [docs/ANDROID.md](docs/ANDROID.md).
+  [docs/guides/ANDROID.md](docs/guides/ANDROID.md).
 - **Embeddable widget** — drop the Verse of the Day into any site:
   `<iframe src="https://your-domain/#/widget/votd">` (options: `?t=vulgate&theme=night`).
 
@@ -366,8 +366,8 @@ npm run build-nabre  # convert a NAB/NABRE PDF you own → an importable file (o
 ```
 
 For iOS: `npm run build && npx cap sync ios && npx cap open ios` (macOS + Xcode required; see
-[docs/IOS.md](docs/IOS.md)). For Android: `npm run build && npx cap sync android && npx cap open android`
-(Android Studio required; see [docs/ANDROID.md](docs/ANDROID.md)).
+[docs/guides/IOS.md](docs/guides/IOS.md)). For Android: `npm run build && npx cap sync android && npx cap open android`
+(Android Studio required; see [docs/guides/ANDROID.md](docs/guides/ANDROID.md)).
 
 > **Convention:** bump `package.json` and add a `CHANGELOG.md` entry together; re-bless golden
 > snapshots only after a *deliberate* engine change you can justify in the diff.
