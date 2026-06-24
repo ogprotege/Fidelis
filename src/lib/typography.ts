@@ -1,6 +1,6 @@
 /** Scripture typography options (spec §1.4): the reading face and its size.
  *
- *  Three faces, no more — "three is a choice; ten is a chore." The chosen face
+ *  Four faces, each visibly distinct (Garamond/Georgia/Times/Sans). The chosen face
  *  drives the `--scripture` custom property (styles.css maps it from
  *  `<html data-font>`); the chosen size is written verbatim as a pixel value.
  *  Both the Settings pills and the Reader's A−/A+ stepper write the same

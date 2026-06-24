@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.13.0%20·%20the%20proper%20of%20the%20day%2C%20by%20default-5B3A8E)
+![version](https://img.shields.io/badge/version-1.13.2%20·%20the%20unbound%20page-5B3A8E)
 ![version](https://img.shields.io/badge/version-1.13.1%20·%20the%20second%20lampstand-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
@@ -191,7 +191,7 @@ piety, never gamification.
 
 - **Reader** — translation switcher; **parallel view** (e.g. Douay beside the Vulgate);
   traditional book names per translation (1 Kings / Liber I Regum, Apocalypse / Apocalypsis); a
-  choice of **reading face** (bundled EB Garamond, system serif, or sans) with four size presets
+  choice of **reading face** (bundled EB Garamond, plus Georgia, Times New Roman, and Sans-serif) with four size presets
   and an A−/A+ fine adjustment; verse deep-links.
 - **Bookmarks, highlights (4 colors), and notes** — stored locally; no account, no server. The
   Library **exports the lot as JSON and imports it back** (merging, newer entry per verse wins),
