@@ -72,23 +72,28 @@ Common gotchas:
 Before shipping to TestFlight/App Store, set your own bundle identifier and
 signing team in the App target (the default id is `app.fidelis.bible`).
 
-## 2. Add the Verse-of-the-Day home-screen widget
+## 2. Add the home-screen widgets
 
-The widget source lives in `ios/WidgetExtension/` (it is plain source — the
-extension *target* must be created once in Xcode, which cannot be scripted
-from this repo):
+The widget sources live in `ios/WidgetExtension/`. The extension *target* is now
+created by a script (it used to be a manual Xcode step):
 
-1. In Xcode: **File ▸ New ▸ Target… ▸ Widget Extension**.
-   - Product name: `FidelisWidget`
-   - **Untick** “Include Configuration App Intent”
-   - Embed in the `App` target when prompted.
-2. Delete the template Swift file Xcode generated for the new target.
-3. Drag `ios/WidgetExtension/FidelisWidget.swift` and
-   `ios/WidgetExtension/votd.json` into the `FidelisWidget` group, with
-   **Target membership: FidelisWidget** checked (and `votd.json` added to the
-   target's *Copy Bundle Resources* build phase, which Xcode does by default).
-4. Run the `FidelisWidget` scheme, or run the app and add the widget from the
-   home screen (long-press ▸ ➕ ▸ Fidelis).
+```bash
+gem install xcodeproj          # once, if not already installed
+ruby scripts/add-ios-widget-target.rb
+```
+
+This adds the `FidelisWidgetExtension` app-extension target to `App.xcodeproj`,
+compiles `FidelisWidget.swift` + `CalendarWidgets.swift`, bundles `votd.json` +
+`calendar.json` + `Info.plist` (extension point `com.apple.widgetkit-extension`),
+and embeds the `.appex` in the `App` target. It is idempotent — re-running once
+the target exists is a no-op. Then build/run the `App` scheme and add a widget
+from the home screen (long-press ▸ ➕ ▸ Fidelis): Verse of the Day, Today at Mass,
+and Quote of the Day, each in small / medium / large.
+
+> If you prefer the manual route: **File ▸ New ▸ Target… ▸ Widget Extension**,
+> product name `FidelisWidget`, untick "Include Configuration App Intent", embed
+> in `App`, delete the template Swift file, then drag in the four
+> `ios/WidgetExtension/*` files with **Target membership** checked.
 
 The widget computes the same daily verse as the web app
 (`index = (dayOfYear + year) mod cycleLength`) and refreshes itself at
@@ -204,8 +209,7 @@ workflow and proves the Capacitor iOS shell still compiles after a web or native
 change. It triggers on demand (`workflow_dispatch`) and on push/PR that touch
 `ios/**`, `src/**`, `capacitor.config.ts`, or the lockfile.
 
-The Widget Extension target is created by hand in Xcode (§2/§5), so it is **not**
-part of the CI build until it exists in the committed project — the App target
-build is the gate. Once you have created and committed the `FidelisWidget` target,
-extend the workflow with a second `xcodebuild` step that builds the
-`FidelisWidgetExtension` scheme the same way.
+The `FidelisWidgetExtension` target now lives in the committed project (added by
+`scripts/add-ios-widget-target.rb`, §2) and is embedded in the `App` target, so
+the App-target CI build compiles and embeds the widgets as a dependency — the App
+build is the gate for the widgets too.

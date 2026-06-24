@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef } from "react";
 import { pushOverlay, removeOverlay } from "../lib/overlays";
+import { lockScroll, unlockScroll } from "../lib/scrollLock";
 
 interface Props {
   /** id of the heading inside `children` that labels the dialog. */
@@ -34,21 +35,11 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
     // Register with the overlay stack so the Android hardware Back button (and the
     // app-root exit decision) closes this sheet first, before touching navigation.
     const overlayId = pushOverlay(() => onCloseRef.current());
-    // iOS WKWebView ignores body overflow:hidden for touch dragging, so the page
-    // behind the scrim still rubber-bands. Pin the body and offset it by the
-    // current scroll to truly freeze it; restore the scroll on close.
-    const scrollY = window.scrollY;
-    const body = document.body;
-    const prev = {
-      overflow: body.style.overflow,
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width
-    };
-    body.style.overflow = "hidden";
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.width = "100%";
+    // Freeze the page behind the scrim. The lock is shared and reference-counted
+    // (lib/scrollLock): stacking sheets pin the body once and unpin it only when
+    // the last one closes, so no open/close order can leave `position: fixed`
+    // stranded on the body — the iOS "page won't scroll" bug.
+    lockScroll();
     panelRef.current
       ?.querySelector<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])')
       ?.focus();
@@ -77,11 +68,7 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
     return () => {
       removeOverlay(overlayId);
       document.removeEventListener("keydown", onKey);
-      body.style.overflow = prev.overflow;
-      body.style.position = prev.position;
-      body.style.top = prev.top;
-      body.style.width = prev.width;
-      window.scrollTo(0, scrollY);
+      unlockScroll();
       opener.current?.focus();
     };
     // Mount-once: the sheet locks the body and traps focus for its lifetime;

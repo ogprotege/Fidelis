@@ -518,14 +518,42 @@ The iOS home-screen widgets reach parity with Android, and the native iOS shell 
 - **`ios/WidgetExtension/CalendarWidgets.swift`** adds `MassWidget` ("Today at Mass") and
   `QuoteWidget` ("Quote of the Day"), the iOS counterparts of the Android widgets, reading the same
   `calendar.json` keyed by a Gregorian + device-tz ISO date so iOS/Android/web never disagree.
-  `FidelisWidget.swift`'s `@main` bundle registers all three. The GUI-only Widget Extension target
-  creation in Xcode is the one remaining step (`docs/IOS.md` §5) — it cannot be scripted.
+  `FidelisWidget.swift`'s `@main` bundle registers all three. (The Widget Extension *target* was a
+  manual Xcode step at 1.13.1; v1.13.2 automated it with `scripts/add-ios-widget-target.rb`, below.)
 - **`.github/workflows/ios.yml`** builds the iOS App target for the simulator on `macos-latest`,
   selecting the newest Xcode. Capacitor 8.4.x ships its iOS framework as a binary built with **Swift
   6.2**, so the build needs Xcode 17+/26 (an older Xcode fails with misleading "`CAPBridgeProtocol`
   has no member `webView`" errors). Capacitor bumped 8.4.0 → 8.4.1 (latest stable).
 - Native version strings (`android/app/build.gradle`, iOS `MARKETING_VERSION`) reconciled to the
   app version (they had lagged at 1.12.3).
+
+## The unbound page — iOS shell fixes — v1.13.2
+
+Three fixes found while running the Capacitor app in the iOS Simulator. All are iOS-shell / native
+concerns; the web app, the engines, the bundled texts, and the harnesses are unchanged.
+
+- **Scroll freeze (`src/lib/scrollLock.ts`, `src/components/Sheet.tsx`).** The bottom-sheet body-lock
+  saved/restored `document.body`'s inline styles per `Sheet` instance. The Reader renders the
+  Commentary, Share, and chapter-picker sheets independently, so two could be open at once; the second
+  captured the already-locked `position: fixed` and, closed out of order, restored it with no sheet
+  open — the document collapsed to the viewport and **nothing scrolled** (reproduced on device:
+  `pos=fixed`, `scrollHeight==innerHeight`). The lock is now a shared, reference-counted module: pin
+  the body once on the first sheet, restore the true pre-lock state only when the last sheet closes.
+  Order-independent, so the leak class is gone. (Aside confirmed in the same session: the iOS Simulator
+  does not scroll web content with two-finger trackpad — you must click-drag; that part is expected.)
+- **Scripture face picker did nothing on iOS (`src/lib/fontLoader.ts`, `src/main.tsx`).** Under the
+  `capacitor://` scheme, iOS WebKit doesn't reliably fire the lazy CSS `@font-face` download, so the
+  bundled EB Garamond never loaded and fell back to `Iowan Old Style` — identical to the "System serif"
+  option, so two of three font choices looked the same. `preloadScriptureFonts()` forces the face via
+  the Font Loading API at startup (which *does* work in that WebView); `font-display: swap` repaints.
+  A no-op on the web. The file, MIME, path, and unicode-ranges were all fine — only the implicit fetch
+  never fired.
+- **iOS home-screen widgets never appeared.** The WidgetKit Swift + JSON existed, but the Xcode
+  project had no Widget Extension target, so nothing built. `scripts/add-ios-widget-target.rb`
+  (idempotent; `xcodeproj` gem) adds `FidelisWidgetExtension`, compiles both Swift files, bundles
+  `votd.json`/`calendar.json`/`Info.plist` (`com.apple.widgetkit-extension`), and embeds the `.appex`
+  in the App target. All three widgets build/embed and support small/medium/large. This automates the
+  former manual `docs/IOS.md` §5 step; the App-target CI build now compiles the widgets as a dependency.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
