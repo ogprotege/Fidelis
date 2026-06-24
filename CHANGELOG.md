@@ -18,8 +18,8 @@ No change to the liturgical engines, the bundled texts, or the harnesses.
   (bundled, light), **Georgia** (sturdy, large x-height — added by request), **Times New Roman**
   (classic), and **Sans-serif**. The old "System serif" option resolved to Iowan Old Style, which on
   iOS looks almost identical to EB Garamond, so switching appeared to do nothing; it's replaced with
-  faces that each look obviously different. (An older saved "serif" choice still maps to the system
-  serif until changed.)
+  faces that each look obviously different. (An older saved "serif" choice migrates to Garamond, the
+  default — the boot script and `getSettings` both normalize the retired id, so it never re-applies.)
 
 ### Fixed
 
@@ -37,7 +37,7 @@ No change to the liturgical engines, the bundled texts, or the harnesses.
   of a CSS `@font-face`, so the bundled EB Garamond never loaded and fell back to `Iowan Old Style`,
   which is exactly what the system-serif option already resolves to. `src/lib/fontLoader.ts` now
   forces the face to load at startup via the Font Loading API (which does work in that WebView);
-  `font-display: swap` then repaints. Verified on device (rendered widths now differ across all three
+  `font-display: swap` then repaints. Verified on device (rendered widths now differ across the four
   faces). A no-op on the web, where the font already loaded.
 - **The iOS home-screen widgets never appeared** — the WidgetKit Swift sources and JSON existed, but
   there was no Widget Extension target in the Xcode project, so nothing was built or installed.
@@ -47,6 +47,11 @@ No change to the liturgical engines, the bundled texts, or the harnesses.
   (`com.apple.widgetkit-extension`), and embeds the `.appex` in the App target. All three widgets
   (Verse of the Day, Today at Mass, Quote of the Day) build and embed and support the small, medium,
   and large families. This automates the previously manual `docs/IOS.md` §5 step.
+
+### Changed
+
+- **Service-worker shell cache `v4`→`v5`** (`public/sw.js`) so an installed/PWA copy fetches this
+  build (the new Scripture faces and the Chi-Rho icon) instead of serving stale cached assets.
 
 ## [1.13.1] — 2026-06-23 — the second lampstand
 

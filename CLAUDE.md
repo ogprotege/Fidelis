@@ -16,7 +16,9 @@ Mass-readings default (import-only; never bundled) in v1.11.0; a navigation & IA
 visual-regression fixes (readable selects, chip section-bar, liturgical-outline selections) in
 v1.12.1; USFM/OSIS import + a NAB-PDF converter in v1.12.2; a documentation reconciliation
 in v1.12.3; the USCCB calendar + NABRE readings made the defaults in v1.13.0; and the iOS
-Mass/Quote widget sources + a macOS CI in v1.13.1 — all recorded below), and `CHANGELOG.md`
+Mass/Quote widget sources + a macOS CI in v1.13.1; and the iOS-shell fixes (a reference-counted
+scroll-lock, the startup font preloader, the scripted Widget Extension target), the Chi-Rho native
+app icon, and the four-face Scripture lineup in v1.13.2 — all recorded below), and `CHANGELOG.md`
 (release history; bump `package.json` version and add a CHANGELOG entry together).
 
 ## Commands
@@ -54,7 +56,7 @@ items (A1–A6) on the `v1.1-identity` branch:
   `--scripture` via `<html data-font>` (the look-alike "System serif"/Iowan option was
   replaced in v1.13.2 with Georgia + Times New Roman so each face is visibly distinct);
   four size presets (17/19/22/25) own the vocabulary in `src/lib/typography.ts`. `sw.js`
-  is font-aware (shell cache `v3`). Still no red-letter text — weight-400 only, asserted.
+  is font-aware (shell cache `v5` as of v1.13.2). Still no red-letter text — weight-400 only, asserted.
 - **§1.5 — the icon set** (A4): `src/components/Icon.tsx`, six `currentColor`
   marks (bookmark, note, share, commentary, sun/moon, cross) on a 24×24 / 1.6-weight
   grid replacing the emoji glyphs; the iOS widget draws the cross natively. The
@@ -530,8 +532,8 @@ The iOS home-screen widgets reach parity with Android, and the native iOS shell 
 
 ## The unbound page — iOS shell fixes — v1.13.2
 
-Three fixes found while running the Capacitor app in the iOS Simulator. All are iOS-shell / native
-concerns; the web app, the engines, the bundled texts, and the harnesses are unchanged.
+Three iOS-shell fixes plus three small additions, found while running the Capacitor app in the iOS
+Simulator. The liturgical engines, the bundled texts, and the harnesses are unchanged.
 
 - **Scroll freeze (`src/lib/scrollLock.ts`, `src/components/Sheet.tsx`).** The bottom-sheet body-lock
   saved/restored `document.body`'s inline styles per `Sheet` instance. The Reader renders the
@@ -544,8 +546,9 @@ concerns; the web app, the engines, the bundled texts, and the harnesses are unc
   does not scroll web content with two-finger trackpad — you must click-drag; that part is expected.)
 - **Scripture face picker did nothing on iOS (`src/lib/fontLoader.ts`, `src/main.tsx`).** Under the
   `capacitor://` scheme, iOS WebKit doesn't reliably fire the lazy CSS `@font-face` download, so the
-  bundled EB Garamond never loaded and fell back to `Iowan Old Style` — identical to the "System serif"
-  option, so two of three font choices looked the same. `preloadScriptureFonts()` forces the face via
+  bundled EB Garamond never loaded and fell back to `Iowan Old Style` — identical to the then-existing
+  "System serif" option, so two of the faces looked the same (the lineup is now four; see below).
+  `preloadScriptureFonts()` forces the face via
   the Font Loading API at startup (which *does* work in that WebView); `font-display: swap` repaints.
   A no-op on the web. The file, MIME, path, and unicode-ranges were all fine — only the implicit fetch
   never fired.
@@ -555,6 +558,17 @@ concerns; the web app, the engines, the bundled texts, and the harnesses are unc
   `votd.json`/`calendar.json`/`Info.plist` (`com.apple.widgetkit-extension`), and embeds the `.appex`
   in the App target. All three widgets build/embed and support small/medium/large. This automates the
   former manual `docs/IOS.md` §5 step; the App-target CI build now compiles the widgets as a dependency.
+- **The native app icon is the Chi-Rho** (gold ☧ with Alpha/Omega on a dark field), on iOS and Android:
+  the iOS `AppIcon` is a 1024×1024 opaque icon; the Android adaptive icon insets the Chi-Rho on a dark
+  (`#222222`) background, with edge-to-edge legacy mipmaps. (The two unused Capacitor-default icon
+  vectors — the teal grid + green robot — were removed.)
+- **The Scripture-face lineup is now four visibly-distinct faces** — Garamond / Georgia / Times New
+  Roman / Sans-serif (ids `garamond|georgia|times|sans` in `src/lib/typography.ts`; the look-alike
+  "System serif"/Iowan option is gone). A retired saved `serif` id normalizes to Garamond (the default)
+  at both the `index.html` boot script and `getSettings`, so no stale value strands the reader (the dead
+  `[data-font="serif"]` CSS rule was removed).
+- **Service-worker shell cache `v4`→`v5`** (`public/sw.js`) so an installed/PWA copy fetches this build
+  (the new faces and the Chi-Rho icon) instead of serving stale assets.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

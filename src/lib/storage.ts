@@ -48,7 +48,7 @@ export interface Settings {
   translation: string;
   parallel: string | null;
   fontSize: number; // px — one of the §1.4 presets, or any value the Reader stepper lands on
-  /** Scripture reading face (spec §1.4): Garamond, system serif, or system sans. */
+  /** Scripture reading face (spec §1.4): Garamond, Georgia, Times New Roman, or Sans-serif. */
   scriptureFont: ScriptureFont;
   /** Appearance (spec §2.2): System follows the OS; Day/Night pin the palette. */
   theme: ThemeChoice;

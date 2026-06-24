@@ -126,12 +126,12 @@ the shell and the bundled texts are offline by construction. Only books a
 user *imports* (RSV-2CE/NABRE via IndexedDB) and the lectionary fetches go
 through the webview, and those read from local bundle paths as well.
 
-## 5. The Mass & Quote widgets, App Intents, Dynamic Type (spec — wire in Xcode)
+## 5. The Mass & Quote widgets, App Intents, Dynamic Type
 
 The Android counterparts of these ship in v1.8.4 "the doorposts" (the data
-pipeline + `CalendarWidget`/`QuoteWidget` are fully committed). The iOS side
-needs the same one-time Xcode work as the VOTD widget (the target and Swift
-cannot be scripted from this repo), so this is the runbook.
+pipeline + `CalendarWidget`/`QuoteWidget` are fully committed). The iOS side now
+ships in the same `FidelisWidgetExtension` target, added by
+`scripts/add-ios-widget-target.rb` (§2) — no manual Xcode step. This is the runbook.
 
 **Shared data — already generated.** `scripts/build-calendar-widget.ts`
 (`npm run calendar-widget`, also part of `npm run widgets`) pre-resolves, from
@@ -161,15 +161,14 @@ after any calendar/lectionary/quote change with `npm run calendar-widget`.
 The `MassWidget` and `QuoteWidget` are implemented in
 `ios/WidgetExtension/CalendarWidgets.swift`, and `FidelisWidget.swift`'s
 `@main FidelisWidgetBundle` already registers all three
-(`FidelisWidget()` + `MassWidget()` + `QuoteWidget()`). The only remaining work
-is the one-time Xcode wiring (it cannot be scripted from the repo):
+(`FidelisWidget()` + `MassWidget()` + `QuoteWidget()`). `scripts/add-ios-widget-target.rb`
+(§2) already compiles `CalendarWidgets.swift` and bundles `calendar.json` into the
+`FidelisWidgetExtension` target, so there is no manual Xcode wiring:
 
-1. Drag `ios/WidgetExtension/CalendarWidgets.swift` into the `FidelisWidget`
-   group with **Target membership: FidelisWidget** checked.
-2. Drag `ios/WidgetExtension/calendar.json` into the `FidelisWidget` group with
-   **Target membership: FidelisWidget** (it lands in Copy Bundle Resources).
-3. Build the `FidelisWidget` scheme, or run the app and add the widgets from the
-   home screen (long-press ▸ ➕ ▸ Fidelis ▸ "Today at Mass" / "Quote of the Day").
+1. Run `ruby scripts/add-ios-widget-target.rb` (idempotent) if the target is not yet
+   in your checkout, then `npx cap open ios`.
+2. Build the `App` scheme, or run the app and add the widgets from the home screen
+   (long-press ▸ ➕ ▸ Fidelis ▸ "Today at Mass" / "Quote of the Day").
 
 What the implemented Swift does (for reference): it loads `calendar.json`, keys
 it by `DateFormatter` (`yyyy-MM-dd`, `Calendar(identifier: .gregorian)`, device
