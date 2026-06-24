@@ -71,11 +71,13 @@ export interface Settings {
   /** Magisterium layer (spec §5): show the CCC paragraph links in the verse
    *  actions. Off ⇒ no CCC row anywhere. Links open vatican.va. */
   cccLinksEnabled: boolean;
-  /** Preferred translation for the Mass / Daily-Readings surfaces. "" = auto:
-   *  the NABRE for the USA region (it is the translation of the U.S. lectionary),
-   *  otherwise the general reading translation. The NABRE is import-only (it is
-   *  under copyright and never bundled), so when it is the preference but not yet
-   *  imported the readings fall back to a bundled public-domain text. */
+  /** Preferred translation for the Mass / Daily-Readings surfaces. Defaults to
+   *  the NABRE — the translation of the U.S. lectionary — so the Daily Readings
+   *  prefer it out of the box. "" = auto (match the calendar region: the NABRE
+   *  for the USA region, otherwise the general reading translation). The NABRE is
+   *  import-only (it is under copyright and never bundled), so when it is the
+   *  preference but not yet imported the readings fall back to a bundled
+   *  public-domain text (the Douay-Rheims). */
   massTranslation: string;
 }
 
@@ -108,7 +110,12 @@ export function getSettings(): Settings {
     scriptureFont: DEFAULT_SCRIPTURE_FONT,
     theme: DEFAULT_THEME,
     showVerseNumbers: true,
-    calendarRegion: "universal",
+    // Default to the U.S. (USCCB) calendar so the liturgical day and the Daily
+    // Readings stay consistent with the NABRE U.S. lectionary default below
+    // (Epiphany on the Sunday of Jan 2–8, Ascension on the Seventh Sunday of
+    // Easter, and the U.S. proper memorials). A user can switch to Universal in
+    // Settings → Calendar.
+    calendarRegion: "usa",
     followLiturgicalYear: true,
     showIndulgence: true,
     commentaryEnabled: true,
@@ -116,7 +123,11 @@ export function getSettings(): Settings {
     commentaryCatena: true,
     commentaryDoctorsOnly: false,
     cccLinksEnabled: true,
-    massTranslation: "",
+    // The Daily Readings default to the NABRE — the translation of the U.S.
+    // lectionary. It is under copyright and never bundled, so until the user
+    // imports a licensed copy the readings fall back to the bundled Douay-Rheims
+    // (ReadingText handles the fallback and shows the import pointer).
+    massTranslation: "nabre",
     ...read<Partial<Settings>>("settings", {})
   };
   // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored

@@ -14,9 +14,10 @@ touch feel, the gold-contrast split, CCC discoverability) in v1.10.0; NABRE as t
 Mass-readings default (import-only; never bundled) in v1.11.0; a navigation & IA pass
 (scroll restoration, in-page SectionNav jump bars, native-Back handling, focus) in v1.12.0;
 visual-regression fixes (readable selects, chip section-bar, liturgical-outline selections) in
-v1.12.1; USFM/OSIS import + a NAB-PDF converter in v1.12.2; and a documentation reconciliation
-in v1.12.3 — all recorded below), and `CHANGELOG.md` (release history; bump `package.json` version and
-add a CHANGELOG entry together).
+v1.12.1; USFM/OSIS import + a NAB-PDF converter in v1.12.2; a documentation reconciliation
+in v1.12.3; the USCCB calendar + NABRE readings made the defaults in v1.13.0; and the iOS
+Mass/Quote widget sources + a macOS CI in v1.13.1 — all recorded below), and `CHANGELOG.md`
+(release history; bump `package.json` version and add a CHANGELOG entry together).
 
 ## Commands
 
@@ -491,6 +492,41 @@ local; the converter is run by the owner, not committed.
 **v1.12.3 "the faithful record"** — documentation reconciliation (this pass): README badge/content,
 this file, and the CHANGELOG aligned to the current feature set; the first git tags + GitHub release.
 
+## The proper of the day, by default — v1.13.0
+
+Align Fidelis with the **USCCB by default** so the calendar, the readings, and the home-screen
+widgets are consistent out of the box. The legal posture is unchanged and binding (the NABRE is
+© Confraternity of Christian Doctrine and is **never bundled or committed**; this changes only
+*defaults*):
+
+- **`calendarRegion` now defaults to `"usa"`** (was `universal`) and **`massTranslation` defaults
+  to `"nabre"`** (was `""` = match region), both in `src/lib/storage.ts`. So a fresh install opens
+  the U.S. (USCCB) liturgical calendar and the NABRE Daily Readings. `massTranslationFor()` is
+  unchanged (an explicit choice still wins; `""` still means match region); until a licensed NABRE
+  is imported the readings fall back to the bundled Douay-Rheims with the in-line import pointer.
+  The §20 harness and golden snapshots (which pin both regions explicitly) hold; the one
+  default-region-dependent assertion in `test-liturgical.ts` (St. Matthias vs. Ascension) now names
+  its region.
+- **`scripts/build-calendar-widget.ts` uses the USA region**, and the regenerated `calendar.json`
+  ships to both native widget bundles, so the home-screen "Today at Mass" widget matches the app.
+- Settings → Calendar copy documents the U.S./USCCB + NABRE defaults.
+
+## The second lampstand — iOS widgets + macOS CI — v1.13.1
+
+The iOS home-screen widgets reach parity with Android, and the native iOS shell is now built in CI:
+
+- **`ios/WidgetExtension/CalendarWidgets.swift`** adds `MassWidget` ("Today at Mass") and
+  `QuoteWidget` ("Quote of the Day"), the iOS counterparts of the Android widgets, reading the same
+  `calendar.json` keyed by a Gregorian + device-tz ISO date so iOS/Android/web never disagree.
+  `FidelisWidget.swift`'s `@main` bundle registers all three. The GUI-only Widget Extension target
+  creation in Xcode is the one remaining step (`docs/IOS.md` §5) — it cannot be scripted.
+- **`.github/workflows/ios.yml`** builds the iOS App target for the simulator on `macos-latest`,
+  selecting the newest Xcode. Capacitor 8.4.x ships its iOS framework as a binary built with **Swift
+  6.2**, so the build needs Xcode 17+/26 (an older Xcode fails with misleading "`CAPBridgeProtocol`
+  has no member `webView`" errors). Capacitor bumped 8.4.0 → 8.4.1 (latest stable).
+- Native version strings (`android/app/build.gradle`, iOS `MARKETING_VERSION`) reconciled to the
+  app version (they had lagged at 1.12.3).
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
@@ -502,7 +538,7 @@ this file, and the CHANGELOG aligned to the current feature set; the first git t
 ### P1 — correctness and integrity (all fixed)
 
 - **P1-4:** Fixed — grid-empty verse slots are skipped in Reader (both columns), Search, and VerseQuote; fully-empty chapters (the five appendix books, textless in the source corpus in every bundle) show an honest notice. `scripts/build-report.mjs` (run by `npm run data` / `npm run report`) emits the committed `data-report.txt` audit: 1,438 appendix placeholder slots + 17 scattered slots; report↔data sync asserted in `scripts/test-data.ts`. About/BookList/README copy corrected (Clementine appendix attribution, grid honesty). The audit surfaced 3 DRC corpus defects (printed 3 Kings 17:11, Prov 30:19, Bar 6:7 absent outright; their slots hold misfiled verses) — documented in the report and About; correcting the corpus itself folds into P1-10.
-- **P1-5:** Fixed — `calendarRegion` setting (`universal` | `usa`, default universal) in `storage.ts`, read lazily by both engines (`currentRegion()`); explicit region params keep them testable. USA: Epiphany on the Sunday of Jan 2–8 (`epiphanyDate`), Baptism to Monday when Epiphany lands Jan 7–8 (OT week 1 then anchors on the Epiphany Sunday), Ascension on the Seventh Sunday of Easter, the Guadalupe Feast, and all six USA obligatory memorials (Seton, Neumann, Kateri, Claver, Brébeuf/Jogues, Cabrini). Epiphany left `FIXED` for `movableDefs` and the label dropped "(traditional date)" (closes P2-5); Guadalupe moved to `USA_FIXED` (was over-ranked universally). Region select on the Readings toolbar; About documents the transfers incl. the five Thursday-Ascension provinces. 30+ acceptance checks in `test-liturgical.ts`; the gospel sweep in `test-data.ts` runs both regions.
+- **P1-5:** Fixed — `calendarRegion` setting (`universal` | `usa`; default `usa` since v1.13.0, was `universal`) in `storage.ts`, read lazily by both engines (`currentRegion()`); explicit region params keep them testable. USA: Epiphany on the Sunday of Jan 2–8 (`epiphanyDate`), Baptism to Monday when Epiphany lands Jan 7–8 (OT week 1 then anchors on the Epiphany Sunday), Ascension on the Seventh Sunday of Easter, the Guadalupe Feast, and all six USA obligatory memorials (Seton, Neumann, Kateri, Claver, Brébeuf/Jogues, Cabrini). Epiphany left `FIXED` for `movableDefs` and the label dropped "(traditional date)" (closes P2-5); Guadalupe moved to `USA_FIXED` (was over-ranked universally). Region select on the Readings toolbar; About documents the transfers incl. the five Thursday-Ascension provinces. 30+ acceptance checks in `test-liturgical.ts`; the gospel sweep in `test-data.ts` runs both regions.
 - **P1-6:** Fixed — the source tables mark prescribed memorial propers with a thousandths suffix on `t` (Barnabas `1.001`, Guardian Angels `6.001`, Martha/Sorrows `6.101/6.201`, Timothy & Titus `1.101/1.201`, Mary Mother of the Church `.x09`); `resolveReadings()` in `src/lib/lectionary.ts` (pure, testable; `readingsForDate` wraps it) promotes a marked, observed, **obligatory** memorial's formulary to primary with the ferial cycle as `secondary` — optional memorials (`opt: true` in `FIXED`: Joseph the Worker, Lourdes, Fatima, Mount Carmel, JPII) and unmarked memorials stay behind the ferial, and governing solemnities/feasts are never displaced. Candidate groups now carry provenance (`dayCodeGroups`). Sts. Timothy and Titus added to `FIXED`/`NAMED` (was missing). Readings page shows "Proper of the Memorial" + "Ferial readings of the day"; 14 assertions in `test-data.ts` 3b.
 - **P1-7:** Fixed — `displayReadings()` in `src/lib/lectionary.ts` lays out ordered, labeled sections. Easter Vigil (`LW06-6Sat` codes): Reading I–VII / Epistle with each psalm interleaved after its reading, shorter forms as "or (shorter form)", Gospel last, plus a safety net for unclaimed rows. General days: an `x.N1` same-book row is the shorter form of its `x.N` primary; genuine options keep the option labels. `Readings.tsx` renders the helper's sections. Full 21-label Vigil sequence, Palm Sunday short Passion, and option/shorter-form discrimination asserted in `scripts/test-data.ts`.
 - **P1-8:** Fixed — once the target text loads, `Reader.tsx` clamps an out-of-range chapter to the translation's real `data.chapters.length` (replace-navigation to the last chapter); the "Loading…" state now shows only while data is genuinely loading, and a chapter absent from the loaded translation gets an honest notice (also covers the degenerate zero-chapter case, where no redirect fires).

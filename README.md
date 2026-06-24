@@ -13,7 +13,8 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.12.3%20·%20the%20faithful%20record-5B3A8E)
+![version](https://img.shields.io/badge/version-1.13.0%20·%20the%20proper%20of%20the%20day%2C%20by%20default-5B3A8E)
+![version](https://img.shields.io/badge/version-1.13.1%20·%20the%20second%20lampstand-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -102,11 +103,12 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
   in your browser via IndexedDB. The importer accepts **USFM**, **OSIS**, or scrollmapper-style
   **JSON**; `npm run build-nabre` converts a NAB/NABRE PDF you own into an importable file (the
   output stays on your device and is gitignored — never bundled or committed).
-- **NABRE as the U.S. Mass default** — the NABRE is the translation of the U.S. lectionary, so
-  when the calendar **Region** is *United States* the Daily Readings screen prefers it. Until you
-  import your licensed copy it falls back to the bundled Douay-Rheims (with a pointer to import),
-  and you can swap the readings translation at any time. Set an explicit default under
-  Settings → Calendar → *Mass readings*.
+- **USCCB by default** — out of the box the calendar **Region** is *United States* (the USCCB
+  calendar) and the Daily Readings default to the **NABRE**, the translation of the U.S.
+  lectionary. The NABRE is copyrighted and never bundled, so until you import your licensed copy
+  the readings fall back to the bundled Douay-Rheims (with a pointer to import); you can switch the
+  region to *Universal* or change the readings translation at any time under
+  Settings → Calendar (*Region* / *Mass readings*).
 
 > Because the bundles follow the Vulgate, the **Psalms use the traditional Septuagint
 > numbering** (the "Lord is my shepherd" psalm is Psalm 22, not 23) and the Douay names
@@ -255,10 +257,13 @@ piety, never gamification.
 
 - **PWA** — installable; the app shell is precached on install (and stale assets purged on
   deploys), so the app opens offline, with offline reading of any book you have opened.
-- **iOS** — via Capacitor, including a native **WidgetKit home-screen widget** (Verse of the Day;
-  small / medium / large; offline). The Mass &amp; Quote WidgetKit widgets, a "today's Gospel"
-  App Intent (Siri/Shortcuts), and Dynamic Type are specified for an Xcode session in
-  [docs/IOS.md §5](docs/IOS.md). See [docs/IOS.md](docs/IOS.md).
+- **iOS** — via Capacitor, with native **WidgetKit home-screen widgets**: **Verse of the Day**,
+  **Today at Mass**, and **Quote of the Day** (small / medium / large; offline). The Swift sources
+  for all three live in `ios/WidgetExtension/`; creating the Widget Extension target is a one-time
+  Xcode step (it can't be scripted), per [docs/IOS.md §5](docs/IOS.md). The iOS App target is built
+  in CI on macOS ([`.github/workflows/ios.yml`](.github/workflows/ios.yml)). A "today's Gospel" App
+  Intent (Siri/Shortcuts) and Dynamic Type remain specified for that Xcode session. Build requires
+  **Xcode 17+ (Swift 6.2)**. See [docs/IOS.md](docs/IOS.md).
 - **Android** — via Capacitor: the full app in a native shell, offline by construction (the whole
   build ships inside the APK, exactly as on iOS), now with **three native home-screen widgets**
   (App Widgets) — **Verse of the Day**, **Today at Mass**, and **Quote of the Day** — each showing
