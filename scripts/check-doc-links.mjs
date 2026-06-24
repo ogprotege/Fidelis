@@ -39,14 +39,39 @@ const LINK_RE = /\[[^\]]*\]\(([^)]+)\)/g;
 const files = walk(ROOT);
 const errors = [];
 
-// Strip fenced code blocks (``` ... ```) and inline code spans (` ... `) so
-// links inside examples or code aren't checked.
+// Strip fenced code blocks and inline code spans so links inside examples or
+// code aren't checked.
+//
+// Fenced blocks: a fence of N backticks (N≥3) at line start closes on the
+// next line-start run of ≥N backticks — so a 4-backtick fence wrapping an
+// embedded ``` example is not prematurely closed by the inner ```.
+//
+// Inline spans: `x`, ``x``, etc. — closing run must match opening length.
+// A span may not cross a line boundary.
 function stripCode(text) {
-  // Fenced blocks first (multi-line)
-  text = text.replace(/^`{3,}[^\n]*\n[\s\S]*?^`{3,}/gm, "");
-  // Inline code spans
-  text = text.replace(/`[^`\n]+`/g, "");
-  return text;
+  const lines = text.split("\n");
+  const out = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const fenceM = /^(`{3,})/.exec(lines[i]);
+    if (fenceM) {
+      const openLen = fenceM[1].length;
+      // consume until a closing fence of ≥openLen backticks at line start
+      i++;
+      while (i < lines.length) {
+        const closeM = /^(`+)/.exec(lines[i]);
+        if (closeM && closeM[1].length >= openLen) { i++; break; }
+        i++;
+      }
+    } else {
+      // Strip inline code spans (multi-backtick, no line crossing)
+      out.push(lines[i].replace(/(`+)([^\n]*?)\1/g, (_, ticks, _inner) => " ".repeat(ticks.length * 2 + _inner.length)));
+      i++;
+    }
+  }
+
+  return out.join("\n");
 }
 
 // 1. Validate every relative link target + anchor.
