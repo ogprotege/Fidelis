@@ -13,6 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
+![version](https://img.shields.io/badge/version-1.13.0%20·%20the%20proper%20of%20the%20day%2C%20by%20default-5B3A8E)
 ![version](https://img.shields.io/badge/version-1.13.1%20·%20the%20second%20lampstand-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
