@@ -56,6 +56,11 @@
 
 :root {
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  /* Scripture-face options chosen to look clearly different from one another
+     (spec §1.4). Georgia is sturdy with a large x-height; Times New Roman is the
+     sharper classic book serif. Both differ markedly from the light EB Garamond. */
+  --georgia: Georgia, "Times New Roman", "Times", serif;
+  --times: "Times New Roman", Times, "Liberation Serif", serif;
   --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   /* EB Garamond first, the system serif behind it while it loads / for any
      glyph outside the bundled subsets. */
@@ -92,8 +97,12 @@
 
 /* The Scripture-face choice, written by App.tsx as <html data-font="…">. */
 [data-font="garamond"] { --scripture: var(--garamond); }
-[data-font="serif"]    { --scripture: var(--serif); }
+[data-font="georgia"]  { --scripture: var(--georgia); }
+[data-font="times"]     { --scripture: var(--times); }
 [data-font="sans"]     { --scripture: var(--sans); }
+/* Back-compat: an older saved "serif" choice maps to the system serif until the
+   next change writes one of the current ids. */
+[data-font="serif"]    { --scripture: var(--serif); }
 
 /* Day (light). Also the fallback when no [data-theme] is set, so first paint
    is never colorless. The legacy "parchment" choice migrates here (storage.ts). */
