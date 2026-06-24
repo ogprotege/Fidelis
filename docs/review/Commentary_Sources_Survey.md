@@ -1,5 +1,7 @@
 # FIDELIS — COMMENTARY SOURCES SURVEY
 
+*For: maintainers understanding the commentary data sources and vetting decisions.*  · [← Docs index](../INDEX.md)
+
 **Subject:** Public-domain digitizations of (a) the **Haydock** annotated Douay-Rheims
 commentary and (b) the **Catena Aurea** of St. Thomas Aquinas (Newman/Oxford English
 translation, 1841–1845), as candidate data sources for the **v1.5 "Formation"** commentary
@@ -460,3 +462,6 @@ the two recommendations:
    `{father, sourceCitation}` split needed for the §4.2 **Doctors-only** filter at launch?
 
 *Veritas in fontibus — the truth is in the sources, and the sources are now named.*
+
+---
+[← Docs index](../INDEX.md) · Related: [feature design spec](Fidelis_Feature_Design_Spec_V1_2026-06-11.md) · [code review](Fidelis_Code_Review_V1_2026-06-11.md)

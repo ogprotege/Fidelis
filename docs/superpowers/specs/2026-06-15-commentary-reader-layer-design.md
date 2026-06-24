@@ -1,5 +1,7 @@
 # §4.2 — The Commentary Reader Layer (Haydock + Catena Aurea)
 
+[← Docs index](../../INDEX.md)
+
 **Date:** 2026-06-15
 **Spec section:** Feature Design Spec §4.2 (the gold dot and the bottom sheet)
 **Branch:** `v1.5-formation`

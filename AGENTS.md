@@ -1,5 +1,7 @@
 # AGENTS.md
 
+[← Docs index](docs/INDEX.md)
+
 ## Cursor Cloud specific instructions
 
 Fidelis is a React + TypeScript + Vite single-page Catholic Bible app, with

@@ -1,6 +1,6 @@
 # Release narrative — the faithful record
 
-*For: anyone tracing how Fidelis grew, release by release.*
+*For: anyone tracing how Fidelis grew, release by release.*  · [← Docs index](../INDEX.md)
 
 > Preserved verbatim from CLAUDE.md. The terse one-line ledger lives in
 > [CLAUDE.md](../../CLAUDE.md#release-ledger); the canonical changelog is
@@ -574,4 +574,4 @@ Simulator. The liturgical engines, the bundled texts, and the harnesses are unch
 <!-- END extracted narrative -->
 
 ---
-Related: [CHANGELOG](../../CHANGELOG.md) · [CLAUDE.md](../../CLAUDE.md)
+[← Docs index](../INDEX.md) · Related: [CHANGELOG](../../CHANGELOG.md) · [CLAUDE.md](../../CLAUDE.md)

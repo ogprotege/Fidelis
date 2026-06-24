@@ -1,5 +1,7 @@
 # Changelog
 
+[← Docs index](docs/INDEX.md)
+
 All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.

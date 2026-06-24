@@ -1,5 +1,7 @@
 # FIDELIS — FEATURE DESIGN AND IMPROVEMENT SPECIFICATION
 
+*For: maintainers and contributors understanding the product roadmap and design decisions.*  · [← Docs index](../INDEX.md)
+
 **Version:** 1.0
 **Date:** June 11, 2026
 **Author:** Claude, for Wilson Warren
@@ -349,3 +351,6 @@ The simplicity is not a development phase. It is the product.
 4. Decide the one open product question: whether the **Today in the Church** merge (Section 6, card 3) suits you, since it changes the page you see every morning.
 
 *Simplex sigillum veri.*
+
+---
+[← Docs index](../INDEX.md) · Related: [code review](Fidelis_Code_Review_V1_2026-06-11.md) · [specs & plans](../superpowers/INDEX.md)

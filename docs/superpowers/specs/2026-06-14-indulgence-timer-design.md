@@ -1,5 +1,7 @@
 # Design Spec — The Reading-Time Indulgence (v1.2 B2)
 
+[← Docs index](../../INDEX.md)
+
 **Release label:** `v1.2 B2: the indulgence line (Ench. Ind. conc. 30)`
 **Version bump:** `package.json` 1.4.0 → **1.5.0**
 **Branch:** `v1.2-daily-soul`

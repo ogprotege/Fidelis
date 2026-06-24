@@ -1,5 +1,7 @@
 # Reading-Time Indulgence Implementation Plan
 
+[← Docs index](../../INDEX.md)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Spec §6.1 — after a continuous half-hour of reading in the Reader, show one small gold line citing the Church's plenary indulgence (Ench. Ind. conc. 30), tappable to a conditions sheet; a setting hides it.

@@ -1,5 +1,7 @@
 # CLAUDE.md — Fidelis
 
+[← Docs index](docs/INDEX.md)
+
 Catholic Bible app (DRB, CPDV, Clementine Vulgate) with liturgical calendar and
 daily Mass readings. Companion documents:
 `docs/review/Fidelis_Code_Review_V1_2026-06-11.md` (the repair manual — every

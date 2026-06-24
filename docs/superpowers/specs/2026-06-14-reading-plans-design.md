@@ -1,5 +1,7 @@
 # Design Spec — Reading Plans, the Catena Way (v1.2 B3)
 
+[← Docs index](../../INDEX.md)
+
 **Release label:** `v1.2 B3: reading plans, the Catena way`
 **Version bump:** `package.json` 1.5.0 → **1.6.0**
 **Branch:** `v1.2-daily-soul`

@@ -1,5 +1,7 @@
 # FIDELIS — CODE REVIEW AND IMPROVEMENT PLAN
 
+*For: maintainers and contributors understanding what was fixed and why.*  · [← Docs index](../INDEX.md)
+
 **Version:** 1.0
 **Date:** June 11, 2026
 **Reviewer:** Claude, at Wilson Warren's request
@@ -181,3 +183,6 @@ Tokens for the look you described, layered on the existing two themes rather tha
 The P0 work is the price of the app's own creed. Everything else is growth.
 
 *Verbum Domini manet in æternum.*
+
+---
+[← Docs index](../INDEX.md) · Related: [feature design spec](Fidelis_Feature_Design_Spec_V1_2026-06-11.md) · [commentary sources survey](Commentary_Sources_Survey.md)

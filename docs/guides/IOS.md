@@ -1,5 +1,7 @@
 # Building Fidelis for iOS
 
+*For: developers building or testing the native iOS shell.*  · [← Docs index](../INDEX.md)
+
 Fidelis ships as a [Capacitor](https://capacitorjs.com) app: the same web code
 runs inside a native iOS shell, with native WidgetKit home-screen widgets on
 top. Building requires a Mac with **Xcode 17+ (Swift 6.2+)** — Capacitor 8.4.x
@@ -212,3 +214,6 @@ The `FidelisWidgetExtension` target now lives in the committed project (added by
 `scripts/add-ios-widget-target.rb`, §2) and is embedded in the `App` target, so
 the App-target CI build compiles and embeds the widgets as a dependency — the App
 build is the gate for the widgets too.
+
+---
+[← Docs index](../INDEX.md) · Related: [Android guide](ANDROID.md) · [Releasing](RELEASING.md) · [CLAUDE.md](../../CLAUDE.md)

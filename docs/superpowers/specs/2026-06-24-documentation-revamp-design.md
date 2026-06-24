@@ -1,5 +1,7 @@
 # Documentation revamp — design spec
 
+[← Docs index](../../INDEX.md)
+
 > *"Set in order the things that are wanting."* — Titus 1:5
 
 **Date:** 2026-06-24 · **Status:** approved (brainstorming), pending implementation plan

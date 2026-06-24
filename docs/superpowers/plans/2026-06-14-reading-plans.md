@@ -1,5 +1,7 @@
 # Reading Plans Implementation Plan
 
+[← Docs index](../../INDEX.md)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Spec §7 — reading plans as pure citation arithmetic: a `{chapters, perDay}` model, five citation-only presets (incl. a weighted Whole-Canon-in-a-Year), a one-screen creator, and three quiet surfaces (Continue Reading line, "Mark today's portion read" at chapter end, management under Read).

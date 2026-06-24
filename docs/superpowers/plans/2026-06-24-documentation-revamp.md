@@ -1,5 +1,7 @@
 # Documentation Revamp Implementation Plan
 
+[← Docs index](../../INDEX.md)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Reorganize every Fidelis documentation surface into one navigable, drift-resistant system — homes-per-reader, history archived verbatim, the reverent voice kept — with an automated link-check that makes broken pointers impossible.

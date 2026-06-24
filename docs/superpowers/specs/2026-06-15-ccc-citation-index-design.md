@@ -1,5 +1,7 @@
 # §5 — Scripture-to-Magisterium Links (the CCC citation index)
 
+[← Docs index](../../INDEX.md)
+
 **Date:** 2026-06-15
 **Spec section:** Feature Design Spec §5 (Scripture-to-Magisterium links)
 **Branch:** TBD (proposed: `v1.9-ccc-index`)
