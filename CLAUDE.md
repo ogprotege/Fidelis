@@ -50,9 +50,10 @@ items (A1–A6) on the `v1.1-identity` branch:
   `followLiturgicalYear` setting (default on). White borrows gold; `--gold` and
   `--purple-strong` never move.
 - **§1.4 — the Scripture face** (A3): EB Garamond bundled (4 woff2, ≈144 KB, SIL
-  OFL in `src/fonts/`); `scriptureFont` ∈ `garamond|serif|georgia|sans` drives
-  `--scripture` via `<html data-font>` (Georgia added in v1.13.2 by request); four
-  size presets (17/19/22/25) own the vocabulary in `src/lib/typography.ts`. `sw.js`
+  OFL in `src/fonts/`); `scriptureFont` ∈ `garamond|georgia|times|sans` drives
+  `--scripture` via `<html data-font>` (the look-alike "System serif"/Iowan option was
+  replaced in v1.13.2 with Georgia + Times New Roman so each face is visibly distinct);
+  four size presets (17/19/22/25) own the vocabulary in `src/lib/typography.ts`. `sw.js`
   is font-aware (shell cache `v3`). Still no red-letter text — weight-400 only, asserted.
 - **§1.5 — the icon set** (A4): `src/components/Icon.tsx`, six `currentColor`
   marks (bookmark, note, share, commentary, sun/moon, cross) on a 24×24 / 1.6-weight

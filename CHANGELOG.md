@@ -14,8 +14,12 @@ No change to the liturgical engines, the bundled texts, or the harnesses.
 - **The native app icon is the Chi-Rho** (gold ☧ with Alpha/Omega on the dark field), on iOS and
   Android. iOS `AppIcon` is a 1024×1024 opaque icon; the Android adaptive icon uses the Chi-Rho inset
   in the foreground with a dark (`#222222`) background, and the legacy mipmaps are edge-to-edge.
-- **A "Georgia" Scripture face** (`src/lib/typography.ts`, `--georgia` in `styles.css`), beside
-  Garamond, System serif, and System sans — a recognizable, sturdier serif. Added by request.
+- **A clearly distinct Scripture-face lineup** (`src/lib/typography.ts`, `styles.css`): **Garamond**
+  (bundled, light), **Georgia** (sturdy, large x-height — added by request), **Times New Roman**
+  (classic), and **Sans-serif**. The old "System serif" option resolved to Iowan Old Style, which on
+  iOS looks almost identical to EB Garamond, so switching appeared to do nothing; it's replaced with
+  faces that each look obviously different. (An older saved "serif" choice still maps to the system
+  serif until changed.)
 
 ### Fixed
 

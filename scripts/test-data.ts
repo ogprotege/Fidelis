@@ -919,15 +919,15 @@ console.log("");
   check("latin-ext unicode-range present", css.includes("U+0100-02BA"));
   check("--scripture mapped for all four faces",
     /\[data-font="garamond"\]/.test(css) &&
-      /\[data-font="serif"\]/.test(css) &&
       /\[data-font="georgia"\]/.test(css) &&
+      /\[data-font="times"\]/.test(css) &&
       /\[data-font="sans"\]/.test(css));
   check("reading text uses var(--scripture)", /\.verses\s*\{[^}]*var\(--scripture\)/.test(css));
 
   check("four size presets, 17/19/22/25 (spec §1.4)",
     JSON.stringify(FONT_SIZE_PRESETS.map((p) => p.px)) === "[17,19,22,25]");
-  check("four faces: garamond/serif/georgia/sans",
-    JSON.stringify(SCRIPTURE_FONTS.map((f) => f.id)) === '["garamond","serif","georgia","sans"]');
+  check("four faces: garamond/georgia/times/sans",
+    JSON.stringify(SCRIPTURE_FONTS.map((f) => f.id)) === '["garamond","georgia","times","sans"]');
   check("default face is Garamond", DEFAULT_SCRIPTURE_FONT === "garamond");
   check("default size 19 is itself a preset", FONT_SIZE_PRESETS.some((p) => p.px === DEFAULT_FONT_SIZE));
   check("isScriptureFont guards the vocabulary",

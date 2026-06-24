@@ -6,7 +6,7 @@
  *  Both the Settings pills and the Reader's A−/A+ stepper write the same
  *  `fontSize` setting, the stepper as a fine adjustment between presets. */
 
-export type ScriptureFont = "garamond" | "serif" | "georgia" | "sans";
+export type ScriptureFont = "garamond" | "georgia" | "times" | "sans";
 
 export interface FontOption {
   id: ScriptureFont;
@@ -15,21 +15,23 @@ export interface FontOption {
   cssVar: string;
 }
 
-/** In selection order. EB Garamond is the default and the only bundled face;
- *  the rest borrow the platform's own fonts — "System serif" is the device's
- *  reading serif (Iowan Old Style on iOS), Georgia is the classic web serif,
- *  and "System sans" is the platform sans. */
+/** In selection order, chosen so each is visibly distinct (the old "System
+ *  serif" resolved to Iowan Old Style, which looks almost identical to EB
+ *  Garamond, so switching seemed to do nothing). EB Garamond is the default and
+ *  the only bundled face — light and elegant; Georgia is sturdy with a large
+ *  x-height; Times New Roman is the classic, sharper book serif; and Sans-serif
+ *  is the platform's sans. The rest borrow the device's own fonts. */
 export const SCRIPTURE_FONTS: readonly FontOption[] = [
   { id: "garamond", label: "Garamond", cssVar: "--garamond" },
-  { id: "serif", label: "System serif", cssVar: "--serif" },
   { id: "georgia", label: "Georgia", cssVar: "--georgia" },
-  { id: "sans", label: "System sans", cssVar: "--sans" }
+  { id: "times", label: "Times New Roman", cssVar: "--times" },
+  { id: "sans", label: "Sans-serif", cssVar: "--sans" }
 ];
 
 export const DEFAULT_SCRIPTURE_FONT: ScriptureFont = "garamond";
 
 export function isScriptureFont(x: unknown): x is ScriptureFont {
-  return x === "garamond" || x === "serif" || x === "georgia" || x === "sans";
+  return x === "garamond" || x === "georgia" || x === "times" || x === "sans";
 }
 
 export interface SizePreset {
