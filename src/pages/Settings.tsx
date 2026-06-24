@@ -257,7 +257,8 @@ export default function Settings() {
           ))}
         </div>
         <p className="muted small">
-          Garamond is bundled with the app; serif and sans use your device's own fonts.
+          Garamond is bundled with the app; System serif, Georgia, and System sans use your
+          device's own fonts.
         </p>
       </section>
 

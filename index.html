@@ -28,7 +28,7 @@
           var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
           document.documentElement.dataset.theme = theme === "system" ? (dark ? "night" : "day") : theme;
           var font = s.scriptureFont;
-          if (font !== "garamond" && font !== "serif" && font !== "sans") font = "garamond";
+          if (font !== "garamond" && font !== "serif" && font !== "georgia" && font !== "sans") font = "garamond";
           document.documentElement.dataset.font = font;
         } catch (e) {}
       })();

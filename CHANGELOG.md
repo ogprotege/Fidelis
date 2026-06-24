@@ -6,8 +6,16 @@ product — changes to any of them are release-worthy.
 
 ## [1.13.2] — 2026-06-24 — the unbound page
 
-Three iOS-shell fixes found while exercising the Capacitor app in the Simulator. No change to the
-liturgical engines, the bundled texts, or the harnesses; all web behavior is unchanged on the web.
+iOS-shell fixes and two small additions found while exercising the Capacitor app in the Simulator.
+No change to the liturgical engines, the bundled texts, or the harnesses.
+
+### Added
+
+- **The native app icon is the Chi-Rho** (gold ☧ with Alpha/Omega on the dark field), on iOS and
+  Android. iOS `AppIcon` is a 1024×1024 opaque icon; the Android adaptive icon uses the Chi-Rho inset
+  in the foreground with a dark (`#222222`) background, and the legacy mipmaps are edge-to-edge.
+- **A "Georgia" Scripture face** (`src/lib/typography.ts`, `--georgia` in `styles.css`), beside
+  Garamond, System serif, and System sans — a recognizable, sturdier serif. Added by request.
 
 ### Fixed
 

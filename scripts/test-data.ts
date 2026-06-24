@@ -917,16 +917,17 @@ console.log("");
     /font-family:\s*"EB Garamond"[\s\S]*?font-display:\s*swap/.test(css));
   check("latin unicode-range present (covers æ U+00E6, œ U+0152–0153)", css.includes("U+0152-0153"));
   check("latin-ext unicode-range present", css.includes("U+0100-02BA"));
-  check("--scripture mapped for all three faces",
+  check("--scripture mapped for all four faces",
     /\[data-font="garamond"\]/.test(css) &&
       /\[data-font="serif"\]/.test(css) &&
+      /\[data-font="georgia"\]/.test(css) &&
       /\[data-font="sans"\]/.test(css));
   check("reading text uses var(--scripture)", /\.verses\s*\{[^}]*var\(--scripture\)/.test(css));
 
   check("four size presets, 17/19/22/25 (spec §1.4)",
     JSON.stringify(FONT_SIZE_PRESETS.map((p) => p.px)) === "[17,19,22,25]");
-  check("exactly three faces: garamond/serif/sans",
-    JSON.stringify(SCRIPTURE_FONTS.map((f) => f.id)) === '["garamond","serif","sans"]');
+  check("four faces: garamond/serif/georgia/sans",
+    JSON.stringify(SCRIPTURE_FONTS.map((f) => f.id)) === '["garamond","serif","georgia","sans"]');
   check("default face is Garamond", DEFAULT_SCRIPTURE_FONT === "garamond");
   check("default size 19 is itself a preset", FONT_SIZE_PRESETS.some((p) => p.px === DEFAULT_FONT_SIZE));
   check("isScriptureFont guards the vocabulary",

@@ -56,6 +56,9 @@
 
 :root {
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  /* Georgia explicitly — the classic, sturdier web serif, distinct from the iOS
+     reading serif (Iowan Old Style) that --serif resolves to. */
+  --georgia: Georgia, "Times New Roman", "Times", serif;
   --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   /* EB Garamond first, the system serif behind it while it loads / for any
      glyph outside the bundled subsets. */
@@ -93,6 +96,7 @@
 /* The Scripture-face choice, written by App.tsx as <html data-font="…">. */
 [data-font="garamond"] { --scripture: var(--garamond); }
 [data-font="serif"]    { --scripture: var(--serif); }
+[data-font="georgia"]  { --scripture: var(--georgia); }
 [data-font="sans"]     { --scripture: var(--sans); }
 
 /* Day (light). Also the fallback when no [data-theme] is set, so first paint
