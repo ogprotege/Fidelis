@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
 import { SettingsProvider } from "./SettingsContext";
+import { preloadScriptureFonts } from "./lib/fontLoader";
 import "./styles.css";
 
 // The app's ScrollManager owns scroll position on navigation (top on forward,
@@ -10,6 +11,10 @@ import "./styles.css";
 if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
 }
+
+// iOS WKWebView (capacitor://) doesn't auto-fetch the bundled EB Garamond
+// @font-face; force it so the Scripture face actually renders (see fontLoader).
+preloadScriptureFonts();
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

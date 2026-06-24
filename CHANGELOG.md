@@ -4,6 +4,38 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.13.2] — 2026-06-24 — the unbound page
+
+Three iOS-shell fixes found while exercising the Capacitor app in the Simulator. No change to the
+liturgical engines, the bundled texts, or the harnesses; all web behavior is unchanged on the web.
+
+### Fixed
+
+- **The Reader (and every page) could become permanently unscrollable in the iOS WKWebView.** The
+  bottom-sheet body-lock (`src/components/Sheet.tsx`) saved and restored `document.body`'s inline
+  styles per-instance. When two sheets were open at once — the Reader renders the Commentary, Share,
+  and chapter-picker sheets independently — the second captured the already-locked `position: fixed`
+  state and, on closing out of order, restored it with no sheet open, collapsing the document to the
+  viewport so it could not scroll (reproduced on device: `pos=fixed, scrollHeight==innerHeight`). The
+  lock is now a shared, reference-counted module (`src/lib/scrollLock.ts`): the body is frozen once on
+  the first sheet and restored to its true pre-lock state only when the last sheet closes, so no
+  open/close order can strand it. Verified with real touch scrolling in the Simulator.
+- **The Scripture face picker did nothing on iOS — "Garamond" and "System serif" rendered
+  identically.** iOS WebKit under the `capacitor://` scheme does not reliably fire the lazy download
+  of a CSS `@font-face`, so the bundled EB Garamond never loaded and fell back to `Iowan Old Style`,
+  which is exactly what the system-serif option already resolves to. `src/lib/fontLoader.ts` now
+  forces the face to load at startup via the Font Loading API (which does work in that WebView);
+  `font-display: swap` then repaints. Verified on device (rendered widths now differ across all three
+  faces). A no-op on the web, where the font already loaded.
+- **The iOS home-screen widgets never appeared** — the WidgetKit Swift sources and JSON existed, but
+  there was no Widget Extension target in the Xcode project, so nothing was built or installed.
+  `scripts/add-ios-widget-target.rb` (idempotent, uses the `xcodeproj` gem) adds the
+  `FidelisWidgetExtension` app-extension target, compiles `FidelisWidget.swift` +
+  `CalendarWidgets.swift`, bundles `votd.json` + `calendar.json` and `Info.plist`
+  (`com.apple.widgetkit-extension`), and embeds the `.appex` in the App target. All three widgets
+  (Verse of the Day, Today at Mass, Quote of the Day) build and embed and support the small, medium,
+  and large families. This automates the previously manual `docs/IOS.md` §5 step.
+
 ## [1.13.1] — 2026-06-23 — the second lampstand
 
 Bring the iOS home-screen widgets to parity with Android, prove the native iOS shell builds in
