@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * Spec §1.5 — the six-piece inline SVG icon set that replaces the emoji glyphs
- * (⚑ ✎ ☾/☀ ⧉ ✠), which render inconsistently across platforms.
+ * Spec §1.5 — the inline SVG icon set that replaces the emoji glyphs
+ * (⚑ ✎ ☾/☀ ⧉ ✠ ✕ ✓), which render inconsistently across platforms.
  *
  * Drawn in a single stroke weight on a 24×24 grid. `stroke="currentColor"` is
  * the whole trick: each icon takes the color of its context, so the two-accent
@@ -23,7 +23,9 @@ export type IconName =
   | "moon"
   | "cross"
   | "download"
-  | "upload";
+  | "upload"
+  | "close"
+  | "check";
 
 const PATHS: Record<IconName, ReactNode> = {
   bookmark: <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />,
@@ -69,7 +71,9 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M7 14l5-5 5 5" />
       <path d="M5 3h14" />
     </>
-  )
+  ),
+  close: <path d="M6 6l12 12M18 6L6 18" />,
+  check: <path d="M5 13l5 5L19 6" />
 };
 
 interface IconProps {

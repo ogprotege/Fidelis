@@ -19,11 +19,13 @@ function walk(dir, acc = []) {
   return acc;
 }
 
-// GitHub-style heading slug.
+// GitHub-style heading slug. Mirrors github-slugger: strip special chars, then
+// replace each space with a hyphen individually — runs of whitespace are NOT
+// collapsed (so an em-dash flanked by spaces, once stripped, yields "--").
 function slug(text) {
   return text.trim().toLowerCase()
     .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-");
+    .replace(/ /g, "-");
 }
 
 function headingSlugs(file) {

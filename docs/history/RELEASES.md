@@ -543,6 +543,46 @@ Simulator. The liturgical engines, the bundled texts, and the harnesses are unch
 - **Service-worker shell cache `v4`→`v5`** (`public/sw.js`) so an installed/PWA copy fetches this build
   (the new faces and the Chi-Rho icon) instead of serving stale assets.
 
+## Made ready — TestFlight prep, the Gospel by voice, Dynamic Type (v1.13.3)
+
+The release that makes Fidelis ready to hand to a tester. It closes the last open piece of the
+design spec (§9), lands the documentation revamp, and finishes three design rough edges. The
+liturgical engines, the bundled texts, and the harnesses' computed results are unchanged.
+
+- **The last of §9 — a Siri / Shortcuts App Intent and Dynamic Type.** `TodaysGospelIntent.swift`
+  (App Intents, iOS 16+, gated behind `@available`) answers "What's today's Gospel in Fidelis?" by
+  speaking the day's Mass Gospel citation with the celebration/season as context — `openAppWhenRun =
+  false`, so it never leaves what the user is doing. It reads the *same* pre-resolved `calendar.json`
+  the widgets read, keyed by the identical Gregorian `yyyy-MM-dd` device-local key, so no engine is
+  ported and Siri can never disagree with the widgets, Android, or the web app. Dynamic Type adds a
+  "Follow the system text size" switch (iOS): `AppDelegate` mirrors `preferredContentSizeCategory`
+  into the web layer (`window.__fidelisSetContentSize`) on launch, foreground, and change; the pure
+  token→px map (`contentTokenToPx`) is harness-tested; the A−/A+ pills stay the override. A fresh
+  install follows the system size, an existing user keeps the size they chose. Both verified compiling
+  against the real iOS SDK (the App scheme builds the embedded widget too).
+- **iOS made ready for the App Store.** `ITSAppUsesNonExemptEncryption = false` (the app ships only
+  exempt OS-provided HTTPS — no custom crypto), so no build is held in Missing Compliance; a first-party
+  `PrivacyInfo.xcprivacy` declares no tracking, no collected data, and the one required-reason API
+  (UserDefaults, CA92.1); the deprecated `"iPhone Developer"` code-sign identity becomes `"Apple
+  Development"`; and the legacy `armv7` capability becomes `arm64`. A new idempotent
+  `scripts/configure-ios-app-target.rb` wires the privacy manifest, the Intent source, and the
+  Intent's `calendar.json` into the App target (the counterpart to `add-ios-widget-target.rb`), which
+  now derives the widget version from `package.json` rather than a frozen literal. The one step only
+  the owner can do remains: enrol in the Apple Developer Program and set `DEVELOPMENT_TEAM`.
+- **The documentation revamp** (seven tasks): a hub-and-spoke `docs/INDEX.md`, this narrative archived
+  out of CLAUDE.md with a slim one-line ledger, guides moved under `docs/guides/`, CONTRIBUTING + a
+  releasing runbook + a specs/plans status index, a README front-door rewrite, and a `check-docs`
+  link-checker in CI so a dead doc link fails the build. Its slug function was then fixed to match
+  GitHub's anchor algorithm (it had collapsed em-dash double-spaces to a single hyphen, breaking ~11
+  ledger "→ detail" links on github.com) and the affected anchors regenerated.
+- **Three design finishes.** The inline SVG icon set gains `close` (✕) and `check` (✓) marks, retiring
+  the last raw Unicode glyphs across the Sheet close, the highlight-clear, the verse-actions close, the
+  version check, the "Saved" state, and the "Mark portion read" CTA — and the harness now forbids ✕/✓
+  in `.tsx`. The verse-action bar fences its four highlight swatches in one hairline segment so they
+  never interleave with the labelled actions on a narrow wrap. And the Verse/Quote-of-the-Day cards
+  reserve their text height with quiet, motion-free skeleton lines, so the Today grid no longer reflows
+  when the async text lands.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

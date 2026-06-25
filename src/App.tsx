@@ -18,9 +18,10 @@ import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { App as CapApp } from "@capacitor/app";
 import { closeTopOverlay } from "./lib/overlays";
-import { useSettings } from "./SettingsContext";
+import { useSettings, useUpdateSettings } from "./SettingsContext";
 import { accentFor, liturgicalDay } from "./lib/liturgical";
 import { resolveTheme } from "./lib/theme";
+import { installDynamicTypeBridge } from "./lib/dynamicType";
 
 /** A robust read of the OS dark-mode preference; false where matchMedia is
  *  unavailable so the default palette is always defined. */
@@ -32,6 +33,7 @@ function prefersDark(): boolean {
 
 export default function App() {
   const settings = useSettings();
+  const update = useUpdateSettings();
   const location = useLocation();
   const widgetMode = location.pathname.startsWith("/widget/");
 
@@ -115,6 +117,14 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.font = settings.scriptureFont;
   }, [settings.scriptureFont]);
+
+  // Dynamic Type (spec §9): let the native iOS shell drive the reading size from
+  // the device text-size setting while "follow system size" is on. The bridge is
+  // a no-op in the embeddable widget and anywhere nothing calls the hook (web).
+  useEffect(() => {
+    if (widgetMode) return;
+    return installDynamicTypeBridge(settings.followSystemTextSize, (px) => update({ fontSize: px }));
+  }, [settings.followSystemTextSize, update, widgetMode]);
 
   // Follow the liturgical year (spec §1.3): name the day's color in
   // <html data-accent>, which CSS uses to remap --purple. Off (or in the

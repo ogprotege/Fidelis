@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Antiphon from "../components/Antiphon";
 import Icon from "../components/Icon";
 import VerseQuote from "../components/VerseQuote";
+import Skeleton from "../components/Skeleton";
 import Sheet from "../components/Sheet";
 import MysterySheet from "../components/MysterySheet";
 import ShareSheet from "../components/ShareSheet";
@@ -161,7 +162,7 @@ export default function Home() {
 
         <div className="card">
           <h2>Quote of the Day</h2>
-          {!quote && <p className="loading-inline small">Loading today's quote…</p>}
+          {!quote && <Skeleton lines={4} className="qotd-skeleton" />}
           {quote && (
             <>
               <p className="qotd-text">{quote.text}</p>

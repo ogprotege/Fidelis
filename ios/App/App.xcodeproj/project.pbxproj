@@ -16,11 +16,14 @@
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		5626322B641D4605F44A3ACC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11CDBBCB737DEF9C2119B0D0 /* Foundation.framework */; };
+		73C39F6A00D5D783B6EE1F21 /* calendar.json in Resources */ = {isa = PBXBuildFile; fileRef = 84B035AB00BCC924C60370A3 /* calendar.json */; };
 		AB447533271B24F635EAB8DD /* votd.json in Resources */ = {isa = PBXBuildFile; fileRef = 7EFF372456C8913EFA03DBED /* votd.json */; };
 		AE8BB9D9F34E6C3935CF367A /* CalendarWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026CA3150C2ADE6991FE7681 /* CalendarWidgets.swift */; };
 		B30C280F1891819E74E6BAAC /* FidelisWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D64748E6A44324F70C50E8E2 /* FidelisWidget.swift */; };
+		B795439D162EABB32A902B72 /* TodaysGospelIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 647F6B0977688099B6FE7B4A /* TodaysGospelIntent.swift */; };
 		C2D60326A9080E0EE272ADEE /* calendar.json in Resources */ = {isa = PBXBuildFile; fileRef = 84B035AB00BCC924C60370A3 /* calendar.json */; };
 		E752E21575F4486FB68F892B /* FidelisWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 86B5EB695A81E8745E56C422 /* FidelisWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FDB03722DB7A773C3E57233A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C2D158AB1DBC21DD2B0350FB /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,10 +62,12 @@
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
+		647F6B0977688099B6FE7B4A /* TodaysGospelIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TodaysGospelIntent.swift; sourceTree = "<group>"; };
 		7EFF372456C8913EFA03DBED /* votd.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = votd.json; sourceTree = "<group>"; };
 		84B035AB00BCC924C60370A3 /* calendar.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = calendar.json; sourceTree = "<group>"; };
 		86B5EB695A81E8745E56C422 /* FidelisWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FidelisWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		C2D158AB1DBC21DD2B0350FB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D64748E6A44324F70C50E8E2 /* FidelisWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FidelisWidget.swift; sourceTree = "<group>"; };
 		F18D15B3548004808001035D /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -118,6 +123,8 @@
 				504EC3131FED79650016851F /* Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
+				C2D158AB1DBC21DD2B0350FB /* PrivacyInfo.xcprivacy */,
+				647F6B0977688099B6FE7B4A /* TodaysGospelIntent.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -242,6 +249,8 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				FDB03722DB7A773C3E57233A /* PrivacyInfo.xcprivacy in Resources */,
+				73C39F6A00D5D783B6EE1F21 /* calendar.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -262,6 +271,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+				B795439D162EABB32A902B72 /* TodaysGospelIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,7 +329,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.13.2;
+				MARKETING_VERSION = 1.13.3;
 				PRODUCT_BUNDLE_IDENTIFIER = app.fidelis.bible.FidelisWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -360,7 +370,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -417,7 +427,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -454,7 +464,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.13.2;
+				MARKETING_VERSION = 1.13.3;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = app.fidelis.bible;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -478,7 +488,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.13.2;
+				MARKETING_VERSION = 1.13.3;
 				PRODUCT_BUNDLE_IDENTIFIER = app.fidelis.bible;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
@@ -501,7 +511,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.13.2;
+				MARKETING_VERSION = 1.13.3;
 				PRODUCT_BUNDLE_IDENTIFIER = app.fidelis.bible.FidelisWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

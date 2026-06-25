@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import Icon from "../components/Icon";
 import SectionNav from "../components/SectionNav";
 import {
@@ -82,7 +83,7 @@ export default function Settings() {
       markOfflineTranslation(id);
       setOffline(getOfflineTranslations());
     } catch (e) {
-      // Only an actually-cached bundle earns the ✓; surface the failure instead.
+      // Only an actually-cached bundle earns the check mark; surface the failure instead.
       setDownloadError(e instanceof Error ? e.message : "Download failed — please try again with a connection.");
     } finally {
       setProgress((p) => {
@@ -195,7 +196,7 @@ export default function Settings() {
               >
                 <div className="version-abbrev">
                   {t.abbrev}
-                  {selected && <span className="version-check" aria-hidden="true">✓</span>}
+                  {selected && <Icon name="check" className="version-check" />}
                 </div>
                 <div className="version-name">{t.name}</div>
                 <div className="version-meta muted small sans">
@@ -230,7 +231,7 @@ export default function Settings() {
               key={p.px}
               className={`pill ${settings.fontSize === p.px ? "active" : ""}`}
               aria-pressed={settings.fontSize === p.px}
-              onClick={() => update({ fontSize: p.px })}
+              onClick={() => update({ fontSize: p.px, followSystemTextSize: false })}
             >
               {p.label}
               <span className="pill-sub">{p.px}</span>
@@ -238,6 +239,25 @@ export default function Settings() {
           ))}
         </div>
         <p className="muted small">The Reader's A− / A+ buttons fine-tune the size between presets.</p>
+        {Capacitor.getPlatform() === "ios" && (
+          <div className="setting-row">
+            <div>
+              <div className="setting-label">Follow the system text size</div>
+              <p className="catechesis muted small">
+                Match iOS Settings → Display &amp; Brightness → Text Size. Choosing a size above
+                turns this off.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={settings.followSystemTextSize}
+              aria-label="Follow the system text size"
+              className="switch"
+              onClick={() => update({ followSystemTextSize: !settings.followSystemTextSize })}
+            />
+          </div>
+        )}
       </section>
 
       {/* 4 ── Font (each pill rendered in its own face) */}
@@ -483,7 +503,7 @@ export default function Settings() {
                 </span>
               ) : (
                 <button className="pill" onClick={() => download(t.id)}>
-                  {saved ? "Saved ✓ · Update" : "Download"}
+                  {saved ? <>Saved <Icon name="check" /> · Update</> : "Download"}
                 </button>
               )}
             </div>
@@ -507,7 +527,7 @@ export default function Settings() {
                 </span>
               ) : (
                 <button className="pill" onClick={() => download("commentary")}>
-                  {saved ? "Saved ✓ · Update" : "Download"}
+                  {saved ? <>Saved <Icon name="check" /> · Update</> : "Download"}
                 </button>
               )}
             </div>

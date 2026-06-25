@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { loadBook } from "../lib/data";
 import { passageText } from "../lib/passage";
 import { getTranslation } from "../lib/translations";
+import Skeleton from "./Skeleton";
 
 interface Props {
   translation: string;
@@ -33,7 +34,8 @@ export default function VerseQuote({ translation, book, chapter, verse, endVerse
   }, [translation, book, chapter, verse, endVerse]);
 
   if (error) return <p className={className}>—</p>;
-  if (text === null) return <p className="loading-inline">Loading…</p>;
+  // Reserve the verse's height while it loads so the card never reflows on land.
+  if (text === null) return <p className={className}><Skeleton lines={2} /></p>;
   if (!text.trim()) return <p className={className}>—</p>;
   // The quotation marks are gold (sacred); the verse text is not (spec §1.2).
   const isLatin = getTranslation(translation)?.language === "la";

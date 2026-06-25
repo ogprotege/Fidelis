@@ -6,6 +6,63 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.13.3] — 2026-06-25 — made ready
+
+The release that makes Fidelis ready to hand to a tester: the iOS app archives and uploads
+cleanly, the last open piece of the design spec (§9) closes with a Siri App Intent and Dynamic
+Type, the documentation revamp lands, and three design finishes retire the last hand-tuned rough
+edges. No change to the liturgical engines, the bundled texts, or the harnesses' computed results.
+
+### Added
+
+- **"What's today's Gospel?" — a Siri / Shortcuts App Intent** (spec §9). Ask Siri (or run a
+  Shortcut) and Fidelis speaks the day's Mass Gospel citation, with the celebration or season as
+  context — without opening the app. It reads the same pre-resolved `calendar.json` the home-screen
+  widgets read, keyed by the identical Gregorian local-date key, so Siri, the widgets, Android, and
+  the web app can never disagree. iOS 16+; `ios/App/App/TodaysGospelIntent.swift`.
+- **Dynamic Type** (spec §9). A new "Follow the system text size" control (iOS, Settings → Text
+  size) lets the reading size track iOS Settings → Display & Brightness → Text Size; the Reader's
+  A−/A+ pills remain the override (touching them turns following off). The native shell mirrors
+  `UIApplication.preferredContentSizeCategory` into the web layer; the pure token→px mapping
+  (`contentTokenToPx`) is harness-tested. A fresh install follows the system size; an existing user
+  keeps the size they already chose.
+- **A first-party iOS privacy manifest** (`PrivacyInfo.xcprivacy`): declares no tracking and no
+  collected data (spec §13), plus the one required-reason API the app touches (UserDefaults, CA92.1).
+
+### Changed
+
+- **Documentation revamp** (the seven-task `docs/` overhaul): a hub-and-spoke `docs/INDEX.md`, the
+  release narrative archived to `docs/history/RELEASES.md` with a slim CLAUDE.md ledger, guides moved
+  under `docs/guides/`, CONTRIBUTING + a releasing runbook + a specs/plans status index, a README
+  front-door rewrite, and a `check-docs` link-checker wired into CI so a dead doc link fails the build.
+- **The inline icon set retires the last raw Unicode glyphs.** A `close` (✕) and `check` (✓) mark
+  join the set, replacing the bare glyphs on the Sheet close button, the highlight-clear control, the
+  verse-actions close, the version checkmark, the "Saved" state, and the "Mark portion read" CTA — so
+  every control draws from the one `currentColor` SVG family. The harness now forbids ✕/✓ in `.tsx`
+  alongside the older glyphs.
+- **The verse-action bar groups its highlight swatches.** The four colour dots (and the clear button)
+  sit in one hairline-fenced segment, so on a narrow phone they never interleave with the rectangular
+  labelled actions when the bar wraps.
+- **Quiet loading placeholders.** The Verse-of-the-Day and Quote-of-the-Day cards reserve the height
+  their text will take with dim, motion-free skeleton lines (no shimmer; reduced-motion-safe by
+  construction), so the Today grid no longer reflows when the async text lands.
+- **iOS build hygiene for the App Store:** the export-compliance key `ITSAppUsesNonExemptEncryption`
+  is set to `false` (the app uses only exempt OS-provided HTTPS), the deprecated `"iPhone Developer"`
+  code-sign identity is modernized to `"Apple Development"`, and the legacy `armv7` device capability
+  is replaced with `arm64`. A new idempotent `scripts/configure-ios-app-target.rb` wires these (and the
+  Intent / privacy / calendar resources) into the project, and `add-ios-widget-target.rb` now derives
+  the widget's version from `package.json` instead of a frozen literal.
+
+### Fixed
+
+- **The docs link-checker's heading slug now matches GitHub's** (`scripts/check-doc-links.mjs`): it was
+  collapsing runs of whitespace into a single hyphen, but GitHub replaces each space individually, so
+  ~11 of the release-ledger "→ detail" anchors (headings with an em-dash flanked by spaces) resolved
+  locally yet landed at the top of `RELEASES.md` on github.com. Fixed the slug and regenerated the
+  affected anchors; the checker would now catch the regression class.
+- Corrected a stale `docs/IOS.md` link label in the moved Android guide, and flipped the two
+  documentation-revamp status markers in `docs/superpowers/INDEX.md` from "in progress" to shipped.
+
 ## [1.13.2] — 2026-06-24 — the unbound page
 
 iOS-shell fixes and two small additions found while exercising the Capacitor app in the Simulator.

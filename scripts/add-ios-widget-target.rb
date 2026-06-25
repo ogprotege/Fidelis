@@ -11,9 +11,16 @@
 # Xcode" step (docs/guides/IOS.md §5), which is why the widgets never appeared before.
 
 require "xcodeproj"
+require "json"
 
 PROJECT_PATH = File.expand_path("../ios/App/App.xcodeproj", __dir__)
 TARGET_NAME = "FidelisWidgetExtension"
+
+# The widget's version must track the app's, not a literal frozen in this script.
+# MARKETING_VERSION follows package.json (the single release-version source);
+# CURRENT_PROJECT_VERSION (the build number) is read off the App target below so
+# the widget is always in lockstep with whatever build is being shipped.
+PACKAGE_VERSION = JSON.parse(File.read(File.expand_path("../package.json", __dir__)))["version"]
 # The extension bundle id must be prefixed by the host app's id.
 WIDGET_BUNDLE_ID = "app.fidelis.bible.FidelisWidget"
 DEPLOYMENT_TARGET = "17.0" # containerBackground(for: .widget) needs iOS 17+
@@ -53,6 +60,12 @@ end
 # Keep the Info.plist visible in the project navigator (referenced via setting).
 group.new_reference("Info.plist")
 
+# The App target's build number (kept in lockstep so the .appex and the host app
+# never ship a mismatched CFBundleVersion). Falls back to "1" before any bump.
+app_build = app_target.build_configurations
+                      .map { |c| c.build_settings["CURRENT_PROJECT_VERSION"] }
+                      .compact.first || "1"
+
 widget.build_configurations.each do |config|
   config.build_settings.merge!(
     "PRODUCT_BUNDLE_IDENTIFIER" => WIDGET_BUNDLE_ID,
@@ -62,8 +75,8 @@ widget.build_configurations.each do |config|
     "SWIFT_VERSION" => "5.0",
     "IPHONEOS_DEPLOYMENT_TARGET" => DEPLOYMENT_TARGET,
     "TARGETED_DEVICE_FAMILY" => "1,2",
-    "MARKETING_VERSION" => "1.13.2",
-    "CURRENT_PROJECT_VERSION" => "1",
+    "MARKETING_VERSION" => PACKAGE_VERSION,
+    "CURRENT_PROJECT_VERSION" => app_build,
     "CODE_SIGN_STYLE" => "Automatic",
     "SKIP_INSTALL" => "YES",
     "SWIFT_EMIT_LOC_STRINGS" => "YES",
