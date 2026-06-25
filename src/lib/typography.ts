@@ -57,3 +57,28 @@ export const MAX_FONT_SIZE = 28;
 
 export const clampFontSize = (px: number): number =>
   Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, Math.round(px)));
+
+/** Map an iOS Dynamic Type token (emitted by the native shell, AppDelegate.swift)
+ *  onto a reading-size px. The device's default category ("l") maps to the app's
+ *  Medium default; the standard categories span the four presets; every
+ *  accessibility size ("ax") collapses to the app's largest reading size. Pure —
+ *  the only place the system↔in-app size mapping is defined (spec §9). */
+export function contentTokenToPx(token: string): number {
+  switch (token) {
+    case "xs":
+    case "s":
+      return 17;
+    case "m":
+    case "l":
+      return 19;
+    case "xl":
+      return 22;
+    case "xxl":
+      return 25;
+    case "xxxl":
+    case "ax":
+      return MAX_FONT_SIZE; // 28
+    default:
+      return DEFAULT_FONT_SIZE; // 19
+  }
+}

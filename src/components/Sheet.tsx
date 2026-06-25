@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useRef } from "react";
 import { pushOverlay, removeOverlay } from "../lib/overlays";
 import { lockScroll, unlockScroll } from "../lib/scrollLock";
+import Icon from "./Icon";
 
 interface Props {
   /** id of the heading inside `children` that labels the dialog. */
@@ -92,7 +93,7 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
           aria-label="Close"
           title="Close"
         >
-          ✕
+          <Icon name="close" />
         </button>
         {children}
       </div>

@@ -48,6 +48,11 @@ export interface Settings {
   translation: string;
   parallel: string | null;
   fontSize: number; // px — one of the §1.4 presets, or any value the Reader stepper lands on
+  /** Dynamic Type (spec §9): when on, the native iOS shell mirrors the device's
+   *  text-size setting into `fontSize` (AppDelegate → window.__fidelisSetContentSize),
+   *  so the reading size follows the system until the A−/A+ pills override it (which
+   *  turn this off). A no-op off iOS, where nothing pushes a size. */
+  followSystemTextSize: boolean;
   /** Scripture reading face (spec §1.4): Garamond, Georgia, Times New Roman, or Sans-serif. */
   scriptureFont: ScriptureFont;
   /** Appearance (spec §2.2): System follows the OS; Day/Night pin the palette. */
@@ -103,10 +108,12 @@ function write(key: string, value: unknown): void {
 export const refKey = (r: VerseRef) => `${r.book}/${r.chapter}/${r.verse}`;
 
 export function getSettings(): Settings {
+  const stored = read<Partial<Settings>>("settings", {});
   const settings: Settings = {
     translation: "drc",
     parallel: null,
     fontSize: DEFAULT_FONT_SIZE,
+    followSystemTextSize: true,
     scriptureFont: DEFAULT_SCRIPTURE_FONT,
     theme: DEFAULT_THEME,
     showVerseNumbers: true,
@@ -128,8 +135,14 @@ export function getSettings(): Settings {
     // imports a licensed copy the readings fall back to the bundled Douay-Rheims
     // (ReadingText handles the fallback and shows the import pointer).
     massTranslation: "nabre",
-    ...read<Partial<Settings>>("settings", {})
+    ...stored
   };
+  // Dynamic Type default (spec §9): a brand-new install follows the device text
+  // size, but an existing user (a settings blob saved before this field existed)
+  // keeps the reading size they already chose — only the A−/A+ pills change it.
+  if (stored.followSystemTextSize === undefined && Object.keys(stored).length > 0) {
+    settings.followSystemTextSize = false;
+  }
   // The light theme was renamed "parchment" → "day" (spec §1.1). Map a stored
   // legacy choice forward so an existing user keeps their light/dark selection.
   if ((settings.theme as string) === "parchment") settings.theme = "day";

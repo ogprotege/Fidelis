@@ -43,6 +43,7 @@ import {
   DEFAULT_SCRIPTURE_FONT,
   FONT_SIZE_PRESETS,
   SCRIPTURE_FONTS,
+  contentTokenToPx,
   isScriptureFont
 } from "../src/lib/typography";
 import { THEME_OPTIONS, isThemeChoice, resolveTheme } from "../src/lib/theme";
@@ -936,21 +937,37 @@ console.log("");
   const s = getSettings();
   check("getSettings() defaults scriptureFont to garamond", s.scriptureFont === "garamond");
   check("getSettings() defaults fontSize to a preset", FONT_SIZE_PRESETS.some((p) => p.px === s.fontSize));
+
+  // Dynamic Type (spec §9): the native shell's content-size tokens map onto the
+  // reading presets. iOS's default category ("l") must land on the app's default,
+  // every token must resolve to a real preset/clamp value, and accessibility sizes
+  // collapse to the largest reading size.
+  check("contentTokenToPx: device default 'l' → 19 (the app default)",
+    contentTokenToPx("l") === DEFAULT_FONT_SIZE);
+  check("contentTokenToPx: spans the presets xs..xxl → 17/17/19/19/22/25",
+    JSON.stringify(["xs", "s", "m", "l", "xl", "xxl"].map(contentTokenToPx)) === "[17,17,19,19,22,25]");
+  check("contentTokenToPx: accessibility 'ax' and 'xxxl' → largest reading size (28)",
+    contentTokenToPx("ax") === 28 && contentTokenToPx("xxxl") === 28);
+  check("contentTokenToPx: an unknown token falls back to the default",
+    contentTokenToPx("bogus") === DEFAULT_FONT_SIZE);
 }
 
-// ── 10. Iconography (spec §1.5): the six-piece inline SVG set replaces the
-//        emoji glyphs in interactive UI. Guard that none creep back in, and
-//        that the Icon component stays currentColor-driven and single-weight.
+// ── 10. Iconography (spec §1.5): the inline SVG set replaces the emoji glyphs in
+//        interactive UI. Guard that none creep back in, and that the Icon
+//        component stays currentColor-driven and single-weight.
 {
-  // The five named glyphs (⚑ ✎ ☾/☀ ⧉ ✠); escaped so this guard file holds
-  // none of them itself. Gear/dove and typographic affordances are out of scope.
+  // The named glyphs the Icon set retired (⚑ ✎ ☾/☀ ⧉ ✠ ✕ ✓); held here so a
+  // *rendered* one anywhere under src/**.tsx is caught. Gear/dove and other
+  // typographic affordances are out of scope.
   const FORBIDDEN: [string, string][] = [
     ["⚑", "bookmark flag"],
     ["✎", "pencil"],
     ["☾", "crescent moon"],
     ["☀", "sun"],
     ["⧉", "copy/share"],
-    ["✠", "cross"]
+    ["✠", "cross"],
+    ["✕", "close (x)"],
+    ["✓", "check mark"]
   ];
   // Every .tsx under src/ (App.tsx and any future nesting included), with block
   // comments stripped first — so Icon.tsx's doc-comment, which names the glyphs

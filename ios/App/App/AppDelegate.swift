@@ -1,4 +1,5 @@
 import UIKit
+import WebKit
 import Capacitor
 
 @UIApplicationMain
@@ -7,8 +8,61 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Dynamic Type (docs/guides/IOS.md §5): mirror the device's text-size
+        // setting into the web layer so the reading size can follow it until the
+        // A−/A+ pills override. Re-push whenever the system setting changes.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(contentSizeCategoryDidChange),
+            name: UIContentSizeCategory.didChangeNotification,
+            object: nil
+        )
         return true
+    }
+
+    @objc private func contentSizeCategoryDidChange() {
+        pushContentSize(after: 0)
+    }
+
+    /// Evaluate the web bridge with the current content-size token, after `delay`.
+    private func pushContentSize(after delay: TimeInterval) {
+        let token = AppDelegate.token(for: UIApplication.shared.preferredContentSizeCategory)
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let webView = self?.findBridgeWebView() else { return }
+            let js = "window.__fidelisSetContentSize && window.__fidelisSetContentSize('\(token)')"
+            webView.evaluateJavaScript(js, completionHandler: nil)
+        }
+    }
+
+    /// Capacitor's bridge view controller owns the WKWebView; find it wherever it
+    /// sits in the hierarchy (root, a child, or presented).
+    private func findBridgeWebView() -> WKWebView? {
+        func search(_ vc: UIViewController?) -> WKWebView? {
+            guard let vc = vc else { return nil }
+            if let bridgeVC = vc as? CAPBridgeViewController { return bridgeVC.webView }
+            for child in vc.children {
+                if let found = search(child) { return found }
+            }
+            return search(vc.presentedViewController)
+        }
+        return search(window?.rootViewController)
+    }
+
+    /// Map a UIContentSizeCategory to the stable token the web layer maps to a px
+    /// preset (src/lib/typography.ts → contentTokenToPx). All accessibility sizes
+    /// collapse to the app's largest reading size.
+    private static func token(for category: UIContentSizeCategory) -> String {
+        switch category {
+        case .extraSmall: return "xs"
+        case .small: return "s"
+        case .medium: return "m"
+        case .large: return "l"
+        case .extraLarge: return "xl"
+        case .extraExtraLarge: return "xxl"
+        case .extraExtraExtraLarge: return "xxxl"
+        default:
+            return category.rawValue.contains("Accessibility") ? "ax" : "l"
+        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
@@ -27,6 +81,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        // Push the system Dynamic Type size to the web layer. The web view may still
+        // be loading on a cold launch, so nudge twice — the web hook ignores a push
+        // that arrives before it is installed, and applies the later one. Both are
+        // cheap no-ops once the size already matches.
+        pushContentSize(after: 0.2)
+        pushContentSize(after: 1.0)
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

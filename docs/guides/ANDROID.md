@@ -78,7 +78,7 @@ A native **Verse of the Day App Widget** ships in the Android project —
 `android/app/src/main/java/app/fidelis/bible/VotdWidget.java` plus
 `res/layout/widget_votd.xml`, `res/xml/votd_widget_info.xml`, and the bundled
 `res/raw/votd.json`. It is the Android counterpart of the iOS WidgetKit widget
-(see [docs/IOS.md](IOS.md) §2) and shows the **same verse**: both read the
+(see [iOS guide](IOS.md) §2) and shows the **same verse**: both read the
 pre-resolved `votd.json` (emitted by `scripts/build-votd-widget.mjs`) and apply
 the web app's formula — `index = (dayOfYear + year) mod count`, Gregorian, device
 time zone — so the widget, the iOS widget, and the app never disagree. It draws

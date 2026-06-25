@@ -363,14 +363,14 @@ export default function Reader() {
           </select>
           <button
             className="icon-btn"
-            onClick={() => update({ fontSize: clampFontSize(fontSize - 1) })}
+            onClick={() => update({ fontSize: clampFontSize(fontSize - 1), followSystemTextSize: false })}
             title="Smaller text"
           >
             A−
           </button>
           <button
             className="icon-btn"
-            onClick={() => update({ fontSize: clampFontSize(fontSize + 1) })}
+            onClick={() => update({ fontSize: clampFontSize(fontSize + 1), followSystemTextSize: false })}
             title="Larger text"
           >
             A+
@@ -472,7 +472,7 @@ export default function Reader() {
               setPlan(next);
             }}
           >
-            Mark today's portion read ✓
+            Mark today's portion read <Icon name="check" />
           </button>
         </div>
       )}
@@ -491,31 +491,34 @@ export default function Reader() {
           >
             <Icon name="bookmark" /> {bookmarks.has(selKey) ? "Unbookmark" : "Bookmark"}
           </button>
-          {(["gold", "rose", "sky", "olive"] as HighlightColor[]).map((c) => (
-            <button
-              key={c}
-              className={`hl-dot ${c}`}
-              title={`Highlight ${c}`}
-              aria-label={`Highlight ${c}`}
-              aria-pressed={highlights.get(selKey) === c}
-              onClick={() => {
-                setHighlight(selRef, c);
-                setMarksVersion((x) => x + 1);
-              }}
-            />
-          ))}
-          {highlights.has(selKey) && (
-            <button
-              className="hl-dot clear"
-              title="Remove highlight"
-              onClick={() => {
-                setHighlight(selRef, null);
-                setMarksVersion((x) => x + 1);
-              }}
-            >
-              ✕
-            </button>
-          )}
+          <span className="hl-group">
+            {(["gold", "rose", "sky", "olive"] as HighlightColor[]).map((c) => (
+              <button
+                key={c}
+                className={`hl-dot ${c}`}
+                title={`Highlight ${c}`}
+                aria-label={`Highlight ${c}`}
+                aria-pressed={highlights.get(selKey) === c}
+                onClick={() => {
+                  setHighlight(selRef, c);
+                  setMarksVersion((x) => x + 1);
+                }}
+              />
+            ))}
+            {highlights.has(selKey) && (
+              <button
+                className="hl-dot clear"
+                title="Remove highlight"
+                aria-label="Remove highlight"
+                onClick={() => {
+                  setHighlight(selRef, null);
+                  setMarksVersion((x) => x + 1);
+                }}
+              >
+                <Icon name="close" />
+              </button>
+            )}
+          </span>
           <button
             className="icon-btn"
             onClick={() => {
@@ -536,8 +539,8 @@ export default function Reader() {
               <Icon name="commentary" /> Commentary
             </button>
           )}
-          <button className="icon-btn" onClick={() => setSelected(null)} title="Close">
-            ✕
+          <button className="icon-btn" onClick={() => setSelected(null)} title="Close" aria-label="Close">
+            <Icon name="close" />
           </button>
           {cccParas.length > 0 && (
             <div className="ccc-row">

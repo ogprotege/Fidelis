@@ -408,7 +408,7 @@ option { background: var(--bg-1); color: var(--text); }
    hollow dot when off. Reads the same --purple the rest of the UI acts in. */
 .accent-dot { color: var(--purple); font-size: 0.8rem; line-height: 1; }
 
-/* ── Iconography (spec §1.5): the six-piece inline SVG set. Sized in em so each
+/* ── Iconography (spec §1.5): the inline SVG set. Sized in em so each
    call site scales it exactly like the emoji glyph it replaced; the stroke is
    currentColor, so the two-accent rule (§1.2) colors it — gold to honor or mark
    state, the neutral/accent text color to act (it inherits whatever its
@@ -860,7 +860,14 @@ h1.page-title {
 .hl-dot.rose { background: var(--hl-rose); }
 .hl-dot.sky { background: var(--hl-sky); }
 .hl-dot.olive { background: var(--hl-olive); }
-.hl-dot.clear { background: transparent; }
+.hl-dot.clear {
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
 /* In the verse-action bar, grow each swatch's tap target to ~44pt tall without
    enlarging the disc or eating into the 8px gap to its neighbours — the row of
    five stays precise to the thumb (the height is what a thumb from below needs). */
@@ -878,6 +885,18 @@ h1.page-title {
 .hl-dot:active { transform: translateY(-1px); }
 .hl-dot:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .hl-dot[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--bg-1), 0 0 0 3px var(--gold); }
+
+/* Keep the four highlight swatches (and the clear button) together as one
+   segment, fenced by hairlines, so when the verse-action bar wraps on a narrow
+   phone the round dots never interleave with the rectangular labelled actions. */
+.hl-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.55rem;
+  border-left: var(--hairline) solid var(--border);
+  border-right: var(--hairline) solid var(--border);
+}
 
 .note-editor { width: 100%; }
 .note-editor textarea {
@@ -1258,6 +1277,25 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
 
 .loading { text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0; }
 .loading-inline { color: var(--text-muted); font-style: italic; }
+
+/* Quiet, motion-free loading placeholders (spec §9 polish): dim bars that reserve
+   the height the async text will take, so the Today cards don't reflow when it
+   lands. No shimmer by design — a prayer book, not an app, and reduced-motion-safe
+   by construction. Bars are sized in em, so they scale with their container's text. */
+.skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+.skeleton-lines .bar {
+  height: 0.72em;
+  border-radius: 0.25rem;
+  background: var(--bg-2);
+}
+.skeleton-lines .bar:last-child { width: 55%; }
+/* Standalone (not nested in a text element): carry the body's own block spacing,
+   and match the larger quote body so its placeholder reserves the right height. */
+.qotd-skeleton { margin: 0.25rem 0 0.75rem; font-size: 1.1rem; }
 .browse-links { margin-top: 0.9rem; }
 .card-spaced { margin: 1rem 0; }
 .mb-0 { margin-bottom: 0; }
