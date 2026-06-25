@@ -50,7 +50,7 @@ Update the version in every native location to match `package.json`:
 |---|---|
 | iOS App (`IPHONEOS_DEPLOYMENT_TARGET`) | 15.0 |
 | WidgetKit extension (`IPHONEOS_DEPLOYMENT_TARGET`) | 17.0 (`containerBackground(for:)` requires it) |
-| `Package.swift` swift-tools-version | 5.5 (`.v15`) |
+| `Package.swift` iOS platform (`platforms: [.iOS(…)]`) | `.v15` — must be ≤ the App target's deployment target, or SPM errors |
 
 If `cap sync` raises them, revert. The CI build will catch a mismatched App target.
 
