@@ -14,7 +14,6 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
 ![version](https://img.shields.io/badge/version-1.13.2%20·%20the%20unbound%20page-5B3A8E)
-![version](https://img.shields.io/badge/version-1.13.1%20·%20the%20second%20lampstand-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -50,6 +49,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 ## Contents
 
+- [Docs map](#docs-map)
 - [Highlights](#highlights)
 - [The Bible](#the-bible)
 - [The liturgy](#the-liturgy)
@@ -61,9 +61,29 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 - [What Fidelis refuses](#what-fidelis-refuses)
 - [Data integrity &amp; provenance](#data-integrity--provenance)
 - [Architecture](#architecture)
-- [Development](#development)
-- [Testing](#testing)
+- [Development &amp; testing](#development--testing)
 - [License &amp; attribution](#license--attribution)
+
+---
+
+## Docs map
+
+Two entrances, one map. This README is the front door for **readers**; the
+hub — [**docs/INDEX.md**](docs/INDEX.md) — is one click from home on every page. Its
+five spokes:
+
+- **Using the app** → this README · the in-app **About** page.
+- **Contributing or building** → [CONTRIBUTING](CONTRIBUTING.md) ·
+  [guides](docs/guides/) ([iOS](docs/guides/IOS.md) · [Android](docs/guides/ANDROID.md) ·
+  [Releasing](docs/guides/RELEASING.md)) · [CLAUDE.md](CLAUDE.md).
+- **The history** → [CHANGELOG](CHANGELOG.md) ·
+  [the release narrative](docs/history/RELEASES.md).
+- **The design rationale** → [specs &amp; plans](docs/superpowers/INDEX.md) ·
+  [code review](docs/review/Fidelis_Code_Review_V1_2026-06-11.md) ·
+  [feature design spec](docs/review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md) ·
+  [commentary sources survey](docs/review/Commentary_Sources_Survey.md).
+- **Maintainer / AI assistant** → [CLAUDE.md](CLAUDE.md) · [AGENTS.md](AGENTS.md) ·
+  [Releasing](docs/guides/RELEASING.md).
 
 ---
 
@@ -320,80 +340,41 @@ A short, binding list — the product is defined as much by what it will not do:
 
 ## Architecture
 
-A fully static site — Vite + React + TypeScript with hash routing — that deploys `dist/` to any
-static host (GitHub Pages, Netlify, …). The liturgical engines, the bundled texts, and the
-harnesses are the product; everything else is chrome.
+A fully static site — Vite + React + TypeScript with hash routing — wrapped in a Capacitor
+native shell for iOS and Android. `src/lib/` is the pure, testable core (the liturgical engines
++ logic, no React); `src/components/` and `src/pages/` are the UI; `scripts/` is the build/data
+pipeline and the two assertion harnesses; `public/data/` is the generated, manifest-sealed corpus
+(never hand-edited).
 
-| Layer | Where |
-|---|---|
-| Liturgical engine (computus, precedence, transfers, regions) | `src/lib/liturgical.ts` |
-| Lectionary resolution (day codes, propers, Vigil ladder, psalm mapping) | `src/lib/lectionary.ts` |
-| Pure devotional logic (VOTD, rosary, reading-time, reading plans) | `src/lib/votd.ts`, `rosary.ts`, `reading.ts`, `plans.ts` |
-| Canon metadata (chapter/verse counts from the real corpus) | `src/lib/canon.ts`, `src/generated/bookMeta.json` |
-| Local persistence (settings, marginalia, plans) | `src/lib/storage.ts` |
-| Navigation (scroll restore, in-page jump bar, overlay back-stack) | `src/lib/scroll.ts`, `src/lib/overlays.ts`, `src/components/ScrollManager.tsx`, `SectionNav.tsx` |
-| Translation import (USFM / OSIS / JSON parsers, on-device only) | `src/lib/import-formats.ts`, `scripts/build-nabre.mjs` |
-| Commentary & the Magisterium (Haydock, Catena, the CCC citation index) | `src/lib/commentary.ts`, `src/lib/ccc.ts`, `scripts/build-haydock.mjs`, `build-catena.mjs`, `build-ccc*.mjs` |
-| Data pipeline & integrity (build, pins, manifest, report) | `scripts/*.mjs` |
-| Assertion harnesses & golden snapshots | `scripts/test-*.ts`, `scripts/golden/` |
-| Native shells & widgets | `ios/` (Capacitor + WidgetKit), `android/` (Capacitor + App Widgets), `scripts/build-*-widget.*` |
-
+The full architecture map — every engine, primitive, and pipeline, with file paths — is the
+**"Architecture" section of [CLAUDE.md](CLAUDE.md#architecture)** (single source of truth).
 Design constants are encoded once and asserted: the liturgical day never exceeds **five cards**,
 the chrome speaks in **two accents**, and the Word is **never printed in red**.
 
 ---
 
-## Development
+## Development &amp; testing
 
 ```bash
 npm install
-npm run dev          # local dev server
-npm test             # liturgical + data harnesses (hard assertions) + manifest verify
-npm run build        # type-check (tsc) + production build to dist/
-npm run preview      # serve the production build
-
-npm run lint         # type-aware ESLint over src (also part of npm test)
-npm run data         # rebuild public/data/ from the pinned upstream commits
-npm run lectionary   # rebuild the lectionary citation tables (pinned)
-npm run quotes       # rebuild the Quote-of-the-Day corpus (re-seals the manifest)
-npm run commentary   # rebuild Haydock + Catena from the pinned upstreams
-npm run widgets      # rebuild the native widget data (VOTD + Mass/Quote calendar)
-npm run ccc          # rebuild the CCC citation index from a local Catechism PDF (CCC_PDF=…) + vatican.va, then re-seal
-npm run report       # regenerate data-report.txt (also runs after npm run data)
-npm run verify-data  # SHA-256 manifest check of public/data
-npm run golden       # re-bless golden-year calendar snapshots after a deliberate engine change
-npm run build-nabre  # convert a NAB/NABRE PDF you own → an importable file (on-device only, gitignored)
+npm run dev      # local dev server
+npm test         # liturgical + data harnesses (hard assertions) + manifest verify + ESLint
+npm run build    # type-check (tsc --noEmit) + production build to dist/
+npm run check-docs  # broken-link, anchor, and orphan-page checker
 ```
 
-For iOS: `npm run build && npx cap sync ios && npx cap open ios` (macOS + Xcode required; see
-[docs/guides/IOS.md](docs/guides/IOS.md)). For Android: `npm run build && npx cap sync android && npx cap open android`
-(Android Studio required; see [docs/guides/ANDROID.md](docs/guides/ANDROID.md)).
+All three of `npm test`, `npm run build`, and `npm run check-docs` must be green before a pull
+request — every expectation is a hard assertion; any failure exits non-zero. CI
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs them on Node 22 for every push and PR;
+[`ios.yml`](.github/workflows/ios.yml) builds the iOS App target on macOS.
 
-> **Convention:** bump `package.json` and add a `CHANGELOG.md` entry together; re-bless golden
-> snapshots only after a *deliberate* engine change you can justify in the diff.
-
----
-
-## Testing
-
-`npm test` runs two assertion harnesses, the SHA-256 manifest check, and a type-aware ESLint
-pass — **every expectation is a hard assertion; any failure exits non-zero.** CI
-(`.github/workflows/ci.yml`) runs `npm ci`, `npm test`, and `npm run build` on Node 22 for every
-push and pull request.
-
-- **`scripts/test-liturgical.ts`** — the Easter computus against the known table; trap-year
-  precedence/transfer acceptance (Annunciation on Good Friday 2016, Immaculate Conception 2024,
-  Christmas-on-Sunday 2022, …); the liturgical-accent rules; the full Universal/USA region suite.
-- **`scripts/test-data.ts`** — committed-data integrity: psalm-span incipits, the Easter Vigil
-  label ladder, memorial-proper resolution, every lectionary span rendering text in every
-  translation, the empty-slot report in sync, VOTD web/iOS parity, the SHA-256 manifest, the
-  rosary passages matching the Reader, the reading-time accumulator (gap reset + midnight
-  rollover), the reading-plan arithmetic (preset totals from the real canon counts, pace,
-  completion, and the weighted Whole-Canon order), the Search book-group filters, the **CCC
-  citation index** (every key resolving to a real verse, the Hebrew→Vulgate Psalm mapping, the
-  pinned famous anchors, and full vatican.va URL coverage), and **golden-year snapshots**: the full
-  computed calendar and readings for every day of 2024–2027 in both regions (`scripts/golden/`),
-  so any engine change that silently moves a feast is a red test run.
+The full contributor workflow — the data-pipeline scripts (`npm run data` / `lectionary` /
+`commentary` / `ccc` / `widgets` / `golden` / `build-nabre`), the standing rules, and the native
+build steps — lives in **[CONTRIBUTING.md](CONTRIBUTING.md)** and the
+**Commands section of [CLAUDE.md](CLAUDE.md#commands)**. The release runbook (bump
+`package.json` + a `CHANGELOG.md` entry together, re-bless golden snapshots deliberately) is
+**[docs/guides/RELEASING.md](docs/guides/RELEASING.md)**. Platform setup is
+[docs/guides/IOS.md](docs/guides/IOS.md) and [docs/guides/ANDROID.md](docs/guides/ANDROID.md).
 
 ---
 
