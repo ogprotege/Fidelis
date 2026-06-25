@@ -1,5 +1,7 @@
 # Building Fidelis for Android
 
+*For: developers building or testing the native Android shell.*  · [← Docs index](../INDEX.md)
+
 Fidelis ships as a [Capacitor](https://capacitorjs.com) app: the same web code
 that runs in the browser and inside the iOS shell also runs inside a native
 Android shell. Building requires [Android Studio](https://developer.android.com/studio)
@@ -112,3 +114,6 @@ local bundle paths as well.
 > Android users who would rather not install from a store can still **install the
 > PWA** straight from Chrome (▸ *Add to Home screen*); the Capacitor build exists
 > for Play Store distribution and future native integrations (the widget above).
+
+---
+[← Docs index](../INDEX.md) · Related: [iOS guide](IOS.md) · [Releasing](RELEASING.md) · [CLAUDE.md](../../CLAUDE.md)

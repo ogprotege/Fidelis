@@ -1,5 +1,7 @@
 # Fidelis — Navigation & Information-Architecture redesign
 
+[← Docs index](../../INDEX.md)
+
 **Date:** 2026-06-17 · **Status:** design approved (owner), ready for planning
 **Driver:** owner intent — "a single readable and navigable page with links to other pages
 through clearly discernable titles and headers", navigation "seamless … forward and backwards"

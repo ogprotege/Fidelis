@@ -1,5 +1,7 @@
 # Design Spec — Rosary Mystery Sheets (v1.2 B1)
 
+[← Docs index](../../INDEX.md)
+
 **Release label:** `v1.2 B1: rosary mystery sheets with the traditional prayers`
 **Version bump:** `package.json` 1.3.0 → **1.4.0** (feature; dev-step bump, mirrors the v1.1 A-step precedent)
 **Branch:** `v1.2-daily-soul`

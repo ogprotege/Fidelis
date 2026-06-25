@@ -1,5 +1,7 @@
 # §5 — CCC Citation Index — LOCAL BUILD RUNBOOK
 
+[← Docs index](../../INDEX.md)
+
 **A paste-and-run prompt + command sheet for building §5 on your own machine**, where
 the cloud sandbox's two blockers don't exist: your Catechism PDF is readable, and
 vatican.va is reachable. The design is already **signed off** in

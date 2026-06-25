@@ -1,5 +1,7 @@
 # Rosary Mystery Sheets Implementation Plan
 
+[← Docs index](../../INDEX.md)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Upgrade Today card 4 so tapping a mystery opens a bottom-sheet showing its Scripture passage (verbatim, current translation) and, collapsed beneath, the five traditional rosary prayers in Latin and English.

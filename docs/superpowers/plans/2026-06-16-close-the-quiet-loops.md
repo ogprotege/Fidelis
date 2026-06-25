@@ -1,5 +1,7 @@
 # "Close the Quiet Loops" — Quality & Polish Release Implementation Plan
 
+[← Docs index](../../INDEX.md)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Finish the design language Fidelis already has — make every mouse action keyboard/screen-reader reachable, close the interaction-state feedback loops, restore token discipline where it slipped, then ship three touch-first functional refinements (Search filters, chapter grid, transient verse focus).

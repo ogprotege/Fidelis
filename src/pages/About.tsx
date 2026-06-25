@@ -72,9 +72,11 @@ export default function About() {
         <li>
           <strong>RSV-2CE and NABRE</strong> — supported, but under copyright; see{" "}
           <Link to="/translations">Translations</Link> for how to import a licensed
-          copy. The NABRE is the translation of the U.S. lectionary, so the Daily
-          Readings prefer it when your calendar region is the United States (falling
-          back to the Douay-Rheims until you import it).
+          copy. The NABRE is the translation of the U.S. lectionary, and out of the
+          box the calendar region is the United States (the USCCB calendar), so the
+          Daily Readings default to the NABRE — falling back to the Douay-Rheims until
+          you import it. You can change the region or the readings translation under
+          Settings.
         </li>
       </ul>
       <p className="muted small">
@@ -118,11 +120,12 @@ export default function About() {
         gaps are described in the note on numbering above. The
         liturgical calendar follows the General Roman Calendar (all solemnities
         and feasts, with a representative selection of memorials); movable feasts
-        are computed from the date of Easter, and a calendar-region setting in
-        Settings applies the United States transfers — Epiphany to the Sunday
-        of Jan 2–8, and the Ascension to the Seventh Sunday of Easter, as observed
-        in most U.S. ecclesiastical provinces (Boston, Hartford, New York, Omaha,
-        and Philadelphia keep Ascension Thursday) — and the U.S. proper days. Daily Mass reading citations follow the
+        are computed from the date of Easter. The calendar-region setting in
+        Settings defaults to the United States (the USCCB calendar) and applies the
+        U.S. transfers — Epiphany to the Sunday of Jan 2–8, and the Ascension to the
+        Seventh Sunday of Easter, as observed in most U.S. ecclesiastical provinces
+        (Boston, Hartford, New York, Omaha, and Philadelphia keep Ascension
+        Thursday) — and the U.S. proper days; you can switch it to Universal. Daily Mass reading citations follow the
         Roman Lectionary cycles (Sundays A/B/C, weekdays I/II), derived from the
         public-domain tables of{" "}
         <a

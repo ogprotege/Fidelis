@@ -1,5 +1,7 @@
 # Changelog
 
+[← Docs index](docs/INDEX.md)
+
 All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
@@ -594,7 +596,7 @@ byte-identical to 1.5.1.
   needed in the WebView. Application id `app.fidelis.bible`; the background uses
   the day `--bg-0` token. Build with
   `npm run build && npx cap sync android && npx cap open android`; full guide in
-  [docs/ANDROID.md](docs/ANDROID.md). The committed `android/` mirrors the iOS
+  [docs/guides/ANDROID.md](docs/guides/ANDROID.md). The committed `android/` mirrors the iOS
   convention: the Gradle project and resources are tracked; the synced web assets
   (`app/src/main/assets/public`) and the build output are gitignored.
 - **The free pledge, in writing.** The README now states plainly that Fidelis is

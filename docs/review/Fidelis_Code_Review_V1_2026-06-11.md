@@ -1,5 +1,7 @@
 # FIDELIS — CODE REVIEW AND IMPROVEMENT PLAN
 
+*For: maintainers and contributors understanding what was fixed and why.*  · [← Docs index](../INDEX.md)
+
 **Version:** 1.0
 **Date:** June 11, 2026
 **Reviewer:** Claude, at Wilson Warren's request
@@ -99,7 +101,7 @@ Both build scripts fetch `master` of their source repos; a silent upstream edit 
 
 1. **About page and README repeat the appendix error:** the Clementine appendix is Manasses + 3–4 Esdras; Psalm 151 and Laodiceans come from the wider Vulgate manuscript tradition. Reword both (15 min).
 2. **Search highlight** fails to `<mark>` accent-folded matches (query *caelum*, text *cælum*); highlight on the folded index mapping (1 h).
-3. **Service worker:** nothing precaches the shell, hashed assets accumulate forever in `fidelis-shell-v1`; precache the build manifest on install and purge non-current assets on activate (2 h). Note SWs do not run inside Capacitor's webview; irrelevant on iOS since `dist/` ships in the bundle, but say so in IOS.md.
+3. **Service worker:** nothing precaches the shell, hashed assets accumulate forever in `fidelis-shell-v1`; precache the build manifest on install and purge non-current assets on activate (2 h). Note SWs do not run inside Capacitor's webview; irrelevant on iOS since `dist/` ships in the bundle, but say so in docs/guides/IOS.md.
 4. **Partial flag under-reports:** `parseCitation` drops letter suffixes (`12b`) without setting `partial`, contrary to its own doc comment; set it (30 min). Only 2 rows are flagged today.
 5. **Epiphany naming:** "(traditional date)" reads like editorializing; after P1-5 the label becomes simply The Epiphany of the Lord on the correct regional date.
 6. **Notes/bookmarks export:** localStorage only; add JSON export/import in Library so a device loss does not eat a user's marginalia (2–3 h).
@@ -181,3 +183,6 @@ Tokens for the look you described, layered on the existing two themes rather tha
 The P0 work is the price of the app's own creed. Everything else is growth.
 
 *Verbum Domini manet in æternum.*
+
+---
+[← Docs index](../INDEX.md) · Related: [feature design spec](Fidelis_Feature_Design_Spec_V1_2026-06-11.md) · [commentary sources survey](Commentary_Sources_Survey.md)
