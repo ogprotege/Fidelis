@@ -3,5 +3,5 @@
     android:shape="rectangle">
     <solid android:color="@color/fidelis_parchment" />
     <corners android:radius="20dp" />
-    <stroke android:width="0.5dp" android:color="#22000000" />
+    <stroke android:width="0.5dp" android:color="@color/fidelis_widget_stroke" />
 </shape>

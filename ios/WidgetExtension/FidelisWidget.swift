@@ -98,15 +98,19 @@ private struct CrossIcon: View {
 struct FidelisWidgetView: View {
     var entry: VotdEntry
     @Environment(\.widgetFamily) var family
+    @Environment(\.colorScheme) private var scheme
 
-    // Day-theme tokens from src/styles.css, so the widget matches the app's own
-    // surfaces: --bg-0 #F4F2EE, --text #26241F, --gold #A8862C, --text-muted
-    // #6E6A61 (the citation color). No off-token red — the two-accent grammar
-    // (gold honors) holds on the native surface too.
-    private let parchment = Color(red: 0.957, green: 0.949, blue: 0.933)
-    private let ink = Color(red: 0.149, green: 0.141, blue: 0.122)
-    private let muted = Color(red: 0.431, green: 0.416, blue: 0.380)
-    private let gold = Color(red: 0.659, green: 0.525, blue: 0.173)
+    // Day + night theme tokens from src/styles.css, resolved at render time via the
+    // colorScheme environment so the widget follows the system appearance like the
+    // app (which defaults to System) — pure SwiftUI, no UIKit / App Group / entitlement:
+    //   --bg-0 #F4F2EE/#1B1B1E · --text #26241F/#ECEAE4 · --text-muted #6E6A61/#A19D94
+    //   · --gold #A8862C/#D4B254. No off-token red — the two-accent grammar (gold
+    //   honors) holds on the native surface in both appearances.
+    private var dark: Bool { scheme == .dark }
+    private var parchment: Color { dark ? Color(red: 0.106, green: 0.106, blue: 0.118) : Color(red: 0.957, green: 0.949, blue: 0.933) }
+    private var ink: Color { dark ? Color(red: 0.925, green: 0.918, blue: 0.894) : Color(red: 0.149, green: 0.141, blue: 0.122) }
+    private var muted: Color { dark ? Color(red: 0.631, green: 0.616, blue: 0.580) : Color(red: 0.431, green: 0.416, blue: 0.380) }
+    private var gold: Color { dark ? Color(red: 0.831, green: 0.698, blue: 0.329) : Color(red: 0.659, green: 0.525, blue: 0.173) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {

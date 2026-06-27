@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Night-theme tokens from src/styles.css [data-theme="night"], matching the iOS
+     widgets' dark branch (ios/WidgetExtension/*.swift). The system dark setting selects
+     these over values/colors.xml, so the home-screen widgets follow the system
+     appearance like the app — no app-side toggle needed (the app defaults to System).
+     bg-0 #1B1B1E, text #ECEAE4, text-muted #A19D94, gold #D4B254.
+     Gold still honors; the two-accent grammar holds in dark too. -->
+<resources>
+    <color name="fidelis_parchment">#1B1B1E</color>
+    <color name="fidelis_ink">#ECEAE4</color>
+    <color name="fidelis_muted">#A19D94</color>
+    <color name="fidelis_gold">#D4B254</color>
+    <!-- Light hairline so the card edge reads on a dark home screen. -->
+    <color name="fidelis_widget_stroke">#22FFFFFF</color>
+</resources>
