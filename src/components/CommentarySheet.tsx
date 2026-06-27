@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { CommentaryNote, loadCommentary } from "../lib/data";
-import { fathersOf, groupCatena } from "../lib/commentary";
+import { fathersOf, groupCatena, sortChronological, yearOf, circaOf } from "../lib/commentary";
 
 interface Props {
   book: string;
@@ -67,7 +67,8 @@ export default function CommentarySheet({
   const [doctorsOnly, setDoctorsOnly] = useState(doctorsOnlyDefault);
   const [picked, setPicked] = useState<Set<string>>(new Set());
 
-  const blocks = useMemo(() => groupCatena(catena ?? []), [catena]);
+  const grouped = useMemo(() => groupCatena(catena ?? []), [catena]);
+  const blocks = useMemo(() => sortChronological(grouped), [grouped]);
   const fatherChips = useMemo(() => fathersOf(blocks), [blocks]);
   const otherChips = useMemo(() => {
     const seen = new Set<string>();
@@ -192,12 +193,27 @@ export default function CommentarySheet({
               {visible.length === 0 ? (
                 <p className="muted small sans">No comments match this filter.</p>
               ) : (
-                visible.map((b, i) => (
-                  <div className="cmt-block" key={i}>
-                    <div className={`cmt-attr ${b.kind !== "father" ? "plain" : ""}`}>{b.name}</div>
-                    <Paragraphs text={b.text} />
-                  </div>
-                ))
+                visible.map((b, i) => {
+                  const prev = visible[i - 1];
+                  const startsOthers = b.kind !== "father" && (!prev || prev.kind === "father");
+                  const y = b.kind === "father" && b.father ? yearOf(b.father.id) : null;
+                  return (
+                    <Fragment key={i}>
+                      {startsOthers && (
+                        <div className="cmt-divider" aria-hidden="true">Glossa &amp; other sources</div>
+                      )}
+                      <div className="cmt-block">
+                        <div className={`cmt-attr ${b.kind !== "father" ? "plain" : ""}`}>
+                          {b.name}
+                          {y !== null && (
+                            <span className="cmt-date">{` · ${circaOf(b.father!.id) ? "c. " : ""}${y}`}</span>
+                          )}
+                        </div>
+                        <Paragraphs text={b.text} />
+                      </div>
+                    </Fragment>
+                  );
+                })
               )}
             </>
           )}

@@ -1609,6 +1609,22 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   margin-bottom: 0.2rem;
 }
 .cmt-attr.plain { color: var(--text-muted); font-style: italic; text-transform: none; letter-spacing: 0; }
+/* §4.3 Phase 1 — the chronological chain. The date is honor/apparatus text inside
+   the already-gold .cmt-attr label: it inherits gold, adds no new accent, no
+   purple. text-transform:none keeps "c." lowercase under the label's uppercasing. */
+.cmt-date { text-transform: none; font-weight: 400; opacity: 0.8; }
+/* The quiet "Glossa & other sources" lane divider (G5) — neutral structural text,
+   not an accent. */
+.cmt-divider {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-top: var(--hairline) solid var(--border);
+  padding-top: 0.7rem;
+  margin: 0.4rem 0 0.9rem;
+}
 .cmt-text { margin: 0 0 0.5rem; line-height: 1.62; }
 .cmt-loading { margin: 0.5rem 0; }
 
