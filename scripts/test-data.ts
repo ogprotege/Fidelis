@@ -2016,5 +2016,78 @@ console.log("");
   check("parseImport JSON (scrollmapper): verses", j.length === 1 && resolveBookSlug(j[0].name) === "mark" && j[0].chapters[0][0] === "zeta" && j[0].chapters[0][1] === "eta");
 }
 
+// §21 — the inline catechism (CCC P1): pure tier/edition logic (src/lib/catechism.ts),
+// the bundled PD Trent corpus (public/data/trent/trent.json), and the trentEdition
+// setting. The modern CCC text is NEVER bundled — only the PD Roman Catechism is.
+console.log("");
+{
+  const { pickTier, pickEdition, isTrentEdition, DEFAULT_TRENT_EDITION, TRENT_EDITIONS } =
+    await import("../src/lib/catechism");
+
+  // pickTier precedence: imported+paras → imported; else trent → trent; else links.
+  check("pickTier: imported copy with cited ¶ supersedes",
+    pickTier({ imported: true, hasParas: true, trent: true }) === "imported");
+  check("pickTier: imported but no cited ¶ falls to Trent",
+    pickTier({ imported: true, hasParas: false, trent: true }) === "trent");
+  check("pickTier: no import, Trent present → trent",
+    pickTier({ imported: false, hasParas: true, trent: true }) === "trent");
+  check("pickTier: nothing bundled/imported → links",
+    pickTier({ imported: false, hasParas: true, trent: false }) === "links");
+
+  // edition vocabulary — only the bundled McHugh-Callan ships today.
+  check("TRENT_EDITIONS lists the bundled McHugh-Callan edition",
+    TRENT_EDITIONS.map((e) => e.id).join(",") === "mchughCallan");
+  check("default Trent edition is McHugh-Callan", DEFAULT_TRENT_EDITION === "mchughCallan");
+  check("isTrentEdition guards the vocabulary",
+    isTrentEdition("mchughCallan") && isTrentEdition("donovan") && !isTrentEdition("kjv") && !isTrentEdition(null));
+
+  // pickEdition picks the preferred edition, else falls back to the default
+  const fakeFile = {
+    editions: {
+      mchughCallan: { edition: "M", source: "s", license: "public-domain-US", parts: [] }
+    }
+  } as unknown as Awaited<ReturnType<typeof import("../src/lib/data").loadTrent>>;
+  check("pickEdition returns the preferred edition", pickEdition(fakeFile!, "mchughCallan")?.edition === "M");
+  check("pickEdition falls back to the default for an absent edition",
+    pickEdition(fakeFile!, "donovan")?.edition === "M");
+
+  // The bundled Trent corpus is shaped, complete, and sealed.
+  const trent = JSON.parse(readFileSync(join(ROOT, "public/data/trent/trent.json"), "utf8")) as {
+    editions: Record<string, { edition: string; license: string; parts: { id: string; title: string; sections: { id: string; title: string; html: string }[] }[] }>;
+  };
+  const EXPECT_PARTS = ["creed", "sacraments", "commandments", "lords-prayer"];
+  for (const id of ["mchughCallan"]) {
+    const ed = trent.editions[id];
+    check(`Trent ${id} edition is present with a label`, !!ed && ed.edition.length > 0, ed?.edition ?? "missing");
+    if (!ed) continue;
+    check(`Trent ${id} has the four Parts in order`,
+      ed.parts.map((p) => p.id).join(",") === EXPECT_PARTS.join(","), ed.parts.map((p) => p.id).join(","));
+    const secIds = ed.parts.flatMap((p) => p.sections.map((s) => s.id));
+    check(`Trent ${id} section ids are unique`, new Set(secIds).size === secIds.length, `${secIds.length} ids`);
+    let bad = 0;
+    for (const p of ed.parts) for (const s of p.sections) if (!s.title?.trim() || !s.html?.trim()) bad++;
+    check(`Trent ${id} every section has a non-empty title + html`, bad === 0, `${bad} empty`);
+    check(`Trent ${id} is public domain`, ed.license.startsWith("public-domain"), ed.license);
+    check(`Trent ${id} ships no verse keys (browsable-by-section, design §4)`,
+      ed.parts.every((p) => p.sections.every((s) => !/^\d+:\d+$/.test(s.id))));
+    check(`Trent ${id} html is paragraphs-only structural markup (h4/p)`,
+      ed.parts.every((p) => p.sections.every((s) => !/<(?!\/?(?:h4|p)\b)[a-z]/i.test(s.html))));
+  }
+
+  // Sealed in the manifest + the §5 index is byte-for-byte untouched.
+  const tman = JSON.parse(readFileSync(join(ROOT, "public/data/manifest.json"), "utf8")) as { files: Record<string, string> };
+  check("trent/trent.json is sealed in the manifest", !!tman.files["trent/trent.json"]);
+  check("§5 index + url remain sealed (unchanged by P1)",
+    !!tman.files["ccc/index.json"] && !!tman.files["ccc/url.json"]);
+
+  // The Trent-edition setting defaults to McHugh-Callan and is a valid id.
+  {
+    const { getSettings } = await import("../src/lib/storage");
+    const s = getSettings();
+    check("getSettings() defaults trentEdition to mchughCallan", s.trentEdition === "mchughCallan", String(s.trentEdition));
+    check("Settings.trentEdition is a valid edition id", isTrentEdition(s.trentEdition));
+  }
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

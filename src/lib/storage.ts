@@ -7,6 +7,7 @@ import {
   isScriptureFont
 } from "./typography";
 import { DEFAULT_THEME, ThemeChoice, isThemeChoice } from "./theme";
+import { DEFAULT_TRENT_EDITION, isTrentEdition, type TrentEditionId } from "./catechism";
 import type { ReadingState } from "./reading";
 import type { ReadingPlan } from "./plans";
 
@@ -76,6 +77,10 @@ export interface Settings {
   /** Magisterium layer (spec §5): show the CCC paragraph links in the verse
    *  actions. Off ⇒ no CCC row anywhere. Links open vatican.va. */
   cccLinksEnabled: boolean;
+  /** Which bundled Roman-Catechism (Trent) edition the inline sheet renders.
+   *  Today only McHugh-Callan 1923 ships; the field is the seam for a future
+   *  Donovan 1829 edition. */
+  trentEdition: TrentEditionId;
   /** Preferred translation for the Mass / Daily-Readings surfaces. Defaults to
    *  the NABRE — the translation of the U.S. lectionary — so the Daily Readings
    *  prefer it out of the box. "" = auto (match the calendar region: the NABRE
@@ -130,6 +135,7 @@ export function getSettings(): Settings {
     commentaryCatena: true,
     commentaryDoctorsOnly: false,
     cccLinksEnabled: true,
+    trentEdition: DEFAULT_TRENT_EDITION,
     // The Daily Readings default to the NABRE — the translation of the U.S.
     // lectionary. It is under copyright and never bundled, so until the user
     // imports a licensed copy the readings fall back to the bundled Douay-Rheims
@@ -153,6 +159,8 @@ export function getSettings(): Settings {
   // Guard a stored font against corruption or a future build's vocabulary so an
   // unknown value can never strand the reader on an undefined face (spec §1.4).
   if (!isScriptureFont(settings.scriptureFont)) settings.scriptureFont = DEFAULT_SCRIPTURE_FONT;
+  // Guard the stored Trent edition so an unknown/legacy value falls back cleanly.
+  if (!isTrentEdition(settings.trentEdition)) settings.trentEdition = DEFAULT_TRENT_EDITION;
   return settings;
 }
 

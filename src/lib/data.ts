@@ -212,6 +212,33 @@ export function loadCCC(): Promise<CCCData> {
   return cccPromise;
 }
 
+/** Spec §5 (text tier) — the bundled PUBLIC-DOMAIN Roman Catechism (Trent),
+ *  browsable by Part → section (it has no verse keys; the §5 index keeps verse
+ *  precision). Each edition ships in one file, keyed by edition id, so a future
+ *  Donovan edition slots in with no shape change. The modern CCC text is NEVER
+ *  here. `html` is build-sealed, paragraphs-only structural HTML (<h4>/<p>). */
+export interface TrentSection { id: string; title: string; html: string; }
+export interface TrentPart { id: string; title: string; sections: TrentSection[]; }
+export interface TrentEdition {
+  edition: string;
+  source: string;
+  license: string;
+  parts: TrentPart[];
+}
+export interface TrentFile {
+  editions: Partial<Record<import("./catechism").TrentEditionId, TrentEdition>>;
+}
+
+let trentPromise: Promise<TrentFile | null> | null = null;
+/** Load the bundled Trent corpus once, memoized like loadCCC. A 404 (the layer
+ *  isn't built) yields null, never an error the sheet must handle. */
+export function loadTrent(): Promise<TrentFile | null> {
+  trentPromise ??= fetch(`${import.meta.env.BASE_URL}data/trent/trent.json`)
+    .then((r) => (r.ok ? (r.json() as Promise<TrentFile>) : null))
+    .catch(() => null);
+  return trentPromise;
+}
+
 /** Save a bundled translation for offline reading (spec §2.2 Data): fetch every
  *  file the manifest lists under `${translation}/`, which the service worker's
  *  cache-first /data/ handler persists into its data cache. The manifest is
