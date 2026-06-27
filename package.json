@@ -30,6 +30,7 @@
     "widgets": "npm run votd-widget && npm run calendar-widget",
     "ccc": "tsx scripts/build-ccc.mjs && node scripts/build-ccc-urls.mjs && npm run manifest",
     "build-nabre": "node scripts/build-nabre.mjs",
+    "build-ccc-text": "node scripts/build-ccc-text.mjs",
     "check-docs": "node scripts/check-doc-links.mjs"
   },
   "dependencies": {

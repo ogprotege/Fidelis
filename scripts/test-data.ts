@@ -2107,5 +2107,72 @@ console.log("");
   check("Reader keeps the purple gutter mark + loadCCC", readerSrc.includes("ccc-mark") && readerSrc.includes("loadCCC"));
 }
 
+// §22 — the personal-CCC import path (CCC P2). Synthetic fixtures ONLY — never real
+// Catechism text. The parser is pure; it normalizes three shapes, validates the
+// 1–2865 integer key space (shared with url.json), and strips footnote apparatus.
+console.log("");
+{
+  const { parseCccText } = await import("../src/lib/import-formats");
+  const cu = JSON.parse(readFileSync(join(ROOT, "public/data/ccc/url.json"), "utf8")) as Record<string, string>;
+
+  // (a) the header shape normalizes to { edition, language, paragraphs }
+  const header = JSON.stringify({ format: "fidelis-ccc-1", edition: "Synthetic Ed.", language: "en", paragraphs: { "1": "alpha", "1817": "beta" } });
+  const h = parseCccText("ccc.json", header);
+  check("parseCccText: header shape → edition/language/paragraphs", h.edition === "Synthetic Ed." && h.language === "en" && h.paragraphs["1"] === "alpha" && h.paragraphs["1817"] === "beta");
+
+  // (b) a bare flat map is accepted, edition defaulted
+  const bare = parseCccText("ccc.json", JSON.stringify({ "1": "gamma" }));
+  check("parseCccText: bare flat map accepted", bare.paragraphs["1"] === "gamma" && bare.language === "en" && bare.edition.length > 0);
+
+  // (c) the { ccc: { … } } wrapper is accepted
+  const wrapped = parseCccText("ccc.json", JSON.stringify({ ccc: { edition: "Wrapped", paragraphs: { "2865": "omega" } } }));
+  check("parseCccText: { ccc: {…} } wrapper accepted", wrapped.paragraphs["2865"] === "omega" && wrapped.edition === "Wrapped");
+
+  // (d) output is a pure function of input — the parser holds no embedded text
+  const one = parseCccText("ccc.json", JSON.stringify({ format: "fidelis-ccc-1", paragraphs: { "5": "only-this" } }));
+  check("parseCccText: output keys/values come only from input (no injection)", Object.keys(one.paragraphs).join() === "5" && one.paragraphs["5"] === "only-this");
+
+  // (e) footnote apparatus is stripped: superscript digit runs + [n] refs
+  const dirty = parseCccText("ccc.json", JSON.stringify({ format: "fidelis-ccc-1", paragraphs: { "1": "Hope is the virtue⁴⁵ by which we desire.[12]" } }));
+  check("parseCccText: strips footnote superscripts + [n] refs", dirty.paragraphs["1"] === "Hope is the virtue by which we desire.");
+
+  // (f) rejections — non-integer key, out-of-range, and a Bible-shaped file
+  let threwAbc = false; try { parseCccText("x.json", JSON.stringify({ "abc": "x" })); } catch { threwAbc = true; }
+  check("parseCccText: rejects a non-integer key", threwAbc);
+  let threwRange = false; try { parseCccText("x.json", JSON.stringify({ format: "fidelis-ccc-1", paragraphs: { "3000": "x" } })); } catch { threwRange = true; }
+  check("parseCccText: rejects a ¶ outside [1,2865]", threwRange);
+  let threwBible = false; try { parseCccText("x.json", JSON.stringify({ books: [{ name: "Mark", chapters: [] }] })); } catch { threwBible = true; }
+  check("parseCccText: rejects a Bible-shaped JSON", threwBible);
+
+  // (g) the key space is url.json's: 219/444 are cited by john 3:16, so present in url.json
+  const ks = parseCccText("ccc.json", JSON.stringify({ format: "fidelis-ccc-1", paragraphs: { "219": "x", "444": "y" } }));
+  check("parseCccText: keys share url.json's string-integer key space", Object.keys(ks.paragraphs).every((k) => /^\d+$/.test(k) && k in cu));
+
+  // CCC-text storage (data.ts). IndexedDB cannot run under tsx, so these guard the
+  // upgrade discipline by SOURCE: DB v2, the ccc store created WITHOUT dropping
+  // books, and loadCCCText's memo invalidated on write.
+  const ds = readFileSync(join(ROOT, "src/lib/data.ts"), "utf8");
+  check("data.ts bumps DB_VERSION to 2", /DB_VERSION\s*=\s*2\b/.test(ds));
+  check("data.ts creates the ccc object store", /createObjectStore\(\s*CCC_STORE\s*\)/.test(ds));
+  check("data.ts still creates the books store (upgrade preserves imports)", /createObjectStore\(\s*STORE\s*\)/.test(ds));
+  check("data.ts exports loadCCCText + idbPutCcc/idbGetCcc/idbClearCcc",
+    /export function loadCCCText/.test(ds) && /export async function idbPutCcc/.test(ds) && /export async function idbGetCcc/.test(ds) && /export async function idbClearCcc/.test(ds));
+  check("loadCCCText invalidates its memo on import/remove", (ds.match(/cccTextPromise\s*=\s*null/g) || []).length >= 2);
+
+  // The CCCSheet Tier-1 supersede wiring + two-accent (purple acts, no gold).
+  const sheet = readFileSync(join(ROOT, "src/components/CCCSheet.tsx"), "utf8");
+  check("CCCSheet wires loadCCCText (Tier-1 supersede)", /loadCCCText/.test(sheet));
+  check("CCCSheet renders the imported ¶ text branch", /tier === "imported"/.test(sheet) && /ccc-para-num/.test(sheet));
+  const cssP2 = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  check("CCC imported ¶ number acts in purple (two-accent)", /\.ccc-para-num\s*\{[^}]*var\(--purple\)/.test(cssP2));
+  check("CCC imported block carries no gold honor mark",
+    !/\.ccc-para[^{]*\{[^}]*var\(--gold\)/.test(cssP2) && !/\.ccc-credit\s*\{[^}]*var\(--gold\)/.test(cssP2));
+
+  // The Settings Magisterium import slot exists and stores on-device only.
+  const setSrc = readFileSync(join(ROOT, "src/pages/Settings.tsx"), "utf8");
+  check("Settings imports the modern Catechism on-device (parse → idbPutCcc)",
+    setSrc.includes("parseCccText") && setSrc.includes("idbPutCcc") && setSrc.includes("Import the modern Catechism"));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

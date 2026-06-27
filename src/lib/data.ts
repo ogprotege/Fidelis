@@ -1,4 +1,5 @@
 import { getTranslation } from "./translations";
+import type { CccTextDoc } from "./import-formats";
 
 export interface BookData {
   translation: string;
@@ -40,15 +41,22 @@ export function loadManifest(): Promise<ManifestDoc | null> {
 }
 
 const DB_NAME = "fidelis-imported";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = "books";
+const CCC_STORE = "ccc";
+const CCC_KEY = "text";
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
+      // Idempotent: covers a fresh install (oldVersion 0) and the 1→2 upgrade.
+      // The books store (NABRE/RSV-2CE imports) is preserved — only added if absent.
       if (!req.result.objectStoreNames.contains(STORE)) {
         req.result.createObjectStore(STORE);
+      }
+      if (!req.result.objectStoreNames.contains(CCC_STORE)) {
+        req.result.createObjectStore(CCC_STORE);
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -123,6 +131,65 @@ export async function importedTranslations(): Promise<Set<string>> {
   } catch {
     return new Set();
   }
+}
+
+/** The modern Catechism the owner imported — never bundled (spec §6). Stored
+ *  under one key in the ccc store as { edition, language, paragraphs }. */
+export type CCCText = CccTextDoc;
+
+/** Persist the owner's imported CCC text (replaces any prior import). */
+export async function idbPutCcc(doc: CCCText): Promise<void> {
+  const db = await openDb();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(CCC_STORE, "readwrite");
+      tx.objectStore(CCC_STORE).put(doc, CCC_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } finally {
+    db.close();
+  }
+  cccTextPromise = null; // a fresh import must be seen by the next loadCCCText()
+}
+
+/** Read the owner's imported CCC text, or null if none. */
+export async function idbGetCcc(): Promise<CCCText | null> {
+  const db = await openDb();
+  try {
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(CCC_STORE, "readonly");
+      const req = tx.objectStore(CCC_STORE).get(CCC_KEY);
+      req.onsuccess = () => resolve((req.result as CCCText | undefined) ?? null);
+      req.onerror = () => reject(req.error);
+    });
+  } finally {
+    db.close();
+  }
+}
+
+/** Remove the imported Catechism ("Remove imported Catechism"). */
+export async function idbClearCcc(): Promise<void> {
+  const db = await openDb();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(CCC_STORE, "readwrite");
+      tx.objectStore(CCC_STORE).delete(CCC_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } finally {
+    db.close();
+  }
+  cccTextPromise = null;
+}
+
+let cccTextPromise: Promise<CCCText | null> | null = null;
+/** The owner's imported modern CCC, memoized like loadCCC; the memo is cleared
+ *  by idbPutCcc/idbClearCcc so the supersede tier flips live after an import. */
+export function loadCCCText(): Promise<CCCText | null> {
+  cccTextPromise ??= idbGetCcc().catch(() => null);
+  return cccTextPromise;
 }
 
 export function loadBook(translation: string, book: string): Promise<BookData> {

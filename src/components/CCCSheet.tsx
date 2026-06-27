@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrentEdition, TrentFile, loadTrent } from "../lib/data";
+import { CCCText, TrentEdition, TrentFile, loadCCCText, loadTrent } from "../lib/data";
 import { capParagraphs } from "../lib/ccc";
 import { pickEdition, pickTier, TrentEditionId } from "../lib/catechism";
 
@@ -30,6 +30,7 @@ interface Props {
  */
 export default function CCCSheet({ refLabel, titleId, paras, urls, edition }: Props) {
   const [trent, setTrent] = useState<TrentFile | null>(null);
+  const [cccText, setCccText] = useState<CCCText | null>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<{ partId: string; secId: string } | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -39,10 +40,11 @@ export default function CCCSheet({ refLabel, titleId, paras, urls, edition }: Pr
     loadTrent()
       .then((t) => { if (alive) { setTrent(t); setLoading(false); } })
       .catch(() => { if (alive) { setTrent(null); setLoading(false); } });
+    void loadCCCText().then((d) => { if (alive) setCccText(d); });
     return () => { alive = false; };
   }, []);
 
-  const tier = pickTier({ imported: false, hasParas: paras.length > 0, trent: !!trent });
+  const tier = pickTier({ imported: !!cccText, hasParas: paras.length > 0, trent: !!trent });
   const ed: TrentEdition | null = trent ? pickEdition(trent, edition) : null;
   const section =
     ed && open
@@ -53,6 +55,32 @@ export default function CCCSheet({ refLabel, titleId, paras, urls, edition }: Pr
   return (
     <div className="ccc-sheet">
       <h2 id={titleId} className="ccc-sheet-title">{refLabel}</h2>
+
+      {/* Tier 1 — the owner's imported modern Catechism, superseding Trent for the
+          cited ¶. A ¶ the import omits falls back to its precise vatican.va link. */}
+      {tier === "imported" && cccText && (
+        <div className="ccc-imported">
+          {paras.map((n) => {
+            const body = cccText.paragraphs[String(n)];
+            return (
+              <div className="ccc-para" key={n}>
+                <span className="ccc-para-num">¶{n}</span>
+                {body ? (
+                  <p className="ccc-para-text" lang={cccText.language}>{body}</p>
+                ) : (
+                  <p className="ccc-para-text muted small">
+                    Not in your imported copy —{" "}
+                    <a href={urls[String(n)]} target="_blank" rel="noopener noreferrer">
+                      read ¶{n} on vatican.va
+                    </a>.
+                  </p>
+                )}
+              </div>
+            );
+          })}
+          <p className="ccc-credit muted small">{cccText.edition} · imported on this device.</p>
+        </div>
+      )}
 
       {/* Tier 2 — the bundled Roman Catechism (Trent), browsable by Part. Gated on
           `tier !== "imported"`, NOT `=== "trent"`: while Trent is still loading,

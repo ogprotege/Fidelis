@@ -17,6 +17,7 @@ These documents are the working design artifacts: feature specs written before i
 - [Golden Chain: chronological & beyond-Gospels design (2026-06-27)](specs/2026-06-27-commentary-chronological-and-beyond-gospels-design.md) — §4.3 commentary, third pass: order the Catena chronologically (Phase 1), keep Haydock in its own lane (Phase 2), extend the patristic chain beyond the Gospels from a PD source (Phase 3). 📝 design
 - [CCC inline catechism design (2026-06-27)](specs/2026-06-27-ccc-inline-catechism-design.md) — §5 follow-on: replace the vatican.va redirect with an inline catechism sheet — bundled public-domain Trent (default) → imported personal CCC (supersedes) → vatican.va links (fallback) → future licensed CCC. 📝 design
 - [Quote-of-the-Day intake design (2026-06-27)](specs/2026-06-27-quotes-intake-design.md) — §3 handoff contract: the `quotes.corpus.json` entry schema, the public-domain red list, the selection model, and the build/widget-resync steps for owner-authored quotes. 📝 design
+- [Modern CCC import local-build runbook (2026-06-27)](specs/2026-06-27-ccc-text-LOCAL-BUILD-RUNBOOK.md) — owner-run converter (EPUB/PDF → `fidelis-ccc-1` JSON) for the §6 personal Catechism import; output gitignored, imported on-device only, never committed. ✓ shipped v1.14.0
 
 ## Implementation plans
 

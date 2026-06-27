@@ -851,6 +851,18 @@ h1.page-title {
   padding-top: 0.6rem;
   border-top: var(--hairline) solid var(--border);
 }
+/* CCC inline sheet — Tier-1 imported supersede (P2). Purple acts; gold appears
+   nowhere here — the credit reuses the muted .ccc-credit above (spec §8.2). */
+.ccc-imported { margin: 0.2rem 0 0; }
+.ccc-para { margin: 0 0 1rem; }
+.ccc-para-num {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--purple);
+}
+.ccc-para-text { margin: 0.25rem 0 0; line-height: 1.62; }
 
 .parallel-grid {
   display: grid;

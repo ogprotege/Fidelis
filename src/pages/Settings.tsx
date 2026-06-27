@@ -6,10 +6,14 @@ import SectionNav from "../components/SectionNav";
 import {
   ManifestDoc,
   downloadBundle,
+  idbClearCcc,
+  idbPutCcc,
   importedTranslations,
   loadBook,
+  loadCCCText,
   loadManifest
 } from "../lib/data";
+import { parseCccText } from "../lib/import-formats";
 import {
   CalendarRegion,
   exportMarginalia,
@@ -98,6 +102,41 @@ export default function Settings() {
   // ── Data: export / import the library (P2-6) ────────────────────────────────
   const fileRef = useRef<HTMLInputElement>(null);
   const [transfer, setTransfer] = useState<string | null>(null);
+
+  // ── Magisterium: the imported modern Catechism (spec §6, P2) ────────────────
+  const cccFileRef = useRef<HTMLInputElement>(null);
+  const [cccImported, setCccImported] = useState(false);
+  const [cccBusy, setCccBusy] = useState(false);
+  const [cccMsg, setCccMsg] = useState<string | null>(null);
+  useEffect(() => {
+    loadCCCText().then((d) => setCccImported(!!d)).catch(() => {});
+  }, []);
+
+  const onCccFile = async (file: File | undefined) => {
+    if (!file) return;
+    setCccBusy(true);
+    setCccMsg(null);
+    try {
+      const doc = parseCccText(file.name, await file.text());
+      await idbPutCcc(doc);
+      setCccImported(true);
+      setCccMsg(
+        `Imported the Catechism on this device (${Object.keys(doc.paragraphs).length} paragraphs). Stored only here.`
+      );
+    } catch (e) {
+      setCccMsg(`Import failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setCccBusy(false);
+      if (cccFileRef.current) cccFileRef.current.value = "";
+    }
+  };
+
+  const removeCcc = async () => {
+    await idbClearCcc();
+    setCccImported(false);
+    setCccMsg("Removed the imported Catechism.");
+  };
+
   const doExport = () => {
     const data = exportMarginalia();
     const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
@@ -502,6 +541,33 @@ export default function Settings() {
             </select>
           </div>
         )}
+        <hr className="rule" />
+        <input
+          ref={cccFileRef}
+          type="file"
+          accept=".json,application/json"
+          style={{ display: "none" }}
+          onChange={(e) => onCccFile(e.target.files?.[0])}
+        />
+        <div className="setting-label">Import the modern Catechism (a copy you own)</div>
+        <p className="catechesis muted small">
+          The Catechism of the Catholic Church is under copyright and is never bundled. If you
+          own a digital copy, import it here — it is stored only on this device, and a cited
+          verse will then show its paragraph text inline instead of a link out. Accepts the{" "}
+          <code>fidelis-ccc-1</code> JSON produced by the local converter.
+        </p>
+        <div className="import-zone">
+          {cccImported ? (
+            <button className="icon-btn" onClick={removeCcc}>
+              Remove imported Catechism
+            </button>
+          ) : (
+            <button className="icon-btn" onClick={() => cccFileRef.current?.click()} disabled={cccBusy}>
+              {cccBusy ? "Importing…" : "Import the Catechism"}
+            </button>
+          )}
+          {cccMsg && <p className="muted small" style={{ marginTop: "0.4rem" }}>{cccMsg}</p>}
+        </div>
       </section>
 
       {/* 8 ── Data */}
