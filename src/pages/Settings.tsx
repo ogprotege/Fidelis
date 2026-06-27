@@ -20,6 +20,7 @@ import {
 import { TRANSLATIONS, getTranslation } from "../lib/translations";
 import { FONT_SIZE_PRESETS, SCRIPTURE_FONTS } from "../lib/typography";
 import { THEME_OPTIONS } from "../lib/theme";
+import { TRENT_EDITIONS } from "../lib/catechism";
 import { formatBytes } from "../lib/format";
 import { useSettings, useUpdateSettings } from "../SettingsContext";
 
@@ -464,8 +465,10 @@ export default function Settings() {
           <div>
             <div className="setting-label">Catechism cross-references</div>
             <p className="catechesis muted small">
-              Where the Catechism cites a verse, show its paragraph links in the verse
-              actions. The links open vatican.va; no Catechism text is stored in the app.
+              Where the Catechism cites a verse, offer it from the verse actions — the
+              bundled Roman Catechism (Trent), shown inline, with the vatican.va links to
+              the modern Catechism kept inside the same sheet. No modern Catechism text is
+              bundled.
             </p>
           </div>
           <button
@@ -477,6 +480,28 @@ export default function Settings() {
             onClick={() => update({ cccLinksEnabled: !settings.cccLinksEnabled })}
           />
         </div>
+        {settings.cccLinksEnabled && TRENT_EDITIONS.length > 1 && (
+          <div className="setting-row">
+            <div>
+              <div className="setting-label">Roman Catechism edition</div>
+              <p className="catechesis muted small">
+                Donovan (1829) is the classic English; McHugh-Callan (1923) reads in
+                more modern English. Both are public domain and bundled.
+              </p>
+            </div>
+            <select
+              aria-label="Roman Catechism edition"
+              value={settings.trentEdition}
+              onChange={(e) =>
+                update({ trentEdition: e.target.value as (typeof TRENT_EDITIONS)[number]["id"] })
+              }
+            >
+              {TRENT_EDITIONS.map((ed) => (
+                <option key={ed.id} value={ed.id}>{ed.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </section>
 
       {/* 8 ── Data */}

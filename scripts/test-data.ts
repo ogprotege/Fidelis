@@ -2089,5 +2089,23 @@ console.log("");
   }
 }
 
+// §21b — the inline catechism sheet + Reader integration (two-accent + no redirect).
+{
+  // Two-accent (§8.2): the sheet ACTS in purple and carries NO gold anywhere.
+  const cccSheetSrc = readFileSync(join(ROOT, "src/components/CCCSheet.tsx"), "utf8");
+  check("CCCSheet renders no gold honor (purple acts; credit is muted)",
+    !/--gold/.test(cccSheetSrc) && !cccSheetSrc.includes("✠"));
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  check("the Trent TOC button acts in purple", /\.ccc-toc-sec\s*\{[^}]*var\(--purple\)/.test(css));
+  check("the Trent credit + sub-headings are muted provenance, not gold",
+    /\.ccc-toc-part-title\s*\{[^}]*var\(--text-muted\)/.test(css) && /\.ccc-credit\b/.test(css));
+
+  // The Reader exposes the Catechism as a sheet action, not a forced redirect.
+  const readerSrc = readFileSync(join(ROOT, "src/pages/Reader.tsx"), "utf8");
+  check("Reader opens CCCSheet (no inline ccc-row links)",
+    readerSrc.includes("<CCCSheet") && !readerSrc.includes('className="ccc-row"'));
+  check("Reader keeps the purple gutter mark + loadCCC", readerSrc.includes("ccc-mark") && readerSrc.includes("loadCCC"));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;
