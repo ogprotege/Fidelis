@@ -33,5 +33,16 @@ export const PINS = {
   catena: {
     repo: "Isidore-Guild/catena",
     commit: "aebb0f6b2b313fd3732dab9b7f28714fbe967f40"
+  },
+  // §5 text tier — the Roman Catechism (Catechism of the Council of Trent), in the
+  // McHugh & Callan 1923 English translation: PUBLIC DOMAIN in the U.S. (published
+  // 1923). Bundled (unlike the modern CCC) precisely because it is public domain.
+  // Source: a clean, MIT-licensed structured-JSON digitization (the MIT license
+  // covers the digitization; the underlying 1923 text is itself PD). Pinned by
+  // commit like every other corpus. Donovan 1829 is a planned future 2nd edition;
+  // build-trent.mjs already keys trent.json by edition so it slots in.
+  trent: {
+    repo: "mborders/romanus",
+    commit: "c5a5ccf585384c7f06bc1888fb24052e3a31616c"
   }
 };

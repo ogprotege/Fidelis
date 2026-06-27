@@ -746,8 +746,8 @@ check(
 // Source pins: both build scripts must fetch pinned commits, never a branch.
 const pinsSrc = readFileSync(join(ROOT, "scripts/pins.mjs"), "utf8");
 const declaredPins = [...pinsSrc.matchAll(/commit:\s*"([0-9a-f]{40})"/g)].map((m) => m[1]);
-check("four 40-hex upstream pins declared in scripts/pins.mjs", declaredPins.length === 4, `${declaredPins.length}`);
-const buildSrcs = ["build-data", "build-lectionary", "build-haydock", "build-catena"].map((s) =>
+check("five 40-hex upstream pins declared in scripts/pins.mjs", declaredPins.length === 5, `${declaredPins.length}`);
+const buildSrcs = ["build-data", "build-lectionary", "build-haydock", "build-catena", "build-trent"].map((s) =>
   readFileSync(join(ROOT, `scripts/${s}.mjs`), "utf8")
 );
 const pinnedFetch = buildSrcs.every((s) => !s.includes("/master/") && s.includes("PINS."));
@@ -760,11 +760,12 @@ const manifestPins = [
   manifest.sources?.scrollmapper?.commit,
   manifest.sources?.lectionary?.commit,
   manifest.sources?.haydock?.commit,
-  manifest.sources?.catena?.commit
+  manifest.sources?.catena?.commit,
+  manifest.sources?.trent?.commit
 ];
 check(
   "manifest records the declared source pins",
-  manifestPins.length === 4 && manifestPins.every((c) => typeof c === "string" && declaredPins.includes(c)),
+  manifestPins.length === 5 && manifestPins.every((c) => typeof c === "string" && declaredPins.includes(c)),
   `manifest: ${manifestPins.map((c) => String(c).slice(0, 7)).join(", ")}`
 );
 const dotfileEntries = Object.keys(manifest.files).filter((p) =>

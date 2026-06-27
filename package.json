@@ -23,6 +23,7 @@
     "lectionary": "node scripts/build-lectionary.mjs",
     "haydock": "tsx scripts/build-haydock.mjs",
     "catena": "node scripts/build-catena.mjs",
+    "trent": "node scripts/build-trent.mjs",
     "commentary": "npm run haydock && npm run catena",
     "votd-widget": "node scripts/build-votd-widget.mjs",
     "calendar-widget": "tsx scripts/build-calendar-widget.ts",
