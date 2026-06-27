@@ -388,8 +388,8 @@ export default function Settings() {
           <div>
             <div className="setting-label">Show commentary</div>
             <p className="catechesis muted small">
-              Mark verses that carry Haydock or the Catena Aurea with a small gold dot, and
-              offer them from the verse actions. Off leaves the bare page.
+              Mark verses that carry a Haydock note with a small gold dot, and offer
+              commentary from the verse actions. Off leaves the bare page.
             </p>
           </div>
           <button
@@ -421,16 +421,17 @@ export default function Settings() {
         </div>
         <div className="setting-row">
           <div>
-            <div className="setting-label">Catena Aurea</div>
+            <div className="setting-label">Church Fathers</div>
             <p className="catechesis muted small">
-              St. Thomas Aquinas's chain of the Church Fathers on the four Gospels.
+              The Catena Aurea — St. Thomas Aquinas's chain of the Church Fathers on the
+              four Gospels.
             </p>
           </div>
           <button
             type="button"
             role="switch"
             aria-checked={settings.commentaryCatena}
-            aria-label="Catena Aurea commentary"
+            aria-label="Church Fathers commentary"
             className="switch"
             disabled={!settings.commentaryEnabled}
             onClick={() => update({ commentaryCatena: !settings.commentaryCatena })}
@@ -440,8 +441,8 @@ export default function Settings() {
           <div>
             <div className="setting-label">Doctors of the Church only</div>
             <p className="catechesis muted small">
-              Open the Catena filtered to the Doctors of the Church; you can change it within
-              the sheet.
+              Open the Church Fathers filtered to the Doctors of the Church; you can change
+              it within the sheet.
             </p>
           </div>
           <button

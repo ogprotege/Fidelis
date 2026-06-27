@@ -29,10 +29,15 @@ function Paragraphs({ text }: { text: string }) {
 }
 
 /**
- * The §4.2 study surface: Haydock and Catena Aurea tabs, with per-Father chips
- * and a Doctors-only toggle on the Catena tab. Scripture stays Scripture; this is
- * study, one tap away. Haydock is already cached (the Reader loaded it for the
- * dots); the Catena Gospel file (6–10 MB) loads here, on first open, and only then.
+ * The §4.2 / §4.3 study surface: two tabs that NEVER interleave — "Haydock" (one
+ * 19th-century compiler, the gold-dot source, the whole canon) and "Church Fathers"
+ * (the patristic chain: the Catena Aurea on the Gospels, the Phase-3 corpus
+ * elsewhere), with per-Father chips and a Doctors-only toggle on the Church Fathers
+ * tab. The two render in mutually-exclusive panes (tab === "haydock" | "catena")
+ * from separate loaders and are never merged into one list (§4.3 §7, H1). Scripture
+ * stays Scripture; this is study, one tap away. Haydock is already cached (the
+ * Reader loaded it for the dots); the Catena Gospel file (6–10 MB) loads here, on
+ * first open, and only then.
  */
 export default function CommentarySheet({
   book, chapter, verse, refLabel, titleId, isGospel, hasHaydock,
@@ -41,6 +46,15 @@ export default function CommentarySheet({
   const key = `${chapter}:${verse}`;
   const catenaTab = isGospel && showCatena;
   const haydockTab = showHaydock && hasHaydock;
+
+  // The patristic tab carries the durable label "Church Fathers"; the credit line
+  // names the actual source per book. On the four Gospels that source is the Catena
+  // Aurea (Newman ed.). The non-Gospel patristic-database credit lands with the
+  // Phase-3 corpus (§4.3 §8) — until then the Church Fathers tab is Gospels-only
+  // (catenaTab requires isGospel), so only the Gospel arm renders.
+  const fathersCredit = isGospel
+    ? "The Catena Aurea · the Newman edition"
+    : "The Church Fathers";
 
   const [tab, setTab] = useState<"haydock" | "catena">(haydockTab ? "haydock" : "catena");
   const [haydock, setHaydock] = useState<CommentaryNote[] | null>(haydockTab ? null : []);
@@ -116,7 +130,7 @@ export default function CommentarySheet({
             aria-pressed={tab === "catena"}
             onClick={() => setTab("catena")}
           >
-            Catena Aurea
+            Church Fathers
           </button>
         </div>
       )}
@@ -142,12 +156,12 @@ export default function CommentarySheet({
       {/* ── Catena Aurea pane ── */}
       {tab === "catena" && catenaTab && (
         <div className="cmt-pane">
-          <div className="cmt-credit">The Catena Aurea · the Newman edition</div>
+          <div className="cmt-credit">{fathersCredit}</div>
 
           {catena === null ? (
             <p className="cmt-loading muted small sans">Gathering the Fathers…</p>
           ) : blocks.length === 0 ? (
-            <p className="muted small sans">No Catena commentary on this verse.</p>
+            <p className="muted small sans">No Church Fathers commentary on this verse.</p>
           ) : (
             <>
               <div className="cmt-filters">
