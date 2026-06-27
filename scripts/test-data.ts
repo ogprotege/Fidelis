@@ -36,7 +36,7 @@ import { parseReference } from "../src/lib/refparse";
 import { getTranslation, DEFAULT_TRANSLATION } from "../src/lib/translations";
 import { parseHaydockSfm } from "./build-haydock.mjs";
 import { parseCatenaOsis } from "./build-catena.mjs";
-import { normalizeFather, groupCatena, fathersOf, isDoctor } from "../src/lib/commentary";
+import { normalizeFather, groupCatena, fathersOf, isDoctor, yearOf, circaOf, sortChronological, FATHER_IDS } from "../src/lib/commentary";
 import { getSettings } from "../src/lib/storage";
 import {
   DEFAULT_FONT_SIZE,
@@ -1722,6 +1722,124 @@ console.log("");
   }
   check("Catena normaliser: ≥93% of all entries resolve to a Father", fatherEntries / totalEntries >= 0.93, `${((100 * fatherEntries) / totalEntries).toFixed(2)}% of ${totalEntries}`);
   check("Catena normaliser: the 'source' fallback hides no real Father (only anonymous/council sources)", leaked.length === 0, leaked.slice(0, 6).join(" | "));
+}
+
+// §16b — chronological ordering of the Catena chain (§4.3 Phase 1). Pure, over
+// src/lib/commentary.ts. public/data is untouched; this is a render-time sort.
+console.log("");
+{
+  // 1. Every declared Father has a finite year (TS already requires `year`; this
+  //    also catches a NaN or a yearOf-resolution regression). Newman is dated too.
+  const undated = FATHER_IDS.filter((id) => !Number.isFinite(yearOf(id)));
+  check("every declared Father resolves to a finite year", undated.length === 0, undated.join(", "));
+  check("the editor Newman is dated (never sorts, but complete)", yearOf("newman") === 1890);
+
+  // 2. The researched dates + circa flags the chain depends on (§3.2).
+  check("yearOf: Origen 254 (circa), Chrysostom 407, Augustine 430, Gregory the Great 604",
+    yearOf("origen") === 254 && circaOf("origen") === true &&
+    yearOf("chrysostom") === 407 && circaOf("chrysostom") === false &&
+    yearOf("augustine") === 430 && yearOf("gregory-the-great") === 604);
+  check("yearOf: maximus defaults to Turin (465, circa) — flip to 662 is one line",
+    yearOf("maximus") === 465 && circaOf("maximus") === true);
+
+  // 3. Runtime pseudo-* ids dated by COMPOSITION era, not the namesake (§3.3, G2).
+  check("pseudo-chrysostom (Opus Imperfectum) dated to its 5th-c. era, circa",
+    yearOf("pseudo-chrysostom") === 430 && circaOf("pseudo-chrysostom") === true);
+  check("pseudo-jerome (Hiberno-Latin Expositio) dated c. 675",
+    yearOf("pseudo-jerome") === 675 && circaOf("pseudo-jerome") === true);
+  check("pseudo-athan ('Pseudo-Athan.', Vigilius of Thapsus) is dated, not undated",
+    yearOf("pseudo-athan") === 450);
+  // base+1 fallback for an undocumented pseudo-<known father> (§3.4 step 3).
+  check("yearOf: a generated pseudo-<base> falls to base death year + 1, circa",
+    yearOf("pseudo-cyprian") === 259 && circaOf("pseudo-cyprian") === true);
+  // a nameless / unknown pseudo → the undated bucket (G4), NEVER 0.
+  check("yearOf: pseudo-anon and bare 'Pseudo.' (pseudo-pseudo) are undated, not 0",
+    yearOf("pseudo-anon") === null && yearOf("pseudo-pseudo") === null);
+
+  // 4. sortChronological orders earliest-Father-first (built via groupCatena so the
+  //    blocks are real). Input is deliberately out of order.
+  const chain = sortChronological(groupCatena([
+    { father: "Augustine", text: "aug" },
+    { father: "Gregory", text: "greg" },           // Gregory the Great, 604
+    { father: "Origen", text: "ori" },
+    { father: "Pseudo-Chrysostom", text: "ps-chrys" },
+    { father: "Chrysostom", text: "chrys" }
+  ]));
+  check("sortChronological: Origen < Chrysostom < Augustine < pseudo-chrysostom < Gregory",
+    chain.map((b) => b.father!.id).join(",") === "origen,chrysostom,augustine,pseudo-chrysostom,gregory-the-great",
+    chain.map((b) => b.father!.id).join(","));
+  // pseudo-chrysostom (430) sits in the 5th-c. slot, AFTER chrysostom (407) — never
+  // beside its namesake at 407.
+  const ids = chain.map((b) => b.father!.id);
+  check("pseudo-chrysostom sorts to its composition era (after Chrysostom 407, not at it)",
+    ids.indexOf("pseudo-chrysostom") > ids.indexOf("chrysostom"));
+
+  // 5. Tie-break: equal years resolve stable-ascending-alphabetical by id (G3).
+  const tie = sortChronological(groupCatena([
+    { father: "Nemesius", text: "n" },             // 390
+    { father: "Gregory Naz.", text: "gn" },        // 390
+    { father: "Chrysologus", text: "pc" },         // Peter Chrysologus, 450 — the corpus
+                                                    //  label is "Chrysologus"; "Peter
+                                                    //  Chrysologus" misses matchFather's
+                                                    //  prefix rule and becomes a source.
+    { father: "Isidore", text: "ip" }              // Isidore of Pelusium, 450
+  ]));
+  check("tie-break: gregory-nazianzen<nemesius (390); isidore-pelusium<peter-chrysologus (450)",
+    tie.map((b) => b.father!.id).join(",") === "gregory-nazianzen,nemesius,isidore-pelusium,peter-chrysologus",
+    tie.map((b) => b.father!.id).join(","));
+
+  // 6. Continuations survive the sort (sort runs on GROUPED blocks, §4).
+  const cont = sortChronological(groupCatena([
+    { father: "Chrysostom", text: "A" },
+    { father: "It goes on", text: "B" },           // folds into Chrysostom
+    { father: "Augustine", text: "C" }
+  ]));
+  check("continuations survive the sort (block count + merged text intact)",
+    cont.length === 2 && cont[0].father!.id === "chrysostom" && cont[0].text === "A\n\nB" &&
+    cont[1].father!.id === "augustine");
+
+  // 7. Lane separation (G5): Fathers (chronological) first, then gloss/source in
+  //    source order; no gloss/source block appears among the Fathers.
+  const lane = sortChronological(groupCatena([
+    { father: "Gloss", text: "g" },
+    { father: "Augustine", text: "a" },
+    { father: "A Greek expositor", text: "s" },
+    { father: "Origen", text: "o" }
+  ]));
+  const firstNonFather = lane.findIndex((b) => b.kind !== "father");
+  check("lane separation: all Fathers precede every gloss/source block",
+    lane.slice(0, firstNonFather).every((b) => b.kind === "father") &&
+    lane.slice(firstNonFather).every((b) => b.kind !== "father"));
+  check("lane separation: Fathers chronological, gloss/source keep source order",
+    lane.map((b) => b.kind === "father" ? b.father!.id : b.kind).join(",") === "origen,augustine,gloss,source");
+
+  // 8. Undated tail: a synthetic undated Father sorts AFTER every dated one (G4).
+  const tail = sortChronological(groupCatena([
+    { father: "Pseudo.", text: "x" },              // → pseudo-pseudo, undated
+    { father: "Augustine", text: "a" }
+  ]));
+  check("undated Father sorts after dated ones (never front-loaded as 'earliest')",
+    tail.map((b) => b.father!.id).join(",") === "augustine,pseudo-pseudo");
+
+  // 9. Corpus guard: every kind:'father' id in the built Catena is dated, or is an
+  //    explicitly-listed undatable id — so a new unmatched author can never silently
+  //    sort to 0 (G4). Read straight from public/data (manifest-sealed, not edited).
+  const cdir = join(ROOT, "public/data/commentary/catena");
+  const undatedInCorpus = new Set<string>();
+  for (const fn of readdirSync(cdir)) {
+    if (!fn.endsWith(".json")) continue;
+    const bk: Record<string, { father?: string }[]> = JSON.parse(readFileSync(join(cdir, fn), "utf8"));
+    for (const notes of Object.values(bk)) for (const n of notes) {
+      const nf = normalizeFather(n.father ?? "");
+      if (nf.kind === "father" && yearOf(nf.id!) === null) undatedInCorpus.add(nf.id!);
+    }
+  }
+  // The only genuinely undatable label in the Gospel Catena is the nameless
+  // "Pseudo." (→ pseudo-pseudo, 7 blocks); everything else must resolve to a year.
+  const KNOWN_UNDATED = new Set(["pseudo-pseudo"]);
+  const leaked2 = [...undatedInCorpus].filter((id) => !KNOWN_UNDATED.has(id));
+  check("every Catena Father id in the corpus is dated (only the nameless 'Pseudo.' is undated)",
+    leaked2.length === 0, leaked2.join(", "));
 }
 
 // §17 — reference parser (Search "jump to verse") and the canon/translation
