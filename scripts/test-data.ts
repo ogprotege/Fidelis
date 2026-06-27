@@ -831,43 +831,68 @@ console.log("");
   }
   check("every quote satisfies the spec §3.1 schema", schemaBad === 0, `${schemaBad} bad`);
 
-  const RED = [/sheen/i, /escriv/i, /pietrelcina|padre pio/i, /john paul/i, /benedict xvi/i];
-  const red = quotes.filter((q) => RED.some((re) => re.test(q.author)));
-  check("no red-list author in the corpus (spec §3.3)", red.length === 0, red.map((q) => q.id).join(", "));
+  // The build's §3.3 red list is ADVISORY for the closed beta (owner directive):
+  // non-PD authors are kept; re-enable the hard fail in build-quotes.mjs before any
+  // public release. What the rotation needs instead is a corpus larger than a year,
+  // so a quote can never repeat within one calendar year.
+  check(
+    "corpus larger than a calendar year (no in-year repeat possible)",
+    quotes.length >= 366,
+    `${quotes.length}`
+  );
 
   const every = ["advent", "christmastide", "lent", "eastertide"].filter(
     (s) => !quotes.some((q) => q.season === s)
   );
   check("each seasonal pool is non-empty", every.length === 0, every.join(", "));
 
-  // Tier 1 — sanctoral: Augustine speaks on August 28.
+  const litUni = (d: Date) => liturgicalDay(d, "universal");
+
+  // Tier 1 — sanctoral: Augustine speaks on his feast, August 28.
   const aug = new Date(2026, 7, 28);
-  const q1 = quoteOfTheDay(quotes, aug, liturgicalDay(aug, "universal"));
+  const q1 = quoteOfTheDay(quotes, aug, litUni, "universal");
   check(
     "Aug 28: the sanctoral tier serves Augustine",
     q1?.author.includes("Augustine") === true && q1?.feast === "08-28",
     q1?.id ?? "null"
   );
-  // Tier 2 — seasonal: a Lent feria draws from the Lent pool.
+  // Tier 2 — seasonal: an early-Lent feria draws from the Lent pool.
   const lent = new Date(2026, 2, 5); // Thursday of the 2nd week of Lent
-  const q2 = quoteOfTheDay(quotes, lent, liturgicalDay(lent, "universal"));
+  const q2 = quoteOfTheDay(quotes, lent, litUni, "universal");
   check("Lent feria draws from the Lent pool", q2?.season === "lent", q2?.id ?? "null");
-  // Tier 3 — general: an OT feria draws from the season-untagged remainder.
-  const ot = new Date(2026, 5, 16); // Tuesday of the 11th week in OT
-  const q3 = quoteOfTheDay(quotes, ot, liturgicalDay(ot, "universal"));
-  check("OT feria draws from the general cycle", q3 !== null && q3.season === null, q3?.id ?? "null");
-  // Determinism + totality: every day of 2026 resolves, twice identically.
+
+  // Tier 3 — the headline guarantee: no quote repeats within a calendar year.
+  const ids2026: string[] = [];
   let nulls = 0;
-  let nondet = 0;
   for (let d = new Date(2026, 0, 1); d.getFullYear() === 2026; d = new Date(2026, d.getMonth(), d.getDate() + 1)) {
-    const lit = liturgicalDay(d, "universal");
-    const a = quoteOfTheDay(quotes, d, lit);
-    const b = quoteOfTheDay(quotes, d, lit);
-    if (!a) nulls++;
-    if (a?.id !== b?.id) nondet++;
+    const q = quoteOfTheDay(quotes, d, litUni, "universal");
+    if (q) ids2026.push(q.id);
+    else nulls++;
   }
   check("a quote resolves for every day of 2026", nulls === 0, `${nulls} null`);
+  check(
+    "no quote repeats within calendar year 2026",
+    new Set(ids2026).size === ids2026.length,
+    `${ids2026.length - new Set(ids2026).size} repeats across ${ids2026.length} days`
+  );
+
+  // Determinism: the same (date, region) always resolves to the same quote.
+  let nondet = 0;
+  for (let d = new Date(2026, 0, 1); d.getFullYear() === 2026; d = new Date(2026, d.getMonth(), d.getDate() + 1)) {
+    if (quoteOfTheDay(quotes, d, litUni, "universal")?.id !== quoteOfTheDay(quotes, d, litUni, "universal")?.id) {
+      nondet++;
+    }
+  }
   check("quote selection is deterministic", nondet === 0, `${nondet} differ`);
+
+  // The order reshuffles year to year — not a fixed cycle.
+  let sameAcrossYears = 0;
+  for (let m = 0; m < 12; m++) {
+    const a = quoteOfTheDay(quotes, new Date(2026, m, 15), litUni, "universal")?.id;
+    const b = quoteOfTheDay(quotes, new Date(2027, m, 15), litUni, "universal")?.id;
+    if (a === b) sameAcrossYears++;
+  }
+  check("the rotation reshuffles year to year", sameAcrossYears < 12, `${sameAcrossYears}/12 mid-month dates identical`);
 }
 
 // ── 9. Typography (spec §1.4): bundled Scripture face + size presets ─────────

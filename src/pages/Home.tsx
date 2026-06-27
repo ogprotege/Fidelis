@@ -19,7 +19,7 @@ import {
   sundayCycle,
   weekdayCycle
 } from "../lib/lectionary";
-import { liturgicalDay, COLOR_HEX } from "../lib/liturgical";
+import { liturgicalDay, COLOR_HEX, currentRegion } from "../lib/liturgical";
 import { DailyQuote, loadQuotes, quoteOfTheDay } from "../lib/quotes";
 import { mysteriesForDate, Mystery } from "../lib/rosary";
 import { getLastRead, activePlan } from "../lib/storage";
@@ -50,7 +50,7 @@ export default function Home() {
   useEffect(() => {
     readingsForDate(new Date()).then(setMass).catch(() => setMass(null));
     loadQuotes()
-      .then((qs) => setQuote(quoteOfTheDay(qs, new Date(), liturgicalDay(new Date()))))
+      .then((qs) => setQuote(quoteOfTheDay(qs, new Date(), (d) => liturgicalDay(d), currentRegion())))
       .catch(() => setQuote(null));
   }, []);
   const dateLabel = today.toLocaleDateString(undefined, {

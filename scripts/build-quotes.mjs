@@ -4,9 +4,10 @@
  * the data manifest (design spec §3; standing rule: nothing under public/data
  * is hand-edited).
  *
- * Validates the corpus schema and enforces the spec's red list (§3.3):
- * authors whose works/translations are not public domain are refused at
- * build time, regardless of how shareable the line is.
+ * Validates the corpus schema and applies the spec's red list (§3.3) as an
+ * ADVISORY flag: authors whose works/translations are not public domain are
+ * counted and reported, but kept, per the owner's directive for the closed
+ * beta. Re-enable the hard fail before any public App Store release.
  */
 import { readFile, writeFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
@@ -35,6 +36,7 @@ if (!Array.isArray(quotes) || quotes.length === 0) throw new Error("corpus has n
 
 const ids = new Set();
 let verified = 0;
+const flagged = [];
 for (const q of quotes) {
   for (const f of REQUIRED) {
     if (typeof q[f] !== "string" || !q[f].trim()) {
@@ -51,10 +53,18 @@ for (const q of quotes) {
   }
   for (const re of RED_LIST) {
     if (re.test(q.author.replace(/^st\.?\s+|^pope\s+st\.?\s+/i, "").trim()) || re.test(q.author)) {
-      throw new Error(`quote ${q.id}: author "${q.author}" is on the red list (spec §3.3)`);
+      flagged.push(q.id);
+      break;
     }
   }
   if (q.verified === true) verified++;
+}
+
+if (flagged.length) {
+  console.log(
+    `note: ${flagged.length} quotes match the §3.3 red list (non-PD authors) — kept per owner ` +
+    `directive for the closed beta; re-enable the hard fail before any public release.`
+  );
 }
 
 const out = join(ROOT, "public", "data", "quotes.json");

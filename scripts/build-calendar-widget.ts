@@ -81,7 +81,7 @@ for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
   const date = new Date(d);
   const lit = liturgicalDay(date, REGION);
   const readings = readingsFor(date);
-  const q = quoteOfTheDay(quotes, date, lit);
+  const q = quoteOfTheDay(quotes, date, (dd) => liturgicalDay(dd, REGION), REGION);
   if (readings.length) withReadings++;
   if (q) withQuote++;
   out[isoLocal(date)] = {
