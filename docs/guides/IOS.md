@@ -130,6 +130,10 @@ through the webview, and those read from local bundle paths as well.
 
 ## 5. The Mass & Quote widgets, App Intents, Dynamic Type
 
+*Shipped in v1.13.3:* the App Intent (`ios/App/App/TodaysGospelIntent.swift`) and
+the Dynamic Type bridge (`ios/App/App/AppDelegate.swift` ↔ `src/lib/dynamicType.ts`)
+are now in the tree; the notes below remain as the design rationale.
+
 The Android counterparts of these ship in v1.8.4 "the doorposts" (the data
 pipeline + `CalendarWidget`/`QuoteWidget` are fully committed). The iOS side now
 ships in the same `FidelisWidgetExtension` target, added by
@@ -214,6 +218,56 @@ The `FidelisWidgetExtension` target now lives in the committed project (added by
 `scripts/add-ios-widget-target.rb`, §2) and is embedded in the `App` target, so
 the App-target CI build compiles and embeds the widgets as a dependency — the App
 build is the gate for the widgets too.
+
+## 7. Shipping to TestFlight
+
+Once you have an Apple Developer membership, the entire archive → sign → upload
+runs from **one command** — no Xcode GUI, no Organizer:
+
+```bash
+bash scripts/ios-testflight.sh
+```
+
+**One-time setup.** Generate an **App Store Connect API key** (App Store Connect ▸
+Users and Access ▸ Integrations ▸ App Store Connect API ▸ generate a key with
+**Admin** access; download the `.p8` — it is downloadable only once). Then copy
+`scripts/ios-release.local.env.example` to `scripts/ios-release.local.env` (which
+is gitignored) and fill in your `TEAM_ID`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, and the
+`.p8` path. The app record must also exist once: App Store Connect ▸ Apps ▸ ➕ ▸
+New App, bundle id `app.fidelis.bible`.
+
+**What the script does, and why it's shaped this way.** A brand-new developer
+account has **no registered devices**, and Xcode's *automatic* signing demands a
+*development* provisioning profile at archive time — which requires a device.
+(Forcing `Apple Distribution` with automatic style instead errors with
+"conflicting provisioning settings.") The pipeline sidesteps this entirely:
+
+1. **Build + sync** the web bundle into the shell, then revert the `Package.swift`
+   `.v15` → `.v17` bump that `cap sync` re-applies each time (see §4 of
+   [Releasing](RELEASING.md)).
+2. **Archive UNSIGNED** (`CODE_SIGNING_ALLOWED=NO`) — so the no-device wall never
+   comes up. A monotonic `CURRENT_PROJECT_VERSION` (the git commit count) is
+   injected so each upload's `CFBundleVersion` is unique; both Info.plists read
+   `$(CURRENT_PROJECT_VERSION)`, so the app and widget stay in lockstep.
+3. **Sign at EXPORT** with the API key (`-allowProvisioningUpdates`): this is where
+   the **distribution** certificate and an **App Store** provisioning profile are
+   created — and App Store profiles need **zero** devices.
+4. **Upload** the signed `.ipa` via `xcrun altool --upload-app`.
+
+**Check processing** without refreshing the browser:
+
+```bash
+node scripts/asc-build-status.mjs   # PROCESSING -> VALID
+```
+
+When the build reads `VALID`, add it in App Store Connect ▸ Fidelis ▸ **TestFlight**
+▸ **Internal Testing** (add yourself as a tester, assign the build — internal
+testing needs **no** Apple review), then install via the TestFlight app on your
+phone.
+
+> **Export compliance** is already answered: `ITSAppUsesNonExemptEncryption` is
+> `false` in `Info.plist` (the app does no first-party cryptography — only
+> OS-provided HTTPS), so the upload skips the encryption questionnaire.
 
 ---
 [← Docs index](../INDEX.md) · Related: [Android guide](ANDROID.md) · [Releasing](RELEASING.md) · [CLAUDE.md](../../CLAUDE.md)

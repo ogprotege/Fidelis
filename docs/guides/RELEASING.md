@@ -73,5 +73,20 @@ git push origin vX.Y.Z
 
 Open a pull request if on a feature branch; merge to `main`; the tag on `main` marks the release.
 
+## 7. Ship the iOS build to TestFlight
+
+With the version committed, build and upload the signed iOS app in one command:
+
+```sh
+bash scripts/ios-testflight.sh
+```
+
+It archives unsigned, signs for **distribution** at export (an App Store profile
+needs no registered devices), and uploads via the App Store Connect API key — then
+`node scripts/asc-build-status.mjs` reports when the build turns `VALID`. See
+[iOS guide §7](IOS.md#7-shipping-to-testflight) for the one-time API-key setup and
+the full rationale. Add the build to a TestFlight group in App Store Connect
+(internal testing needs no Apple review).
+
 ---
 [← Docs index](../INDEX.md) · Related: [CHANGELOG](../../CHANGELOG.md) · [iOS guide](IOS.md) · [Android guide](ANDROID.md)

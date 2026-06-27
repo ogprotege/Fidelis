@@ -6,3 +6,6 @@ dist/
 # Imported licensed translations (e.g. a NABRE you own) — on-device only, never committed.
 *.local.json
 nabre.local.json
+
+# Local iOS release credentials (App Store Connect API key details) — never committed.
+scripts/ios-release.local.env
