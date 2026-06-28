@@ -16,6 +16,7 @@ import {
   epiphanyDate,
   liturgicalDay
 } from "./liturgical";
+import { Book } from "./canon";
 
 export interface LectionaryRow {
   /** 1 first reading · 2 responsorial psalm · 3 second reading · 6 gospel
@@ -637,4 +638,15 @@ export function formatCitation(row: LectionaryRow, bookName: string): string {
         .join(",")}`
   );
   return `${bookName} ${parts.join("; ")}`;
+}
+
+/** The citation for a Mass reading, always in the MODERN book name
+ *  ("2 Kings 4:8-11", never the Douay "4 Kings" or the Latin "Liber IV Regum").
+ *  The Roman lectionary is promulgated and universally referenced in modern
+ *  form, so a reading's reference label must not inherit the reader's chosen
+ *  Bible naming — even when the text itself is rendered from the bundled
+ *  Douay-Rheims. (The Bible Reader and book picker stay translation-aware; only
+ *  the lectionary citation is pinned to the modern name.) */
+export function formatLectionaryCitation(row: LectionaryRow, book: Book): string {
+  return formatCitation(row, book.name);
 }

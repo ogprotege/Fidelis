@@ -557,8 +557,9 @@ export default function Settings() {
         <p className="catechesis muted small">
           The Catechism of the Catholic Church is under copyright and is never bundled. If you
           own a digital copy, import it here — it is stored only on this device, and a cited
-          verse will then show its paragraph text inline instead of a link out. Accepts the{" "}
-          <code>fidelis-ccc-1</code> JSON produced by the local converter.
+          verse will then show its paragraph text inline instead of a link out. Accepts a{" "}
+          <code>fidelis-ccc-1</code> JSON (from the local converter) or a St. Charles Borromeo
+          Catechism export (the <code>ccc.json</code> from scborromeo.org) directly.
         </p>
         <div className="import-zone">
           {cccImported ? (

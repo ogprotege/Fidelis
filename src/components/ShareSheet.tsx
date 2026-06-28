@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { renderShareCard, ShareTheme } from "../lib/shareCard";
+import { canSaveToPhotos, isNativePlatform, saveImageToPhotos } from "../lib/saveImage";
 
 interface Props {
   /** id of the <h2> below, for the Sheet's aria-labelledby. */
@@ -55,6 +56,25 @@ export default function ShareSheet({ titleId, text, citation, source, filename }
     });
   }, [text, citation, source, theme]);
 
+  /** Hand a PNG to the native/Web Share sheet. Returns true if the sheet was
+   *  available (and shown); false when the platform can't share files. */
+  async function shareBlob(blob: Blob): Promise<boolean> {
+    const file = new File([blob], `${filename}.png`, { type: "image/png" });
+    const nav = navigator as Navigator & {
+      canShare?: (data: { files?: File[] }) => boolean;
+      share?: (data: { files?: File[]; title?: string; text?: string }) => Promise<void>;
+    };
+    if (nav.canShare?.({ files: [file] }) && nav.share) {
+      try {
+        await nav.share({ files: [file], title: "Fidelis", text: citation });
+      } catch {
+        // the user dismissed the share sheet — nothing to report
+      }
+      return true;
+    }
+    return false;
+  }
+
   async function onShare(): Promise<void> {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -63,18 +83,7 @@ export default function ShareSheet({ titleId, text, citation, source, filename }
     try {
       const blob = await toBlob(canvas);
       if (!blob) return;
-      const file = new File([blob], `${filename}.png`, { type: "image/png" });
-      const nav = navigator as Navigator & {
-        canShare?: (data: { files?: File[] }) => boolean;
-        share?: (data: { files?: File[]; title?: string; text?: string }) => Promise<void>;
-      };
-      if (nav.canShare?.({ files: [file] }) && nav.share) {
-        try {
-          await nav.share({ files: [file], title: "Fidelis", text: citation });
-        } catch {
-          // the user dismissed the share sheet — nothing to report
-        }
-      } else {
+      if (!(await shareBlob(blob))) {
         download(blob, filename);
         setStatus("Saved the image — sharing isn't available here.");
       }
@@ -87,9 +96,23 @@ export default function ShareSheet({ titleId, text, citation, source, filename }
     const canvas = canvasRef.current;
     if (!canvas) return;
     setBusy(true);
+    setStatus("");
     try {
       const blob = await toBlob(canvas);
-      if (blob) {
+      if (!blob) return;
+      // On iOS the web download is a silent no-op; write to Photos natively instead.
+      if (canSaveToPhotos()) {
+        try {
+          await saveImageToPhotos(blob);
+          setStatus("Saved to Photos.");
+        } catch {
+          setStatus("Couldn't save to Photos — allow photo access for Fidelis in Settings.");
+        }
+      } else if (isNativePlatform()) {
+        // Android: a web download is a no-op in the WebView, so don't claim "Saved."
+        // Offer the share sheet instead (its "Save image" lands in the gallery).
+        if (!(await shareBlob(blob))) setStatus("Couldn't save the image on this device.");
+      } else {
         download(blob, filename);
         setStatus("Saved.");
       }

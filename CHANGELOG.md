@@ -6,6 +6,43 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.14.1] — 2026-06-28 — set right
+
+Three fixes found in the v1.14.0 TestFlight build: a Mass reading shown under an unexpected book
+name, a Catechism import that rejected a common file, and a "Save image" that claimed success but
+saved nothing on iOS.
+
+### Fixed
+
+- **Mass readings are cited in modern book names.** The Today card and the Readings page labelled
+  each reading using the *selected Bible's* naming, so a Douay-Rheims reader saw "4 Kings
+  4:8-11,14-16" for the Thirteenth Sunday's first reading. Citations now pin to the modern
+  lectionary name ("2 Kings"), independent of the translation the reading text is rendered in
+  (`formatLectionaryCitation` in `src/lib/lectionary.ts`). This covers all three Mass-citation
+  surfaces — the Today card, the Readings page, and the pre-resolved home-screen **widget** data
+  (`calendar.json`, regenerated for iOS and Android, which had still carried Douay names). The
+  Bible Reader and book picker stay translation-aware.
+- **The St. Charles Borromeo Catechism export now imports.** `parseCccText` recognizes the
+  scborromeo.org `page_nodes`/`ref-ccc` shape and converts it on-device to a `fidelis-ccc-1`
+  paragraph map (all 2865 ¶, full coverage of the 1258 cited ¶). Footnote apparatus is stripped,
+  block-quote/continuation paragraphs are joined with a space, and unambiguous section headings
+  (all-caps, roman-numeral, or TOC-listed titles) are dropped — conservatively, so that a split
+  sentence, a maxim, or a scripture quotation is never mistaken for a heading and deleted. Owners
+  import that `ccc.json` directly on iOS — no desktop converter needed. The modern Catechism text
+  remains **never bundled**.
+- **The share card's "Save image" saves to Photos on iOS.** The web `<a download>` is a no-op
+  inside the WKWebView; a minimal in-app Capacitor plugin (`ios/App/App/SaveImagePlugin.swift`)
+  writes the PNG to the photo library via `UIImageWriteToSavedPhotosAlbum`, using only the
+  add-only `NSPhotoLibraryAddUsageDescription` permission. On Android, where the same download
+  also fails, Save now routes through the system share sheet rather than falsely reporting
+  success. Desktop and web keep the file download.
+- **Xcode Cloud archive builds.** The iOS project links the Capacitor plugins as local Swift
+  packages under `node_modules/`, and the web bundle isn't committed — but Xcode Cloud never ran
+  `npm`, so package resolution failed (`node_modules/@capacitor/app doesn't exist`). Added
+  `ci_scripts/ci_post_clone.sh` (`npm ci` → `npm run build` → `npx cap sync ios`) and committed a
+  shared **App** scheme (the workflow had been archiving the widget extension). Point the Xcode
+  Cloud workflow's scheme at **App**.
+
 ## [1.14.0] — 2026-06-27 — the open catechism
 
 The Catechism stops being a link out and becomes something you read in place, the Golden

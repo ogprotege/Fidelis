@@ -5,12 +5,14 @@
 #
 #   ruby scripts/configure-ios-app-target.rb
 #
-# It does four things, all of which a hand-edit of project.pbxproj would do but
+# It does five things, all of which a hand-edit of project.pbxproj would do but
 # fragilely:
 #   1. Bundles PrivacyInfo.xcprivacy (the app's first-party privacy manifest) into
 #      the App target's resources.
 #   2. Compiles TodaysGospelIntent.swift (the Siri / Shortcuts App Intent) into the
 #      App target.
+#   2b. Compiles SaveImagePlugin.swift (the in-app Capacitor plugin that saves the
+#      share card to Photos) into the App target.
 #   3. Bundles calendar.json (the pre-resolved widget data) into the App target too,
 #      so the App Intent can read today's Gospel without porting the engine. Reuses
 #      the existing file reference the widget target already owns.
@@ -63,6 +65,12 @@ intent_ref = ensure_ref(app_group, "TodaysGospelIntent.swift")
 before = app_target.source_build_phase.files.size
 app_target.source_build_phase.add_file_reference(intent_ref, true)
 changed << "TodaysGospelIntent.swift → sources" if app_target.source_build_phase.files.size > before
+
+# 2b. The in-app SaveImage Capacitor plugin (share card → Photos) → App sources.
+save_ref = ensure_ref(app_group, "SaveImagePlugin.swift")
+before = app_target.source_build_phase.files.size
+app_target.source_build_phase.add_file_reference(save_ref, true)
+changed << "SaveImagePlugin.swift → sources" if app_target.source_build_phase.files.size > before
 
 # 3. calendar.json (the widget's pre-resolved data) → App resources, so the Intent
 #    can read today's Gospel. Reuse the reference the widget target already owns.
