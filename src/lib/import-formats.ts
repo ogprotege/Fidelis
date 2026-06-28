@@ -213,3 +213,84 @@ function parseOsis(text: string): ImportedBook[] {
   }
   return [...byBook.entries()].map(([name, chapters]) => ({ name, chapters }));
 }
+
+/* ── CCC text intake (the modern Catechism, a copy the owner imports) ──────── */
+
+/** The normalized shape of a parsed `fidelis-ccc-1` import. Contains the owner's
+ *  own licensed text only — never bundled, stored only on their device. */
+export interface CccTextDoc {
+  edition: string;
+  language: string;
+  paragraphs: Record<string, string>;
+}
+
+/** Intake hygiene only (NOT content derivation): strip the footnote apparatus a
+ *  hand- or converter-prepared file may carry — Unicode superscript digit runs
+ *  (⁰¹²³⁴-⁹) and bracketed footnote refs like [45] — then collapse whitespace.
+ *  The prose itself is untouched. */
+function cleanCccText(s: string): string {
+  return s
+    .replace(/[⁰¹²³⁴-⁹]+/g, "")
+    .replace(/\s*\[\d+\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Parse a `fidelis-ccc-1` import (the modern Catechism, the owner's own copy).
+ * Tolerant of three shapes — the header `{ format, edition, language, paragraphs }`,
+ * a `{ ccc: { … } }` wrapper, and a bare flat map `{ "1": "…" }` — all normalized
+ * to `{ edition, language, paragraphs }`. Keys must be integers in [1, 2865]
+ * (url.json's key space), so a mis-dropped Bible file throws a friendly error.
+ * Contains NO Catechism text: the output derives only from the supplied file.
+ */
+export function parseCccText(_filename: string, text: string): CccTextDoc {
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error("Not a JSON file — expected a fidelis-ccc-1 Catechism file.");
+  }
+  if (!json || typeof json !== "object" || Array.isArray(json)) {
+    throw new Error("Unrecognized Catechism file — expected a fidelis-ccc-1 paragraph map.");
+  }
+  const obj = json as Record<string, unknown>;
+
+  let raw: Record<string, unknown> | undefined;
+  let edition = "Catechism of the Catholic Church";
+  let language = "en";
+
+  if (obj.format === "fidelis-ccc-1" && obj.paragraphs && typeof obj.paragraphs === "object") {
+    raw = obj.paragraphs as Record<string, unknown>;
+    if (typeof obj.edition === "string") edition = obj.edition;
+    if (typeof obj.language === "string") language = obj.language;
+  } else if (obj.ccc && typeof obj.ccc === "object" && !Array.isArray(obj.ccc)) {
+    const c = obj.ccc as Record<string, unknown>;
+    raw = (c.paragraphs && typeof c.paragraphs === "object" ? c.paragraphs : c) as Record<string, unknown>;
+    if (typeof c.edition === "string") edition = c.edition;
+    if (typeof c.language === "string") language = c.language;
+  } else {
+    raw = obj; // bare flat map
+  }
+
+  const paragraphs: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    if (k === "format" || k === "edition" || k === "language" || k === "paragraphs") continue;
+    if (!/^\d+$/.test(k)) {
+      throw new Error(`Not a Catechism file: "${k}" is not a paragraph number.`);
+    }
+    const n = Number(k);
+    if (n < 1 || n > 2865) {
+      throw new Error(`Paragraph ${n} is outside the Catechism range 1–2865.`);
+    }
+    if (typeof v !== "string") {
+      throw new Error(`Paragraph ${k} is not text.`);
+    }
+    const cleaned = cleanCccText(v);
+    if (cleaned) paragraphs[String(n)] = cleaned;
+  }
+  if (Object.keys(paragraphs).length === 0) {
+    throw new Error("No Catechism paragraphs found — is this a fidelis-ccc-1 file?");
+  }
+  return { edition, language, paragraphs };
+}

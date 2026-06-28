@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { BOOKS, bookDisplayName, bookIndex, getBook } from "../lib/canon";
 import { BookData, CCCData, CommentaryBook, loadBook, loadCCC, loadCommentary } from "../lib/data";
 import { GOSPELS } from "../lib/commentary";
-import { cccParagraphs, capParagraphs, isCited } from "../lib/ccc";
+import { cccParagraphs, isCited } from "../lib/ccc";
 import {
   HighlightColor,
   VerseRef,
@@ -22,6 +22,7 @@ import Icon from "../components/Icon";
 import IndulgenceNotice from "../components/IndulgenceNotice";
 import Sheet from "../components/Sheet";
 import CommentarySheet from "../components/CommentarySheet";
+import CCCSheet from "../components/CCCSheet";
 import ShareSheet from "../components/ShareSheet";
 import { clampFontSize } from "../lib/typography";
 import { useSettings, useUpdateSettings } from "../SettingsContext";
@@ -59,10 +60,11 @@ export default function Reader() {
   const [haydockBook, setHaydockBook] = useState<CommentaryBook | null>(null);
   const [commentaryFor, setCommentaryFor] = useState<number | null>(null);
   const [shareFor, setShareFor] = useState<number | null>(null);
+  // §5 catechism: the verse whose inline Catechism sheet is open.
+  const [cccFor, setCccFor] = useState<number | null>(null);
   const [chapterPickerOpen, setChapterPickerOpen] = useState(false);
   // §5 CCC links: the small index+url maps, loaded once when enabled.
   const [ccc, setCcc] = useState<CCCData | null>(null);
-  const [cccExpanded, setCccExpanded] = useState(false);
   const wantHaydockDots = settings.commentaryEnabled && settings.commentaryHaydock;
 
   const bookmarks = useMemo(
@@ -152,6 +154,7 @@ export default function Reader() {
     setNoteOpen(false);
     setCommentaryFor(null);
     setShareFor(null);
+    setCccFor(null);
     setChapterPickerOpen(false);
     // Scroll position is owned by <ScrollManager> now (top on a fresh chapter,
     // your place restored on Back); the ?v= effect below still wins when present.
@@ -245,7 +248,7 @@ export default function Reader() {
   const onSelectVerse = (v: number) => {
     setSelected(selected === v ? null : v);
     setNoteOpen(false);
-    setCccExpanded(false);
+    setCccFor(null);
   };
 
   const copySelected = async () => {
@@ -539,34 +542,14 @@ export default function Reader() {
               <Icon name="commentary" /> Commentary
             </button>
           )}
+          {cccParas.length > 0 && (
+            <button className="icon-btn" onClick={() => setCccFor(selRef.verse)}>
+              <Icon name="book" /> Catechism
+            </button>
+          )}
           <button className="icon-btn" onClick={() => setSelected(null)} title="Close" aria-label="Close">
             <Icon name="close" />
           </button>
-          {cccParas.length > 0 && (
-            <div className="ccc-row">
-              <span className="ccc-label">Catechism</span>
-              {(cccExpanded ? cccParas : capParagraphs(cccParas).shown).map((p) =>
-                ccc?.url[String(p)] ? (
-                  <a
-                    key={p}
-                    className="ccc-ref"
-                    href={ccc.url[String(p)]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    ¶{p}
-                  </a>
-                ) : (
-                  <span key={p} className="ccc-ref muted">¶{p}</span>
-                )
-              )}
-              {!cccExpanded && capParagraphs(cccParas).more > 0 && (
-                <button type="button" className="ccc-more" onClick={() => setCccExpanded(true)}>
-                  +{capParagraphs(cccParas).more} more
-                </button>
-              )}
-            </div>
-          )}
           {noteOpen && (
             <div className="note-editor">
               <textarea
@@ -602,6 +585,21 @@ export default function Reader() {
             showHaydock={settings.commentaryHaydock}
             showCatena={settings.commentaryCatena}
             doctorsOnlyDefault={settings.commentaryDoctorsOnly}
+          />
+        </Sheet>
+      )}
+
+      {cccFor != null && ccc && (
+        <Sheet variant="panel" titleId="ccc-title" onClose={() => setCccFor(null)}>
+          <CCCSheet
+            book={bookSlug}
+            chapter={chapter}
+            verse={cccFor}
+            refLabel={`${displayName} ${chapter}:${cccFor}`}
+            titleId="ccc-title"
+            paras={cccParagraphs(ccc.index, bookSlug, chapter, cccFor)}
+            urls={ccc.url}
+            edition={settings.trentEdition}
           />
         </Sheet>
       )}

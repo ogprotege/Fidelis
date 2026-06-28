@@ -16,10 +16,14 @@
   "catena": {
    "repo": "Isidore-Guild/catena",
    "commit": "aebb0f6b2b313fd3732dab9b7f28714fbe967f40"
+  },
+  "trent": {
+   "repo": "mborders/romanus",
+   "commit": "c5a5ccf585384c7f06bc1888fb24052e3a31616c"
   }
  },
- "fileCount": 318,
- "rootHash": "235f1097ee5d09112a31952de8e7e65837fc95e2744fd5fea26a0cab7e557e22",
+ "fileCount": 319,
+ "rootHash": "60ef383c80511b30f0b0bdbceb228d4c8e08befb4af39f2ba3bcb8770bbd0087",
  "bundles": {
   "ccc": {
    "files": 2,
@@ -36,6 +40,10 @@
   "drc": {
    "files": 79,
    "bytes": 4729437
+  },
+  "trent": {
+   "files": 1,
+   "bytes": 1051836
   },
   "vulgate": {
    "files": 79,
@@ -281,7 +289,8 @@
   "drc/zechariah.json": "3fb2357158bd648b90616cff44008be97c01679bd61e178f90223e7aac7eaa9d",
   "drc/zephaniah.json": "5a3a6c934af946afcd2dd311a77261f5a3f2d1347f4fb98271cd8061658d1cdf",
   "lectionary.json": "6f7cd44d64ab72780aab09b132e24eefa98732f8df1e3d93b3c1e68e82b65973",
-  "quotes.json": "8545ceacf92491ab0acdc1ce07083689047e10d594a939b21df44bd565707e73",
+  "quotes.json": "f63b94c0dac0c23a24421226851a8d42f9f32a77f5cbe4054c24ff5c8764c880",
+  "trent/trent.json": "b631fe807513098110d0f0ff3331a059d624a2f18d29b75a278f650e44ea846c",
   "vulgate/1-chronicles.json": "f3c7176cfc7106cb67a356c1a585a25dd6df9abb666a8a437e47ccc9f22b7365",
   "vulgate/1-corinthians.json": "2175d17bb8e55449b280fe0667a665bc73a90d3ee38d22f8988264b39cf3ec2e",
   "vulgate/1-john.json": "47ef9489308fc9e5784fd9c2a08f509812f9fe5b062dace16ced51f73ec4a1b3",

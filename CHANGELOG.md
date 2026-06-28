@@ -6,6 +6,59 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.14.0] — 2026-06-27 — the open catechism
+
+The Catechism stops being a link out and becomes something you read in place, the Golden
+Chain finally reads in the order the Fathers spoke, and the daily quote draws from a corpus
+large enough never to repeat inside a year. One release, several long-promised pieces of the
+§3/§4.3/§5 plan.
+
+### Added
+
+- **The inline Catechism (§5 text tier, CCC P1).** A cited verse's Catechism affordance now
+  opens an inline sheet instead of forcing a redirect: the bundled **public-domain Roman
+  Catechism (Trent), McHugh-Callan 1923**, browsable by the Creed, the Sacraments, the
+  Commandments, and the Lord's Prayer, with the precise vatican.va ¶ links kept *inside* the
+  sheet. Built from a pinned GitHub source (`mborders/romanus`, MIT digitization of the PD
+  text) into a sealed `public/data/trent/trent.json`. The sheet wears **no gold** — purple
+  acts, the source credit is muted provenance.
+- **Import your own modern Catechism (§5 text tier, CCC P2).** If you own a digital copy of
+  the modern *Catechism of the Catholic Church*, import it (Settings → Magisterium) as a
+  `fidelis-ccc-1` JSON; it is stored **only on your device** (IndexedDB) and supersedes Trent
+  for a cited verse, showing the ¶ text inline. A local-only Mac converter
+  (`scripts/build-ccc-text.mjs`) turns an owned EPUB/PDF into that file. **The modern CCC text
+  is never bundled or committed** — only your imported copy renders.
+- **A death/floruit year on every Catena Father** plus a `PSEUDO_YEARS` map dating the
+  pseudonymous voices by their composition era, behind a pure, tested `sortChronological`.
+- **A 538-quote corpus** with a deterministic, seeded rotation that **never repeats a quote
+  within a calendar year** (sanctoral feast → liturgical season → seeded random fill), matched
+  bit-for-bit by the home-screen widgets.
+
+### Changed
+
+- **The Catena Aurea now reads earliest-Father-first** (§4.3 Phase 1) — Origen and Chrysostom
+  before the medieval voices — with a gold `· c. 407` date inside the attribution label and a
+  quiet "Glossa & other sources" divider after the Fathers. A pure render-time sort; no text,
+  data file, or manifest changed.
+- **The patristic commentary tab is now "Church Fathers"** (§4.3 Phase 2), not "Catena Aurea";
+  the specific source moves to a per-book credit line. Haydock and the Church Fathers stay two
+  tabs that never interleave, and the gold verse dot is stated and shown as **Haydock-only**.
+- **The home-screen widgets follow the system appearance** (light/dark) on both iOS
+  (`@Environment(\.colorScheme)`) and Android (`values-night/`), matching the app.
+
+### Notes
+
+- Bundled-text, liturgical-engine, and golden-snapshot behavior is unchanged. The §5 CCC
+  citation index (`ccc/index.json`, `ccc/url.json`) is byte-for-byte as shipped in v1.9.0. The
+  upstream source pins grow from four to five (the new Trent pin); the manifest is resealed to
+  record it.
+- **Closed-beta note (re-gate before any public release):** the quote corpus deliberately
+  includes a small number of quotations from authors whose works are still under copyright
+  (recent popes and other modern figures), so the §3.3 public-domain red list is currently an
+  **advisory** in `scripts/build-quotes.mjs`, not a hard build gate. This is intentional for the
+  closed TestFlight beta; the red list must be restored to a hard fail (or those quotes removed)
+  before any public App Store release.
+
 ## [1.13.3] — 2026-06-25 — made ready
 
 The release that makes Fidelis ready to hand to a tester: the iOS app archives and uploads

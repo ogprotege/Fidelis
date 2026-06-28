@@ -20,7 +20,10 @@ v1.12.1; USFM/OSIS import + a NAB-PDF converter in v1.12.2; a documentation reco
 in v1.12.3; the USCCB calendar + NABRE readings made the defaults in v1.13.0; and the iOS
 Mass/Quote widget sources + a macOS CI in v1.13.1; and the iOS-shell fixes (a reference-counted
 scroll-lock, the startup font preloader, the scripted Widget Extension target), the Chi-Rho native
-app icon, and the four-face Scripture lineup in v1.13.2 — all recorded below), and `CHANGELOG.md`
+app icon, and the four-face Scripture lineup in v1.13.2; and the §5 inline-Catechism text tier (the
+bundled public-domain Trent, McHugh-Callan 1923, plus import-your-own modern CCC on-device), the §4.3
+Catena chronological reorder with the "Church Fathers" lane, the §3 no-repeat-per-year quote rotation,
+and dark-mode home-screen widgets in v1.14.0 — all recorded below), and `CHANGELOG.md`
 (release history; bump `package.json` version and add a CHANGELOG entry together).
 
 ## Commands
@@ -137,6 +140,7 @@ build` → `npm run check-docs` on every push and PR (so a dead doc link fails t
 One line per release. The unabridged narrative is
 [docs/history/RELEASES.md](docs/history/RELEASES.md); the changelog is [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.14.0 — the open catechism** — the §5 text tier (inline Catechism: bundled PD Roman Catechism/Trent McHugh-Callan 1923 from a pinned GitHub source, browsable in a no-gold `CCCSheet` with vatican.va links inside; plus import-your-own modern CCC on-device that supersedes Trent, with a local converter) + §4.3 (the Catena reordered earliest-Father-first and the patristic tab renamed "Church Fathers") + §3 (538-quote corpus, no-repeat-per-year rotation) + dark-mode home-screen widgets. Source pins 4→5. → [detail](docs/history/RELEASES.md#the-open-catechism-v1140)
 - **v1.13.3 — made ready** — the §9 close: a Siri/Shortcuts App Intent ("today's Gospel") + Dynamic Type; TestFlight-readiness iOS fixes (encryption flag, privacy manifest, signing, scripted App-target config); the documentation revamp; three design finishes (icon glyphs retired, verse-actions grouped, skeleton loaders). → [detail](docs/history/RELEASES.md#made-ready--testflight-prep-the-gospel-by-voice-dynamic-type-v1133)
 - **v1.13.2 — the unbound page** — iOS-shell fixes (reference-counted scroll-lock, startup font preloader, scripted Widget Extension target), the Chi-Rho native app icon, the four-face Scripture lineup, sw cache v4→v5. → [detail](docs/history/RELEASES.md#the-unbound-page--ios-shell-fixes--v1132)
 - **v1.13.1 — the second lampstand** — iOS Mass/Quote WidgetKit widgets + macOS CI; Capacitor 8.4.1. → [detail](docs/history/RELEASES.md#the-second-lampstand--ios-widgets--macos-ci--v1131)

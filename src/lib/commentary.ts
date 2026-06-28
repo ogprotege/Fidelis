@@ -28,6 +28,11 @@ export interface Father {
   id: string;
   name: string;
   isDoctor: boolean;
+  /** Death year (or estimate; see `circa`) for the chronological chain (§4.3). */
+  year: number;
+  /** True when `year` is an estimate (anonymous floruit, "martyred c.", a soft
+   *  range, or a pseudonymous composition era): the UI renders "c. 407". */
+  circa?: boolean;
 }
 
 /** A normalised attribution label. Flat-optional (not a discriminated union) so
@@ -59,62 +64,71 @@ interface FatherDef {
   id: string;
   name: string;
   aliases: string[];
+  /** Sort key for the chronological chain (§4.3 Phase 1): death year by default;
+   *  floruit midpoint or composition era where `circa`. Relative order — not the
+   *  exact integer — is what matters. From the verified research table (§3.2). */
+  year: number;
+  circa?: boolean;
 }
 
 const FATHERS: FatherDef[] = [
-  { id: "gregory-nazianzen", name: "Gregory Nazianzen", aliases: ["gregory nazianzen", "gregory naz", "greg naz"] },
-  { id: "gregory-of-nyssa", name: "Gregory of Nyssa", aliases: ["gregory of nyssa", "gregory nyss", "greg nyss"] },
-  { id: "gregory-the-great", name: "Gregory the Great", aliases: ["gregory", "greg"] },
-  { id: "peter-chrysologus", name: "Peter Chrysologus", aliases: ["chrysologus", "chrysolog", "chrysol"] },
-  { id: "chrysostom", name: "Chrysostom", aliases: ["chrysostom", "chrysost", "chrys", "chyrs"] },
-  { id: "augustine", name: "Augustine", aliases: ["augustine", "august", "aug"] },
+  { id: "gregory-nazianzen", name: "Gregory Nazianzen", aliases: ["gregory nazianzen", "gregory naz", "greg naz"], year: 390, circa: true },
+  { id: "gregory-of-nyssa", name: "Gregory of Nyssa", aliases: ["gregory of nyssa", "gregory nyss", "greg nyss"], year: 394 },
+  { id: "gregory-the-great", name: "Gregory the Great", aliases: ["gregory", "greg"], year: 604 },
+  { id: "peter-chrysologus", name: "Peter Chrysologus", aliases: ["chrysologus", "chrysolog", "chrysol"], year: 450, circa: true },
+  { id: "chrysostom", name: "Chrysostom", aliases: ["chrysostom", "chrysost", "chrys", "chyrs"], year: 407 },
+  { id: "augustine", name: "Augustine", aliases: ["augustine", "august", "aug"], year: 430 },
   // Ambrosiaster — the conventional name for an anonymous 4th-c. commentator on
   // the Pauline epistles, NOT St. Ambrose and not a Doctor. Listed before Ambrose
   // so the "ambros" startsWith never absorbs it. (Labels whose head is "Ambrose"
   // with "Ambrosiaster" in the citation apparatus still resolve to Ambrose.)
-  { id: "ambrosiaster", name: "Ambrosiaster", aliases: ["ambrosiaster"] },
-  { id: "ambrose", name: "Ambrose", aliases: ["ambrose", "ambros"] },
-  { id: "jerome", name: "Jerome", aliases: ["jerome", "hieronymus", "hieron"] },
-  { id: "john-damascene", name: "John Damascene", aliases: ["john damascene", "john of damascus", "damascene", "damascen", "damasc", "damas"] },
-  { id: "athanasius", name: "Athanasius", aliases: ["athanasius", "athanas"] },
-  { id: "basil", name: "Basil", aliases: ["basil"] },
-  { id: "hilary", name: "Hilary", aliases: ["hilary", "hilar", "hil"] },
+  { id: "ambrosiaster", name: "Ambrosiaster", aliases: ["ambrosiaster"], year: 375, circa: true },
+  { id: "ambrose", name: "Ambrose", aliases: ["ambrose", "ambros"], year: 397 },
+  { id: "jerome", name: "Jerome", aliases: ["jerome", "hieronymus", "hieron"], year: 420 },
+  { id: "john-damascene", name: "John Damascene", aliases: ["john damascene", "john of damascus", "damascene", "damascen", "damasc", "damas"], year: 749, circa: true },
+  { id: "athanasius", name: "Athanasius", aliases: ["athanasius", "athanas"], year: 373 },
+  { id: "basil", name: "Basil", aliases: ["basil"], year: 379 },
+  { id: "hilary", name: "Hilary", aliases: ["hilary", "hilar", "hil"], year: 367 },
   // Cyril of Alexandria in the Gospel Catena (a Doctor; Cyril of Jerusalem is too).
-  { id: "cyril", name: "Cyril", aliases: ["cyril"] },
-  { id: "isidore-of-seville", name: "Isidore of Seville", aliases: ["isidore of seville", "isidorus hispalensis", "isid hisp", "isidore hisp", "isidorus hisp"] },
+  { id: "cyril", name: "Cyril", aliases: ["cyril"], year: 444 },
+  { id: "isidore-of-seville", name: "Isidore of Seville", aliases: ["isidore of seville", "isidorus hispalensis", "isid hisp", "isidore hisp", "isidorus hisp"], year: 636 },
   // Bare "Isidore" in the Gospel Catena is Isidore of Pelusium — NOT a Doctor.
-  { id: "isidore-pelusium", name: "Isidore of Pelusium", aliases: ["isidore of pelusium", "isidore pelus", "isidore", "isidor", "isid"] },
-  { id: "leo", name: "Leo the Great", aliases: ["leo"] },
-  { id: "bede", name: "Bede", aliases: ["bede", "beda"] },
-  { id: "theophylact", name: "Theophylact", aliases: ["theophylact", "theophyl", "theophyact", "theopehyl", "theoph"] },
-  { id: "origen", name: "Origen", aliases: ["origen", "origin"] },
-  { id: "remigius", name: "Remigius", aliases: ["remigius", "remig"] },
-  { id: "rabanus", name: "Rabanus Maurus", aliases: ["rabanus", "raban"] },
-  { id: "alcuin", name: "Alcuin", aliases: ["alcuin"] },
-  { id: "eusebius", name: "Eusebius", aliases: ["eusebius", "euseb"] },
-  { id: "maximus", name: "Maximus", aliases: ["maximus", "maxim", "max"] },
-  { id: "haymo", name: "Haymo", aliases: ["haymo", "haimo"] },
-  { id: "titus-of-bostra", name: "Titus of Bostra", aliases: ["titus of bostra", "titus", "tit bost", "tit bos", "tit"] },
-  { id: "didymus", name: "Didymus", aliases: ["didymus"] },
-  { id: "severianus", name: "Severianus", aliases: ["severianus", "severian"] },
-  { id: "epiphanius", name: "Epiphanius", aliases: ["epiphanius", "epiphan"] },
-  { id: "cyprian", name: "Cyprian", aliases: ["cyprian"] },
-  { id: "theodotus", name: "Theodotus", aliases: ["theodotus", "theodot", "theod"] },
-  { id: "clement-of-alexandria", name: "Clement of Alexandria", aliases: ["clement of alexandria", "clement", "clem alex", "clem"] },
+  { id: "isidore-pelusium", name: "Isidore of Pelusium", aliases: ["isidore of pelusium", "isidore pelus", "isidore", "isidor", "isid"], year: 450, circa: true },
+  { id: "leo", name: "Leo the Great", aliases: ["leo"], year: 461 },
+  { id: "bede", name: "Bede", aliases: ["bede", "beda"], year: 735 },
+  { id: "theophylact", name: "Theophylact", aliases: ["theophylact", "theophyl", "theophyact", "theopehyl", "theoph"], year: 1107 },
+  { id: "origen", name: "Origen", aliases: ["origen", "origin"], year: 254, circa: true },
+  { id: "remigius", name: "Remigius", aliases: ["remigius", "remig"], year: 908, circa: true },
+  { id: "rabanus", name: "Rabanus Maurus", aliases: ["rabanus", "raban"], year: 856 },
+  { id: "alcuin", name: "Alcuin", aliases: ["alcuin"], year: 804 },
+  { id: "eusebius", name: "Eusebius", aliases: ["eusebius", "euseb"], year: 339, circa: true },
+  // BIG FLAG (§17): assumed Maximus of Turin (~465). If this is Maximus the
+  // Confessor it is 662 — a ~200-year move on ~65 blocks. Default Turin; to flip,
+  // change this single line to `year: 662`. See the open question.
+  { id: "maximus", name: "Maximus", aliases: ["maximus", "maxim", "max"], year: 465, circa: true },
+  { id: "haymo", name: "Haymo", aliases: ["haymo", "haimo"], year: 853 },
+  { id: "titus-of-bostra", name: "Titus of Bostra", aliases: ["titus of bostra", "titus", "tit bost", "tit bos", "tit"], year: 378 },
+  { id: "didymus", name: "Didymus", aliases: ["didymus"], year: 398 },
+  { id: "severianus", name: "Severianus", aliases: ["severianus", "severian"], year: 425 },
+  { id: "epiphanius", name: "Epiphanius", aliases: ["epiphanius", "epiphan"], year: 403 },
+  { id: "cyprian", name: "Cyprian", aliases: ["cyprian"], year: 258 },
+  { id: "theodotus", name: "Theodotus", aliases: ["theodotus", "theodot", "theod"], year: 446, circa: true },
+  { id: "clement-of-alexandria", name: "Clement of Alexandria", aliases: ["clement of alexandria", "clement", "clem alex", "clem"], year: 215, circa: true },
   // Dionysius of Alexandria — a real Father, distinct from the Areopagite below.
-  { id: "dionysius-of-alexandria", name: "Dionysius of Alexandria", aliases: ["dionysius of alexandria", "dionysius alex", "dion alex", "dionysius al", "dion al"] },
-  { id: "cassian", name: "John Cassian", aliases: ["cassian"] },
-  { id: "nemesius", name: "Nemesius", aliases: ["nemesius"] },
-  { id: "gennadius", name: "Gennadius", aliases: ["gennadius"] },
-  { id: "paschasius", name: "Paschasius", aliases: ["paschasius"] },
-  { id: "lanfranc", name: "Lanfranc", aliases: ["lanfranc"] },
-  { id: "petrus-alfonsus", name: "Petrus Alfonsus", aliases: ["petrus alfonsus", "petrus alphonsus", "petrus alf"] },
-  { id: "methodius", name: "Methodius", aliases: ["methodius"] },
-  { id: "photius", name: "Photius", aliases: ["photius"] },
-  { id: "anselm", name: "Anselm", aliases: ["anselm"] },
+  { id: "dionysius-of-alexandria", name: "Dionysius of Alexandria", aliases: ["dionysius of alexandria", "dionysius alex", "dion alex", "dionysius al", "dion al"], year: 265, circa: true },
+  { id: "cassian", name: "John Cassian", aliases: ["cassian"], year: 435, circa: true },
+  { id: "nemesius", name: "Nemesius", aliases: ["nemesius"], year: 390, circa: true },
+  { id: "gennadius", name: "Gennadius", aliases: ["gennadius"], year: 471 },
+  { id: "paschasius", name: "Paschasius", aliases: ["paschasius"], year: 865, circa: true },
+  { id: "lanfranc", name: "Lanfranc", aliases: ["lanfranc"], year: 1089 },
+  { id: "petrus-alfonsus", name: "Petrus Alfonsus", aliases: ["petrus alfonsus", "petrus alphonsus", "petrus alf"], year: 1116 },
+  { id: "methodius", name: "Methodius", aliases: ["methodius"], year: 311, circa: true },
+  { id: "photius", name: "Photius", aliases: ["photius"], year: 893, circa: true },
+  { id: "anselm", name: "Anselm", aliases: ["anselm"], year: 1117 },
   // Every other "Dionys…" is the Pseudo-Dionysian corpus (Celestial Hierarchy,
-  // Divine Names). Last, so "dion alex" above wins for Dionysius of Alexandria.
-  { id: "pseudo-dionysius", name: "Pseudo-Dionysius", aliases: ["dionysius", "dionys"] }
+  // Divine Names), composition era c. 485–500. Last, so "dion alex" above wins for
+  // Dionysius of Alexandria.
+  { id: "pseudo-dionysius", name: "Pseudo-Dionysius", aliases: ["dionysius", "dionys"], year: 500, circa: true }
 ];
 
 /** The Doctors of the Church present in (or editing) the Catena. Newman edited
@@ -129,6 +143,84 @@ const DOCTOR_IDS: ReadonlySet<string> = new Set([
 
 export function isDoctor(id: string): boolean {
   return DOCTOR_IDS.has(id);
+}
+
+// ── Chronological ordering (§4.3 Phase 1) ────────────────────────────────────
+// The Catena ships in Aquinas's source order; the reader wants earliest-Father-
+// first. yearOf / circaOf / sortChronological are pure and tested (test-data.ts
+// §16b). public/data is untouched — this is a render-time sort.
+
+const FATHER_YEAR = new Map(FATHERS.map((f) => [f.id, f.year]));
+const FATHER_CIRCA = new Map(FATHERS.map((f) => [f.id, f.circa === true]));
+
+/** Every declared Father id — the §16b "no Father lacks a year" guard reads this. */
+export const FATHER_IDS: readonly string[] = FATHERS.map((f) => f.id);
+
+/** Runtime pseudo-* ids that normalizeFather mints but that are NOT literals in
+ *  FATHERS[]. Dated by COMPOSITION era, never the namesake's death year (G2).
+ *  Keyed by the EXACT id normalizeFather emits — note `pseudo-athan` (from the
+ *  abbreviated "Pseudo-Athan." label, since "athan" misses the athanasius alias),
+ *  not `pseudo-athanasius`. pseudo-dionysius is a FATHERS[] literal (500), dated
+ *  there, not here. */
+const PSEUDO_YEARS: Record<string, number> = {
+  "pseudo-chrysostom": 430, // Opus Imperfectum in Matthaeum, anon. 5th-c. (~2,886 blocks)
+  "pseudo-jerome": 675,     // Hiberno-Latin Expositio sec. Marcum, c. 650–700 (~1,519)
+  "pseudo-augustine": 530,  // mixed pseudo-Augustinian sermons (~194)
+  "pseudo-origen": 400,     // pseudo-Origen homilies (~81)
+  "pseudo-basil": 450,      // pseudo-Basil (~19)
+  "pseudo-athan": 450       // "Pseudo-Athan." — Vigilius of Thapsus material (~2)
+};
+
+/** Newman's death year — the editor of this Catena edition; never a per-verse
+ *  label, so it never actually sorts, but dated for completeness (§3.2). */
+const NEWMAN_YEAR = 1890;
+
+/** The Father's sort year. `null` → the undated bucket (G4), never `0`. Order:
+ *  (1) the editor Newman; (2) a literal FATHERS[] entry → its year; (3) a
+ *  PSEUDO_YEARS key → that era; (4) a generated `pseudo-<base>` whose <base> is a
+ *  known Father → base death year + 1 (sits just after its genuine namesake);
+ *  else `null`. */
+export function yearOf(id: string): number | null {
+  if (id === "newman") return NEWMAN_YEAR;
+  const y = FATHER_YEAR.get(id);
+  if (y !== undefined) return y;
+  if (id in PSEUDO_YEARS) return PSEUDO_YEARS[id];
+  if (id.startsWith("pseudo-")) {
+    const baseYear = FATHER_YEAR.get(id.slice("pseudo-".length));
+    if (baseYear !== undefined) return baseYear + 1;
+  }
+  return null;
+}
+
+/** Whether yearOf(id) is an estimate (renders "c. NNN" not "NNN"). Every
+ *  pseudonymous date is an estimate. */
+export function circaOf(id: string): boolean {
+  const c = FATHER_CIRCA.get(id);
+  if (c !== undefined) return c;
+  if (id in PSEUDO_YEARS || id.startsWith("pseudo-")) return true;
+  return false;
+}
+
+/** Year an undated Father sorts to: after every dated one (G4). 9999 > any real
+ *  death year (the latest is Newman, 1890). */
+const UNDATED_YEAR = 9999;
+
+/** Order a verse's GROUPED blocks earliest-Father-first (§4.3 Phase 1). MUST run
+ *  after groupCatena — sorting raw notes would tear a continuation from its
+ *  Father. Father blocks sort by yearOf (undated → last); the stable tie-break is
+ *  ascending alphabetical by id (G3), so a Father quoted twice keeps the two
+ *  comments adjacent in their original order. Gloss/source blocks leave the chain
+ *  and trail in source order (G5). */
+export function sortChronological(blocks: CatenaBlock[]): CatenaBlock[] {
+  const fathers = blocks.filter((b) => b.kind === "father");
+  const others = blocks.filter((b) => b.kind !== "father");
+  const sorted = [...fathers].sort((a, b) => {
+    const ya = a.father ? yearOf(a.father.id) ?? UNDATED_YEAR : UNDATED_YEAR;
+    const yb = b.father ? yearOf(b.father.id) ?? UNDATED_YEAR : UNDATED_YEAR;
+    if (ya !== yb) return ya - yb;
+    return (a.father?.id ?? "").localeCompare(b.father?.id ?? "");
+  });
+  return [...sorted, ...others];
 }
 
 // A connective the Catena uses to introduce the next passage within a Father's
@@ -223,7 +315,10 @@ export function groupCatena(notes: { father?: string; text: string }[]): CatenaB
       continue;
     }
     if (nf.kind === "father") {
-      const father: Father = { id: nf.id!, name: nf.name!, isDoctor: nf.isDoctor! };
+      const father: Father = {
+        id: nf.id!, name: nf.name!, isDoctor: nf.isDoctor!,
+        year: yearOf(nf.id!) ?? UNDATED_YEAR, circa: circaOf(nf.id!)
+      };
       blocks.push({ kind: "father", father, name: father.name, isDoctor: father.isDoctor, text });
     } else if (nf.kind === "gloss") {
       blocks.push({ kind: "gloss", father: null, name: nf.name!, isDoctor: false, text });

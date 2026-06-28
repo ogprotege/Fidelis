@@ -6,10 +6,14 @@ import SectionNav from "../components/SectionNav";
 import {
   ManifestDoc,
   downloadBundle,
+  idbClearCcc,
+  idbPutCcc,
   importedTranslations,
   loadBook,
+  loadCCCText,
   loadManifest
 } from "../lib/data";
+import { parseCccText } from "../lib/import-formats";
 import {
   CalendarRegion,
   exportMarginalia,
@@ -20,6 +24,7 @@ import {
 import { TRANSLATIONS, getTranslation } from "../lib/translations";
 import { FONT_SIZE_PRESETS, SCRIPTURE_FONTS } from "../lib/typography";
 import { THEME_OPTIONS } from "../lib/theme";
+import { TRENT_EDITIONS } from "../lib/catechism";
 import { formatBytes } from "../lib/format";
 import { useSettings, useUpdateSettings } from "../SettingsContext";
 
@@ -97,6 +102,45 @@ export default function Settings() {
   // ── Data: export / import the library (P2-6) ────────────────────────────────
   const fileRef = useRef<HTMLInputElement>(null);
   const [transfer, setTransfer] = useState<string | null>(null);
+
+  // ── Magisterium: the imported modern Catechism (spec §6, P2) ────────────────
+  const cccFileRef = useRef<HTMLInputElement>(null);
+  const [cccImported, setCccImported] = useState(false);
+  const [cccBusy, setCccBusy] = useState(false);
+  const [cccMsg, setCccMsg] = useState<string | null>(null);
+  useEffect(() => {
+    loadCCCText().then((d) => setCccImported(!!d)).catch(() => {});
+  }, []);
+
+  const onCccFile = async (file: File | undefined) => {
+    if (!file) return;
+    setCccBusy(true);
+    setCccMsg(null);
+    try {
+      const doc = parseCccText(file.name, await file.text());
+      await idbPutCcc(doc);
+      setCccImported(true);
+      setCccMsg(
+        `Imported the Catechism on this device (${Object.keys(doc.paragraphs).length} paragraphs). Stored only here.`
+      );
+    } catch (e) {
+      setCccMsg(`Import failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setCccBusy(false);
+      if (cccFileRef.current) cccFileRef.current.value = "";
+    }
+  };
+
+  const removeCcc = async () => {
+    try {
+      await idbClearCcc();
+      setCccImported(false);
+      setCccMsg("Removed the imported Catechism.");
+    } catch (e) {
+      setCccMsg(`Remove failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
   const doExport = () => {
     const data = exportMarginalia();
     const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
@@ -388,8 +432,8 @@ export default function Settings() {
           <div>
             <div className="setting-label">Show commentary</div>
             <p className="catechesis muted small">
-              Mark verses that carry Haydock or the Catena Aurea with a small gold dot, and
-              offer them from the verse actions. Off leaves the bare page.
+              Mark verses that carry a Haydock note with a small gold dot, and offer
+              commentary from the verse actions. Off leaves the bare page.
             </p>
           </div>
           <button
@@ -421,16 +465,17 @@ export default function Settings() {
         </div>
         <div className="setting-row">
           <div>
-            <div className="setting-label">Catena Aurea</div>
+            <div className="setting-label">Church Fathers</div>
             <p className="catechesis muted small">
-              St. Thomas Aquinas's chain of the Church Fathers on the four Gospels.
+              The Catena Aurea — St. Thomas Aquinas's chain of the Church Fathers on the
+              four Gospels.
             </p>
           </div>
           <button
             type="button"
             role="switch"
             aria-checked={settings.commentaryCatena}
-            aria-label="Catena Aurea commentary"
+            aria-label="Church Fathers commentary"
             className="switch"
             disabled={!settings.commentaryEnabled}
             onClick={() => update({ commentaryCatena: !settings.commentaryCatena })}
@@ -440,8 +485,8 @@ export default function Settings() {
           <div>
             <div className="setting-label">Doctors of the Church only</div>
             <p className="catechesis muted small">
-              Open the Catena filtered to the Doctors of the Church; you can change it within
-              the sheet.
+              Open the Church Fathers filtered to the Doctors of the Church; you can change
+              it within the sheet.
             </p>
           </div>
           <button
@@ -463,8 +508,10 @@ export default function Settings() {
           <div>
             <div className="setting-label">Catechism cross-references</div>
             <p className="catechesis muted small">
-              Where the Catechism cites a verse, show its paragraph links in the verse
-              actions. The links open vatican.va; no Catechism text is stored in the app.
+              Where the Catechism cites a verse, offer it from the verse actions — the
+              bundled Roman Catechism (Trent), shown inline, with the vatican.va links to
+              the modern Catechism kept inside the same sheet. No modern Catechism text is
+              bundled.
             </p>
           </div>
           <button
@@ -475,6 +522,55 @@ export default function Settings() {
             className="switch"
             onClick={() => update({ cccLinksEnabled: !settings.cccLinksEnabled })}
           />
+        </div>
+        {settings.cccLinksEnabled && TRENT_EDITIONS.length > 1 && (
+          <div className="setting-row">
+            <div>
+              <div className="setting-label">Roman Catechism edition</div>
+              <p className="catechesis muted small">
+                Donovan (1829) is the classic English; McHugh-Callan (1923) reads in
+                more modern English. Both are public domain and bundled.
+              </p>
+            </div>
+            <select
+              aria-label="Roman Catechism edition"
+              value={settings.trentEdition}
+              onChange={(e) =>
+                update({ trentEdition: e.target.value as (typeof TRENT_EDITIONS)[number]["id"] })
+              }
+            >
+              {TRENT_EDITIONS.map((ed) => (
+                <option key={ed.id} value={ed.id}>{ed.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <hr className="rule" />
+        <input
+          ref={cccFileRef}
+          type="file"
+          accept=".json,application/json"
+          style={{ display: "none" }}
+          onChange={(e) => onCccFile(e.target.files?.[0])}
+        />
+        <div className="setting-label">Import the modern Catechism (a copy you own)</div>
+        <p className="catechesis muted small">
+          The Catechism of the Catholic Church is under copyright and is never bundled. If you
+          own a digital copy, import it here — it is stored only on this device, and a cited
+          verse will then show its paragraph text inline instead of a link out. Accepts the{" "}
+          <code>fidelis-ccc-1</code> JSON produced by the local converter.
+        </p>
+        <div className="import-zone">
+          {cccImported ? (
+            <button className="icon-btn" onClick={removeCcc}>
+              Remove imported Catechism
+            </button>
+          ) : (
+            <button className="icon-btn" onClick={() => cccFileRef.current?.click()} disabled={cccBusy}>
+              {cccBusy ? "Importing…" : "Import the Catechism"}
+            </button>
+          )}
+          {cccMsg && <p className="muted small" style={{ marginTop: "0.4rem" }}>{cccMsg}</p>}
         </div>
       </section>
 

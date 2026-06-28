@@ -792,6 +792,78 @@ h1.page-title {
   background: var(--ccc-mark);
 }
 
+/* §5 inline catechism sheet (Trent). Purple ACTS (TOC, links, back); the source
+   credit is plain muted provenance — NO gold here (unlike the Catena credit). */
+.ccc-sheet-title { margin: 0 3rem 0.6rem 0; }
+.ccc-note { margin: 0 0 0.9rem; }
+.ccc-toc-part { margin: 0 0 1rem; }
+.ccc-toc-part-title {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+.ccc-toc-secs { list-style: none; margin: 0; padding: 0; }
+.ccc-toc-secs li { margin: 0; }
+.ccc-toc-sec {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--purple);
+  padding: 0.4rem 0;
+  min-height: 44px;
+}
+@media (hover: hover) { .ccc-toc-sec:hover { text-decoration: underline; } }
+.ccc-toc-sec:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.ccc-back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--purple);
+  padding: 0.3rem 0;
+  margin-bottom: 0.4rem;
+}
+.ccc-back:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.ccc-sec-title { margin: 0 0 0.5rem; font-size: 1.05rem; }
+.ccc-prose { line-height: 1.62; }
+.ccc-prose p { margin: 0 0 0.7rem; }
+/* Upstream sub-section titles inside a Trent section — quiet structural headings,
+   muted (no accent), not gold/purple. */
+.ccc-prose h4 {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 1.1rem 0 0.4rem;
+}
+.ccc-prose h4:first-child { margin-top: 0; }
+.ccc-credit {
+  margin-top: 0.9rem;
+  padding-top: 0.6rem;
+  border-top: var(--hairline) solid var(--border);
+}
+/* CCC inline sheet — Tier-1 imported supersede (P2). Purple acts; gold appears
+   nowhere here — the credit reuses the muted .ccc-credit above (spec §8.2). */
+.ccc-imported { margin: 0.2rem 0 0; }
+.ccc-para { margin: 0 0 1rem; }
+.ccc-para-num {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--purple);
+}
+.ccc-para-text { margin: 0.25rem 0 0; line-height: 1.62; }
+
 .parallel-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1609,6 +1681,22 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   margin-bottom: 0.2rem;
 }
 .cmt-attr.plain { color: var(--text-muted); font-style: italic; text-transform: none; letter-spacing: 0; }
+/* §4.3 Phase 1 — the chronological chain. The date is honor/apparatus text inside
+   the already-gold .cmt-attr label: it inherits gold, adds no new accent, no
+   purple. text-transform:none keeps "c." lowercase under the label's uppercasing. */
+.cmt-date { text-transform: none; font-weight: 400; opacity: 0.8; }
+/* The quiet "Glossa & other sources" lane divider (G5) — neutral structural text,
+   not an accent. */
+.cmt-divider {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-top: var(--hairline) solid var(--border);
+  padding-top: 0.7rem;
+  margin: 0.4rem 0 0.9rem;
+}
 .cmt-text { margin: 0 0 0.5rem; line-height: 1.62; }
 .cmt-loading { margin: 0.5rem 0; }
 

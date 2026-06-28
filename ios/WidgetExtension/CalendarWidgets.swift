@@ -71,12 +71,13 @@ private func weekTimelineDates() -> [Date] {
     return (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: startOfToday) }
 }
 
-// ── Day-theme tokens from src/styles.css (same as FidelisWidget.swift), so the
-//    widgets match the app's own surfaces. Gold honors; no off-token red. ──────
-private let kParchment = Color(red: 0.957, green: 0.949, blue: 0.933) // --bg-0 #F4F2EE
-private let kInk = Color(red: 0.149, green: 0.141, blue: 0.122)       // --text #26241F
-private let kMuted = Color(red: 0.431, green: 0.416, blue: 0.380)     // --text-muted #6E6A61
-private let kGold = Color(red: 0.659, green: 0.525, blue: 0.173)      // --gold #A8862C
+// ── Day + night theme tokens from src/styles.css (same as FidelisWidget.swift),
+//    resolved at render time via @Environment(\.colorScheme) so the widgets follow
+//    the system appearance like the app — pure SwiftUI, no UIKit / App Group /
+//    entitlement. Each widget view below carries the four computed tokens
+//    (kParchment/kInk/kMuted/kGold): --bg-0 #F4F2EE/#1B1B1E · --text #26241F/#ECEAE4
+//    · --text-muted #6E6A61/#A19D94 · --gold #A8862C/#D4B254. Gold honors; no
+//    off-token red, in either appearance. ───────────────────────────────────────
 
 /// The Fidelis cross (spec §1.5) — a single 1.6 stroke on a 24×24 grid, drawn
 /// natively so the widget shows the same mark as every web surface, never a
@@ -132,6 +133,12 @@ struct MassProvider: TimelineProvider {
 struct MassWidgetView: View {
     var entry: MassEntry
     @Environment(\.widgetFamily) var family
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    private var kParchment: Color { dark ? Color(red: 0.106, green: 0.106, blue: 0.118) : Color(red: 0.957, green: 0.949, blue: 0.933) }
+    private var kInk: Color { dark ? Color(red: 0.925, green: 0.918, blue: 0.894) : Color(red: 0.149, green: 0.141, blue: 0.122) }
+    private var kMuted: Color { dark ? Color(red: 0.631, green: 0.616, blue: 0.580) : Color(red: 0.431, green: 0.416, blue: 0.380) }
+    private var kGold: Color { dark ? Color(red: 0.831, green: 0.698, blue: 0.329) : Color(red: 0.659, green: 0.525, blue: 0.173) }
 
     private var maxReadings: Int {
         switch family {
@@ -232,6 +239,12 @@ struct QuoteProvider: TimelineProvider {
 struct QuoteWidgetView: View {
     var entry: QuoteEntry
     @Environment(\.widgetFamily) var family
+    @Environment(\.colorScheme) private var scheme
+    private var dark: Bool { scheme == .dark }
+    private var kParchment: Color { dark ? Color(red: 0.106, green: 0.106, blue: 0.118) : Color(red: 0.957, green: 0.949, blue: 0.933) }
+    private var kInk: Color { dark ? Color(red: 0.925, green: 0.918, blue: 0.894) : Color(red: 0.149, green: 0.141, blue: 0.122) }
+    private var kMuted: Color { dark ? Color(red: 0.631, green: 0.616, blue: 0.580) : Color(red: 0.431, green: 0.416, blue: 0.380) }
+    private var kGold: Color { dark ? Color(red: 0.831, green: 0.698, blue: 0.329) : Color(red: 0.659, green: 0.525, blue: 0.173) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {

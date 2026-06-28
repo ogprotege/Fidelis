@@ -583,6 +583,70 @@ liturgical engines, the bundled texts, and the harnesses' computed results are u
   reserve their text height with quiet, motion-free skeleton lines, so the Today grid no longer reflows
   when the async text lands.
 
+## The open catechism (v1.14.0)
+
+One release that lands four long-promised pieces of the §3 / §4.3 / §5 plan: the Catechism becomes
+readable in place, the Golden Chain reads in order, the daily quote stops repeating, and the widgets
+follow dark mode.
+
+**§5 text tier — the inline Catechism (CCC P1).** The cited-verse Catechism affordance was, since
+v1.9.0, a link out to vatican.va. It now opens an inline `CCCSheet` (the `Sheet variant="panel"`
+primitive) whose primary content is the **public-domain Roman Catechism (Trent), McHugh-Callan 1923**,
+browsable by the four Parts (the Creed, the Sacraments, the Commandments, the Lord's Prayer), with the
+precise vatican.va ¶ links kept *inside* the sheet rather than replacing it. The bundle is built by
+`scripts/build-trent.mjs` from a **pinned GitHub source** (`mborders/romanus` — an MIT-licensed
+structured-JSON digitization; the underlying 1923 text is itself public domain in the U.S.) into a
+manifest-sealed `public/data/trent/trent.json`, keyed by edition so a future Donovan 1829 edition slots
+in with no shape change. The data source decision was the owner's: McHugh-Callan ships first because it
+is the one with a clean, reproducible, machine-readable source (Donovan exists only as Wikisource
+HTML). `src/lib/catechism.ts` holds the pure `pickTier` (imported → Trent → links) and `pickEdition`;
+the sheet carries **no gold** — purple acts, the source credit is muted provenance (unlike the gold
+Catena credit), asserted by source-grep in the harness.
+
+**§5 text tier — your own modern Catechism (CCC P2).** The modern *Catechism of the Catholic Church*
+is under copyright and is **never bundled**. An owner who has a digital copy can import it (Settings →
+Magisterium) as a `fidelis-ccc-1` paragraph JSON, validated by the pure `parseCccText` (three tolerant
+shapes, the 1–2865 key space shared with `url.json`, footnote-apparatus hygiene, no embedded text). It
+is stored **only on the device** (the existing `fidelis-imported` IndexedDB, bumped `DB_VERSION 1→2`
+with a new `ccc` store that preserves the `books` store), read by a memoized `loadCCCText()` whose memo
+is invalidated on import/remove so the supersede flips live. In the sheet it becomes Tier 1: the
+imported ¶ text renders inline ahead of Trent, with a per-¶ vatican.va fallback for any paragraph the
+import omits. A local-only `scripts/build-ccc-text.mjs` converter (EPUB/PDF → `ccc.local.json`,
+gitignored, **counts-only** validation against `url.json`) turns an owned copy into the import file; the
+owner runbook is `docs/superpowers/specs/2026-06-27-ccc-text-LOCAL-BUILD-RUNBOOK.md`.
+
+**§4.3 Phase 1 — the Catena in order.** The Catena Aurea always shipped in Aquinas's source order. A
+hand-curated death/floruit `year` (+ optional `circa`) now sits on every Father in `commentary.ts`,
+with a `PSEUDO_YEARS` map dating the runtime pseudonymous labels (the Opus Imperfectum, the
+Hiberno-Latin Mark *Expositio*, …) by their **composition era**, never the namesake. A pure
+`sortChronological(blocks)` orders a verse's grouped blocks earliest-Father-first (stable alphabetical
+tie-break, undated voices to the tail, never year 0), applied at render time **after** `groupCatena` so
+an "It goes on" continuation is never torn from its Father. The Glossa and named sources fall after the
+dated Fathers under a quiet divider; a gold `· c. 407` date sits inside the existing attribution label.
+("Maximus" is confirmed as Maximus of Turin, d. c. 465 — the homily-format citations, against a
+Magisterium check.) No data, manifest, golden, or service-worker change — a render-time sort only.
+
+**§4.3 Phase 2 — the Haydock lane.** The patristic tab is renamed from "Catena Aurea" to the durable
+**"Church Fathers"**; the specific source moves to a per-book credit line ("The Catena Aurea · the
+Newman edition" on the Gospels). Haydock and the Church Fathers stay two tabs that **never interleave**
+(now stated in the component contract), and the gold verse dot is stated and shown as **Haydock-only**;
+the Settings copy that implied it also marked Catena verses is corrected. The `commentaryCatena`
+settings key is kept verbatim (no migration).
+
+**§3 — daily quotes that never repeat in a year.** The Quote of the Day moves from a fixed modular
+cycle to a per-year seeded permutation over a **538-quote corpus**: each calendar year is assigned a
+fresh order (sanctoral feast → liturgical season → seeded random fill of the remainder), so no quote
+repeats within the year and the order differs year to year. It stays a pure function of (date, region,
+corpus), so the home-screen widgets — which read the pre-resolved `calendar.json` built from the same
+function — match bit-for-bit.
+
+**Dark-mode widgets.** The iOS WidgetKit widgets read `@Environment(\.colorScheme)` and the Android App
+Widgets gain `values-night/` resources, so both follow the system light/dark appearance like the app —
+no signing or capability change.
+
+The upstream source pins grow from four to five (the Trent pin); the manifest is resealed to record it.
+The bundled texts, liturgical engines, and golden snapshots are untouched.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

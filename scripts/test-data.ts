@@ -36,7 +36,7 @@ import { parseReference } from "../src/lib/refparse";
 import { getTranslation, DEFAULT_TRANSLATION } from "../src/lib/translations";
 import { parseHaydockSfm } from "./build-haydock.mjs";
 import { parseCatenaOsis } from "./build-catena.mjs";
-import { normalizeFather, groupCatena, fathersOf, isDoctor } from "../src/lib/commentary";
+import { normalizeFather, groupCatena, fathersOf, isDoctor, yearOf, circaOf, sortChronological, FATHER_IDS } from "../src/lib/commentary";
 import { getSettings } from "../src/lib/storage";
 import {
   DEFAULT_FONT_SIZE,
@@ -746,8 +746,8 @@ check(
 // Source pins: both build scripts must fetch pinned commits, never a branch.
 const pinsSrc = readFileSync(join(ROOT, "scripts/pins.mjs"), "utf8");
 const declaredPins = [...pinsSrc.matchAll(/commit:\s*"([0-9a-f]{40})"/g)].map((m) => m[1]);
-check("four 40-hex upstream pins declared in scripts/pins.mjs", declaredPins.length === 4, `${declaredPins.length}`);
-const buildSrcs = ["build-data", "build-lectionary", "build-haydock", "build-catena"].map((s) =>
+check("five 40-hex upstream pins declared in scripts/pins.mjs", declaredPins.length === 5, `${declaredPins.length}`);
+const buildSrcs = ["build-data", "build-lectionary", "build-haydock", "build-catena", "build-trent"].map((s) =>
   readFileSync(join(ROOT, `scripts/${s}.mjs`), "utf8")
 );
 const pinnedFetch = buildSrcs.every((s) => !s.includes("/master/") && s.includes("PINS."));
@@ -760,11 +760,12 @@ const manifestPins = [
   manifest.sources?.scrollmapper?.commit,
   manifest.sources?.lectionary?.commit,
   manifest.sources?.haydock?.commit,
-  manifest.sources?.catena?.commit
+  manifest.sources?.catena?.commit,
+  manifest.sources?.trent?.commit
 ];
 check(
   "manifest records the declared source pins",
-  manifestPins.length === 4 && manifestPins.every((c) => typeof c === "string" && declaredPins.includes(c)),
+  manifestPins.length === 5 && manifestPins.every((c) => typeof c === "string" && declaredPins.includes(c)),
   `manifest: ${manifestPins.map((c) => String(c).slice(0, 7)).join(", ")}`
 );
 const dotfileEntries = Object.keys(manifest.files).filter((p) =>
@@ -831,43 +832,68 @@ console.log("");
   }
   check("every quote satisfies the spec §3.1 schema", schemaBad === 0, `${schemaBad} bad`);
 
-  const RED = [/sheen/i, /escriv/i, /pietrelcina|padre pio/i, /john paul/i, /benedict xvi/i];
-  const red = quotes.filter((q) => RED.some((re) => re.test(q.author)));
-  check("no red-list author in the corpus (spec §3.3)", red.length === 0, red.map((q) => q.id).join(", "));
+  // The build's §3.3 red list is ADVISORY for the closed beta (owner directive):
+  // non-PD authors are kept; re-enable the hard fail in build-quotes.mjs before any
+  // public release. What the rotation needs instead is a corpus larger than a year,
+  // so a quote can never repeat within one calendar year.
+  check(
+    "corpus larger than a calendar year (no in-year repeat possible)",
+    quotes.length >= 366,
+    `${quotes.length}`
+  );
 
   const every = ["advent", "christmastide", "lent", "eastertide"].filter(
     (s) => !quotes.some((q) => q.season === s)
   );
   check("each seasonal pool is non-empty", every.length === 0, every.join(", "));
 
-  // Tier 1 — sanctoral: Augustine speaks on August 28.
+  const litUni = (d: Date) => liturgicalDay(d, "universal");
+
+  // Tier 1 — sanctoral: Augustine speaks on his feast, August 28.
   const aug = new Date(2026, 7, 28);
-  const q1 = quoteOfTheDay(quotes, aug, liturgicalDay(aug, "universal"));
+  const q1 = quoteOfTheDay(quotes, aug, litUni, "universal");
   check(
     "Aug 28: the sanctoral tier serves Augustine",
     q1?.author.includes("Augustine") === true && q1?.feast === "08-28",
     q1?.id ?? "null"
   );
-  // Tier 2 — seasonal: a Lent feria draws from the Lent pool.
+  // Tier 2 — seasonal: an early-Lent feria draws from the Lent pool.
   const lent = new Date(2026, 2, 5); // Thursday of the 2nd week of Lent
-  const q2 = quoteOfTheDay(quotes, lent, liturgicalDay(lent, "universal"));
+  const q2 = quoteOfTheDay(quotes, lent, litUni, "universal");
   check("Lent feria draws from the Lent pool", q2?.season === "lent", q2?.id ?? "null");
-  // Tier 3 — general: an OT feria draws from the season-untagged remainder.
-  const ot = new Date(2026, 5, 16); // Tuesday of the 11th week in OT
-  const q3 = quoteOfTheDay(quotes, ot, liturgicalDay(ot, "universal"));
-  check("OT feria draws from the general cycle", q3 !== null && q3.season === null, q3?.id ?? "null");
-  // Determinism + totality: every day of 2026 resolves, twice identically.
+
+  // Tier 3 — the headline guarantee: no quote repeats within a calendar year.
+  const ids2026: string[] = [];
   let nulls = 0;
-  let nondet = 0;
   for (let d = new Date(2026, 0, 1); d.getFullYear() === 2026; d = new Date(2026, d.getMonth(), d.getDate() + 1)) {
-    const lit = liturgicalDay(d, "universal");
-    const a = quoteOfTheDay(quotes, d, lit);
-    const b = quoteOfTheDay(quotes, d, lit);
-    if (!a) nulls++;
-    if (a?.id !== b?.id) nondet++;
+    const q = quoteOfTheDay(quotes, d, litUni, "universal");
+    if (q) ids2026.push(q.id);
+    else nulls++;
   }
   check("a quote resolves for every day of 2026", nulls === 0, `${nulls} null`);
+  check(
+    "no quote repeats within calendar year 2026",
+    new Set(ids2026).size === ids2026.length,
+    `${ids2026.length - new Set(ids2026).size} repeats across ${ids2026.length} days`
+  );
+
+  // Determinism: the same (date, region) always resolves to the same quote.
+  let nondet = 0;
+  for (let d = new Date(2026, 0, 1); d.getFullYear() === 2026; d = new Date(2026, d.getMonth(), d.getDate() + 1)) {
+    if (quoteOfTheDay(quotes, d, litUni, "universal")?.id !== quoteOfTheDay(quotes, d, litUni, "universal")?.id) {
+      nondet++;
+    }
+  }
   check("quote selection is deterministic", nondet === 0, `${nondet} differ`);
+
+  // The order reshuffles year to year — not a fixed cycle.
+  let sameAcrossYears = 0;
+  for (let m = 0; m < 12; m++) {
+    const a = quoteOfTheDay(quotes, new Date(2026, m, 15), litUni, "universal")?.id;
+    const b = quoteOfTheDay(quotes, new Date(2027, m, 15), litUni, "universal")?.id;
+    if (a === b) sameAcrossYears++;
+  }
+  check("the rotation reshuffles year to year", sameAcrossYears < 12, `${sameAcrossYears}/12 mid-month dates identical`);
 }
 
 // ── 9. Typography (spec §1.4): bundled Scripture face + size presets ─────────
@@ -1699,6 +1725,124 @@ console.log("");
   check("Catena normaliser: the 'source' fallback hides no real Father (only anonymous/council sources)", leaked.length === 0, leaked.slice(0, 6).join(" | "));
 }
 
+// §16b — chronological ordering of the Catena chain (§4.3 Phase 1). Pure, over
+// src/lib/commentary.ts. public/data is untouched; this is a render-time sort.
+console.log("");
+{
+  // 1. Every declared Father has a finite year (TS already requires `year`; this
+  //    also catches a NaN or a yearOf-resolution regression). Newman is dated too.
+  const undated = FATHER_IDS.filter((id) => !Number.isFinite(yearOf(id)));
+  check("every declared Father resolves to a finite year", undated.length === 0, undated.join(", "));
+  check("the editor Newman is dated (never sorts, but complete)", yearOf("newman") === 1890);
+
+  // 2. The researched dates + circa flags the chain depends on (§3.2).
+  check("yearOf: Origen 254 (circa), Chrysostom 407, Augustine 430, Gregory the Great 604",
+    yearOf("origen") === 254 && circaOf("origen") === true &&
+    yearOf("chrysostom") === 407 && circaOf("chrysostom") === false &&
+    yearOf("augustine") === 430 && yearOf("gregory-the-great") === 604);
+  check("yearOf: maximus defaults to Turin (465, circa) — flip to 662 is one line",
+    yearOf("maximus") === 465 && circaOf("maximus") === true);
+
+  // 3. Runtime pseudo-* ids dated by COMPOSITION era, not the namesake (§3.3, G2).
+  check("pseudo-chrysostom (Opus Imperfectum) dated to its 5th-c. era, circa",
+    yearOf("pseudo-chrysostom") === 430 && circaOf("pseudo-chrysostom") === true);
+  check("pseudo-jerome (Hiberno-Latin Expositio) dated c. 675",
+    yearOf("pseudo-jerome") === 675 && circaOf("pseudo-jerome") === true);
+  check("pseudo-athan ('Pseudo-Athan.', Vigilius of Thapsus) is dated, not undated",
+    yearOf("pseudo-athan") === 450);
+  // base+1 fallback for an undocumented pseudo-<known father> (§3.4 step 3).
+  check("yearOf: a generated pseudo-<base> falls to base death year + 1, circa",
+    yearOf("pseudo-cyprian") === 259 && circaOf("pseudo-cyprian") === true);
+  // a nameless / unknown pseudo → the undated bucket (G4), NEVER 0.
+  check("yearOf: pseudo-anon and bare 'Pseudo.' (pseudo-pseudo) are undated, not 0",
+    yearOf("pseudo-anon") === null && yearOf("pseudo-pseudo") === null);
+
+  // 4. sortChronological orders earliest-Father-first (built via groupCatena so the
+  //    blocks are real). Input is deliberately out of order.
+  const chain = sortChronological(groupCatena([
+    { father: "Augustine", text: "aug" },
+    { father: "Gregory", text: "greg" },           // Gregory the Great, 604
+    { father: "Origen", text: "ori" },
+    { father: "Pseudo-Chrysostom", text: "ps-chrys" },
+    { father: "Chrysostom", text: "chrys" }
+  ]));
+  check("sortChronological: Origen < Chrysostom < Augustine < pseudo-chrysostom < Gregory",
+    chain.map((b) => b.father!.id).join(",") === "origen,chrysostom,augustine,pseudo-chrysostom,gregory-the-great",
+    chain.map((b) => b.father!.id).join(","));
+  // pseudo-chrysostom (430) sits in the 5th-c. slot, AFTER chrysostom (407) — never
+  // beside its namesake at 407.
+  const ids = chain.map((b) => b.father!.id);
+  check("pseudo-chrysostom sorts to its composition era (after Chrysostom 407, not at it)",
+    ids.indexOf("pseudo-chrysostom") > ids.indexOf("chrysostom"));
+
+  // 5. Tie-break: equal years resolve stable-ascending-alphabetical by id (G3).
+  const tie = sortChronological(groupCatena([
+    { father: "Nemesius", text: "n" },             // 390
+    { father: "Gregory Naz.", text: "gn" },        // 390
+    { father: "Chrysologus", text: "pc" },         // Peter Chrysologus, 450 — the corpus
+                                                    //  label is "Chrysologus"; "Peter
+                                                    //  Chrysologus" misses matchFather's
+                                                    //  prefix rule and becomes a source.
+    { father: "Isidore", text: "ip" }              // Isidore of Pelusium, 450
+  ]));
+  check("tie-break: gregory-nazianzen<nemesius (390); isidore-pelusium<peter-chrysologus (450)",
+    tie.map((b) => b.father!.id).join(",") === "gregory-nazianzen,nemesius,isidore-pelusium,peter-chrysologus",
+    tie.map((b) => b.father!.id).join(","));
+
+  // 6. Continuations survive the sort (sort runs on GROUPED blocks, §4).
+  const cont = sortChronological(groupCatena([
+    { father: "Chrysostom", text: "A" },
+    { father: "It goes on", text: "B" },           // folds into Chrysostom
+    { father: "Augustine", text: "C" }
+  ]));
+  check("continuations survive the sort (block count + merged text intact)",
+    cont.length === 2 && cont[0].father!.id === "chrysostom" && cont[0].text === "A\n\nB" &&
+    cont[1].father!.id === "augustine");
+
+  // 7. Lane separation (G5): Fathers (chronological) first, then gloss/source in
+  //    source order; no gloss/source block appears among the Fathers.
+  const lane = sortChronological(groupCatena([
+    { father: "Gloss", text: "g" },
+    { father: "Augustine", text: "a" },
+    { father: "A Greek expositor", text: "s" },
+    { father: "Origen", text: "o" }
+  ]));
+  const firstNonFather = lane.findIndex((b) => b.kind !== "father");
+  check("lane separation: all Fathers precede every gloss/source block",
+    lane.slice(0, firstNonFather).every((b) => b.kind === "father") &&
+    lane.slice(firstNonFather).every((b) => b.kind !== "father"));
+  check("lane separation: Fathers chronological, gloss/source keep source order",
+    lane.map((b) => b.kind === "father" ? b.father!.id : b.kind).join(",") === "origen,augustine,gloss,source");
+
+  // 8. Undated tail: a synthetic undated Father sorts AFTER every dated one (G4).
+  const tail = sortChronological(groupCatena([
+    { father: "Pseudo.", text: "x" },              // → pseudo-pseudo, undated
+    { father: "Augustine", text: "a" }
+  ]));
+  check("undated Father sorts after dated ones (never front-loaded as 'earliest')",
+    tail.map((b) => b.father!.id).join(",") === "augustine,pseudo-pseudo");
+
+  // 9. Corpus guard: every kind:'father' id in the built Catena is dated, or is an
+  //    explicitly-listed undatable id — so a new unmatched author can never silently
+  //    sort to 0 (G4). Read straight from public/data (manifest-sealed, not edited).
+  const cdir = join(ROOT, "public/data/commentary/catena");
+  const undatedInCorpus = new Set<string>();
+  for (const fn of readdirSync(cdir)) {
+    if (!fn.endsWith(".json")) continue;
+    const bk: Record<string, { father?: string }[]> = JSON.parse(readFileSync(join(cdir, fn), "utf8"));
+    for (const notes of Object.values(bk)) for (const n of notes) {
+      const nf = normalizeFather(n.father ?? "");
+      if (nf.kind === "father" && yearOf(nf.id!) === null) undatedInCorpus.add(nf.id!);
+    }
+  }
+  // The only genuinely undatable label in the Gospel Catena is the nameless
+  // "Pseudo." (→ pseudo-pseudo, 7 blocks); everything else must resolve to a year.
+  const KNOWN_UNDATED = new Set(["pseudo-pseudo"]);
+  const leaked2 = [...undatedInCorpus].filter((id) => !KNOWN_UNDATED.has(id));
+  check("every Catena Father id in the corpus is dated (only the nameless 'Pseudo.' is undated)",
+    leaked2.length === 0, leaked2.join(", "));
+}
+
 // §17 — reference parser (Search "jump to verse") and the canon/translation
 // display helpers. Pure input-handling that ships to users with no other guard.
 {
@@ -1870,6 +2014,164 @@ console.log("");
   const json = '{"books":[{"name":"Mark","chapters":[{"verses":[{"text":"zeta"},{"text":"eta"}]}]}]}';
   const j = parseImport("t.json", json);
   check("parseImport JSON (scrollmapper): verses", j.length === 1 && resolveBookSlug(j[0].name) === "mark" && j[0].chapters[0][0] === "zeta" && j[0].chapters[0][1] === "eta");
+}
+
+// §21 — the inline catechism (CCC P1): pure tier/edition logic (src/lib/catechism.ts),
+// the bundled PD Trent corpus (public/data/trent/trent.json), and the trentEdition
+// setting. The modern CCC text is NEVER bundled — only the PD Roman Catechism is.
+console.log("");
+{
+  const { pickTier, pickEdition, isTrentEdition, DEFAULT_TRENT_EDITION, TRENT_EDITIONS } =
+    await import("../src/lib/catechism");
+
+  // pickTier precedence: imported+paras → imported; else trent → trent; else links.
+  check("pickTier: imported copy with cited ¶ supersedes",
+    pickTier({ imported: true, hasParas: true, trent: true }) === "imported");
+  check("pickTier: imported but no cited ¶ falls to Trent",
+    pickTier({ imported: true, hasParas: false, trent: true }) === "trent");
+  check("pickTier: no import, Trent present → trent",
+    pickTier({ imported: false, hasParas: true, trent: true }) === "trent");
+  check("pickTier: nothing bundled/imported → links",
+    pickTier({ imported: false, hasParas: true, trent: false }) === "links");
+
+  // edition vocabulary — only the bundled McHugh-Callan ships today.
+  check("TRENT_EDITIONS lists the bundled McHugh-Callan edition",
+    TRENT_EDITIONS.map((e) => e.id).join(",") === "mchughCallan");
+  check("default Trent edition is McHugh-Callan", DEFAULT_TRENT_EDITION === "mchughCallan");
+  check("isTrentEdition guards the vocabulary",
+    isTrentEdition("mchughCallan") && isTrentEdition("donovan") && !isTrentEdition("kjv") && !isTrentEdition(null));
+
+  // pickEdition picks the preferred edition, else falls back to the default
+  const fakeFile = {
+    editions: {
+      mchughCallan: { edition: "M", source: "s", license: "public-domain-US", parts: [] }
+    }
+  } as unknown as Awaited<ReturnType<typeof import("../src/lib/data").loadTrent>>;
+  check("pickEdition returns the preferred edition", pickEdition(fakeFile!, "mchughCallan")?.edition === "M");
+  check("pickEdition falls back to the default for an absent edition",
+    pickEdition(fakeFile!, "donovan")?.edition === "M");
+
+  // The bundled Trent corpus is shaped, complete, and sealed.
+  const trent = JSON.parse(readFileSync(join(ROOT, "public/data/trent/trent.json"), "utf8")) as {
+    editions: Record<string, { edition: string; license: string; parts: { id: string; title: string; sections: { id: string; title: string; html: string }[] }[] }>;
+  };
+  const EXPECT_PARTS = ["creed", "sacraments", "commandments", "lords-prayer"];
+  for (const id of ["mchughCallan"]) {
+    const ed = trent.editions[id];
+    check(`Trent ${id} edition is present with a label`, !!ed && ed.edition.length > 0, ed?.edition ?? "missing");
+    if (!ed) continue;
+    check(`Trent ${id} has the four Parts in order`,
+      ed.parts.map((p) => p.id).join(",") === EXPECT_PARTS.join(","), ed.parts.map((p) => p.id).join(","));
+    const secIds = ed.parts.flatMap((p) => p.sections.map((s) => s.id));
+    check(`Trent ${id} section ids are unique`, new Set(secIds).size === secIds.length, `${secIds.length} ids`);
+    let bad = 0;
+    for (const p of ed.parts) for (const s of p.sections) if (!s.title?.trim() || !s.html?.trim()) bad++;
+    check(`Trent ${id} every section has a non-empty title + html`, bad === 0, `${bad} empty`);
+    check(`Trent ${id} is public domain`, ed.license.startsWith("public-domain"), ed.license);
+    check(`Trent ${id} ships no verse keys (browsable-by-section, design §4)`,
+      ed.parts.every((p) => p.sections.every((s) => !/^\d+:\d+$/.test(s.id))));
+    check(`Trent ${id} html is paragraphs-only structural markup (h4/p)`,
+      ed.parts.every((p) => p.sections.every((s) => !/<(?!\/?(?:h4|p)\b)[a-z]/i.test(s.html))));
+  }
+
+  // Sealed in the manifest + the §5 index is byte-for-byte untouched.
+  const tman = JSON.parse(readFileSync(join(ROOT, "public/data/manifest.json"), "utf8")) as { files: Record<string, string> };
+  check("trent/trent.json is sealed in the manifest", !!tman.files["trent/trent.json"]);
+  check("§5 index + url remain sealed (unchanged by P1)",
+    !!tman.files["ccc/index.json"] && !!tman.files["ccc/url.json"]);
+
+  // The Trent-edition setting defaults to McHugh-Callan and is a valid id.
+  {
+    const { getSettings } = await import("../src/lib/storage");
+    const s = getSettings();
+    check("getSettings() defaults trentEdition to mchughCallan", s.trentEdition === "mchughCallan", String(s.trentEdition));
+    check("Settings.trentEdition is a valid edition id", isTrentEdition(s.trentEdition));
+  }
+}
+
+// §21b — the inline catechism sheet + Reader integration (two-accent + no redirect).
+{
+  // Two-accent (§8.2): the sheet ACTS in purple and carries NO gold anywhere.
+  const cccSheetSrc = readFileSync(join(ROOT, "src/components/CCCSheet.tsx"), "utf8");
+  check("CCCSheet renders no gold honor (purple acts; credit is muted)",
+    !/--gold/.test(cccSheetSrc) && !cccSheetSrc.includes("✠"));
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  check("the Trent TOC button acts in purple", /\.ccc-toc-sec\s*\{[^}]*var\(--purple\)/.test(css));
+  check("the Trent credit + sub-headings are muted provenance, not gold",
+    /\.ccc-toc-part-title\s*\{[^}]*var\(--text-muted\)/.test(css) && /\.ccc-credit\b/.test(css));
+
+  // The Reader exposes the Catechism as a sheet action, not a forced redirect.
+  const readerSrc = readFileSync(join(ROOT, "src/pages/Reader.tsx"), "utf8");
+  check("Reader opens CCCSheet (no inline ccc-row links)",
+    readerSrc.includes("<CCCSheet") && !readerSrc.includes('className="ccc-row"'));
+  check("Reader keeps the purple gutter mark + loadCCC", readerSrc.includes("ccc-mark") && readerSrc.includes("loadCCC"));
+}
+
+// §22 — the personal-CCC import path (CCC P2). Synthetic fixtures ONLY — never real
+// Catechism text. The parser is pure; it normalizes three shapes, validates the
+// 1–2865 integer key space (shared with url.json), and strips footnote apparatus.
+console.log("");
+{
+  const { parseCccText } = await import("../src/lib/import-formats");
+  const cu = JSON.parse(readFileSync(join(ROOT, "public/data/ccc/url.json"), "utf8")) as Record<string, string>;
+
+  // (a) the header shape normalizes to { edition, language, paragraphs }
+  const header = JSON.stringify({ format: "fidelis-ccc-1", edition: "Synthetic Ed.", language: "en", paragraphs: { "1": "alpha", "1817": "beta" } });
+  const h = parseCccText("ccc.json", header);
+  check("parseCccText: header shape → edition/language/paragraphs", h.edition === "Synthetic Ed." && h.language === "en" && h.paragraphs["1"] === "alpha" && h.paragraphs["1817"] === "beta");
+
+  // (b) a bare flat map is accepted, edition defaulted
+  const bare = parseCccText("ccc.json", JSON.stringify({ "1": "gamma" }));
+  check("parseCccText: bare flat map accepted", bare.paragraphs["1"] === "gamma" && bare.language === "en" && bare.edition.length > 0);
+
+  // (c) the { ccc: { … } } wrapper is accepted
+  const wrapped = parseCccText("ccc.json", JSON.stringify({ ccc: { edition: "Wrapped", paragraphs: { "2865": "omega" } } }));
+  check("parseCccText: { ccc: {…} } wrapper accepted", wrapped.paragraphs["2865"] === "omega" && wrapped.edition === "Wrapped");
+
+  // (d) output is a pure function of input — the parser holds no embedded text
+  const one = parseCccText("ccc.json", JSON.stringify({ format: "fidelis-ccc-1", paragraphs: { "5": "only-this" } }));
+  check("parseCccText: output keys/values come only from input (no injection)", Object.keys(one.paragraphs).join() === "5" && one.paragraphs["5"] === "only-this");
+
+  // (e) footnote apparatus is stripped: superscript digit runs + [n] refs
+  const dirty = parseCccText("ccc.json", JSON.stringify({ format: "fidelis-ccc-1", paragraphs: { "1": "Hope is the virtue⁴⁵ by which we desire.[12]" } }));
+  check("parseCccText: strips footnote superscripts + [n] refs", dirty.paragraphs["1"] === "Hope is the virtue by which we desire.");
+
+  // (f) rejections — non-integer key, out-of-range, and a Bible-shaped file
+  let threwAbc = false; try { parseCccText("x.json", JSON.stringify({ "abc": "x" })); } catch { threwAbc = true; }
+  check("parseCccText: rejects a non-integer key", threwAbc);
+  let threwRange = false; try { parseCccText("x.json", JSON.stringify({ format: "fidelis-ccc-1", paragraphs: { "3000": "x" } })); } catch { threwRange = true; }
+  check("parseCccText: rejects a ¶ outside [1,2865]", threwRange);
+  let threwBible = false; try { parseCccText("x.json", JSON.stringify({ books: [{ name: "Mark", chapters: [] }] })); } catch { threwBible = true; }
+  check("parseCccText: rejects a Bible-shaped JSON", threwBible);
+
+  // (g) the key space is url.json's: 219/444 are cited by john 3:16, so present in url.json
+  const ks = parseCccText("ccc.json", JSON.stringify({ format: "fidelis-ccc-1", paragraphs: { "219": "x", "444": "y" } }));
+  check("parseCccText: keys share url.json's string-integer key space", Object.keys(ks.paragraphs).every((k) => /^\d+$/.test(k) && k in cu));
+
+  // CCC-text storage (data.ts). IndexedDB cannot run under tsx, so these guard the
+  // upgrade discipline by SOURCE: DB v2, the ccc store created WITHOUT dropping
+  // books, and loadCCCText's memo invalidated on write.
+  const ds = readFileSync(join(ROOT, "src/lib/data.ts"), "utf8");
+  check("data.ts bumps DB_VERSION to 2", /DB_VERSION\s*=\s*2\b/.test(ds));
+  check("data.ts creates the ccc object store", /createObjectStore\(\s*CCC_STORE\s*\)/.test(ds));
+  check("data.ts still creates the books store (upgrade preserves imports)", /createObjectStore\(\s*STORE\s*\)/.test(ds));
+  check("data.ts exports loadCCCText + idbPutCcc/idbGetCcc/idbClearCcc",
+    /export function loadCCCText/.test(ds) && /export async function idbPutCcc/.test(ds) && /export async function idbGetCcc/.test(ds) && /export async function idbClearCcc/.test(ds));
+  check("loadCCCText invalidates its memo on import/remove", (ds.match(/cccTextPromise\s*=\s*null/g) || []).length >= 2);
+
+  // The CCCSheet Tier-1 supersede wiring + two-accent (purple acts, no gold).
+  const sheet = readFileSync(join(ROOT, "src/components/CCCSheet.tsx"), "utf8");
+  check("CCCSheet wires loadCCCText (Tier-1 supersede)", /loadCCCText/.test(sheet));
+  check("CCCSheet renders the imported ¶ text branch", /tier === "imported"/.test(sheet) && /ccc-para-num/.test(sheet));
+  const cssP2 = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  check("CCC imported ¶ number acts in purple (two-accent)", /\.ccc-para-num\s*\{[^}]*var\(--purple\)/.test(cssP2));
+  check("CCC imported block carries no gold honor mark",
+    !/\.ccc-para[^{]*\{[^}]*var\(--gold\)/.test(cssP2) && !/\.ccc-credit\s*\{[^}]*var\(--gold\)/.test(cssP2));
+
+  // The Settings Magisterium import slot exists and stores on-device only.
+  const setSrc = readFileSync(join(ROOT, "src/pages/Settings.tsx"), "utf8");
+  check("Settings imports the modern Catechism on-device (parse → idbPutCcc)",
+    setSrc.includes("parseCccText") && setSrc.includes("idbPutCcc") && setSrc.includes("Import the modern Catechism"));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
