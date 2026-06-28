@@ -38,10 +38,13 @@ saved nothing on iOS.
   success. Desktop and web keep the file download.
 - **Xcode Cloud archive builds.** The iOS project links the Capacitor plugins as local Swift
   packages under `node_modules/`, and the web bundle isn't committed — but Xcode Cloud never ran
-  `npm`, so package resolution failed (`node_modules/@capacitor/app doesn't exist`). Added
-  `ci_scripts/ci_post_clone.sh` (`npm ci` → `npm run build` → `npx cap sync ios`) and committed a
-  shared **App** scheme (the workflow had been archiving the widget extension). Point the Xcode
-  Cloud workflow's scheme at **App**.
+  `npm`, so package resolution failed (`node_modules/@capacitor/app doesn't exist`). Added a
+  post-clone hook (`npm ci` → `npm run build` → `npx cap copy ios`) at
+  `ios/App/ci_scripts/ci_post_clone.sh` — Xcode Cloud resolves `ci_scripts/` **relative to the
+  `.xcodeproj`**, which lives in `ios/App/`, so a repo-root copy alone is reported "not found" — and
+  committed a shared **App** scheme (the workflow had been archiving the widget extension). The hook
+  uses `cap copy`, not `cap sync`, so it never rewrites the committed `Package.swift` platform. Point
+  the Xcode Cloud workflow's scheme at **App**.
 
 ## [1.14.0] — 2026-06-27 — the open catechism
 
