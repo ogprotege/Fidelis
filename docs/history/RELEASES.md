@@ -685,12 +685,16 @@ The bundled texts, liturgical engines, and golden snapshots are untouched.
 - **Xcode Cloud can archive again.** The iOS project links the Capacitor plugins as *local* Swift
   packages under `node_modules/@capacitor/*`, and the web bundle (`dist` → `ios/App/App/public`) is
   generated, not committed — but Xcode Cloud clones the repo and never runs `npm`, so SPM
-  resolution failed (`node_modules/@capacitor/app doesn't exist`). A `ci_scripts/ci_post_clone.sh`
-  hook now runs `npm ci` → `npm run build` → `npx cap sync ios` before resolution (the same
-  sequence `.github/workflows/ios.yml` and a local build use). A shared **App** scheme is now
-  committed (`xcshareddata/xcschemes/App.xcscheme`) because the workflow had fallen back to
-  archiving the `FidelisWidgetExtension` scheme; the Xcode Cloud workflow must be pointed at the
-  **App** scheme.
+  resolution failed (`node_modules/@capacitor/app doesn't exist`). A `ci_post_clone.sh` hook now
+  runs `npm ci` → `npm run build` → `npx cap copy ios` before resolution. **Location matters:**
+  Xcode Cloud resolves the `ci_scripts/` folder *relative to the `.xcodeproj`*, which sits at
+  `ios/App/`, not the repository root — a root-only copy is reported "Post-Clone script not found at
+  ci_scripts/ci_post_clone.sh" even when committed. So the hook lives at
+  `ios/App/ci_scripts/ci_post_clone.sh` (a repo-root copy is kept as a harmless fallback). It uses
+  `cap copy`, not `cap sync`, so it never re-runs `cap update` and never rewrites the committed
+  `Package.swift` platform (the `.v15`→`.v17` trap). A shared **App** scheme is now committed
+  (`xcshareddata/xcschemes/App.xcscheme`) because the workflow had fallen back to archiving the
+  `FidelisWidgetExtension` scheme; the Xcode Cloud workflow must be pointed at the **App** scheme.
 
 No engine, bundled text, or golden snapshot changed.
 
