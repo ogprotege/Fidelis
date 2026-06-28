@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { bookDisplayName, getBook } from "../lib/canon";
+import { getBook } from "../lib/canon";
 import { BookData, loadBook } from "../lib/data";
-import { LectionaryRow, formatCitation, hebrewSpanToVulgate } from "../lib/lectionary";
+import { LectionaryRow, formatLectionaryCitation, hebrewSpanToVulgate } from "../lib/lectionary";
 import { getTranslation } from "../lib/translations";
 
 interface Props {
@@ -97,7 +97,7 @@ export default function ReadingText({ row, translation, label, id }: Props) {
       {label && <div className="reading-label">{label}</div>}
       <div className="reading-citation">
         <Link to={`/read/${shownTranslation}/${row.b}/${firstCh}?v=${firstV}`}>
-          {formatCitation(row, bookDisplayName(book, shownTranslation))}
+          {formatLectionaryCitation(row, book)}
         </Link>
         {row.partial && (
           <span className="muted small" title="The lectionary subdivides verses here; full verses are shown.">

@@ -14,7 +14,7 @@ import { getTranslation } from "../lib/translations";
 import {
   DayReadings,
   READING_LABELS,
-  formatCitation,
+  formatLectionaryCitation,
   readingsForDate,
   sundayCycle,
   weekdayCycle
@@ -127,7 +127,7 @@ export default function Home() {
                 return (
                   <li key={g}>
                     <span className="mass-label">{READING_LABELS[Number(g)] ?? "Reading"}</span>{" "}
-                    {formatCitation(row, bookDisplayName(book, translation))}
+                    {formatLectionaryCitation(row, book)}
                   </li>
                 );
               })}

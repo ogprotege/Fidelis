@@ -647,6 +647,53 @@ no signing or capability change.
 The upstream source pins grow from four to five (the Trent pin); the manifest is resealed to record it.
 The bundled texts, liturgical engines, and golden snapshots are untouched.
 
+## Set right (v1.14.1)
+
+*Bugs found in the v1.14.0 TestFlight build, plus the Xcode Cloud archive fix.*
+
+- **The Mass reading is named the modern way.** The Today card and the Readings page cited each
+  reading in the *selected Bible's* naming, so a Douay-Rheims reader saw the Thirteenth Sunday's
+  first reading as "4 Kings 4:8-11,14-16" — authentic Douay, but jarring against the modern Roman
+  lectionary everyone else prints. `formatLectionaryCitation()` (`src/lib/lectionary.ts`) now pins
+  a reading's reference label to the **modern** book name ("2 Kings"), independent of the
+  translation the body text renders in. This was applied to all three Mass-citation surfaces — the
+  Today card, the Readings page, and the pre-resolved home-screen **widget** data
+  (`scripts/build-calendar-widget.ts` → `calendar.json`, regenerated for iOS and Android, which had
+  still emitted "3 Kings"/"1 Paralipomenon" and so contradicted the app). The Bible Reader and book
+  picker stay translation-aware; only the lectionary citation is fixed.
+- **A St. Charles Borromeo Catechism export now imports.** `parseCccText()`
+  (`src/lib/import-formats.ts`) recognizes the scborromeo.org export shape — the full modern CCC
+  carried in `page_nodes`, each paragraph opened by a `ref-ccc` marker — and converts it on-device
+  to the same flat ¶ map the `fidelis-ccc-1` intake produces (all 2865 ¶, the 1258 cited ¶ fully
+  covered). Footnote apparatus is stripped; block-quote and layout-split prose paragraphs are
+  rejoined with a space; and unambiguous section headings (`heavy_header`-flagged, all-caps,
+  roman-numeral, or TOC-listed titles) that sit before a numbered ¶ are dropped. The heading rule
+  is deliberately **conservative** — the export splits a single ¶ across many short paragraphs and
+  carries no reliable heading flag, so guessing at mixed-case titles would delete real prose (a
+  split sentence, a maxim, a scripture quotation). We drop only what is certain and leave the rest,
+  because losing text is worse than a cosmetic title left in place. The owner drops their `ccc.json`
+  straight into Settings → Magisterium on iOS — no desktop converter. The modern CCC text is still
+  **never bundled**: only the imported copy renders.
+- **"Save image" actually saves.** The share card's Save button used a web `<a download>`, a silent
+  no-op inside the iOS WKWebView — it reported success while nothing reached Photos. A tiny in-app
+  Capacitor plugin (`ios/App/App/SaveImagePlugin.swift`, via `UIImageWriteToSavedPhotosAlbum`)
+  now writes the card to the photo library, needing only the **add-only**
+  `NSPhotoLibraryAddUsageDescription` permission (the app can save out, never read the library
+  back). On Android, where the same download is also a no-op, Save routes through the system share
+  sheet instead of claiming a false success. Web/desktop keep the download. The plugin is wired
+  into the App target by `scripts/configure-ios-app-target.rb`.
+- **Xcode Cloud can archive again.** The iOS project links the Capacitor plugins as *local* Swift
+  packages under `node_modules/@capacitor/*`, and the web bundle (`dist` → `ios/App/App/public`) is
+  generated, not committed — but Xcode Cloud clones the repo and never runs `npm`, so SPM
+  resolution failed (`node_modules/@capacitor/app doesn't exist`). A `ci_scripts/ci_post_clone.sh`
+  hook now runs `npm ci` → `npm run build` → `npx cap sync ios` before resolution (the same
+  sequence `.github/workflows/ios.yml` and a local build use). A shared **App** scheme is now
+  committed (`xcshareddata/xcschemes/App.xcscheme`) because the workflow had fallen back to
+  archiving the `FidelisWidgetExtension` scheme; the Xcode Cloud workflow must be pointed at the
+  **App** scheme.
+
+No engine, bundled text, or golden snapshot changed.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

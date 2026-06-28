@@ -6,8 +6,10 @@ import {
   dayCodeCandidates,
   displayReadings,
   formatCitation,
+  formatLectionaryCitation,
   hebrewSpanToVulgate,
-  resolveReadings
+  resolveReadings,
+  LectionaryRow
 } from "../src/lib/lectionary";
 import { liturgicalDay } from "../src/lib/liturgical";
 import { DailyQuote, quoteOfTheDay } from "../src/lib/quotes";
@@ -2148,6 +2150,64 @@ console.log("");
   const ks = parseCccText("ccc.json", JSON.stringify({ format: "fidelis-ccc-1", paragraphs: { "219": "x", "444": "y" } }));
   check("parseCccText: keys share url.json's string-integer key space", Object.keys(ks.paragraphs).every((k) => /^\d+$/.test(k) && k in cu));
 
+  // (h) the St. Charles Borromeo (scborromeo.org) export shape — page_nodes keyed by
+  // TOC section, each ¶ opened by a `ref-ccc` marker — is recognized and converted
+  // in-app (the owner imports it on iOS; no desktop converter runs). Synthetic fixture.
+  const scb = JSON.stringify({
+    meta: { version: "0.0.2", attribution: ["Libreria Editrice Vaticana", "St. Charles Borromeo Catholic Church"] },
+    toc_link_tree: [],
+    toc_nodes: { "h1": { text: "The Profession of Faith" } }, // a real TOC title, matched to drop its inline copy
+    ccc_refs: { bible: {}, other: {} },
+    page_nodes: {
+      "toc-2": { id: "toc-2", paragraphs: [
+        { elements: [{ type: "ref-ccc", ref_number: 1817 }, { type: "text", text: "Hope is the virtue", attrs: { i: true } }], attrs: {} },
+        // a between-paragraph heading (heavy_header, no ref-ccc) must NOT glue onto ¶1817
+        { elements: [{ type: "text", text: "Our Father who art in heaven", attrs: { heavy_header: true } }], attrs: {} },
+        { elements: [{ type: "ref-ccc", ref_number: 2865 }, { type: "text", text: "omega", attrs: {} }], attrs: {} }
+      ] },
+      // page_nodes order is not numeric; the converter must order by ¶, not key order
+      "toc-1": { id: "toc-1", paragraphs: [
+        { elements: [{ type: "text", text: "PROLOGUE", attrs: { b: true, heavy_header: true } }], attrs: {} },
+        // a ¶ that spans TWO source paragraphs (a continuation, no new ref-ccc) — the
+        // bodies must be joined WITH a space, not run together ("…faith!"The Church)
+        { elements: [{ type: "ref-ccc", ref_number: 1 }, { type: "text", text: "God, infinitely perfect.", attrs: {} }, { type: "ref", number: 7 }], attrs: {} },
+        { elements: [{ type: "text", text: "He calls man to seek him.", attrs: {} }], attrs: {} },
+        // inline scripture citation = ref-anchor + its trailing text; both kept, the footnote `ref` dropped
+        { elements: [{ type: "ref-ccc", ref_number: 2 }, { type: "text", text: "alpha ", attrs: {} }, { type: "ref-anchor", link: "x", attrs: {} }, { type: "text", text: "beta.", attrs: {} }], attrs: {} }
+      ], footnotes: {} },
+      // heading handling — drop ONLY unambiguous structural titles; never guess at a
+      // mixed-case line (a wrong guess deletes real prose split across paragraphs).
+      "toc-3": { id: "toc-3", paragraphs: [
+        { elements: [{ type: "ref-ccc", ref_number: 100 }, { type: "text", text: "The first sentence." }], attrs: {} },
+        // an ALL-CAPS / roman-numeral section title before the next ¶ → dropped, not glued onto ¶100
+        { elements: [{ type: "text", text: "II. THE STAGES OF REVELATION" }], attrs: {} },
+        { elements: [{ type: "ref-ccc", ref_number: 101 }, { type: "text", text: "Body of one hundred one." }], attrs: {} },
+        // a mid-sentence prose fragment (split for layout) — must be KEPT, never dropped
+        { elements: [{ type: "text", text: "and the sentence continues here" }], attrs: {} },
+        { elements: [{ type: "ref-ccc", ref_number: 102 }, { type: "text", text: "Body of one oh two." }], attrs: {} },
+        // a mixed-case title that IS in the TOC → dropped by the toc-match path
+        { elements: [{ type: "text", text: "The Profession of Faith" }], attrs: {} },
+        // finding [5]: a heading sharing the elements array BEFORE a ref-ccc must not glue
+        { elements: [{ type: "text", text: "ARTICLE 4", attrs: { heavy_header: true } }, { type: "ref-ccc", ref_number: 103 }, { type: "text", text: "Body of one oh three." }], attrs: {} }
+      ] }
+    }
+  });
+  const sc = parseCccText("ccc.json", scb);
+  check("parseCccText: Borromeo page_nodes export → every ref-ccc ¶ extracted",
+    Object.keys(sc.paragraphs).length === 8 && sc.paragraphs["1817"] === "Hope is the virtue" && sc.paragraphs["2865"] === "omega");
+  check("parseCccText: Borromeo multi-paragraph ¶ joined with a space (no run-on)",
+    sc.paragraphs["1"] === "God, infinitely perfect. He calls man to seek him.");
+  check("parseCccText: Borromeo inline ref-anchor text kept, footnote `ref` dropped", sc.paragraphs["2"] === "alpha beta.");
+  check("parseCccText: Borromeo heavy_header heading does not glue onto the previous ¶", sc.paragraphs["1817"] === "Hope is the virtue" && !/Our Father/.test(sc.paragraphs["1817"]));
+  check("parseCccText: Borromeo structural (all-caps/roman) heading dropped, not glued",
+    sc.paragraphs["100"] === "The first sentence.");
+  check("parseCccText: Borromeo mid-sentence prose fragment KEPT (no false heading drop)",
+    sc.paragraphs["101"] === "Body of one hundred one. and the sentence continues here");
+  check("parseCccText: Borromeo TOC-matched heading dropped, not glued",
+    sc.paragraphs["102"] === "Body of one oh two.");
+  check("parseCccText: Borromeo heading before a ref-ccc in the same paragraph not glued",
+    sc.paragraphs["103"] === "Body of one oh three.");
+
   // CCC-text storage (data.ts). IndexedDB cannot run under tsx, so these guard the
   // upgrade discipline by SOURCE: DB v2, the ccc store created WITHOUT dropping
   // books, and loadCCCText's memo invalidated on write.
@@ -2172,6 +2232,41 @@ console.log("");
   const setSrc = readFileSync(join(ROOT, "src/pages/Settings.tsx"), "utf8");
   check("Settings imports the modern Catechism on-device (parse → idbPutCcc)",
     setSrc.includes("parseCccText") && setSrc.includes("idbPutCcc") && setSrc.includes("Import the modern Catechism"));
+}
+
+// §23 — Mass lectionary citations use MODERN book names regardless of the reading
+// translation. The Roman lectionary is published in modern form ("2 Kings 4:8-11"),
+// so the Douay name the bundled DRB carries ("4 Kings") must not surface on the Mass
+// card or the Readings page even when the text shown is Douay.
+console.log("");
+{
+  const shunammite: LectionaryRow = { t: 1, b: "2-kings", s: [[4, 8, 11], [4, 14, 16]] };
+  const book = getBook("2-kings")!;
+  check("formatLectionaryCitation: modern name (13th Sun OT-A first reading)",
+    formatLectionaryCitation(shunammite, book) === "2 Kings 4:8-11,14-16");
+  check("formatLectionaryCitation: never the Douay '4 Kings'",
+    !formatLectionaryCitation(shunammite, book).includes("4 Kings"));
+  // it must agree with formatCitation when handed the modern name explicitly
+  check("formatLectionaryCitation: == formatCitation(row, book.name)",
+    formatLectionaryCitation(shunammite, book) === formatCitation(shunammite, book.name));
+  // the Mass surfaces are wired to it (so the selected Bible's naming no longer leaks in)
+  const homeSrc = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
+  check("Home Mass list cites via formatLectionaryCitation (not bookDisplayName)",
+    homeSrc.includes("formatLectionaryCitation"));
+  const rtSrc = readFileSync(join(ROOT, "src/components/ReadingText.tsx"), "utf8");
+  check("ReadingText cites via formatLectionaryCitation (modern names)",
+    rtSrc.includes("formatLectionaryCitation"));
+  // the native widget pipeline is the third Mass-citation surface — it must use the
+  // modern name too, or the home-screen "Today at Mass" widget would contradict the app.
+  const calBuilder = readFileSync(join(ROOT, "scripts/build-calendar-widget.ts"), "utf8");
+  check("widget builder cites via formatLectionaryCitation (not bookDisplayName/translation)",
+    calBuilder.includes("formatLectionaryCitation") && !calBuilder.includes("bookDisplayName"));
+  // and the committed, generated widget data must carry no Douay-only book names
+  for (const rel of ["ios/WidgetExtension/calendar.json", "android/app/src/main/res/raw/calendar.json"]) {
+    const cal = readFileSync(join(ROOT, rel), "utf8");
+    check(`${rel} carries modern lectionary book names (no Douay-only)`,
+      !/\b[34] Kings\b/.test(cal) && !/Paralipomenon/.test(cal) && !/Canticle of Canticles/.test(cal));
+  }
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

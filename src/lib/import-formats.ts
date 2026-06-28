@@ -236,13 +236,139 @@ function cleanCccText(s: string): string {
     .trim();
 }
 
+/* The St. Charles Borromeo (scborromeo.org) Catechism export — a freely available
+ * dump of the modern CCC. The full text lives in `page_nodes`, keyed by TOC section;
+ * within each section every Catechism paragraph is opened by a `{ type:"ref-ccc",
+ * ref_number }` marker, followed by the `text` (and inline `ref-anchor` scripture
+ * citations) that make up its body. We carry only the minimal shape we read. */
+interface ScbElement {
+  type?: string;
+  text?: string;
+  ref_number?: number;
+  attrs?: { heavy_header?: boolean; [k: string]: unknown };
+}
+interface ScbParagraph {
+  elements?: ScbElement[];
+  attrs?: { indent?: boolean; [k: string]: unknown };
+}
+interface ScbPageNode {
+  paragraphs?: ScbParagraph[];
+}
+
+/** A heading string folded for table-of-contents matching. */
+function normHeading(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
 /**
- * Parse a `fidelis-ccc-1` import (the modern Catechism, the owner's own copy).
- * Tolerant of three shapes — the header `{ format, edition, language, paragraphs }`,
- * a `{ ccc: { … } }` wrapper, and a bare flat map `{ "1": "…" }` — all normalized
- * to `{ edition, language, paragraphs }`. Keys must be integers in [1, 2865]
- * (url.json's key space), so a mis-dropped Bible file throws a friendly error.
- * Contains NO Catechism text: the output derives only from the supplied file.
+ * Is a ref-ccc-less paragraph an unambiguous section HEADING (to drop)? The export
+ * splits a single numbered ¶ across several layout paragraphs and inserts section
+ * titles between numbered ¶ — and the title carries no reliable flag of its own.
+ * We therefore drop ONLY titles we can recognize without risk: an all-caps line, a
+ * roman-numeral / Part / Section / Chapter / Article header, or an exact
+ * table-of-contents title. Mixed-case sub-headings ("The covenant with Noah") are
+ * deliberately NOT guessed at — a wrong guess deletes real prose (a split sentence,
+ * a short maxim, a scripture quotation), which is far worse than a cosmetic title
+ * left in place. Callers also require the next paragraph to open a new ¶, so a
+ * mid-sentence fragment can never be mistaken for a heading.
+ */
+function isStructuralHeading(text: string, tocTitles: Set<string>): boolean {
+  const t = text.trim();
+  if (!t) return false;
+  if (/[A-Z]/.test(t) && !/[a-z]/.test(t) && t.replace(/[^A-Za-z]/g, "").length >= 2) return true; // ALL CAPS
+  if (/^[IVXLCDM]+\.\s/.test(t)) return true; // "III. …"
+  if (/^(Part|Section|Chapter|Article|Paragraph)\b/.test(t)) return true;
+  return tocTitles.has(normHeading(t));
+}
+
+/**
+ * Convert a Borromeo `page_nodes` map into a flat `{ "¶": "text" }` map — the same
+ * shape the bare-flat-map intake already normalizes. PARSING ONLY: every word comes
+ * from the supplied file. A `ref-ccc` opens a paragraph; subsequent `text` /
+ * `ref-anchor` body appends to it; footnote `ref` markers are dropped (their
+ * apparatus is stripped downstream anyway). Paragraphs with no `ref-ccc` are the
+ * tricky case: a `heavy_header` title, or a structural heading that titles the next
+ * numbered ¶, closes the open ¶ and is dropped; everything else (block quotes,
+ * prose split across layout paragraphs) is a continuation and is appended with a
+ * separating space so sentences don't run together.
+ */
+function extractScborromeoParagraphs(
+  pageNodes: Record<string, unknown>,
+  tocNodes: unknown
+): Record<string, string> {
+  const tocTitles = new Set<string>();
+  if (tocNodes && typeof tocNodes === "object") {
+    for (const node of Object.values(tocNodes as Record<string, unknown>)) {
+      const txt = (node as { text?: unknown } | null)?.text;
+      if (typeof txt === "string" && txt.trim()) tocTitles.add(normHeading(txt));
+    }
+  }
+  const out: Record<string, string> = {};
+  // page_nodes are keyed "toc-N" in arbitrary order; walk them by N so a paragraph's
+  // body can never be reordered. (Order WITHIN a node is the array order, authoritative.)
+  const ids = Object.keys(pageNodes).sort(
+    (a, b) => Number(/(\d+)$/.exec(a)?.[1] ?? 0) - Number(/(\d+)$/.exec(b)?.[1] ?? 0)
+  );
+  const textOf = (els: ScbElement[]) =>
+    els.filter((e) => e && e.type === "text" && typeof e.text === "string").map((e) => e.text).join("");
+  const opensParagraph = (els: ScbElement[] | undefined) =>
+    Array.isArray(els) && els.some((e) => e && e.type === "ref-ccc");
+  for (const id of ids) {
+    const node = pageNodes[id] as ScbPageNode | null;
+    if (!node || typeof node !== "object") continue;
+    const paras = Array.isArray(node.paragraphs) ? node.paragraphs : [];
+    let cur = ""; // the open ¶ key; ref-ccc never spans a node, so reset per node
+    for (let i = 0; i < paras.length; i++) {
+      const para = paras[i];
+      const els = Array.isArray(para?.elements) ? para.elements : [];
+      if (opensParagraph(els)) {
+        // Opens (one or more) numbered ¶. Skip any heading text BEFORE the first
+        // ref-ccc; append only the body that follows it.
+        let started = false;
+        for (const el of els) {
+          if (!el || typeof el !== "object") continue;
+          if (el.type === "ref-ccc") {
+            cur = typeof el.ref_number === "number" ? String(el.ref_number) : "";
+            if (cur && out[cur] === undefined) out[cur] = "";
+            started = true;
+          } else if (started && cur && el.type === "text" && typeof el.text === "string") {
+            out[cur] += el.text;
+          }
+        }
+        continue;
+      }
+      // A ref-ccc-less paragraph: heading (drop) or continuation (append).
+      if (els.some((e) => e && e.type === "text" && e.attrs?.heavy_header === true)) {
+        cur = ""; // a flagged heading closes the open ¶
+        continue;
+      }
+      const indent = (para as ScbParagraph)?.attrs?.indent === true; // block quote — always content
+      const text = textOf(els);
+      if (
+        !indent &&
+        opensParagraph(paras[i + 1]?.elements) &&
+        isStructuralHeading(text, tocTitles)
+      ) {
+        cur = ""; // a section title before the next numbered ¶ — drop it
+        continue;
+      }
+      if (cur && text) {
+        if (out[cur] && !/\s$/.test(out[cur])) out[cur] += " ";
+        out[cur] += text;
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Parse a Catechism import (the modern CCC, the owner's own copy). Tolerant of
+ * four shapes — the `fidelis-ccc-1` header `{ format, edition, language, paragraphs }`,
+ * a `{ ccc: { … } }` wrapper, a bare flat map `{ "1": "…" }`, and the St. Charles
+ * Borromeo `page_nodes` export (converted in-app, since the owner imports on iOS) —
+ * all normalized to `{ edition, language, paragraphs }`. Keys must be integers in
+ * [1, 2865] (url.json's key space), so a mis-dropped Bible file throws a friendly
+ * error. Contains NO Catechism text: the output derives only from the supplied file.
  */
 export function parseCccText(_filename: string, text: string): CccTextDoc {
   let json: unknown;
@@ -269,6 +395,9 @@ export function parseCccText(_filename: string, text: string): CccTextDoc {
     raw = (c.paragraphs && typeof c.paragraphs === "object" ? c.paragraphs : c) as Record<string, unknown>;
     if (typeof c.edition === "string") edition = c.edition;
     if (typeof c.language === "string") language = c.language;
+  } else if (obj.page_nodes && typeof obj.page_nodes === "object" && !Array.isArray(obj.page_nodes)) {
+    // St. Charles Borromeo (scborromeo.org) export — convert page_nodes → flat ¶ map.
+    raw = extractScborromeoParagraphs(obj.page_nodes as Record<string, unknown>, obj.toc_nodes);
   } else {
     raw = obj; // bare flat map
   }

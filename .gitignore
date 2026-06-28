@@ -7,5 +7,10 @@ dist/
 *.local.json
 nabre.local.json
 
+# A personal Catechism file dropped into the bundle dir for conversion/review must never
+# be committed — it is copyrighted, and the modern CCC text is never shipped. Import it
+# on-device via Settings → Magisterium instead. (npm test also flags it as an unsealed file.)
+/public/data/ccc/ccc.json
+
 # Local iOS release credentials (App Store Connect API key details) — never committed.
 scripts/ios-release.local.env

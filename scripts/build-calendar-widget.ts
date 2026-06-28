@@ -4,7 +4,7 @@
  * "Today at Mass" and "Quote of the Day" home-screen widgets can show the right
  * content WITHOUT porting the calendar/lectionary/quote engines to Swift/Java.
  *
- * It mirrors what src/pages/Home.tsx computes (resolveReadings + formatCitation +
+ * It mirrors what src/pages/Home.tsx computes (resolveReadings + formatLectionaryCitation +
  * READING_LABELS, liturgicalDay, quoteOfTheDay) — the single source of truth —
  * and emits the same JSON to both native widget bundles:
  *   ios/WidgetExtension/calendar.json
@@ -20,11 +20,11 @@ import { fileURLToPath } from "node:url";
 import {
   LectionaryData,
   READING_LABELS,
-  formatCitation,
+  formatLectionaryCitation,
   resolveReadings,
 } from "../src/lib/lectionary";
 import { COLOR_HEX, liturgicalDay } from "../src/lib/liturgical";
-import { getBook, bookDisplayName } from "../src/lib/canon";
+import { getBook } from "../src/lib/canon";
 import { DailyQuote, quoteOfTheDay } from "../src/lib/quotes";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -32,7 +32,6 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 // (src/lib/storage.ts) so the home-screen "Today at Mass" widget never disagrees
 // with the app about the day's celebration, color, or reading citations.
 const REGION = "usa" as const;
-const TRANSLATION = "drc"; // the bundled default the widgets read for book names
 
 const lect: LectionaryData = JSON.parse(
   readFileSync(join(ROOT, "public/data/lectionary.json"), "utf8")
@@ -62,7 +61,9 @@ function readingsFor(date: Date): { label: string; cite: string }[] {
       if (!book) return null;
       return {
         label: READING_LABELS[Number(g)] ?? "Reading",
-        cite: formatCitation(row, bookDisplayName(book, TRANSLATION)),
+        // Modern book names ("2 Kings"), matching the app's Today card — the Roman
+        // lectionary is cited in modern form, not the bundled DRB's Douay names.
+        cite: formatLectionaryCitation(row, book),
       };
     })
     .filter((x): x is { label: string; cite: string } => x !== null);
