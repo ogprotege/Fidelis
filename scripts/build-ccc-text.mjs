@@ -4,7 +4,8 @@
  * import. PARSING LOGIC ONLY — this script contains no Catechism text. It reads a
  * file you supply (EPUB-derived .txt, recommended; or a PDF), extracts a single
  * monotonic paragraph sequence ¶1→¶2865, and writes ccc.local.json (gitignored,
- * never bundled or committed). It then prints COUNTS ONLY (no body dump).
+ * never bundled or committed). It then prints COUNTS plus a few short incipits to
+ * eyeball — never the full body.
  *
  * Usage:
  *   # EPUB (cleanest — resolves footnote anchors):
@@ -28,6 +29,12 @@ const out = process.argv[3] || "ccc.local.json";
 const edition = process.env.CCC_EDITION || "Catechism of the Catholic Church, 2nd Edition";
 if (!input) {
   console.error('Usage: node scripts/build-ccc-text.mjs <ccc.txt|Catechism.pdf> [out.json]  (or set CCC_TEXT_PDF=)');
+  process.exit(1);
+}
+if (!/\.local\.json$/.test(out)) {
+  // The modern CCC text must NEVER be committed. .gitignore only ignores *.local.json,
+  // so any other name could be accidentally staged — refuse rather than risk it.
+  console.error(`Refusing to write "${out}": the output MUST end in .local.json (the only gitignored name), so the copyrighted text can never be committed.`);
   process.exit(1);
 }
 

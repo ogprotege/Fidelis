@@ -52,6 +52,12 @@ large enough never to repeat inside a year. One release, several long-promised p
   citation index (`ccc/index.json`, `ccc/url.json`) is byte-for-byte as shipped in v1.9.0. The
   upstream source pins grow from four to five (the new Trent pin); the manifest is resealed to
   record it.
+- **Closed-beta note (re-gate before any public release):** the quote corpus deliberately
+  includes a small number of quotations from authors whose works are still under copyright
+  (recent popes and other modern figures), so the §3.3 public-domain red list is currently an
+  **advisory** in `scripts/build-quotes.mjs`, not a hard build gate. This is intentional for the
+  closed TestFlight beta; the red list must be restored to a hard fail (or those quotes removed)
+  before any public App Store release.
 
 ## [1.13.3] — 2026-06-25 — made ready
 

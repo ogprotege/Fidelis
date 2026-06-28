@@ -132,9 +132,13 @@ export default function Settings() {
   };
 
   const removeCcc = async () => {
-    await idbClearCcc();
-    setCccImported(false);
-    setCccMsg("Removed the imported Catechism.");
+    try {
+      await idbClearCcc();
+      setCccImported(false);
+      setCccMsg("Removed the imported Catechism.");
+    } catch (e) {
+      setCccMsg(`Remove failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
   };
 
   const doExport = () => {
