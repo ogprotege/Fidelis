@@ -14,3 +14,6 @@ nabre.local.json
 
 # Local iOS release credentials (App Store Connect API key details) — never committed.
 scripts/ios-release.local.env
+
+# Xcode Cloud build-log artifacts downloaded for debugging (contains signed IPA + dSYMs) — never committed.
+/LOGS/
