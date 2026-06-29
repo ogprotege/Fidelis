@@ -72,6 +72,16 @@ before = app_target.source_build_phase.files.size
 app_target.source_build_phase.add_file_reference(save_ref, true)
 changed << "SaveImagePlugin.swift → sources" if app_target.source_build_phase.files.size > before
 
+# 2c. MainViewController.swift (the CAPBridgeViewController subclass that REGISTERS
+#     SaveImagePlugin in capacitorDidLoad) → App sources. Capacitor only auto-registers
+#     npm-package plugins via capacitor.config.json's packageClassList, so a loose
+#     app-target plugin like SaveImagePlugin must be registered here or it never loads
+#     (Main.storyboard's root VC points at this class).
+mvc_ref = ensure_ref(app_group, "MainViewController.swift")
+before = app_target.source_build_phase.files.size
+app_target.source_build_phase.add_file_reference(mvc_ref, true)
+changed << "MainViewController.swift → sources" if app_target.source_build_phase.files.size > before
+
 # 3. calendar.json (the widget's pre-resolved data) → App resources, so the Intent
 #    can read today's Gospel. Reuse the reference the widget target already owns.
 cal_ref = project.files.find { |f| f.path == "calendar.json" }

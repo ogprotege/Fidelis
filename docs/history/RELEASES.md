@@ -679,9 +679,15 @@ The bundled texts, liturgical engines, and golden snapshots are untouched.
   Capacitor plugin (`ios/App/App/SaveImagePlugin.swift`, via `UIImageWriteToSavedPhotosAlbum`)
   now writes the card to the photo library, needing only the **add-only**
   `NSPhotoLibraryAddUsageDescription` permission (the app can save out, never read the library
-  back). On Android, where the same download is also a no-op, Save routes through the system share
-  sheet instead of claiming a false success. Web/desktop keep the download. The plugin is wired
-  into the App target by `scripts/configure-ios-app-target.rb`.
+  back). **The plugin has to be registered, not just compiled in:** Capacitor auto-registers only
+  the plugins in `capacitor.config.json`'s `packageClassList` (npm plugin packages), so a loose
+  class in the App target is never loaded — `registerPlugin("SaveImage")` then silently resolves
+  to a no-op and iOS never even shows the add-only Photos prompt (the app never appears under
+  Settings → Privacy → Photos). The fix is `MainViewController`, a `CAPBridgeViewController`
+  subclass set as the storyboard root, which calls `bridge?.registerPluginInstance(SaveImagePlugin())`
+  in `capacitorDidLoad()`. On Android, where the same download is also a no-op, Save routes through
+  the system share sheet instead of claiming a false success. Web/desktop keep the download. Both
+  Swift files are wired into the App target by `scripts/configure-ios-app-target.rb`.
 - **Xcode Cloud can archive again.** The iOS project links the Capacitor plugins as *local* Swift
   packages under `node_modules/@capacitor/*`, and the web bundle (`dist` → `ios/App/App/public`) is
   generated, not committed — but Xcode Cloud clones the repo and never runs `npm`, so SPM

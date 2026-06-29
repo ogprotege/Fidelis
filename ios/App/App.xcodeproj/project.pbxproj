@@ -18,6 +18,7 @@
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		5626322B641D4605F44A3ACC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11CDBBCB737DEF9C2119B0D0 /* Foundation.framework */; };
 		73C39F6A00D5D783B6EE1F21 /* calendar.json in Resources */ = {isa = PBXBuildFile; fileRef = 84B035AB00BCC924C60370A3 /* calendar.json */; };
+		A9E1AC20A8326CDF7CB14E48 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4841980084A3F8CCEF44E37F /* MainViewController.swift */; };
 		AB447533271B24F635EAB8DD /* votd.json in Resources */ = {isa = PBXBuildFile; fileRef = 7EFF372456C8913EFA03DBED /* votd.json */; };
 		AE8BB9D9F34E6C3935CF367A /* CalendarWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026CA3150C2ADE6991FE7681 /* CalendarWidgets.swift */; };
 		B30C280F1891819E74E6BAAC /* FidelisWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D64748E6A44324F70C50E8E2 /* FidelisWidget.swift */; };
@@ -56,6 +57,7 @@
 		11CDBBCB737DEF9C2119B0D0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		2E06B0F094A160219C75F3B8 /* SaveImagePlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SaveImagePlugin.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
+		4841980084A3F8CCEF44E37F /* MainViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -128,6 +130,7 @@
 				C2D158AB1DBC21DD2B0350FB /* PrivacyInfo.xcprivacy */,
 				647F6B0977688099B6FE7B4A /* TodaysGospelIntent.swift */,
 				2E06B0F094A160219C75F3B8 /* SaveImagePlugin.swift */,
+				4841980084A3F8CCEF44E37F /* MainViewController.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -276,6 +279,7 @@
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				B795439D162EABB32A902B72 /* TodaysGospelIntent.swift in Sources */,
 				1EABEFBA53261CA7AF48CB1F /* SaveImagePlugin.swift in Sources */,
+				A9E1AC20A8326CDF7CB14E48 /* MainViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -2269,5 +2269,36 @@ console.log("");
   }
 }
 
+// §24 — the in-app SaveImage Capacitor plugin must be REGISTERED with the bridge.
+// Capacitor only auto-registers plugins listed in capacitor.config.json's
+// packageClassList (derived from npm plugin packages); a loose class in the App
+// target is never registered, so registerPlugin("SaveImage") silently falls back to
+// a no-op and the share card's "Save image" can never even request Photos access
+// (the app never appears under Settings → Privacy → Photos). The fix is a
+// CAPBridgeViewController subclass that registers it in capacitorDidLoad(). These
+// guards lock that wiring in so the Save-to-Photos path can never regress.
+console.log("");
+{
+  const storyboard = readFileSync(join(ROOT, "ios/App/App/Base.lproj/Main.storyboard"), "utf8");
+  check("Main.storyboard root VC is the MainViewController subclass (not bare CAPBridgeViewController)",
+    /customClass="MainViewController"/.test(storyboard));
+  const mvc = readFileSync(join(ROOT, "ios/App/App/MainViewController.swift"), "utf8");
+  check("MainViewController subclasses CAPBridgeViewController",
+    /class\s+MainViewController\s*:\s*CAPBridgeViewController/.test(mvc));
+  check("MainViewController registers SaveImagePlugin in capacitorDidLoad()",
+    /capacitorDidLoad/.test(mvc) && /registerPluginInstance\(\s*SaveImagePlugin\(\)\s*\)/.test(mvc));
+  // the subclass must be compiled into the App target (reproducibly, via the script)
+  const cfg = readFileSync(join(ROOT, "scripts/configure-ios-app-target.rb"), "utf8");
+  check("configure-ios-app-target.rb wires MainViewController.swift into App sources",
+    cfg.includes("MainViewController.swift"));
+  // and the permission that makes the save actually grantable must be present
+  const plist = readFileSync(join(ROOT, "ios/App/App/Info.plist"), "utf8");
+  check("Info.plist declares NSPhotoLibraryAddUsageDescription (add-only Photos permission)",
+    plist.includes("NSPhotoLibraryAddUsageDescription"));
+  const plugin = readFileSync(join(ROOT, "ios/App/App/SaveImagePlugin.swift"), "utf8");
+  check("SaveImagePlugin writes via UIImageWriteToSavedPhotosAlbum (triggers the add-only prompt)",
+    plugin.includes("UIImageWriteToSavedPhotosAlbum"));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

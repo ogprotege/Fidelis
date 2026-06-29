@@ -33,9 +33,13 @@ saved nothing on iOS.
 - **The share card's "Save image" saves to Photos on iOS.** The web `<a download>` is a no-op
   inside the WKWebView; a minimal in-app Capacitor plugin (`ios/App/App/SaveImagePlugin.swift`)
   writes the PNG to the photo library via `UIImageWriteToSavedPhotosAlbum`, using only the
-  add-only `NSPhotoLibraryAddUsageDescription` permission. On Android, where the same download
-  also fails, Save now routes through the system share sheet rather than falsely reporting
-  success. Desktop and web keep the file download.
+  add-only `NSPhotoLibraryAddUsageDescription` permission. The plugin is **registered** with the
+  Capacitor bridge by a `MainViewController` (`CAPBridgeViewController` subclass) in
+  `capacitorDidLoad()` — Capacitor only auto-registers npm-package plugins (via
+  `capacitor.config.json`'s `packageClassList`), so a loose app-target plugin must be registered
+  explicitly or it never loads, and the Photos permission prompt never even appears. On Android,
+  where the same download also fails, Save now routes through the system share sheet rather than
+  falsely reporting success. Desktop and web keep the file download.
 - **Xcode Cloud archive builds.** The iOS project links the Capacitor plugins as local Swift
   packages under `node_modules/`, and the web bundle isn't committed — but Xcode Cloud never ran
   `npm`, so package resolution failed (`node_modules/@capacitor/app doesn't exist`). Added a
