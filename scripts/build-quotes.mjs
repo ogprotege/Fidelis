@@ -4,10 +4,11 @@
  * the data manifest (design spec §3; standing rule: nothing under public/data
  * is hand-edited).
  *
- * Validates the corpus schema and applies the spec's red list (§3.3) as an
- * ADVISORY flag: authors whose works/translations are not public domain are
- * counted and reported, but kept, per the owner's directive for the closed
- * beta. Re-enable the hard fail before any public App Store release.
+ * Validates the corpus schema and applies the spec's red list (§3.3) as a
+ * HARD FAIL: authors whose works/translations are not public domain stop the
+ * build. The closed-beta escape hatch is explicit — ALLOW_RED_LIST=1 keeps the
+ * flagged quotes and prints them — so the exception can never silently ride
+ * into a public App Store release.
  */
 import { readFile, writeFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
@@ -61,9 +62,15 @@ for (const q of quotes) {
 }
 
 if (flagged.length) {
+  if (process.env.ALLOW_RED_LIST !== "1") {
+    throw new Error(
+      `${flagged.length} quotes match the §3.3 red list (non-PD authors): ${flagged.join(", ")}. ` +
+      `Remove them from the corpus, or set ALLOW_RED_LIST=1 for a closed-beta build only.`
+    );
+  }
   console.log(
-    `note: ${flagged.length} quotes match the §3.3 red list (non-PD authors) — kept per owner ` +
-    `directive for the closed beta; re-enable the hard fail before any public release.`
+    `ALLOW_RED_LIST=1: ${flagged.length} quotes match the §3.3 red list (non-PD authors) — ` +
+    `kept for this CLOSED-BETA build only; they must be removed before any public release.`
   );
 }
 

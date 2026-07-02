@@ -36,6 +36,11 @@ export function loadManifest(): Promise<ManifestDoc | null> {
     manifestPromise = fetch(`${import.meta.env.BASE_URL}data/manifest.json`)
       .then((r) => (r.ok ? (r.json() as Promise<ManifestDoc>) : null))
       .catch(() => null);
+    // Don't memoize a null: an offline blip must not disable offline downloads
+    // (Settings → Data) and the About integrity line until a full reload.
+    void manifestPromise.then((m) => {
+      if (m === null) manifestPromise = null;
+    });
   }
   return manifestPromise;
 }
@@ -275,7 +280,13 @@ export function loadCCC(): Promise<CCCData> {
       fetch(`${base}data/ccc/url.json`).then((r) => (r.ok ? (r.json() as Promise<CCCData["url"]>) : {}))
     ]);
     return { index, url };
-  })().catch(() => ({ index: {}, url: {} }));
+  })().catch(() => {
+    // A transport failure (offline blip) yields empty maps for THIS call but is
+    // not memoized, so the purple CCC marks return once the network does. A 404
+    // (the layer isn't built) resolves to {} above and stays cached — correct.
+    cccPromise = null;
+    return { index: {}, url: {} };
+  });
   return cccPromise;
 }
 
@@ -302,7 +313,12 @@ let trentPromise: Promise<TrentFile | null> | null = null;
 export function loadTrent(): Promise<TrentFile | null> {
   trentPromise ??= fetch(`${import.meta.env.BASE_URL}data/trent/trent.json`)
     .then((r) => (r.ok ? (r.json() as Promise<TrentFile>) : null))
-    .catch(() => null);
+    .catch(() => {
+      // Transport failure: don't memoize, so the Catechism sheet recovers once
+      // the network does (a built-but-unreachable layer is not a missing one).
+      trentPromise = null;
+      return null;
+    });
   return trentPromise;
 }
 

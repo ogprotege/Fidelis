@@ -85,7 +85,7 @@ const FATHERS: FatherDef[] = [
   { id: "ambrosiaster", name: "Ambrosiaster", aliases: ["ambrosiaster"], year: 375, circa: true },
   { id: "ambrose", name: "Ambrose", aliases: ["ambrose", "ambros"], year: 397 },
   { id: "jerome", name: "Jerome", aliases: ["jerome", "hieronymus", "hieron"], year: 420 },
-  { id: "john-damascene", name: "John Damascene", aliases: ["john damascene", "john of damascus", "damascene", "damascen", "damasc", "damas"], year: 749, circa: true },
+  { id: "john-damascene", name: "John Damascene", aliases: ["john damascene", "john of damascus", "damascene", "damascenus", "damascen", "damasc", "damas"], year: 749, circa: true },
   { id: "athanasius", name: "Athanasius", aliases: ["athanasius", "athanas"], year: 373 },
   { id: "basil", name: "Basil", aliases: ["basil"], year: 379 },
   { id: "hilary", name: "Hilary", aliases: ["hilary", "hilar", "hil"], year: 367 },
@@ -275,7 +275,11 @@ function matchFather(norm: string): FatherDef | null {
   if (!norm) return null;
   for (const f of FATHERS) {
     for (const a of f.aliases) {
-      if (norm === a || norm.startsWith(a + " ") || norm.startsWith(a)) return f;
+      // An alias matches only at a word boundary: exactly, or followed by a
+      // non-letter. A bare prefix match would mis-attribute — "leontius" is not
+      // Leo the Great, and marking him a Doctor would corrupt the Doctors-only
+      // filter (aliases stay abbreviation-friendly: "aug." → "aug" still hits).
+      if (norm === a || (norm.startsWith(a) && !/[a-z]/.test(norm.charAt(a.length)))) return f;
     }
   }
   return null;

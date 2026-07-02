@@ -27,6 +27,13 @@ interface SavedBodyStyle {
 let lockCount = 0;
 let saved: SavedBodyStyle | null = null;
 
+/** Whether the body is currently pinned by at least one sheet. While locked,
+ *  `window.scrollY` is not the page's real offset (pinning resets it to 0), so
+ *  scroll recorders must ignore it. */
+export function isScrollLocked(): boolean {
+  return lockCount > 0;
+}
+
 /** Freeze the page behind a modal. Safe to nest — only the first call pins the
  *  body; later calls just bump the count. */
 export function lockScroll(): void {

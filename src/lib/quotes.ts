@@ -40,10 +40,17 @@ export interface DailyQuote {
 
 let cache: Promise<DailyQuote[]> | null = null;
 export function loadQuotes(): Promise<DailyQuote[]> {
-  cache ??= fetch(`${import.meta.env.BASE_URL}data/quotes.json`).then(async (r) => {
-    if (!r.ok) throw new Error(`quotes data: HTTP ${r.status}`);
-    return (await r.json()).quotes as DailyQuote[];
-  });
+  if (!cache) {
+    cache = fetch(`${import.meta.env.BASE_URL}data/quotes.json`).then(async (r) => {
+      if (!r.ok) throw new Error(`quotes data: HTTP ${r.status}`);
+      return (await r.json()).quotes as DailyQuote[];
+    });
+    // Never memoize a failure: a transient offline blip must not pin the Quote
+    // of the Day to the same rejection until a full reload.
+    cache.catch(() => {
+      cache = null;
+    });
+  }
   return cache;
 }
 

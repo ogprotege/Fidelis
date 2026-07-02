@@ -326,6 +326,7 @@ export default function Reader() {
           value={translation}
           onChange={(e) => go(e.target.value, bookSlug, Math.min(chapter, getBook(bookSlug)!.chapters))}
           title="Translation"
+          aria-label="Translation"
         >
           {TRANSLATIONS.map((t) => (
             <option key={t.id} value={t.id}>
@@ -333,7 +334,12 @@ export default function Reader() {
             </option>
           ))}
         </select>
-        <select value={bookSlug} onChange={(e) => go(translation, e.target.value, 1)} title="Book">
+        <select
+          value={bookSlug}
+          onChange={(e) => go(translation, e.target.value, 1)}
+          title="Book"
+          aria-label="Book"
+        >
           {BOOKS.map((b) => (
             <option key={b.slug} value={b.slug}>
               {bookDisplayName(b, translation)}
@@ -344,6 +350,7 @@ export default function Reader() {
           value={chapter}
           onChange={(e) => go(translation, bookSlug, parseInt(e.target.value, 10))}
           title="Chapter"
+          aria-label="Chapter"
         >
           {Array.from({ length: chapterCount }, (_, i) => (
             <option key={i + 1} value={i + 1}>
@@ -356,6 +363,7 @@ export default function Reader() {
             value={parallel ?? ""}
             onChange={(e) => update({ parallel: e.target.value || null })}
             title="Parallel translation"
+            aria-label="Parallel translation"
           >
             <option value="">No parallel</option>
             {TRANSLATIONS.filter((t) => t.id !== translation).map((t) => (

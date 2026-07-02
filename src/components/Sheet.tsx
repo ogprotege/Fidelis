@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useLayoutEffect, useRef } from "react";
 import { pushOverlay, removeOverlay } from "../lib/overlays";
 import { lockScroll, unlockScroll } from "../lib/scrollLock";
 import Icon from "./Icon";
@@ -31,7 +31,12 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
-  useEffect(() => {
+  // A LAYOUT effect, deliberately: its cleanup (unlockScroll, which restores the
+  // pre-lock scroll offset) must run in React's mutation phase, BEFORE
+  // ScrollManager's layout effect positions the new page. As a passive effect,
+  // navigating away while the sheet was open would scroll the destination page
+  // to the departed page's offset after ScrollManager had already placed it.
+  useLayoutEffect(() => {
     opener.current = document.activeElement as HTMLElement | null;
     // Register with the overlay stack so the Android hardware Back button (and the
     // app-root exit decision) closes this sheet first, before touching navigation.
@@ -42,7 +47,7 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
     // stranded on the body — the iOS "page won't scroll" bug.
     lockScroll();
     panelRef.current
-      ?.querySelector<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])')
+      ?.querySelector<HTMLElement>('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')
       ?.focus();
 
     const onKey = (e: KeyboardEvent) => {
@@ -51,8 +56,10 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
         return;
       }
       if (e.key !== "Tab") return;
+      // Exclude disabled controls: a disabled first/last element can never hold
+      // focus, so keeping it as the trap boundary would let Tab escape the sheet.
       const f = panelRef.current?.querySelectorAll<HTMLElement>(
-        'button, [href], input, summary, [tabindex]:not([tabindex="-1"])'
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
       );
       if (!f || f.length === 0) return;
       const first = f[0];
