@@ -61,14 +61,31 @@ for (const bk of BOOKS) {
 }
 for (const k in OSIS_TO_SLUG) NAME_TO_SLUG.set(norm(k), OSIS_TO_SLUG[k]);
 
-/** Resolve a USFM code / OSIS id / book name to an app slug, or undefined. */
+// Traditional aliases various exports use (e.g. the SWORD/scrollmapper corpus
+// family names books "I Samuel", "Revelation of John"). Pure metadata.
+NAME_TO_SLUG.set(norm("Song of Solomon"), "song-of-songs");
+NAME_TO_SLUG.set(norm("Canticle of Canticles"), "song-of-songs");
+NAME_TO_SLUG.set(norm("Revelation of John"), "revelation");
+NAME_TO_SLUG.set(norm("Apocalypse of John"), "revelation");
+NAME_TO_SLUG.set(norm("Prayer of Manasses"), "prayer-of-manasseh");
+
+/** Resolve a USFM code / OSIS id / book name to an app slug, or undefined.
+ *  Leading roman-numeral ordinals ("I Samuel", "III John") normalize to the
+ *  arabic form the canon aliases carry. */
 export function resolveBookSlug(raw: string): string | undefined {
   if (!raw) return undefined;
   const trimmed = raw.trim();
   if (USFM_TO_SLUG[trimmed.toUpperCase()]) return USFM_TO_SLUG[trimmed.toUpperCase()];
   if (OSIS_TO_SLUG[trimmed]) return OSIS_TO_SLUG[trimmed];
   const n = norm(trimmed);
-  return NAME_TO_SLUG.get(n);
+  const direct = NAME_TO_SLUG.get(n);
+  if (direct) return direct;
+  const romans: Record<string, string> = { i: "1", ii: "2", iii: "3", iv: "4" };
+  const rm = trimmed.match(/^(I{1,3}|IV)\s+(.+)$/i);
+  if (rm && romans[rm[1].toLowerCase()]) {
+    return NAME_TO_SLUG.get(norm(`${romans[rm[1].toLowerCase()]} ${rm[2]}`));
+  }
+  return undefined;
 }
 
 /* ── format detection + dispatch ────────────────────────────────────────── */
@@ -95,6 +112,101 @@ export function parseImport(filename: string, text: string): ImportedBook[] {
     case "osis": return parseOsis(text);
     default: return parseJson(text);
   }
+}
+
+/** Does an imported book carry any verse text at all? Corpus files often ship
+ *  empty placeholder books (e.g. an untranslated Vulgate appendix); importing
+ *  one is never useful — and via a name alias ("I Esdras" → the Douay name of
+ *  Ezra) an empty placeholder could even overwrite a real book. Skip them. */
+export function importedBookHasText(book: ImportedBook): boolean {
+  return book.chapters.some((ch) => ch.some((v) => v.trim().length > 0));
+}
+
+/* ── Versification normalization (per-translation, verified coordinates) ── */
+
+/* The app's grid is the Clementine Vulgate's (see ReadingText/votd: every
+ * cross-reference — lectionary spans, VOTD, commentary keys, CCC citations —
+ * addresses Vulgate coordinates), so an import must arrive on that grid.
+ *
+ * The Biblia Platense (Straubinger) digital corpus is Vulgate-gridded in 1,330
+ * of its 1,334 chapters (verified against the bundled Clementine text by a
+ * full-corpus verse-count diff and a per-chapter length-correlation sweep,
+ * with every flagged chapter adjudicated by content). Exactly four chapters
+ * carry their text at the Hebrew/critical verse numbers inside the
+ * Vulgate-sized grid, and each was verified verse-by-verse at the boundaries:
+ *
+ *   exodus 8   +4  (ES 8:1 "Extiende tu mano…" = Vulg 8:5; Vulg 8:1-4's content
+ *                   sits merged in 7:25, per the Hebrew chapter break)
+ *   numbers 13 +1  (ES 13:1 "Habló Yahvé…" = Vulg 13:2)
+ *   psalms 10  +1  (ES 10:1 title+text = Vulg 10:1-2; the title is merged)
+ *   mark 9     −1  (ES 9:1 "En verdad, os digo…" = Vulg 8:39 — the AV chapter
+ *                   break; ES 9:49 carries Vulg 9:48+49 merged)
+ *
+ * The remaps below MOVE text between slots — they never alter a character of
+ * it. Each applies only when the chapter matches its pre-remap signature
+ * (filled/empty layout), so an already-normalized file is untouched
+ * (idempotent) and a differently-prepared Straubinger never double-shifts. */
+
+interface ChapterShift {
+  slug: string;
+  chapter: number; // 1-indexed
+  /** Vulgate slot = source slot + shift. */
+  shift: number;
+  /** Signature: source slots that must be FILLED / EMPTY for the remap to apply. */
+  filledThrough: number;
+  emptyAfter: number; // count of trailing empties expected (0 = none)
+}
+
+const STRAUBINGER_SHIFTS: ChapterShift[] = [
+  { slug: "exodus", chapter: 8, shift: 4, filledThrough: 28, emptyAfter: 4 },
+  { slug: "numbers", chapter: 13, shift: 1, filledThrough: 33, emptyAfter: 1 },
+  { slug: "psalms", chapter: 10, shift: 1, filledThrough: 7, emptyAfter: 1 }
+];
+
+function applyShift(chapter: string[], { shift, filledThrough, emptyAfter }: ChapterShift): string[] | null {
+  const size = filledThrough + emptyAfter;
+  if (chapter.length !== size) return null;
+  for (let v = 1; v <= filledThrough; v++) if (!chapter[v - 1]?.trim()) return null;
+  for (let v = filledThrough + 1; v <= size; v++) if (chapter[v - 1]?.trim()) return null;
+  const out = new Array<string>(size).fill("");
+  for (let v = 1; v <= filledThrough; v++) out[v - 1 + shift] = chapter[v - 1];
+  return out;
+}
+
+/**
+ * Normalize a parsed import onto the Vulgate grid for the translation being
+ * imported. Today only the Straubinger (Biblia Platense) needs it; other ids
+ * pass through unchanged. Pure coordinate movement — no text is created,
+ * edited, or dropped.
+ */
+export function normalizeImport(translationId: string, books: ImportedBook[]): ImportedBook[] {
+  if (translationId !== "straubinger") return books;
+  return books.map((book) => {
+    const slug = resolveBookSlug(book.name);
+    let chapters = book.chapters;
+    for (const s of STRAUBINGER_SHIFTS) {
+      if (s.slug !== slug) continue;
+      const shifted = applyShift(chapters[s.chapter - 1] ?? [], s);
+      if (shifted) chapters = chapters.map((ch, ci) => (ci === s.chapter - 1 ? shifted : ch));
+    }
+    // Mark 8/9: the AV chapter break. ES 9:1 is Vulg 8:39 (the empty last slot
+    // of ch8), and ch9 shifts down one; Vulg 9:48+49 arrive merged in the last
+    // filled slot. Applies only to the exact pre-remap signature.
+    if (slug === "mark") {
+      const c8 = chapters[7] ?? [];
+      const c9 = chapters[8] ?? [];
+      const signature =
+        c8.length === 39 && !c8[38]?.trim() && c9.length === 49 && c9.every((v) => v.trim());
+      if (signature) {
+        const n8 = [...c8];
+        n8[38] = c9[0];
+        const n9 = new Array<string>(49).fill("");
+        for (let v = 2; v <= 49; v++) n9[v - 2] = c9[v - 1];
+        chapters = chapters.map((ch, ci) => (ci === 7 ? n8 : ci === 8 ? n9 : ch));
+      }
+    }
+    return chapters === book.chapters ? book : { ...book, chapters };
+  });
 }
 
 /* ── JSON (scrollmapper shape) ──────────────────────────────────────────── */

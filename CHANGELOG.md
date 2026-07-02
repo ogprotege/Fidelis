@@ -6,6 +6,45 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.15.0] — 2026-07-02 — our own tongues
+
+*"We have heard them speak in our own tongues the wonderful works of God." (Acts 2:11)*
+
+Spanish arrives: the **Biblia Platense** (Mons. Juan Straubinger, La Plata 1948–51) — the
+classic Spanish Catholic translation — as the app's third import-only translation. Like the
+NABRE, its text is **never bundled** (its U.S. copyright term has not clearly expired; the
+standing rule holds): the user imports a copy they may lawfully use, and the whole app —
+Reader, parallel view, Verse of the Day, share cards, Mass readings — works in Spanish.
+
+### Added
+
+- **`straubinger` translation** (`src/lib/translations.ts`): Spanish (`language: "es"`),
+  import-only, honest copyright note. It appears everywhere translations do — the Reader
+  toolbar, parallel view, Settings, the Translations page — with zero special-casing.
+- **Versification normalization at import** (`normalizeImport` in `src/lib/import-formats.ts`).
+  The app's grid is the Clementine Vulgate's (every cross-reference — lectionary spans, VOTD,
+  commentary keys, CCC citations — addresses Vulgate coordinates). The Platense digital corpus
+  was verified against the bundled Vulgate chapter-by-chapter (a full verse-count diff plus a
+  per-chapter length-correlation sweep, every flagged chapter adjudicated by content): 1,330 of
+  1,334 chapters already sit on the Vulgate grid, and exactly four carry their text at
+  Hebrew/critical verse numbers — Exodus 8 (+4), Numbers 13 (+1), Psalm 10 (+1), and Mark 9
+  (−1, the AV chapter break: its first verse belongs at Mark 8:39). The normalizer MOVES those
+  verses to their Vulgate slots — it never alters a character — and each remap is gated on the
+  chapter's exact pre-remap signature, so it is idempotent and inert on any other file.
+- **Book-name resolution for the SWORD/scrollmapper family** (`resolveBookSlug`): leading
+  roman-numeral ordinals ("I Samuel", "III John") and traditional aliases ("Song of Solomon",
+  "Revelation of John", "Prayer of Manasses") now resolve — for every import format.
+- **`lang` plumbing for Spanish**: `langAttr()`/`languageLabel()` (`src/lib/translations.ts`)
+  replace the scattered `language === "la"` ternaries, so screen readers voice Spanish text as
+  Spanish everywhere the Latin already worked (Reader, parallel column, readings, verse cards).
+
+### Fixed
+
+- **A textless placeholder book can no longer overwrite a real one.** Corpus files often carry
+  empty appendix placeholders; via a name alias ("I Esdras" is the Douay name of Ezra) an empty
+  placeholder imported after the real book would have clobbered it. The import now skips books
+  with no text at all (`importedBookHasText`).
+
 ## [1.14.4] — 2026-07-02 — the watchmen
 
 *"Upon thy walls, O Jerusalem, I have appointed watchmen: all the day and all the night they

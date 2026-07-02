@@ -821,6 +821,46 @@ batch. No app code changed; every line is a gate.*
   change must prove the shells still build. Xcode Cloud's `ci_post_clone.sh` pins `node@22` to
   match CI.
 
+## Our own tongues (v1.15.0)
+
+*"We have heard them speak in our own tongues the wonderful works of God." (Acts 2:11) — the
+first Spanish translation, and the pattern every future language will ride.*
+
+The **Biblia Platense** — Mons. Juan Straubinger's translation from the original languages
+against the Vulgate (La Plata, 1948–51), the classic Spanish Catholic Bible — joins as the
+third **import-only** translation. The licensing posture is the NABRE's exactly: Straubinger
+died in 1956, so the translation's U.S. copyright term (via URAA restoration) has not clearly
+expired, whatever "public domain" labels circulate; the standing rule — copyrighted texts are
+never bundled — holds, and the user imports a copy they may lawfully use. (The rights question
+joins the NABRE conversation with the owner's licensing contacts; a blessing later converts
+this into a clean bundle with no code change.)
+
+What made this more than a metadata entry:
+
+- **The corpus was verified against the app's own Vulgate grid, chapter by chapter.** The
+  digital Platense is Vulgate-versified in 1,330 of its 1,334 chapters — full verse-count diff:
+  zero shape mismatches; the seven Vulgate join/split psalms all correctly arranged (Ps 9
+  carries Heb 10; "In exitu" at 113; "Lauda Jerusalem" at 147). A per-chapter verse-LENGTH
+  correlation sweep (language-independent) flagged eight shift candidates; content adjudication
+  confirmed four real ones — Exodus 8 (+4; Vulg 8:1-4 sits merged in 7:25 per the Hebrew
+  chapter break), Numbers 13 (+1), Psalm 10 (+1, title merged), Mark 9 (−1, the AV break;
+  Vulg 9:48+49 merged) — and cleared four false positives (repetitive psalm structure; the
+  absent Vulgate interpolation in Ps 13:3, a known critical-text difference, disclosed not
+  patched).
+- **`normalizeImport()` moves those four chapters onto the Vulgate grid at import time** —
+  coordinate moves only, never a character altered, each gated on the chapter's exact
+  pre-remap signature (idempotent; inert on an already-normalized or differently-prepared
+  file). Verified end-to-end with the real corpus: 73/73 canonical books stored, zero grid
+  mismatches, the Transfiguration at Mark 9:1, "Yahvé es mi pastor" at the VOTD's Vulgate
+  Ps 22:1.
+- **The import path grew up generically**: roman-numeral ordinals ("I Samuel") and
+  SWORD-family aliases resolve for every format; textless placeholder books are skipped —
+  closing a real trap where the empty "I Esdras" placeholder, whose name is also the Douay
+  name of Ezra, would have overwritten the real Ezra.
+- **Spanish is a first-class language**: `langAttr()`/`languageLabel()` centralize what the
+  `language === "la"` ternaries did, so VoiceOver reads the Platense as Spanish in the Reader,
+  the parallel column, the readings, and the verse cards.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
