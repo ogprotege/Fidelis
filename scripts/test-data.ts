@@ -1959,6 +1959,19 @@ console.log("");
     getTranslation("drc")?.bundled === true && getTranslation("rsv2ce")?.bundled === false);
   check("getTranslation: unknown id → undefined; DEFAULT_TRANSLATION is drc",
     getTranslation("zzz") === undefined && DEFAULT_TRANSLATION === "drc");
+
+  // The Biblia Platense (Straubinger): Spanish, IMPORT-ONLY — its U.S. term has
+  // not clearly expired, so like the NABRE it is never bundled (standing rule).
+  const { langAttr, languageLabel } = await import("../src/lib/translations");
+  const stb = getTranslation("straubinger");
+  check("straubinger: listed, Spanish, and NEVER bundled",
+    stb?.language === "es" && stb?.bundled === false && !!stb?.copyright);
+  check("langAttr: es for straubinger, la for vulgate, none for English",
+    langAttr("straubinger") === "es" && langAttr("vulgate") === "la" &&
+    langAttr("drc") === undefined && langAttr("nabre") === undefined);
+  check("languageLabel covers all three languages",
+    languageLabel(stb!) === "Español" && languageLabel(getTranslation("vulgate")!) === "Latin" &&
+    languageLabel(getTranslation("drc")!) === "English");
 }
 
 // §18 — Search group filters (src/lib/search.ts). Pure book-group membership
@@ -2103,6 +2116,67 @@ console.log("");
   const json = '{"books":[{"name":"Mark","chapters":[{"verses":[{"text":"zeta"},{"text":"eta"}]}]}]}';
   const j = parseImport("t.json", json);
   check("parseImport JSON (scrollmapper): verses", j.length === 1 && resolveBookSlug(j[0].name) === "mark" && j[0].chapters[0][0] === "zeta" && j[0].chapters[0][1] === "eta");
+
+  // -- roman-numeral ordinals + traditional aliases (the SWORD/scrollmapper family) --
+  check("resolveBookSlug: roman ordinals ('I Samuel', 'III John')",
+    resolveBookSlug("I Samuel") === "1-samuel" && resolveBookSlug("II Maccabees") === "2-maccabees" &&
+    resolveBookSlug("III John") === "3-john" && resolveBookSlug("I Corinthians") === "1-corinthians");
+  check("resolveBookSlug: 'Song of Solomon' / 'Revelation of John' / 'Prayer of Manasses'",
+    resolveBookSlug("Song of Solomon") === "song-of-songs" &&
+    resolveBookSlug("Revelation of John") === "revelation" &&
+    resolveBookSlug("Prayer of Manasses") === "prayer-of-manasseh");
+
+  // -- textless-placeholder guard (an empty aliased book must never overwrite a real one) --
+  const { importedBookHasText } = await import("../src/lib/import-formats");
+  check("importedBookHasText: text → true, empty placeholder → false",
+    importedBookHasText({ name: "Ezra", chapters: [["x"]] }) === true &&
+    importedBookHasText({ name: "I Esdras", chapters: [["", ""], [""]] }) === false);
+}
+
+// §22b — the Straubinger (Biblia Platense) versification normalizer: the four
+// verified Hebrew-numbered chapters move onto the Vulgate grid at import time
+// (coordinate moves only — the text is never altered). Signatures make the
+// remap idempotent and inert on any differently-shaped file.
+console.log("");
+{
+  const { normalizeImport } = await import("../src/lib/import-formats");
+  const fill = (n: number, tail = 0) =>
+    [...Array.from({ length: n }, (_, i) => `v${i + 1}`), ...Array.from({ length: tail }, () => "")];
+
+  // exodus 8: 28 filled + 4 empty → text moves to slots 5..32 (ES 8:1 = Vulg 8:5).
+  const ex = { name: "Exodus", chapters: [...Array.from({ length: 7 }, () => ["x"]), fill(28, 4)] };
+  const exN = normalizeImport("straubinger", [ex])[0];
+  check("straubinger remap: Exodus 8 shifts +4 (ES 8:1 → Vulg 8:5; 8:1-4 empty)",
+    exN.chapters[7][4] === "v1" && exN.chapters[7][31] === "v28" &&
+    exN.chapters[7].slice(0, 4).every((v: string) => v === ""));
+
+  // numbers 13: 33 + 1 → +1. psalms 10: 7 + 1 → +1.
+  const nu = normalizeImport("straubinger", [{ name: "Numbers", chapters: [...Array.from({ length: 12 }, () => ["x"]), fill(33, 1)] }])[0];
+  check("straubinger remap: Numbers 13 shifts +1", nu.chapters[12][1] === "v1" && nu.chapters[12][33] === "v33" && nu.chapters[12][0] === "");
+  const ps = normalizeImport("straubinger", [{ name: "Psalms", chapters: [...Array.from({ length: 9 }, () => ["x"]), fill(7, 1)] }])[0];
+  check("straubinger remap: Psalm 10 shifts +1", ps.chapters[9][1] === "v1" && ps.chapters[9][7] === "v7" && ps.chapters[9][0] === "");
+
+  // mark: ES 9:1 fills the empty Vulg 8:39; ch9 shifts −1; 9:49 left empty.
+  const mk = {
+    name: "Mark",
+    chapters: [...Array.from({ length: 7 }, () => ["x"]), fill(38, 1), fill(49)]
+  };
+  const mkN = normalizeImport("straubinger", [mk])[0];
+  check("straubinger remap: Mark 8:39 receives ES 9:1; ch 9 shifts −1",
+    mkN.chapters[7][38] === "v1" && mkN.chapters[8][0] === "v2" &&
+    mkN.chapters[8][47] === "v49" && mkN.chapters[8][48] === "");
+
+  // Idempotence + guards: a second pass is a no-op; a non-matching signature
+  // (already-normalized or differently-prepared file) is untouched; other
+  // translation ids pass through byte-identical.
+  const again = normalizeImport("straubinger", [exN, nu, ps, mkN]);
+  check("straubinger remap is idempotent (second pass is a no-op)",
+    JSON.stringify(again.map((b) => b.chapters)) === JSON.stringify([exN, nu, ps, mkN].map((b) => b.chapters)));
+  const other = { name: "Exodus", chapters: [...Array.from({ length: 7 }, () => ["x"]), fill(32)] };
+  check("straubinger remap: a full (already-Vulgate) Exodus 8 is untouched",
+    JSON.stringify(normalizeImport("straubinger", [other])[0].chapters) === JSON.stringify(other.chapters));
+  check("normalizeImport: other translations pass through unchanged",
+    JSON.stringify(normalizeImport("nabre", [ex])[0].chapters) === JSON.stringify(ex.chapters));
 }
 
 // §21 — the inline catechism (CCC P1): pure tier/edition logic (src/lib/catechism.ts),

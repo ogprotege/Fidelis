@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { loadBook } from "../lib/data";
 import { passageText } from "../lib/passage";
-import { getTranslation } from "../lib/translations";
+import { langAttr } from "../lib/translations";
 import Skeleton from "./Skeleton";
 
 interface Props {
@@ -38,9 +38,8 @@ export default function VerseQuote({ translation, book, chapter, verse, endVerse
   if (text === null) return <p className={className}><Skeleton lines={2} /></p>;
   if (!text.trim()) return <p className={className}>—</p>;
   // The quotation marks are gold (sacred); the verse text is not (spec §1.2).
-  const isLatin = getTranslation(translation)?.language === "la";
   return (
-    <p className={className} lang={isLatin ? "la" : undefined}>
+    <p className={className} lang={langAttr(translation)}>
       <span className="quote-mark">“</span>
       {text}
       <span className="quote-mark">”</span>

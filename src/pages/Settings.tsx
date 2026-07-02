@@ -21,7 +21,7 @@ import {
   importMarginalia,
   markOfflineTranslation
 } from "../lib/storage";
-import { TRANSLATIONS, getTranslation } from "../lib/translations";
+import { TRANSLATIONS, getTranslation, languageLabel } from "../lib/translations";
 import { FONT_SIZE_PRESETS, SCRIPTURE_FONTS } from "../lib/typography";
 import { THEME_OPTIONS } from "../lib/theme";
 import { TRENT_EDITIONS } from "../lib/catechism";
@@ -244,7 +244,7 @@ export default function Settings() {
                 </div>
                 <div className="version-name">{t.name}</div>
                 <div className="version-meta muted small sans">
-                  {t.language === "la" ? "Latin" : "English"} · {t.year}
+                  {languageLabel(t)} · {t.year}
                 </div>
                 {available ? (
                   <div className="version-prov small sans muted">

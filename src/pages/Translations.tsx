@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { idbClearTranslation, idbPut, importedTranslations } from "../lib/data";
-import { TRANSLATIONS } from "../lib/translations";
-import { parseImport, resolveBookSlug } from "../lib/import-formats";
+import { TRANSLATIONS, languageLabel } from "../lib/translations";
+import { importedBookHasText, normalizeImport, parseImport, resolveBookSlug } from "../lib/import-formats";
 
 export default function Translations() {
   const [imported, setImported] = useState<Set<string>>(new Set());
@@ -27,12 +27,17 @@ export default function Translations() {
     setBusy(id);
     setMessage(null);
     try {
-      const books = parseImport(file.name, await file.text());
+      // normalizeImport places the text on the app's Vulgate grid (verified
+      // per-translation coordinate moves — e.g. the Platense's four
+      // Hebrew-numbered chapters); it never alters the text itself.
+      const books = normalizeImport(id, parseImport(file.name, await file.text()));
       if (!books.length) throw new Error("No books found — expected a JSON, USFM, or OSIS Bible file.");
       let count = 0;
       for (const book of books) {
         const slug = resolveBookSlug(book.name);
-        if (!slug || !book.chapters.length) continue;
+        // Skip textless placeholder books (an untranslated appendix) — via a
+        // name alias an empty one could even overwrite a real book.
+        if (!slug || !book.chapters.length || !importedBookHasText(book)) continue;
         await idbPut(`${id}/${slug}`, { translation: id, book: slug, chapters: book.chapters });
         count++;
       }
@@ -80,7 +85,7 @@ export default function Translations() {
             )}
           </h2>
           <p className="trans-meta">
-            {t.abbrev} · {t.language === "la" ? "Latin" : "English"} · {t.year}
+            {t.abbrev} · {languageLabel(t)} · {t.year}
             {t.copyright ? ` · ${t.copyright}` : ""}
           </p>
           <p style={{ margin: 0 }}>{t.description}</p>
@@ -108,10 +113,11 @@ export default function Translations() {
         </div>
       ))}
       <p className="muted small sans">
-        Why aren't the RSV-2CE and NABRE included? Their copyright holders (Ignatius
-        Press and the Confraternity of Christian Doctrine) do not permit free
-        redistribution of the full text. Rather than ship an unauthorized or altered
-        copy, this app ships none — and lets you import a copy you have licensed.
+        Why aren't the RSV-2CE, NABRE, and Biblia Platense included? Their texts are
+        not freely redistributable — the RSV-2CE and NABRE are under copyright
+        (Ignatius Press; the Confraternity of Christian Doctrine), and the Platense's
+        U.S. term has not clearly expired. Rather than ship an unauthorized or altered
+        copy, this app ships none — and lets you import a copy you may lawfully use.
       </p>
     </div>
   );

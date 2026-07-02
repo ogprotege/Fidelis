@@ -17,7 +17,7 @@ import {
   setNote,
   toggleBookmark
 } from "../lib/storage";
-import { TRANSLATIONS, getTranslation } from "../lib/translations";
+import { TRANSLATIONS, getTranslation, langAttr } from "../lib/translations";
 import Icon from "../components/Icon";
 import IndulgenceNotice from "../components/IndulgenceNotice";
 import Sheet from "../components/Sheet";
@@ -264,7 +264,7 @@ export default function Reader() {
   const renderVerses = (vs: string[], interactive: boolean, transId: string) => (
     // Reading size in rem (the stored preset / 16) so it scales with the iOS
     // text-size / browser-zoom setting instead of being pinned to device px.
-    <div className="verses" style={{ fontSize: `${fontSize / 16}rem` }} lang={getTranslation(transId)?.language === "la" ? "la" : undefined}>
+    <div className="verses" style={{ fontSize: `${fontSize / 16}rem` }} lang={langAttr(transId)}>
       {vs.map((text, i) => {
         // Grid-empty slot (see data-report.txt): no text in this translation.
         if (!text || !text.trim()) return null;
@@ -393,7 +393,7 @@ export default function Reader() {
         <Link to="/read">← All books</Link>
       </p>
 
-      <h1 className="chapter-title" lang={trans?.language === "la" ? "la" : undefined}>
+      <h1 className="chapter-title" lang={langAttr(translation)}>
         {displayName}{" "}
         {chapterCount > 1 && (
           <button
