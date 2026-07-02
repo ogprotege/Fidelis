@@ -1,0 +1,29 @@
+name: External sources health
+
+# Monthly watchman for the two external dependencies nothing else guards:
+# the five pinned upstream repos every bundled text rebuilds from (a deleted
+# or force-pushed upstream ends pipeline reproducibility — the committed
+# outputs survive, but the source must be mirrored while a copy still exists),
+# and the ~374 vatican.va pages the §5 CCC layer links every cited verse to
+# (a site restructure would 404 them all silently). See
+# scripts/check-sources.mjs for exactly what is probed.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 06:14 UTC on the 3rd of each month (odd minute to dodge cron-storm load).
+    - cron: "14 6 3 * *"
+
+jobs:
+  check-sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node scripts/check-sources.mjs
+        env:
+          # Authenticated GitHub API calls (unauthenticated runners share a
+          # 60-req/h IP pool and flake); grants nothing beyond public reads.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

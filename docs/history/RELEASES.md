@@ -793,6 +793,32 @@ layer 40→10 MB; `public/data` 56→31 MB and the built `dist/` 57→32 MB — 
 install, and a ~5× lighter parse on first commentary open. What the faithful read did not change
 by one character.
 
+## The watchmen (v1.14.4)
+
+*"Upon thy walls, O Jerusalem, I have appointed watchmen." (Isaiah 62:6) — the CI-hardening
+batch. No app code changed; every line is a gate.*
+
+- **`android.yml`** — the Android shell gets what iOS has had since v1.13.1: a CI build. The
+  unsigned debug APK compiles on every relevant PR (Node 22 web build → `cap copy android` →
+  `gradlew assembleDebug`, JDK 21 for AGP 8.13), so `VotdWidget.java` and friends can no longer
+  rot invisibly.
+- **`sources.yml` + `scripts/check-sources.mjs`** — the monthly watchman for the two external
+  dependencies nothing else guards. The five pinned upstreams are probed via the GitHub commits
+  API (authenticated with the workflow token — unauthenticated runners share a rate-limit pool
+  and flake): if an upstream is deleted, made private, or force-push-GC'd, the committed outputs
+  survive but `npm run data` reproducibility dies with it — the alarm fires while a mirror can
+  still be taken. And every unique vatican.va page in `ccc/url.json` is swept (HEAD, GET
+  fallback, a retry) so a Vatican site restructure can't 404 every CCC link silently.
+- **The pipeline is linted.** `eslint.config.js` had deliberately scoped `scripts/` out; the
+  review called the bluff — 4,000 lines that regenerate the sacred texts deserve the same gate
+  as the app. A Node-globals tier now covers `scripts/**/*.{ts,mjs}` in `npm run lint` AND the
+  `npm test` gate; the first sweep surfaced six latent issues (all fixed, zero suppressed).
+- **CI economy:** `ci.yml` ran every job twice per feature-branch change (push + PR); pushes now
+  gate `main` only and every workflow carries a cancel-superseded `concurrency` group.
+  `public/**` joins the iOS/Android path filters — the corpus ships in the binaries, so a data
+  change must prove the shells still build. Xcode Cloud's `ci_post_clone.sh` pins `node@22` to
+  match CI.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

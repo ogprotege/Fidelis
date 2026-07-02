@@ -16,7 +16,6 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { PINS } from "./pins.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const DATA_DIR = join(ROOT, "public", "data");
 const MANIFEST = "manifest.json";
 
 async function walk(dir, prefix = "") {

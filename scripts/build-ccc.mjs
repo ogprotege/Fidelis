@@ -139,7 +139,7 @@ function mapPsalm(key) {
   }
 }
 function addKey(rawKey, paras) {
-  let key = rawKey.startsWith("psalms ") ? mapPsalm(rawKey) : rawKey;
+  const key = rawKey.startsWith("psalms ") ? mapPsalm(rawKey) : rawKey;
   // validate against the bundle grid
   const m = key.match(/^(\S+) (\d+):(\d+)$/);
   if (!m) { dropped.push(rawKey); return false; }

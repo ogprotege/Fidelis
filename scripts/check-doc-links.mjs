@@ -81,7 +81,7 @@ for (const file of files) {
   const text = stripCode(readFileSync(file, "utf8"));
   let m;
   while ((m = LINK_RE.exec(text))) {
-    let target = m[1].trim().split(/\s+/)[0]; // strip optional "title"
+    const target = m[1].trim().split(/\s+/)[0]; // strip optional "title"
     if (/^(https?:|mailto:|tel:|#)/.test(target)) continue; // external or same-page
     const [path, anchor] = target.split("#");
     const abs = resolve(dirname(file), path);
