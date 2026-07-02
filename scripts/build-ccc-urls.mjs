@@ -46,7 +46,7 @@ if (pages.length < 100) throw new Error("Vatican index page list looks wrong; ab
 
 // 2. crawl with a small concurrency pool, mapping ¶ -> page
 const paraToUrl = {};
-let firstParaPerPage = [];
+const firstParaPerPage = [];
 let done = 0;
 const POOL = 6;
 async function worker(queue) {

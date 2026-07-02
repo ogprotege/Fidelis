@@ -6,6 +6,43 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.14.4] — 2026-07-02 — the watchmen
+
+*"Upon thy walls, O Jerusalem, I have appointed watchmen: all the day and all the night they
+shall never hold their peace." (Isaiah 62:6)*
+
+The CI-hardening batch from the beta code review. No app code changes — every change is to the
+gates that keep the product honest.
+
+### Added
+
+- **Android build CI** (`.github/workflows/android.yml`): nothing ever compiled `android/` —
+  the three App Widget classes, the manifest, and the Gradle wiring could rot silently between
+  releases. The new workflow builds the unsigned debug APK (Node 22 → web build → `cap sync
+  android` → `gradlew assembleDebug` on JDK 21), path-filtered like `ios.yml`. (`sync`, not
+  `copy`: it generates the uncommitted `capacitor-cordova-android-plugins/` subproject the
+  committed Gradle wiring applies; the copy-not-sync rule guards an iOS-only trap.)
+- **Monthly external-sources health check** (`.github/workflows/sources.yml` +
+  `scripts/check-sources.mjs`): probes the five pinned upstream repos (GitHub commits API — a
+  deleted or force-pushed upstream ends pipeline reproducibility, and the committed outputs are
+  then the only copy) and every unique vatican.va page the §5 CCC layer links to (HEAD with GET
+  fallback, one retry). Either failing turns a silent, unbounded exposure into a red monthly run.
+
+### Changed
+
+- **`scripts/` is linted.** The eslint flat config gains a Node-globals tier for the ~4,000-line
+  data pipeline and both harnesses (`eslint src scripts` in both `npm run lint` and the `npm
+  test` gate). The sweep found six latent issues (four `prefer-const`, one dead `DATA_DIR` in
+  `build-manifest.mjs`, one dead extraction in `test-data.ts`) — all fixed; zero warnings remain.
+- **CI runs once per change, not twice.** `ci.yml` triggered on every push AND every pull
+  request, doubling every feature-branch run; pushes now gate `main` only (PRs cover branches),
+  and all three build workflows carry a `concurrency` group that cancels superseded runs.
+- **`ios.yml` (and the new `android.yml`) trigger on `public/**`** — the entire data corpus
+  ships inside the native binaries, so a corpus change now proves the shells still build.
+- **Xcode Cloud pins Node 22** (`ci_post_clone.sh` installs `node@22`, keg-only PATH handled),
+  matching the GitHub workflows, so an Xcode Cloud archive can never silently build with a newer
+  Node major than CI tested.
+
 ## [1.14.3] — 2026-07-02 — the gathered fragments
 
 *"Gather up the fragments that remain, lest they be lost." (John 6:12)*

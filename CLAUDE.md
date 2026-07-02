@@ -40,7 +40,7 @@ snapshots (§B.2) in `scripts/golden/{2024..2027}.json` pin the full computed ca
 codes, and reading resolution per day for both regions; `test-data.ts` diffs them, so any
 engine change that silently moves a feast is a red `npm test`. §B.3 (CI) is closed:
 `.github/workflows/ci.yml` runs `npm ci`, `npm test`, and `npm run build` on Node 22 for
-every push and pull request, so a red harness or a type error fails the build.
+every pull request and every push to main, so a red harness or a type error fails the build.
 
 ## Architecture
 
@@ -132,14 +132,18 @@ the pure helpers, a both-region gospel sweep, and the manifest re-walk). Golden-
 `scripts/golden/{2024..2027}.json` pin the full computed calendar + readings per day for both regions,
 so any engine change that silently moves a feast is a red `npm test` — re-bless deliberately with
 `npm run golden` and review the diff. `.github/workflows/ci.yml` runs lint → `npm test` → `npm run
-build` → `npm run check-docs` on every push and PR (so a dead doc link fails the build too);
-`.github/workflows/ios.yml` builds the iOS App + widget target on macOS.
+build` → `npm run check-docs` on every PR and push to main (so a dead doc link fails the build too;
+the lint covers `src` and the `scripts/` pipeline); `.github/workflows/ios.yml` builds the iOS App +
+widget target on macOS and `.github/workflows/android.yml` the unsigned debug APK — both trigger on
+`public/**` too, since the corpus ships in the binaries. `.github/workflows/sources.yml` probes the
+five upstream pins and the vatican.va CCC pages monthly (`scripts/check-sources.mjs`).
 
 ## Release ledger
 
 One line per release. The unabridged narrative is
 [docs/history/RELEASES.md](docs/history/RELEASES.md); the changelog is [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.14.4 — the watchmen** — the CI-hardening batch: an Android `assembleDebug` workflow (the shell's first CI); a monthly external-sources health check (`sources.yml` + `scripts/check-sources.mjs` — the five upstream pins via the GitHub commits API + every vatican.va CCC page); `scripts/` linted (a Node tier in the flat config; `eslint src scripts` in lint AND the test gate; six latent issues fixed); CI de-duplicated (push gates `main` only, `concurrency` groups everywhere) with `public/**` added to the iOS/Android path filters; Xcode Cloud pins `node@22`. No app code changed. → [detail](docs/history/RELEASES.md#the-watchmen-v1144)
 - **v1.14.3 — the gathered fragments** — the Catena de-duplication (John 6:12): `build-catena.mjs` emits format 2 (`{format:2, blocks:[{keys,entries}]}` — each pericope's chain stored ONCE with the grid keys it covers) and `expandCatenaSpans()` (`src/lib/commentary.ts`) re-broadcasts at load time in `loadCommentary()` into the identical per-verse map (verified key-for-key against the legacy corpus across all 3,736 keys; legacy files still load, no DATA_CACHE bump). matthew.json 9.9→2.1 MB, `public/data` 56→31 MB, `dist/` 57→32 MB — ~25 MB off every install, ~5× lighter first commentary parse. → [detail](docs/history/RELEASES.md#the-gathered-fragments-v1143)
 - **v1.14.2 — kept watch** — the beta-review reliability pass: the §3.3 quote red list made a hard build failure (`ALLOW_RED_LIST=1` is the explicit closed-beta escape), a today+180-day freshness gate + iOS/Android byte-parity on the widget `calendar.json`, the sheet×scroll-authority fix (`Sheet` locks in a layout effect; the recorder ignores pinned-body scrolls), the live `useToday()` (midnight + foreground resume) behind Today/Readings/accent, retry-after-rejection on the lectionary/quotes/manifest/CCC/Trent memos, honest error states (Search names the unreachable book, the Quote card stops skeleton-ing forever, VOTD Share falls back to DRB), word-boundary Father matching ("Leontius" ≠ Leo the Great), the `--header-h` Reader-toolbar fix, and `aria-label`s on the toolbar controls. → [detail](docs/history/RELEASES.md#kept-watch-v1142)
 - **v1.14.1 — set right** — v1.14.0-TestFlight fixes: Mass readings cited in modern book names ("2 Kings", not the Douay "4 Kings") via `formatLectionaryCitation` across all three surfaces (Today card, Readings page, and the regenerated home-screen widget `calendar.json`); the St. Charles Borromeo `page_nodes`/`ref-ccc` Catechism export now imports on-device (all 2865 ¶, the 1258 cited ¶ covered, conservative heading drop that never deletes prose); the share card's "Save image" writes to Photos on iOS through a tiny in-app `SaveImagePlugin` — registered with the bridge by a `MainViewController` (`CAPBridgeViewController` subclass) in `capacitorDidLoad()`, since Capacitor never auto-registers a non-package plugin; add-only photo permission — and routes through the share sheet on Android; and Xcode Cloud can archive again (`ios/App/ci_scripts/ci_post_clone.sh` — beside the `.xcodeproj`, where Xcode Cloud looks — runs `npm ci`/build/`cap copy`, plus a committed shared **App** scheme). → [detail](docs/history/RELEASES.md#set-right-v1141)

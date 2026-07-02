@@ -1,0 +1,72 @@
+name: Android build
+
+# Linux CI for the Capacitor Android shell — the Android counterpart of ios.yml.
+# Until now nothing ever compiled android/ (the three App Widget classes, the
+# manifest, the Gradle wiring), so a Java or resource regression could rot
+# silently between releases. This builds the debug APK, unsigned — no keystore
+# or Play credentials needed. AGP 8.13 (android/build.gradle) requires JDK 21;
+# Gradle comes from the committed wrapper.
+#
+# Runs only when Android-relevant files change (or on demand) to keep CI light.
+# public/** is included because the whole data corpus ships inside the APK
+# (offline by construction), and the widgets read the committed res/raw JSON.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - "src/**"
+      - "public/**"
+      - "capacitor.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/android.yml"
+  pull_request:
+    paths:
+      - "android/**"
+      - "src/**"
+      - "public/**"
+      - "capacitor.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/android.yml"
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Build the web bundle and sync it into the Android project. `cap sync`
+      # (not just `copy`) is REQUIRED here: it generates the uncommitted
+      # android/capacitor-cordova-android-plugins/ subproject (incl.
+      # cordova.variables.gradle) that the committed capacitor.build.gradle
+      # applies — without it Gradle fails at configure time. The iOS pipelines'
+      # copy-not-sync rule guards an iOS-only trap (the Package.swift platform
+      # rewrite); on Android, sync's regenerated gradle files are deterministic
+      # from the pinned CLI version and the rewrite is ephemeral in CI.
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+
+      - name: Build debug APK (unsigned)
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: android

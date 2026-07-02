@@ -73,9 +73,6 @@ check("566 rows flagged partial (P2-4)", partial === 566, `${partial}`);
 
 // 1. NAMED map coverage — every value must exist as a key (plain or with cycle suffix)
 const src = readFileSync(join(ROOT, "src/lib/lectionary.ts"), "utf8");
-const namedVals = [...src.matchAll(/:\s*\n?\s*"([^"]+)"(?:,|\n)/g)]
-  .map((m) => m[1])
-  .filter((v) => !v.includes('"'));
 // crude but effective: extract the NAMED object literal values
 const namedBlock = src.slice(src.indexOf("const NAMED"), src.indexOf("const ww"));
 const vals = [...namedBlock.matchAll(/:\s*(?:\n\s*)?"([^"]+)"/g)].map((m) => m[1]);
@@ -99,7 +96,7 @@ function mergeHasGospel(groups: string[][]): { ok: boolean; code: string } {
 }
 for (const region of ["universal", "usa"] as const) {
   for (const year of [2024, 2025, 2026]) {
-    let fails: string[] = [];
+    const fails: string[] = [];
     const d = new Date(year, 0, 1);
     while (d.getFullYear() === year) {
       const r = mergeHasGospel(dayCodeCandidates(new Date(d), region));

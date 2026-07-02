@@ -13,9 +13,11 @@ name: iOS build
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - "ios/**"
       - "src/**"
+      - "public/**"
       - "capacitor.config.ts"
       - "package.json"
       - "package-lock.json"
@@ -24,10 +26,15 @@ on:
     paths:
       - "ios/**"
       - "src/**"
+      - "public/**"
       - "capacitor.config.ts"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/ios.yml"
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ios-build:
