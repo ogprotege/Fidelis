@@ -799,7 +799,9 @@ by one character.
 batch. No app code changed; every line is a gate.*
 
 - **`android.yml`** — the Android shell gets what iOS has had since v1.13.1: a CI build. The
-  unsigned debug APK compiles on every relevant PR (Node 22 web build → `cap copy android` →
+  unsigned debug APK compiles on every relevant PR (Node 22 web build → `cap sync android` —
+  sync, not copy: it generates the uncommitted `capacitor-cordova-android-plugins/` subproject
+  the committed Gradle wiring applies; the copy-not-sync rule guards an iOS-only trap — then
   `gradlew assembleDebug`, JDK 21 for AGP 8.13), so `VotdWidget.java` and friends can no longer
   rot invisibly.
 - **`sources.yml` + `scripts/check-sources.mjs`** — the monthly watchman for the two external

@@ -55,13 +55,17 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      # Build the web bundle and copy it into the Android project (writes
-      # android/app/src/main/assets/public, gitignored and regenerated). `cap
-      # copy`, not `cap sync` — same rationale as the iOS pipelines: never let
-      # CI rewrite committed native project files.
+      # Build the web bundle and sync it into the Android project. `cap sync`
+      # (not just `copy`) is REQUIRED here: it generates the uncommitted
+      # android/capacitor-cordova-android-plugins/ subproject (incl.
+      # cordova.variables.gradle) that the committed capacitor.build.gradle
+      # applies — without it Gradle fails at configure time. The iOS pipelines'
+      # copy-not-sync rule guards an iOS-only trap (the Package.swift platform
+      # rewrite); on Android, sync's regenerated gradle files are deterministic
+      # from the pinned CLI version and the rewrite is ephemeral in CI.
       - run: npm ci
       - run: npm run build
-      - run: npx cap copy android
+      - run: npx cap sync android
 
       - name: Build debug APK (unsigned)
         run: ./gradlew assembleDebug --no-daemon

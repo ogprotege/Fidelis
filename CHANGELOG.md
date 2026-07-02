@@ -18,8 +18,10 @@ gates that keep the product honest.
 
 - **Android build CI** (`.github/workflows/android.yml`): nothing ever compiled `android/` —
   the three App Widget classes, the manifest, and the Gradle wiring could rot silently between
-  releases. The new workflow builds the unsigned debug APK (Node 22 → web build → `cap copy
-  android` → `gradlew assembleDebug` on JDK 21), path-filtered like `ios.yml`.
+  releases. The new workflow builds the unsigned debug APK (Node 22 → web build → `cap sync
+  android` → `gradlew assembleDebug` on JDK 21), path-filtered like `ios.yml`. (`sync`, not
+  `copy`: it generates the uncommitted `capacitor-cordova-android-plugins/` subproject the
+  committed Gradle wiring applies; the copy-not-sync rule guards an iOS-only trap.)
 - **Monthly external-sources health check** (`.github/workflows/sources.yml` +
   `scripts/check-sources.mjs`): probes the five pinned upstream repos (GitHub commits API — a
   deleted or force-pushed upstream ends pipeline reproducibility, and the committed outputs are
