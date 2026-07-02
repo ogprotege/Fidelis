@@ -1,4 +1,5 @@
 import { getTranslation } from "./translations";
+import { expandCatenaSpans, isCatenaSpanDoc } from "./commentary";
 import type { CccTextDoc } from "./import-formats";
 
 export interface BookData {
@@ -255,7 +256,11 @@ export function loadCommentary(corpus: string, book: string): Promise<Commentary
       const res = await fetch(`${import.meta.env.BASE_URL}data/commentary/${corpus}/${book}.json`);
       if (res.status === 404) return {};
       if (!res.ok) throw new Error(`Could not load commentary ${corpus}/${book} (HTTP ${res.status})`);
-      return (await res.json()) as CommentaryBook;
+      const raw: unknown = await res.json();
+      // The Catena ships de-duplicated (format 2: one chain per pericope, keyed
+      // by the verses it covers) and expands here to the per-verse map. Legacy
+      // per-verse files (Haydock; a stale data cache) pass through unchanged.
+      return isCatenaSpanDoc(raw) ? (expandCatenaSpans(raw) as CommentaryBook) : (raw as CommentaryBook);
     })();
     p.catch(() => commentaryCache.delete(key));
     commentaryCache.set(key, p);

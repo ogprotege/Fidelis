@@ -6,6 +6,36 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.14.3] — 2026-07-02 — the gathered fragments
+
+*"Gather up the fragments that remain, lest they be lost." (John 6:12)*
+
+The Catena Aurea de-duplication: the commentary layer drops from ~40 MB to ~10 MB on disk — a
+~25 MB cut to the shipped app binary — and opening a Gospel's commentary parses ~5× less JSON.
+What the Reader shows is unchanged to the character (verified: the new format expands to the
+legacy corpus identically across all 3,736 verse keys of all four Gospels).
+
+### Changed
+
+- **The Catena is stored once per pericope (format 2).** The Catena comments by *span*: one
+  patristic chain covers a pericope of verses. The legacy files broadcast that chain into every
+  verse it covered — the same comments copied dozens of times (matthew.json alone was ~10 MB,
+  parsed on the main thread on first open). `scripts/build-catena.mjs` now emits
+  `{ format: 2, blocks: [{ keys, entries }] }` — each chain stored once with the grid verse keys
+  it covers (post-remap, so a chain can legitimately span the Mark 8/9 chapter boundary) — and
+  `expandCatenaSpans()` (`src/lib/commentary.ts`, pure and fixture-tested) re-broadcasts at load
+  time in `loadCommentary()` into the same per-verse map the Reader and CommentarySheet always
+  consumed. Sizes: matthew 9.9→2.1 MB, luke 8.9→1.5 MB, john 6.4→1.3 MB, mark 4.8→0.7 MB;
+  `public/data` 56→31 MB, the built `dist/` 57→32 MB.
+- **Legacy files still load.** `loadCommentary()` detects the format, so a pre-format-2 file
+  served from a migrated service-worker data cache (or any legacy per-verse map, like Haydock's)
+  passes through unchanged — no data-cache bump needed.
+- **The harness asserts the new shape end-to-end:** the committed files must *be* format 2, the
+  §15 grid/incipit checks and §16 label sweeps run over the same expanded map the app consumes,
+  and new fixtures pin `expandCatenaSpans` (broadcast, document order, and the identical-comment
+  collision rule a versification remap depends on). The Settings offline "commentary" download
+  shrinks with it (the manifest's bundle sizes are recomputed from the same walk).
+
 ## [1.14.2] — 2026-07-02 — kept watch
 
 A reliability pass from the beta code review: the licensing gate made unskippable, the widget

@@ -24,6 +24,56 @@
 /** The four Gospels — the whole of the Catena's coverage. */
 export const GOSPELS: ReadonlySet<string> = new Set(["matthew", "mark", "luke", "john"]);
 
+// ── The de-duplicated on-disk Catena shape (build-catena.mjs format 2) ───────
+// The Catena comments by PERICOPE: one patristic chain covers a span of verses.
+// The legacy files broadcast that chain into every verse it covered — the same
+// comments copied dozens of times, ~5-10× the necessary bytes (matthew.json was
+// ~10 MB, parsed on the main thread on first open). Format 2 stores each chain
+// ONCE with the grid verse keys it covers; expandCatenaSpans() re-broadcasts at
+// load time into the per-verse map the Reader and CommentarySheet consume —
+// exactly the shape the legacy files carried, so the UI is unchanged. The
+// legacy per-verse map is still accepted (a service-worker data cache migrated
+// forward can serve pre-format-2 files).
+
+/** One stored pericope: the chain's entries plus every "ch:v" grid key it
+ *  covers (post-remap, so a chain can cover keys across a chapter boundary). */
+export interface CatenaSpanBlock {
+  keys: string[];
+  entries: { father?: string; text: string }[];
+}
+export interface CatenaSpanDoc {
+  format: 2;
+  blocks: CatenaSpanBlock[];
+}
+
+export function isCatenaSpanDoc(doc: unknown): doc is CatenaSpanDoc {
+  return (
+    typeof doc === "object" &&
+    doc !== null &&
+    (doc as { format?: unknown }).format === 2 &&
+    Array.isArray((doc as { blocks?: unknown }).blocks)
+  );
+}
+
+/** Expand a format-2 doc to the per-verse map. Blocks stay in document order
+ *  (the order the source comments a chapter in), and an identical comment never
+ *  lands twice on one verse — the legacy builder's collision rule, which a
+ *  versification remap or overlapping pericopes would otherwise violate. */
+export function expandCatenaSpans(
+  doc: CatenaSpanDoc
+): Record<string, { father?: string; text: string }[]> {
+  const out: Record<string, { father?: string; text: string }[]> = {};
+  for (const block of doc.blocks) {
+    for (const key of block.keys) {
+      const arr = (out[key] ??= []);
+      for (const e of block.entries) {
+        if (!arr.some((x) => x.father === e.father && x.text === e.text)) arr.push(e);
+      }
+    }
+  }
+  return out;
+}
+
 export interface Father {
   id: string;
   name: string;

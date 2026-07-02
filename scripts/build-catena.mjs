@@ -1,10 +1,17 @@
 #!/usr/bin/env node
 /**
- * Builds the Catena Aurea commentary layer (spec §4.1) into per-Gospel
- * verse-keyed JSON under public/data/commentary/catena/<gospel>.json, shaped
- * exactly as the spec:
+ * Builds the Catena Aurea commentary layer (spec §4.1) into per-Gospel JSON
+ * under public/data/commentary/catena/<gospel>.json, DE-DUPLICATED (format 2):
+ * each pericope's patristic chain is stored ONCE with the grid verse keys it
+ * covers —
  *
- *   { "5:3": [ { "father": "Chrysostom", "text": "..." }, ... ], ... }
+ *   { "format": 2, "blocks": [ { "keys": ["5:1","5:2"],
+ *     "entries": [ { "father": "Chrysostom", "text": "..." }, ... ] }, ... ] }
+ *
+ * — and expandCatenaSpans() (src/lib/commentary.ts) re-broadcasts it at load
+ * time into the spec §4.1 per-verse map the Reader consumes. The legacy files
+ * copied every chain into every verse of its span, ~5-10× the necessary bytes
+ * (matthew.json was ~10 MB in the shipped app binary).
  *
  * Source: Isidore-Guild/catena (OSIS catena.xml) — the Oxford "Library of the
  * Fathers" English translation of St. Thomas Aquinas's Catena Aurea (Newman ed.,
@@ -12,7 +19,6 @@
  * (P1-10); the cache is keyed by the pin. Four Gospels only (acceptable per §4.1).
  *
  * Each <div annotateRef="Matt.5.1-Matt.5.3"> is a patristic chain on a pericope.
- * The Catena comments by span, so a block broadcasts to every verse it covers.
  * The Gospel lemma (the <p osisID> with <hi type="italic">) is dropped — Fidelis
  * already serves DRB/CPDV/Vulgate verse text; the Catena's Oxford rendering must
  * never substitute into the Reader grid.
@@ -64,12 +70,15 @@ function cleanCatenaText(s) {
 }
 
 /**
- * Parse the OSIS catena.xml into { matthew: { "5:3": [{father,text}] }, mark, luke, john }.
+ * Parse the OSIS catena.xml into per-Gospel PERICOPE blocks, in document order:
+ *   { matthew: [ { ch, v1, v2, entries: [{father,text}] } ], mark, luke, john }
  * A no-bold <p> continues the previous Father's comment; the <p osisID> lemma is
- * skipped; each block's comments broadcast to every verse in its annotateRef span.
+ * skipped. The chain is stored once per pericope — the per-verse broadcast is a
+ * LOAD-TIME operation now (expandCatenaSpans in src/lib/commentary.ts), never a
+ * storage one.
  */
 export function parseCatenaOsis(xml) {
-  const out = { matthew: {}, mark: {}, luke: {}, john: {} };
+  const out = { matthew: [], mark: [], luke: [], john: [] };
   const divRe = /<div\s+annotateRef="([^"]+)"\s+annotateType="commentary"[^>]*>([\s\S]*?)<\/div>/g;
   let d;
   while ((d = divRe.exec(xml))) {
@@ -100,10 +109,7 @@ export function parseCatenaOsis(xml) {
       }
     }
     if (!entries.length) continue;
-    for (let v = v1; v <= v2; v++) {
-      const key = `${ch}:${v}`;
-      (out[slug][key] ??= []).push(...entries.map((e) => ({ ...e })));
-    }
+    out[slug].push({ ch, v1, v2, entries });
   }
   return out;
 }
@@ -125,16 +131,6 @@ async function fetchCatena() {
   return text;
 }
 
-function sortKeys(obj) {
-  const out = {};
-  for (const k of Object.keys(obj).sort((a, b) => {
-    const [ac, av] = a.split(":").map(Number);
-    const [bc, bv] = b.split(":").map(Number);
-    return ac - bc || av - bv;
-  })) out[k] = obj[k];
-  return out;
-}
-
 /**
  * Map a Catena (AV/KJV-versified) Gospel key onto our Vulgate/Douay grid. The two
  * editions differ in exactly two Gospel chapters (verified against the lemmas):
@@ -151,16 +147,6 @@ function remapGospelKey(slug, ch, v) {
   return [ch, v];
 }
 
-/** Append comments to a verse key, dropping any exact duplicate (a versification
- *  remap can collapse two source verses onto one grid verse). */
-function addComments(book, key, comments) {
-  const arr = (book[key] ??= []);
-  for (const c of comments) {
-    const s = JSON.stringify(c);
-    if (!arr.some((x) => JSON.stringify(x) === s)) arr.push(c);
-  }
-}
-
 async function main() {
   const xml = await fetchCatena();
   // Commentary divs are flat (only <p> inside); a nested <div> would truncate the
@@ -173,26 +159,39 @@ async function main() {
   const parsed = parseCatenaOsis(xml);
   const outDir = join(ROOT, "public", "data", "commentary", "catena");
   await mkdir(outDir, { recursive: true });
-  let totalKeys = 0, totalComments = 0, dropped = 0;
+  let totalBlocks = 0, totalStored = 0, dropped = 0;
+  const uniqueKeys = new Set();
   const droppedSamples = [];
   for (const slug of Object.keys(parsed)) {
     const drc = JSON.parse(readFileSync(join(ROOT, "public", "data", "drc", `${slug}.json`), "utf8"));
-    const book = {};
-    for (const [key, comments] of Object.entries(parsed[slug])) {
-      let [ch, v] = key.split(":").map(Number);
-      [ch, v] = remapGospelKey(slug, ch, v);
-      const inGrid = ch >= 1 && ch <= drc.chapters.length && v >= 1 && v <= (drc.chapters[ch - 1]?.length ?? 0);
-      if (!inGrid) {
-        dropped++;
-        if (droppedSamples.length < 12) droppedSamples.push(`${slug} ${key}`);
-        continue;
+    const blocks = [];
+    for (const { ch, v1, v2, entries } of parsed[slug]) {
+      // Each source verse of the span remaps onto our grid independently (the
+      // Mark 9 boundary crosses a chapter; the Matt 17:14-15 merge collapses two
+      // source verses onto one key — the Set keeps the key list unique).
+      const keys = new Set();
+      for (let v = v1; v <= v2; v++) {
+        const [ck, vk] = remapGospelKey(slug, ch, v);
+        const inGrid = ck >= 1 && ck <= drc.chapters.length && vk >= 1 && vk <= (drc.chapters[ck - 1]?.length ?? 0);
+        if (!inGrid) {
+          dropped++;
+          if (droppedSamples.length < 12) droppedSamples.push(`${slug} ${ch}:${v}`);
+          continue;
+        }
+        keys.add(`${ck}:${vk}`);
       }
-      addComments(book, `${ch}:${v}`, comments);
+      if (!keys.size) continue;
+      blocks.push({ keys: [...keys], entries });
+      totalBlocks++;
+      totalStored += entries.length;
+      for (const k of keys) uniqueKeys.add(`${slug} ${k}`);
     }
-    for (const k of Object.keys(book)) { totalKeys++; totalComments += book[k].length; }
-    await writeFile(join(outDir, `${slug}.json`), JSON.stringify(sortKeys(book)));
+    await writeFile(join(outDir, `${slug}.json`), JSON.stringify({ format: 2, blocks }));
   }
-  console.log(`Catena: 4 Gospels, ${totalKeys} verse-keys, ${totalComments} comment-segments.`);
+  console.log(
+    `Catena: 4 Gospels, ${totalBlocks} pericope blocks, ${totalStored} stored comment-segments, ` +
+    `${uniqueKeys.size} verse-keys covered (format 2 — chains stored once, expanded at load).`
+  );
   if (dropped) console.log(`  WARNING: ${dropped} out-of-grid keys dropped: ${droppedSamples.join(", ")}${dropped > 12 ? " …" : ""}`);
 
   const { writeManifest } = await import("./build-manifest.mjs");
