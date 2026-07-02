@@ -757,6 +757,42 @@ quietly at the seams where two correct systems meet.*
 
 No engine, bundled text, or golden snapshot changed; `public/data/` is byte-identical.
 
+## The gathered fragments (v1.14.3)
+
+*"Gather up the fragments that remain, lest they be lost." (John 6:12) — the Catena Aurea
+de-duplication, the single largest payload cut in the app's history.*
+
+The Catena comments by **pericope**: St. Thomas strung the Fathers' voices along spans of verses,
+not single ones. The legacy build flattened that structure by copying each chain into every verse
+it covered — faithful to the spec's per-verse shape, but ~5-10× the necessary bytes. The four
+Gospel files totalled ~30 MB of the 57 MB shipped binary, and opening Matthew's commentary parsed
+a ~10 MB JSON on the main thread.
+
+Format 2 restores the source's own economy:
+
+- `scripts/build-catena.mjs` emits `{ format: 2, blocks: [{ keys, entries }] }` — each pericope's
+  chain stored **once**, with the list of grid verse keys it covers. The keys are computed at
+  build time through the same per-verse remap as before (`remapGospelKey` + DRC grid check), so a
+  chain can honestly cover keys across the Mark 8/9 chapter boundary, and the Matt 17:14-15 merge
+  collapses to a single key. `parseCatenaOsis` now returns pericope blocks in document order.
+- `expandCatenaSpans()` (`src/lib/commentary.ts` — pure, fixture-tested) re-broadcasts at load
+  time inside `loadCommentary()`, producing the **identical** per-verse map the Reader and
+  CommentarySheet always consumed — including the legacy builder's collision rule (an identical
+  comment never lands twice on one verse). Verified before committing: the expansion of the new
+  files reproduces the old committed corpus key-for-key and note-for-note across all 3,736 verse
+  keys of all four Gospels.
+- `loadCommentary()` detects the format, so legacy per-verse files (Haydock's shape, or a stale
+  pre-format-2 file from a migrated service-worker data cache) pass through untouched — **no
+  DATA_CACHE bump**, no offline user loses anything.
+- The harness asserts the committed files ARE format 2 (a legacy regen can't ship), runs the §15
+  grid/incipit checks and both §16 corpus sweeps over the expanded map, and pins the expansion
+  semantics by fixture.
+
+Sizes: matthew 9.9→2.1 MB, luke 8.9→1.5 MB, john 6.4→1.3 MB, mark 4.8→0.7 MB; the commentary
+layer 40→10 MB; `public/data` 56→31 MB and the built `dist/` 57→32 MB — a ~25 MB cut to every
+install, and a ~5× lighter parse on first commentary open. What the faithful read did not change
+by one character.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

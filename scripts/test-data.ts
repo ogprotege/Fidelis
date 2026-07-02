@@ -38,7 +38,7 @@ import { parseReference } from "../src/lib/refparse";
 import { getTranslation, DEFAULT_TRANSLATION } from "../src/lib/translations";
 import { parseHaydockSfm } from "./build-haydock.mjs";
 import { parseCatenaOsis } from "./build-catena.mjs";
-import { normalizeFather, groupCatena, fathersOf, isDoctor, yearOf, circaOf, sortChronological, FATHER_IDS } from "../src/lib/commentary";
+import { normalizeFather, groupCatena, fathersOf, isDoctor, yearOf, circaOf, sortChronological, FATHER_IDS, expandCatenaSpans, isCatenaSpanDoc } from "../src/lib/commentary";
 import { getSettings } from "../src/lib/storage";
 import {
   DEFAULT_FONT_SIZE,
@@ -1511,31 +1511,57 @@ console.log("");
     '<p><hi type="bold">Augustine:</hi> Born of water and the Spirit.</p>' +
     "</div></div></osisText></osis>";
   const C = parseCatenaOsis(cfix);
+  const mBlock = C.matthew[0];
   check(
-    "catena parser: Gospel comment keyed by 'ch:verse' with father attribution",
-    C.matthew["5:1"]?.[0]?.father === "Pseudo-Chrysostom" &&
-      C.matthew["5:1"][0].text === "Every man in his own trade rejoices, & so on."
+    "catena parser: one pericope block per annotateRef div, span + father attribution",
+    C.matthew.length === 1 &&
+      mBlock?.ch === 5 && mBlock?.v1 === 1 && mBlock?.v2 === 2 &&
+      mBlock?.entries[0]?.father === "Pseudo-Chrysostom" &&
+      mBlock?.entries[0]?.text === "Every man in his own trade rejoices, & so on."
   );
   check(
     "catena parser: entities decoded, <reference> unwrapped, <note> dropped",
-    C.matthew["5:1"]?.[1]?.text.includes("to fulfil the prophecy of Esaias, [Isa 40:9]") &&
-      !C.matthew["5:1"][1].text.includes("editor aside") &&
-      !C.matthew["5:1"][1].text.includes("&amp;")
+    mBlock?.entries[1]?.text.includes("to fulfil the prophecy of Esaias, [Isa 40:9]") &&
+      !mBlock.entries[1].text.includes("editor aside") &&
+      !mBlock.entries[1].text.includes("&amp;")
   );
   check(
     "catena parser: a no-bold <p> continues the previous father's comment",
-    C.matthew["5:1"]?.length === 2 &&
-      C.matthew["5:1"][1].text.includes("Or, He ascended into the mountain to shew the Church")
+    mBlock?.entries.length === 2 &&
+      mBlock.entries[1].text.includes("Or, He ascended into the mountain to shew the Church")
   );
   check(
     "catena parser: the <p osisID> lemma is never emitted as commentary",
-    !C.matthew["5:1"].some((e) => /seeing the multitudes/.test(e.text))
+    !mBlock.entries.some((e: { text: string }) => /seeing the multitudes/.test(e.text))
   );
   check(
-    "catena parser: a span broadcasts to every verse it covers",
-    JSON.stringify(C.matthew["5:1"]) === JSON.stringify(C.matthew["5:2"])
+    "catena parser: comment lands under the right Gospel",
+    C.john.length === 1 && C.john[0].entries[0]?.father === "Augustine"
   );
-  check("catena parser: comment lands under the right Gospel", C.john["3:5"]?.[0]?.father === "Augustine");
+
+  // -- format-2 expansion (the load-time broadcast that replaced the stored one) --
+  const spanDoc = {
+    format: 2 as const,
+    blocks: [
+      { keys: ["5:1", "5:2"], entries: mBlock.entries },
+      // A second pericope re-covering 5:2 with one identical entry: the
+      // collision rule must keep a verse's identical comment single.
+      { keys: ["5:2"], entries: [mBlock.entries[0], { father: "Bede", text: "distinct" }] }
+    ]
+  };
+  check("isCatenaSpanDoc: recognises format 2 and rejects the legacy per-verse map",
+    isCatenaSpanDoc(spanDoc) && !isCatenaSpanDoc({ "5:1": [] }) && !isCatenaSpanDoc(null));
+  const expanded = expandCatenaSpans(spanDoc);
+  check(
+    "expandCatenaSpans: a span broadcasts to every verse it covers",
+    JSON.stringify(expanded["5:1"]) === JSON.stringify(mBlock.entries)
+  );
+  check(
+    "expandCatenaSpans: an identical comment never lands twice on one verse; distinct ones append",
+    expanded["5:2"]?.length === 3 &&
+      expanded["5:2"].filter((e) => e.father === "Pseudo-Chrysostom").length === 1 &&
+      expanded["5:2"][2]?.father === "Bede"
+  );
 }
 
 // 15. Commentary data (spec §4.1): every committed Haydock/Catena key lands on a
@@ -1550,7 +1576,11 @@ console.log("");
     const dir = join(ROOT, "public/data/commentary", sub);
     const out: Record<string, Record<string, { src?: string; father?: string; text: string }[]>> = {};
     for (const f of readdirSync(dir)) {
-      if (f.endsWith(".json")) out[f.replace(/\.json$/, "")] = JSON.parse(readFileSync(join(dir, f), "utf8"));
+      if (!f.endsWith(".json")) continue;
+      const doc = JSON.parse(readFileSync(join(dir, f), "utf8"));
+      // The Catena ships de-duplicated (format 2); assert on the same expanded
+      // per-verse map the app consumes (loadCommentary does this expansion too).
+      out[f.replace(/\.json$/, "")] = isCatenaSpanDoc(doc) ? expandCatenaSpans(doc) : doc;
     }
     return out;
   };
@@ -1583,6 +1613,12 @@ console.log("");
     "Catena covers exactly the four Gospels",
     JSON.stringify(Object.keys(catena).sort()) === JSON.stringify(["john", "luke", "mark", "matthew"]) && catenaKeys > 3000,
     `${Object.keys(catena).length} books, ${catenaKeys} keys`
+  );
+  check(
+    "committed Catena files are the de-duplicated format 2 (chains stored once per pericope)",
+    ["matthew", "mark", "luke", "john"].every((s) =>
+      isCatenaSpanDoc(JSON.parse(readFileSync(join(ROOT, `public/data/commentary/catena/${s}.json`), "utf8")))
+    )
   );
 
   // Spec §4.1 shape: Haydock entries are {src,text}; Catena entries are {father,text}.
@@ -1763,7 +1799,8 @@ console.log("");
   const labelCounts: Record<string, number> = {};
   for (const fn of readdirSync(cdir)) {
     if (!fn.endsWith(".json")) continue;
-    const bk: Record<string, { father?: string }[]> = JSON.parse(readFileSync(join(cdir, fn), "utf8"));
+    const doc = JSON.parse(readFileSync(join(cdir, fn), "utf8"));
+    const bk: Record<string, { father?: string }[]> = isCatenaSpanDoc(doc) ? expandCatenaSpans(doc) : doc;
     for (const notes of Object.values(bk)) for (const n of notes) labelCounts[n.father ?? ""] = (labelCounts[n.father ?? ""] ?? 0) + 1;
   }
   const sourceOk = (l: string) => ["A Greek expositor", "Josephus", "Faustus"].includes(l) || /council|concil/i.test(l);
@@ -1883,7 +1920,8 @@ console.log("");
   const undatedInCorpus = new Set<string>();
   for (const fn of readdirSync(cdir)) {
     if (!fn.endsWith(".json")) continue;
-    const bk: Record<string, { father?: string }[]> = JSON.parse(readFileSync(join(cdir, fn), "utf8"));
+    const doc = JSON.parse(readFileSync(join(cdir, fn), "utf8"));
+    const bk: Record<string, { father?: string }[]> = isCatenaSpanDoc(doc) ? expandCatenaSpans(doc) : doc;
     for (const notes of Object.values(bk)) for (const n of notes) {
       const nf = normalizeFather(n.father ?? "");
       if (nf.kind === "father" && yearOf(nf.id!) === null) undatedInCorpus.add(nf.id!);

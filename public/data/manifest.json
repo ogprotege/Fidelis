@@ -23,7 +23,7 @@
   }
  },
  "fileCount": 319,
- "rootHash": "60ef383c80511b30f0b0bdbceb228d4c8e08befb4af39f2ba3bcb8770bbd0087",
+ "rootHash": "3be1af3dbc63e783836d2b74f9a471e446cca09e107048865052c94f52d1eeb1",
  "bundles": {
   "ccc": {
    "files": 2,
@@ -31,7 +31,7 @@
   },
   "commentary": {
    "files": 77,
-   "bytes": 41684626
+   "bytes": 16096213
   },
   "cpdv": {
    "files": 79,
@@ -53,10 +53,10 @@
  "files": {
   "ccc/index.json": "62dac7d9952260c33a15b9d389a9f9397088474a9578cb0deae3aea7f3d2a179",
   "ccc/url.json": "d0e0b9e89c575c779eb65188f2dac963e7c7ec72773d94e251d3c77106ec7964",
-  "commentary/catena/john.json": "65381ec0cf4a9b73c6423a95ed4d9d2dd0b34ff25944a41f096ac2ae6d8f9458",
-  "commentary/catena/luke.json": "d5f7e52e131fc052d8eec06eb0928a2e2b18eda74ff23425358ef21a210881a2",
-  "commentary/catena/mark.json": "0d7c689e53bf456a93e6825dec4c2a2d442eeeefff0d38d83bab7bef2fc6d637",
-  "commentary/catena/matthew.json": "b24d25cbd969e87456add7cd0fe8bd67cab20fe38b0d50dfd67ede9d09fc735c",
+  "commentary/catena/john.json": "a2199daab0205ca2015381f76c9a19951c8a86ecddd89df0936b6ef08ed30170",
+  "commentary/catena/luke.json": "bc5cac7df075133d2a636fbf2a38411cd8379baf47fc90d9a548d99a55ac2819",
+  "commentary/catena/mark.json": "9aba84e37ae7a143411606701d58656e8ec6afb7cc7eed583b3a30ebc61d2429",
+  "commentary/catena/matthew.json": "e79e54d21ce1dff3c968e22b8f371d3bd0fa06af2c117704aecdfe0c4dd4c723",
   "commentary/haydock/1-chronicles.json": "9955aa71c1b2c65ebb1870d989aebab5e53fecb1287c7e4216260338cb9c417b",
   "commentary/haydock/1-corinthians.json": "d92a448c49bf10250b235df85e673caeecee4284c196eb36168643732fc5b5ec",
   "commentary/haydock/1-john.json": "b56ae6471c8b389caad6678cd51b42e70a0c9839b13d7c9e3cdbec7bcb5ef11e",
