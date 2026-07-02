@@ -6,6 +6,67 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.14.2] — 2026-07-02 — kept watch
+
+A reliability pass from the beta code review: the licensing gate made unskippable, the widget
+data horizon put under test, and seven traced user-facing defects fixed. No feature changes;
+`public/data/` is byte-identical (the quotes corpus regenerates identically under the new gate).
+
+### Fixed
+
+- **Navigating with a sheet open no longer lands the destination at the wrong scroll offset.**
+  `Sheet`'s scroll-lock effect is now a layout effect, so its cleanup (which restores the
+  pre-lock scroll position) runs *before* `ScrollManager` positions the new page — picking a
+  chapter from the chapter grid now lands at the top of the new chapter, not mid-way down it.
+  `ScrollManager`'s recorder also ignores scroll events while the body is pinned
+  (`isScrollLocked()` in `src/lib/scrollLock.ts`), so opening a sheet no longer clobbers the
+  Back-restore offset with `0`.
+- **The Reader toolbar no longer slides under the header on notched iPhones.** Its sticky `top`
+  was a hardcoded `3.4rem` predating the `--header-h` token (which includes
+  `env(safe-area-inset-top)`); it now uses the token, like `SectionNav` already did.
+- **"Today" now rolls at midnight and on foreground resume.** A new `useToday()` hook
+  (`src/useToday.ts` — timer to next local midnight + `visibilitychange`) drives the Today page,
+  the Readings page's default date, and the liturgical accent, so a phone that keeps Fidelis
+  resident overnight never shows yesterday's verse, readings, or color.
+- **A transient network failure is no longer cached forever.** `loadLectionary()` and
+  `loadQuotes()` memoized the fetch *promise*, so one offline blip pinned the Mass readings and
+  the Quote of the Day to the same rejection until a full reload; the memo now clears on
+  rejection and the next call retries. The same reset applies to `loadManifest()`, `loadCCC()`,
+  and `loadTrent()` transport failures (a genuine 404 stays cached, as before).
+- **Errors no longer masquerade as emptiness.** An offline search now says the search couldn't
+  reach a book (instead of "No verses found" — telling the user scripture doesn't contain their
+  word); a failed Quote of the Day shows a quiet notice instead of a skeleton forever; and the
+  Verse of the Day's Share falls back to the bundled Douay-Rheims (cited honestly) when the
+  selected translation isn't available, instead of silently doing nothing.
+- **Search highlighting tracks the executed query, not the live input.** Editing the search box
+  after a search no longer mis-highlights (or un-highlights) the results already on screen.
+- **A Catena label can no longer be attributed to the wrong Father.** `matchFather` matched any
+  label that merely *began* with an alias, so "Leontius" would have resolved to Leo the Great —
+  and been flagged a Doctor. Aliases now match only at a word boundary; the Latin form
+  "Damascenus" (which relied on the loose prefix) is an explicit John Damascene alias, and the
+  harness gained negative over-match assertions.
+- **A corrupt stored `calendarRegion` now falls back to the documented default** (USA) explicitly
+  in `getSettings()`, like the existing theme/font/Trent-edition guards, instead of silently
+  behaving as Universal while claiming otherwise.
+
+### Changed
+
+- **The §3.3 quote red list is now a hard build failure.** `scripts/build-quotes.mjs` refuses to
+  emit a corpus containing non-public-domain authors unless `ALLOW_RED_LIST=1` is set explicitly
+  (printing the flagged ids either way), so the closed-beta exception can never silently ride
+  into a public App Store release.
+- **The widget data horizon is under test.** The committed pre-resolved `calendar.json` covers a
+  fixed window (currently through 2027-12-31); on the day it ran out, every installed home-screen
+  widget would silently degrade to fallback text. The harness now fails if the window doesn't
+  cover today+180 days, and asserts the iOS and Android copies are byte-identical (mirroring the
+  existing `votd.json` parity check).
+- **Focus is trapped correctly in sheets with disabled controls.** The `Sheet` focus trap now
+  skips `disabled` buttons/inputs (a disabled boundary element let Tab escape into the page
+  behind during a share/save) and recognizes `select`/`textarea`.
+- **Unlabeled controls gained `aria-label`s** — the Reader toolbar's four selects, the Search
+  box and its translation select, the Readings date input and translation select — and the
+  Readings page's liturgical color chip now names its color (`title`), matching the Today card.
+
 ## [1.14.1] — 2026-06-28 — set right
 
 Three fixes found in the v1.14.0 TestFlight build: a Mass reading shown under an unexpected book

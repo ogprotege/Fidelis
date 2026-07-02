@@ -41,6 +41,12 @@ export default function Search() {
   const [results, setResults] = useState<Result[]>([]);
   const [progress, setProgress] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+  // A failed sweep must never masquerade as "No verses found" — offline, that
+  // would tell the user scripture doesn't contain their word.
+  const [error, setError] = useState<string | null>(null);
+  // The folded needle of the EXECUTED search: highlighting must track what was
+  // searched, not the live input the user may have edited since.
+  const [ranNeedle, setRanNeedle] = useState("");
   const [group, setGroup] = useState<GroupFilter>(() => {
     const g = params.get("g");
     return g === "ot" || g === "nt" || g === "gospels" ? g : "all";
@@ -71,6 +77,8 @@ export default function Search() {
     const found: Result[] = [];
     setResults([]);
     setSearched(true);
+    setError(null);
+    setRanNeedle(needle);
     for (let i = 0; i < BOOKS.length; i++) {
       if (runId.current !== id) return;
       const b = BOOKS[i];
@@ -89,9 +97,11 @@ export default function Search() {
         setResults([...found]);
         if (found.length >= MAX_RESULTS) break;
       } catch {
+        if (runId.current !== id) return;
         setProgress(null);
-        setResults([]);
-        setSearched(true);
+        setError(
+          `The search couldn't reach ${b.name} — check your connection and try again.`
+        );
         return;
       }
     }
@@ -112,7 +122,7 @@ export default function Search() {
   };
 
   const highlight = (text: string) => {
-    const needle = fold(query.trim());
+    const needle = ranNeedle;
     if (!needle) return text;
     const { folded, map } = foldWithMap(text);
     const idx = folded.indexOf(needle);
@@ -159,9 +169,14 @@ export default function Search() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !tooShort && run()}
           placeholder="Word, phrase, or reference…"
+          aria-label="Search the Scriptures by word, phrase, or reference"
           autoFocus
         />
-        <select value={translation} onChange={(e) => setTranslation(e.target.value)}>
+        <select
+          value={translation}
+          onChange={(e) => setTranslation(e.target.value)}
+          aria-label="Search translation"
+        >
           {TRANSLATIONS.filter((t) => t.bundled).map((t) => (
             <option key={t.id} value={t.id}>
               {t.abbrev}
@@ -173,7 +188,12 @@ export default function Search() {
         </button>
       </div>
       {progress && <div className="search-progress">{progress}</div>}
-      {!progress && searched && (
+      {!progress && error && (
+        <div className="search-progress" role="alert">
+          {error}
+        </div>
+      )}
+      {!progress && !error && searched && (
         <div className="search-progress">
           {results.length === 0
             ? "No verses found."

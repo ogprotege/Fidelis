@@ -704,6 +704,59 @@ The bundled texts, liturgical engines, and golden snapshots are untouched.
 
 No engine, bundled text, or golden snapshot changed.
 
+## Kept watch (v1.14.2)
+
+*The reliability pass from the 2026-07 beta code review: four parallel senior reviews (engines,
+UI, native shells, data pipeline) over v1.14.1, then the traced fixes. The theme: the logic was
+sound; the risks were operational — things that would fail silently later, or fail the user
+quietly at the seams where two correct systems meet.*
+
+- **The licensing gate can no longer be forgotten.** The §3.3 quote red list was an advisory
+  print ("kept per owner directive for the closed beta; re-enable the hard fail before any public
+  release") — and nothing would ever force the re-enable. `scripts/build-quotes.mjs` now **fails
+  the build** when non-public-domain authors are present (32 quotes today: John Paul II, Benedict
+  XVI, Escrivá), unless `ALLOW_RED_LIST=1` is set explicitly for a closed-beta build. The
+  escape-hatch rebuild is byte-identical to the committed corpus.
+- **The widget staleness cliff is a red harness now, not a 2028 surprise.** The pre-resolved
+  `calendar.json` the home-screen widgets read covers a fixed window (today: through 2027-12-31);
+  the day it ran out, every installed Mass/Quote widget would silently degrade to fallback text —
+  and regeneration was a manual RELEASING.md step nothing enforced. The harness now fails unless
+  the committed window covers **today + 180 days**, and asserts iOS/Android `calendar.json`
+  byte-parity (as `votd.json` already had).
+- **The sheet × scroll-authority seam is fixed.** Navigating while a sheet was open (the chapter
+  grid, a MysterySheet link) restored the *departed* page's scroll offset onto the *destination*
+  page: `Sheet`'s passive cleanup ran after `ScrollManager`'s layout positioning, onto a body
+  still pinned. The lock effect is now a **layout** effect (cleanup in the mutation phase, before
+  ScrollManager places the page), and the offset recorder ignores scroll events while the body is
+  pinned (`isScrollLocked()`), so opening a sheet can't clobber a Back-restore offset with 0.
+- **"Today" is live.** `useToday()` (`src/useToday.ts`; timer to next local midnight +
+  `visibilitychange` on resume) drives the Today page, the Readings default date, and the
+  liturgical accent — a resident iOS app no longer wears yesterday's verse, Mass, or color at
+  breakfast. In `src/`, not `src/lib/` (which stays React-free).
+- **One offline blip no longer bricks a surface until reload.** `loadLectionary()`/`loadQuotes()`
+  memoized the fetch *promise*, so a first-fetch failure was cached and every retry re-rejected.
+  Rejections now clear the memo; `loadManifest()`/`loadCCC()`/`loadTrent()` got the same reset for
+  transport failures (a genuine 404 — a layer not built — stays memoized, as designed).
+- **Errors stopped impersonating emptiness.** Offline search said "No verses found" — telling the
+  faithful scripture doesn't contain their word — and now names the book it couldn't reach; the
+  Quote card's failure shows a quiet notice instead of an eternal skeleton; the VOTD Share falls
+  back to the bundled Douay-Rheims (cited as DRB) instead of silently doing nothing when the
+  selected translation isn't importable. Search highlighting also pins to the *executed* query,
+  so editing the box doesn't mis-mark the results on screen.
+- **The Father matcher matches at word boundaries.** `matchFather` accepted any label that merely
+  *began* with an alias — "Leontius" would have resolved to Leo the Great and been flagged a
+  Doctor, corrupting the Doctors-only filter. Aliases now require a word boundary; the corpus
+  guard immediately caught the one loose-prefix dependency ("Damascenus", now an explicit John
+  Damascene alias); negative over-match assertions pin the rule.
+- **Small guards:** a corrupt stored `calendarRegion` falls back to the documented USA default
+  explicitly (matching the theme/font/Trent guards); the `Sheet` focus trap skips `disabled`
+  controls (a disabled boundary let Tab escape mid-save) and knows `select`/`textarea`; the
+  Reader toolbar's sticky `top` uses `--header-h` (it hid under the header on notched iPhones);
+  `aria-label`s landed on the Reader/Search/Readings controls that had only `title` or
+  placeholder.
+
+No engine, bundled text, or golden snapshot changed; `public/data/` is byte-identical.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

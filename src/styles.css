@@ -597,7 +597,7 @@ h1.page-title {
 /* ---------- Reader ---------- */
 .reader-toolbar {
   position: sticky;
-  top: 3.4rem;
+  top: var(--header-h); /* the header's true height incl. the notch safe-area inset */
   z-index: 20;
   display: flex;
   flex-wrap: wrap;

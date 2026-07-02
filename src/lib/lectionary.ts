@@ -50,10 +50,17 @@ export interface DayReadings {
 
 let cache: Promise<LectionaryData> | null = null;
 export function loadLectionary(): Promise<LectionaryData> {
-  cache ??= fetch(`${import.meta.env.BASE_URL}data/lectionary.json`).then((r) => {
-    if (!r.ok) throw new Error(`lectionary data: HTTP ${r.status}`);
-    return r.json();
-  });
+  if (!cache) {
+    cache = fetch(`${import.meta.env.BASE_URL}data/lectionary.json`).then((r) => {
+      if (!r.ok) throw new Error(`lectionary data: HTTP ${r.status}`);
+      return r.json();
+    });
+    // Never memoize a failure: a transient offline blip must not pin every
+    // future readings load to the same rejection until a full reload.
+    cache.catch(() => {
+      cache = null;
+    });
+  }
   return cache;
 }
 

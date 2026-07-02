@@ -161,6 +161,12 @@ export function getSettings(): Settings {
   if (!isScriptureFont(settings.scriptureFont)) settings.scriptureFont = DEFAULT_SCRIPTURE_FONT;
   // Guard the stored Trent edition so an unknown/legacy value falls back cleanly.
   if (!isTrentEdition(settings.trentEdition)) settings.trentEdition = DEFAULT_TRENT_EDITION;
+  // Guard the stored region: a corrupt value would silently behave as Universal
+  // in every `region === "usa"` check while claiming otherwise. Fall back to the
+  // documented default (USA) explicitly instead.
+  if (settings.calendarRegion !== "usa" && settings.calendarRegion !== "universal") {
+    settings.calendarRegion = "usa";
+  }
   return settings;
 }
 

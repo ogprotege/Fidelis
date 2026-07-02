@@ -26,13 +26,16 @@ import { getLastRead, activePlan } from "../lib/storage";
 import { isComplete, todayPortion, planDay, planTotalDays, formatPortion } from "../lib/plans";
 import { verseOfTheDay, formatVotdRef } from "../lib/votd";
 import { useSettings } from "../SettingsContext";
+import { useToday } from "../useToday";
 
 /* The Today page never exceeds five cards (CLAUDE.md standing rule):
    1 Today in the Church (liturgical day + Mass readings + Marian antiphon, merged
    per spec §6) — the time-sensitive card leads on a phone, right under the date ·
    2 Verse of the Day · 3 Quote of the Day · 4 The Holy Rosary · 5 Continue Reading. */
 export default function Home() {
-  const today = new Date();
+  // Live "today": rolls at local midnight and on foreground resume, so a phone
+  // that keeps Fidelis resident overnight never shows yesterday's page.
+  const today = useToday();
   const votd = verseOfTheDay(today);
   const votdBook = getBook(votd.book)!;
   const lit = liturgicalDay(today);
@@ -43,16 +46,35 @@ export default function Home() {
   const planPortion = plan && !isComplete(plan) ? todayPortion(plan) : [];
   const [mass, setMass] = useState<DayReadings | null>(null);
   const [quote, setQuote] = useState<DailyQuote | null>(null);
+  // Distinguish "still loading" (skeleton) from "failed" (a quiet notice) —
+  // otherwise an offline load leaves the skeleton shimmering forever.
+  const [quoteFailed, setQuoteFailed] = useState(false);
   const [openMystery, setOpenMystery] = useState<Mystery | null>(null);
   const [share, setShare] = useState<
     { text: string; citation: string; source?: string; filename: string } | null
   >(null);
   useEffect(() => {
-    readingsForDate(new Date()).then(setMass).catch(() => setMass(null));
+    let alive = true;
+    readingsForDate(today)
+      .then((m) => alive && setMass(m))
+      .catch(() => alive && setMass(null));
+    setQuoteFailed(false);
     loadQuotes()
-      .then((qs) => setQuote(quoteOfTheDay(qs, new Date(), (d) => liturgicalDay(d), currentRegion())))
-      .catch(() => setQuote(null));
-  }, []);
+      .then(
+        (qs) =>
+          alive && setQuote(quoteOfTheDay(qs, today, (d) => liturgicalDay(d), currentRegion()))
+      )
+      .catch(() => {
+        if (alive) {
+          setQuote(null);
+          setQuoteFailed(true);
+        }
+      });
+    return () => {
+      alive = false;
+    };
+    // Re-resolve when the day rolls (midnight / foreground resume).
+  }, [today]);
   const dateLabel = today.toLocaleDateString(undefined, {
     weekday: "long",
     year: "numeric",
@@ -64,10 +86,24 @@ export default function Home() {
     `/read/${translation}/${book}/${chapter}${verse ? `?v=${verse}` : ""}`;
 
   async function shareVotd() {
-    const data = await loadBook(translation, votd.book);
+    // An import-only translation that isn't imported (or an offline miss) must
+    // not turn the Share tap into a silent no-op — fall back to the bundled
+    // Douay-Rheims, the same fallback the Reader uses, and cite it honestly.
+    let shareTranslation = translation;
+    let data;
+    try {
+      data = await loadBook(translation, votd.book);
+    } catch {
+      shareTranslation = "drc";
+      try {
+        data = await loadBook(shareTranslation, votd.book);
+      } catch {
+        return; // offline with nothing cached — leave the page unchanged
+      }
+    }
     const text = passageText(data, votd.chapter, votd.verse, votd.endVerse);
-    const ref = formatVotdRef(votd, bookDisplayName(votdBook, translation));
-    const abbrev = getTranslation(translation)?.abbrev;
+    const ref = formatVotdRef(votd, bookDisplayName(votdBook, shareTranslation));
+    const abbrev = getTranslation(shareTranslation)?.abbrev;
     setShare({
       text,
       citation: abbrev ? `${ref} · ${abbrev}` : ref,
@@ -162,7 +198,12 @@ export default function Home() {
 
         <div className="card">
           <h2>Quote of the Day</h2>
-          {!quote && <Skeleton lines={4} className="qotd-skeleton" />}
+          {!quote && !quoteFailed && <Skeleton lines={4} className="qotd-skeleton" />}
+          {!quote && quoteFailed && (
+            <p className="muted small sans">
+              The quote couldn't be loaded — it will return with your connection.
+            </p>
+          )}
           {quote && (
             <>
               <p className="qotd-text">{quote.text}</p>

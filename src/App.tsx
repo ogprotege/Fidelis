@@ -19,6 +19,7 @@ import { StatusBar, Style } from "@capacitor/status-bar";
 import { App as CapApp } from "@capacitor/app";
 import { closeTopOverlay } from "./lib/overlays";
 import { useSettings, useUpdateSettings } from "./SettingsContext";
+import { useToday } from "./useToday";
 import { accentFor, liturgicalDay } from "./lib/liturgical";
 import { resolveTheme } from "./lib/theme";
 import { installDynamicTypeBridge } from "./lib/dynamicType";
@@ -36,6 +37,9 @@ export default function App() {
   const update = useUpdateSettings();
   const location = useLocation();
   const widgetMode = location.pathname.startsWith("/widget/");
+  // Live "today" (midnight + foreground-resume aware) so the liturgical accent
+  // below never wears yesterday's color in the resident native shell.
+  const today = useToday();
 
   // Track the OS color scheme so theme "System" (spec §2.2) stays live: a user
   // who flips their device to dark while Fidelis is open sees it follow.
@@ -131,12 +135,15 @@ export default function App() {
   // embeddable widget) clears it, so the brand purple shows.
   useEffect(() => {
     const root = document.documentElement;
-    const accent = widgetMode ? null : accentFor(settings.followLiturgicalYear, liturgicalDay().color);
+    const accent = widgetMode
+      ? null
+      : accentFor(settings.followLiturgicalYear, liturgicalDay(today).color);
     if (accent) root.dataset.accent = accent;
     else delete root.dataset.accent;
     // calendarRegion is a dep because today's governing color can differ by
     // region (e.g. a U.S. proper memorial), so the tint must re-derive live.
-  }, [settings.followLiturgicalYear, settings.calendarRegion, widgetMode]);
+    // `today` is a dep so the color rolls at midnight / foreground resume.
+  }, [settings.followLiturgicalYear, settings.calendarRegion, widgetMode, today]);
 
   if (widgetMode) {
     return (

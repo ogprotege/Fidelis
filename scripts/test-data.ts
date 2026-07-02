@@ -574,6 +574,38 @@ check(
   javaFormulaAgrees ? "" : "selection formula or Gregorian calendar pin missing from VotdWidget.java"
 );
 
+// 7b. Pre-resolved calendar widget data: the committed calendar.json is a fixed
+//     window (build year → Dec 31 of the next), so it EXPIRES. On the day the
+//     window runs out, every installed widget silently degrades to its fallback
+//     text. This assertion turns that cliff into a red harness months ahead:
+//     the committed window must cover today through today+180 days. Regenerate
+//     with `npm run widgets` (docs/guides/RELEASING.md) and commit the JSON.
+{
+  const iosCalRaw = readFileSync(join(ROOT, "ios/WidgetExtension/calendar.json"), "utf8");
+  const calKeys = Object.keys(JSON.parse(iosCalRaw));
+  const iso = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const now = new Date();
+  const horizon = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 180);
+  const missing = [iso(now), iso(horizon)].filter((k) => !calKeys.includes(k));
+  check(
+    "widget calendar.json covers today through today+180 (no staleness cliff within 6 months)",
+    missing.length === 0,
+    missing.length
+      ? `missing ${missing.join(", ")} (window ${calKeys[0]}…${calKeys[calKeys.length - 1]}) — run npm run widgets and commit`
+      : ""
+  );
+  const androidCalRaw = readFileSync(
+    join(ROOT, "android/app/src/main/res/raw/calendar.json"),
+    "utf8"
+  );
+  check(
+    "Android widget calendar.json is byte-identical to the iOS one (both read one resolution)",
+    androidCalRaw === iosCalRaw,
+    "android res/raw/calendar.json differs from ios/WidgetExtension/calendar.json — re-run npm run calendar-widget"
+  );
+}
+
 // 8. Empty-slot audit (P1-4): data-report.txt must stay in sync with the
 //    bundles, no canonical chapter may be fully empty, and every scattered
 //    empty slot must be listed in the report.
@@ -1625,6 +1657,26 @@ console.log("");
   check("'Gregory Naz.' is Gregory Nazianzen (Doctor)", F("Gregory Naz.").id === "gregory-nazianzen" && F("Gregory Naz.").isDoctor === true);
   check("citation 'Chrys., Hom. in Matt., 56' → Chrysostom", F("Chrys., Hom. in Matt., 56").id === "chrysostom");
   check("citation 'Aug., Serm. 351, 8' → Augustine", F("Aug., Serm. 351, 8").id === "augustine");
+
+  // Word-boundary matching: an alias that is merely a PREFIX of a different
+  // name must never match — over-matching would mis-attribute a Father and,
+  // worse, could wrongly flag one a Doctor (corrupting the Doctors-only filter).
+  check(
+    "'Leontius' never resolves to Leo the Great",
+    !(F("Leontius").kind === "father" && F("Leontius").id === "leo")
+  );
+  check(
+    "'Basilides' never resolves to Basil",
+    !(F("Basilides").kind === "father" && F("Basilides").id === "basil")
+  );
+  check(
+    "'Maximilian' never resolves to Maximus",
+    !(F("Maximilian").kind === "father" && F("Maximilian").id === "maximus")
+  );
+  check(
+    "abbreviation with punctuation still matches at the boundary ('Aug.' → Augustine)",
+    F("Aug.").id === "augustine"
+  );
 
   // Pseudonymous authors stay distinct and are never Doctors.
   check(

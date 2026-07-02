@@ -14,6 +14,7 @@ import { TRANSLATIONS } from "../lib/translations";
 import { massTranslationFor } from "../lib/storage";
 import { importedTranslations } from "../lib/data";
 import { useSettings } from "../SettingsContext";
+import { useToday } from "../useToday";
 
 function toISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
@@ -24,13 +25,16 @@ function toISO(d: Date): string {
 export default function Readings() {
   const [params, setParams] = useSearchParams();
   const dateParam = params.get("date");
+  // Live "today" so the no-param default rolls at midnight / foreground resume
+  // in the resident native shell instead of pinning yesterday's Mass.
+  const today = useToday();
   const date = useMemo(() => {
     if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
       const [y, m, d] = dateParam.split("-").map(Number);
       return new Date(y, m - 1, d);
     }
-    return new Date();
-  }, [dateParam]);
+    return today;
+  }, [dateParam, today]);
 
   // The calendar region lives on the Settings screen now (spec §2.2); read it
   // live from context so changing it there re-resolves this page at once. The
@@ -105,6 +109,7 @@ export default function Readings() {
           type="date"
           value={toISO(date)}
           onChange={(e) => e.target.value && setParams({ date: e.target.value }, { replace: true })}
+          aria-label="Readings date"
         />
         <button className="icon-btn" onClick={() => go(new Date())}>
           Today
@@ -116,6 +121,7 @@ export default function Readings() {
           value={translation}
           onChange={(e) => setTranslation(e.target.value)}
           title="Reading translation"
+          aria-label="Reading translation"
         >
           {TRANSLATIONS.filter((t) => t.bundled || imported.has(t.id) || t.id === "nabre").map((t) => (
             <option key={t.id} value={t.id}>
@@ -135,7 +141,11 @@ export default function Readings() {
             year: "numeric"
           })}
           <span className="spacer" />
-          <span className="lit-color-chip" style={{ background: COLOR_HEX[lit.color] }} />
+          <span
+            className="lit-color-chip"
+            style={{ background: COLOR_HEX[lit.color] }}
+            title={`Liturgical color: ${lit.color}`}
+          />
         </h2>
         <div className="lit-season">
           <strong>{lit.seasonLabel}</strong>

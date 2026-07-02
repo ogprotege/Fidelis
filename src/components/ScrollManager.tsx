@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 import { decideScroll, hasScrollTarget } from "../lib/scroll";
+import { isScrollLocked } from "../lib/scrollLock";
 
 /**
  * The single scroll authority for the app (nav/IA redesign). Mounted once in
@@ -25,6 +26,9 @@ export default function ScrollManager() {
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
+        // While a sheet pins the body, window.scrollY is 0 regardless of where
+        // the page really was — recording it would make Back restore to top.
+        if (isScrollLocked()) return;
         const m = offsets.current;
         const key = currentKey.current;
         // Bound the map in the long-lived native shell: evict the oldest entry
