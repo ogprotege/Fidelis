@@ -863,10 +863,10 @@ console.log("");
   }
   check("every quote satisfies the spec §3.1 schema", schemaBad === 0, `${schemaBad} bad`);
 
-  // The build's §3.3 red list is ADVISORY for the closed beta (owner directive):
-  // non-PD authors are kept; re-enable the hard fail in build-quotes.mjs before any
-  // public release. What the rotation needs instead is a corpus larger than a year,
-  // so a quote can never repeat within one calendar year.
+  // The build's §3.3 red list is a HARD failure since v1.14.2: build-quotes.mjs
+  // throws on any non-PD-author match unless ALLOW_RED_LIST=1 is set — the
+  // explicit closed-beta escape hatch. What the rotation needs here is a corpus
+  // larger than a year, so a quote can never repeat within one calendar year.
   check(
     "corpus larger than a calendar year (no in-year repeat possible)",
     quotes.length >= 366,
@@ -2459,6 +2459,53 @@ console.log("");
   const plugin = readFileSync(join(ROOT, "ios/App/App/SaveImagePlugin.swift"), "utf8");
   check("SaveImagePlugin writes via UIImageWriteToSavedPhotosAlbum (triggers the add-only prompt)",
     plugin.includes("UIImageWriteToSavedPhotosAlbum"));
+}
+
+// §25 — source-shape guards for UI fixes (v1.14.2 a–c, v1.15.1 d). None of these
+// has a runtime surface the harness can drive, so each pins the load-bearing token
+// of the fix in the source; a silent revert goes red here.
+console.log("");
+{
+  // (a) Sheet pins the body in a LAYOUT effect — "useLayoutEffect(() => {" — so
+  // its cleanup (unlockScroll) runs in React's mutation phase, BEFORE
+  // ScrollManager positions the new page. Reverting to a passive useEffect would
+  // scroll the destination page to the departed page's offset.
+  const sheetSrc = readFileSync(join(ROOT, "src/components/Sheet.tsx"), "utf8");
+  check("Sheet locks scroll in a layout effect (useLayoutEffect)",
+    sheetSrc.includes("useLayoutEffect(() =>"));
+  // …and its focus-trap selector excludes disabled controls — the file reads
+  // 'button:not([disabled]), [href], input:not([disabled]), …'. A disabled
+  // first/last element can never hold focus, so Tab would escape the sheet.
+  check("Sheet focus trap excludes disabled controls (:not([disabled]))",
+    sheetSrc.includes("button:not([disabled])") && sheetSrc.includes("input:not([disabled])"));
+
+  // (b) ScrollManager must not record offsets while a sheet pins the body:
+  // window.scrollY reads 0 under the lock, so Back would restore to top. The
+  // recorder path reads "if (isScrollLocked()) return;" before the map write.
+  const smSrc = readFileSync(join(ROOT, "src/components/ScrollManager.tsx"), "utf8");
+  check("ScrollManager imports isScrollLocked from lib/scrollLock",
+    /import\s*\{[^}]*\bisScrollLocked\b[^}]*\}\s*from\s*"\.\.\/lib\/scrollLock"/.test(smSrc));
+  check("ScrollManager recorder ignores pinned-body scrolls",
+    smSrc.includes("if (isScrollLocked()) return;"));
+
+  // (c) the sticky Reader toolbar sits UNDER the notch-safe header —
+  // ".reader-toolbar { … top: var(--header-h); … }" — a raw `top: 0` would
+  // slide it beneath the fixed header on iOS (the notch safe-area inset).
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  check("Reader toolbar sticks below the header (top: var(--header-h))",
+    /\.reader-toolbar\s*\{[^}]*top:\s*var\(--header-h\)/.test(css));
+
+  // (d) v1.15.1: VerseQuote (the Today VOTD card, the rosary passage) falls back
+  // to the bundled Douay-Rheims when the selected reader translation is
+  // import-only and absent on-device — 'loadBook("drc", book)' in the catch —
+  // instead of leaving a bare em-dash on the front page. And the lang attribute
+  // must describe the text actually shown ("langAttr(shownTranslation)"), not
+  // the requested translation, or a fallen-back Spanish card reads lang="es".
+  const vqSrc = readFileSync(join(ROOT, "src/components/VerseQuote.tsx"), "utf8");
+  check("VerseQuote falls back to the bundled Douay-Rheims on load failure",
+    vqSrc.includes('loadBook("drc", book)'));
+  check("VerseQuote lang attribute follows the translation actually shown",
+    vqSrc.includes("langAttr(shownTranslation)"));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

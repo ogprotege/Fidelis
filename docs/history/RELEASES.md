@@ -861,6 +861,46 @@ What made this more than a metadata entry:
   `language === "la"` ternaries did, so VoiceOver reads the Platense as Spanish in the Reader,
   the parallel column, the readings, and the verse cards.
 
+## The lamp trimmed (v1.15.1)
+
+*"Then all those virgins arose and trimmed their lamps." (Matthew 25:7) — the front page's
+lamp relit, and the shells finally telling the truth about which release they are.*
+
+A beta-review screenshot showed the app's front page dark: the Verse of the Day card rendering
+a bare "—". The cause was a convention applied everywhere but the one place the user sees
+first — and alongside the fix, the release closes a version drift the v1.15.0 Xcode Cloud
+artifact exposed.
+
+- **`VerseQuote` falls back to the bundled Douay-Rheims.** The component behind the Today
+  page's Verse of the Day card and the rosary sheet's passage read the *selected* reader
+  translation directly — so with an import-only translation chosen (NABRE, RSV-2CE, Platense)
+  and no copy imported on-device, the front page showed "—" where the day's verse belongs.
+  v1.14.2 gave the VOTD **Share** path the DRB fallback, and the Reader has always had it; the
+  card itself was the gap. It now falls back like they do, and the `lang` attribute follows the
+  text actually shown — a DRB fallback under a selected Platense is voiced as English, not
+  Spanish (the v1.15.0 `langAttr()` plumbing made that distinction expressible).
+- **`loadCCCText()` retries after an IndexedDB read failure.** v1.14.2 gave every fetch memo
+  the retry-after-rejection treatment (`loadLectionary`/`loadQuotes`/`loadManifest`/`loadCCC`/
+  `loadTrent`) — but the imported-Catechism reader, which memoizes an IndexedDB read rather
+  than a fetch, still cached a transient failure as `null` forever. A failed read now clears
+  the memo and the next call retries, matching the rest of `src/lib/data.ts`.
+- **The three uncovered v1.14.2 UI fixes gained harness source-shape guards.** The sheet ×
+  scroll-authority fix, the recorder guard, and the Reader-toolbar `top` fix were all verified
+  by hand and protected by nothing: `scripts/test-data.ts` now asserts `Sheet`'s scroll lock is
+  a **layout** effect and its focus trap excludes `disabled` controls, that `ScrollManager`'s
+  offset recorder keeps the `isScrollLocked()` guard, and that `.reader-toolbar`'s sticky `top`
+  stays on `var(--header-h)`. A stale "ADVISORY" comment in the harness was corrected while
+  there — the §3.3 quote red list has been a **hard build failure** since v1.14.2, and the
+  comment shouldn't invite anyone to believe otherwise.
+- **The native shells are versioned again.** v1.14.2→v1.15.0 bumped `package.json` three times
+  without touching the committed shells, so Xcode Cloud Build 18 archived v1.15.0 code labelled
+  **"1.14.1 (1)"**. iOS `MARKETING_VERSION` 1.14.1→1.15.1 across all four build configurations
+  (`CURRENT_PROJECT_VERSION` stays 1 — the release script overrides the build number at archive
+  time), Android `versionName` "1.14.1"→"1.15.1" and `versionCode` 11401→11501, and the
+  `package-lock.json` version fields (stranded at 1.14.1) rejoin `package.json`.
+
+No engine, bundled text, or golden snapshot changed.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

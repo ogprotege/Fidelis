@@ -194,7 +194,13 @@ let cccTextPromise: Promise<CCCText | null> | null = null;
 /** The owner's imported modern CCC, memoized like loadCCC; the memo is cleared
  *  by idbPutCcc/idbClearCcc so the supersede tier flips live after an import. */
 export function loadCCCText(): Promise<CCCText | null> {
-  cccTextPromise ??= idbGetCcc().catch(() => null);
+  cccTextPromise ??= idbGetCcc().catch(() => {
+    // An IDB read failure yields null for THIS call but is not memoized, so the
+    // next call retries and the imported Catechism reappears. "No import yet"
+    // resolves null above (never rejects) and stays cached — correct.
+    cccTextPromise = null;
+    return null;
+  });
   return cccTextPromise;
 }
 

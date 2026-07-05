@@ -6,6 +6,44 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.15.1] — 2026-07-05 — the lamp trimmed
+
+*"Then all those virgins arose and trimmed their lamps." (Matthew 25:7)*
+
+The front page's lamp relit — the Verse of the Day card no longer goes dark when the selected
+translation isn't on the device — plus the native shells finally carrying their real version
+(the v1.15.0 Xcode Cloud artifact was labelled "1.14.1 (1)"), one loader retry, and harness
+coverage for three v1.14.2 fixes that had none.
+
+### Fixed
+
+- **The Verse of the Day card no longer goes dark.** `VerseQuote` — the Today page's front-page
+  card and the rosary sheet's passage — rendered a bare "—" when the selected reader translation
+  was import-only (NABRE, RSV-2CE, Platense) and not yet imported on-device (found via a
+  beta-review screenshot). It now falls back to the bundled Douay-Rheims, the convention the
+  share path (v1.14.2) and the Reader already followed; the `lang` attribute follows the text
+  actually shown, so a fallback is voiced in its own language.
+- **A failed Catechism read no longer sticks until reload.** `loadCCCText()` memoized an
+  IndexedDB read failure as `null` forever — the last loader still missing the v1.14.2
+  retry-after-rejection treatment. A failed read now clears the memo and the next call retries.
+- **The native shells carry their own version.** v1.14.2→v1.15.0 bumped `package.json` but never
+  the committed shells, so the Xcode Cloud Build 18 artifact said "1.14.1 (1)" while containing
+  v1.15.0 code. iOS `MARKETING_VERSION` 1.14.1→1.15.1 (all four configurations;
+  `CURRENT_PROJECT_VERSION` stays 1 — the release script overrides it at archive time) and
+  Android `versionName` "1.14.1"→"1.15.1" / `versionCode` 11401→11501.
+
+### Added
+
+- **Source-shape guards for the three v1.14.2 UI fixes that had no coverage:** `Sheet`'s
+  scroll lock must stay a layout effect and its focus trap must keep excluding `disabled`
+  controls; `ScrollManager`'s offset recorder must keep its `isScrollLocked()` guard; and the
+  `.reader-toolbar` sticky `top` must stay on `var(--header-h)`. A regression in any of them is
+  a red `npm test` now, not a re-discovered iOS bug. A stale "ADVISORY" comment in
+  `scripts/test-data.ts` was corrected — the §3.3 quote red list has been a hard build failure
+  since v1.14.2.
+
+No engine, data, or golden-snapshot changes.
+
 ## [1.15.0] — 2026-07-02 — our own tongues
 
 *"We have heard them speak in our own tongues the wonderful works of God." (Acts 2:11)*
