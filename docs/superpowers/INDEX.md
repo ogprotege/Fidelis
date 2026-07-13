@@ -18,6 +18,7 @@ These documents are the working design artifacts: feature specs written before i
 - [CCC inline catechism design (2026-06-27)](specs/2026-06-27-ccc-inline-catechism-design.md) — §5 follow-on: replace the vatican.va redirect with an inline catechism sheet — bundled public-domain Trent (default) → imported personal CCC (supersedes) → vatican.va links (fallback) → future licensed CCC. ✓ shipped v1.14.0 (McHugh-Callan 1923 bundled; Donovan deferred)
 - [Quote-of-the-Day intake design (2026-06-27)](specs/2026-06-27-quotes-intake-design.md) — §3 handoff contract: the `quotes.corpus.json` entry schema, the public-domain red list, the selection model, and the build/widget-resync steps for owner-authored quotes. ✓ shipped v1.14.0
 - [Modern CCC import local-build runbook (2026-06-27)](specs/2026-06-27-ccc-text-LOCAL-BUILD-RUNBOOK.md) — owner-run converter (EPUB/PDF → `fidelis-ccc-1` JSON) for the §6 personal Catechism import; output gitignored, imported on-device only, never committed. ✓ shipped v1.14.0
+- [Collapsing Masthead navigation design (2026-07-13)](specs/2026-07-13-collapsing-masthead-nav-design.md) — top navigation on phones: brand row scrolls off, slim tab row pins (CSS-only, no motion); Reader folio line; one-row Mass controls; bottom tab bar retired. 📝 spec · v1.16.0
 
 ## Implementation plans
 
