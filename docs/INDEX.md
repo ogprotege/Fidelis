@@ -4,7 +4,7 @@
 
 **Using the app?** → [README](../README.md) · the in-app **About** page.
 
-**Contributing or building?** → [CONTRIBUTING](../CONTRIBUTING.md) · [guides](guides/) ([iOS](guides/IOS.md) · [Android](guides/ANDROID.md) · [Releasing](guides/RELEASING.md)) · [CLAUDE.md](../CLAUDE.md).
+**Contributing or building?** → [CONTRIBUTING](../CONTRIBUTING.md) · [guides](guides/) ([iOS](guides/IOS.md) · [Android](guides/ANDROID.md) · [Releasing](guides/RELEASING.md) · [App Store](guides/APP_STORE.md)) · [CLAUDE.md](../CLAUDE.md).
 
 **Want the history?** → [CHANGELOG](../CHANGELOG.md) · [the release narrative](history/RELEASES.md) · [the 2026-06-12 playbook](history/PLAYBOOK_2026-06-12.md).
 

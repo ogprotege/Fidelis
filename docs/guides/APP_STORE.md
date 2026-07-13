@@ -1,0 +1,180 @@
+# App Store submission metadata
+
+[← Docs index](../INDEX.md)
+
+Paste-ready metadata for App Store Connect ("iOS App Version — Prepare for
+Submission"). Character limits verified by script; re-verify after any edit
+(`node -e` counts are recorded at the bottom).
+
+---
+
+## Version
+
+```
+1.15.1
+```
+
+ASC creates the first version as "1.0" — edit the field to `1.15.1` so it
+matches the uploaded build's `MARKETING_VERSION`. Apple recommends (and the
+release ledger assumes) the store version string equals the build's
+`CFBundleShortVersionString`.
+
+## Promotional Text (≤ 170 characters)
+
+```
+The full 73-book Catholic canon, daily Mass readings, and the liturgical year — unaltered, offline, free forever. No accounts, no ads, no tracking, no AI rewrites.
+```
+
+## Description (≤ 4,000 characters)
+
+```
+Fidelis is the Catholic Bible, kept faithfully — the full 73-book canon, the daily Mass readings, and the liturgical year, built on one conviction: the text is not ours to edit.
+
+Every bundled translation is reproduced verbatim from its public-domain source. No paraphrasing, no softening of hard sayings, no silent updates. Where a source differs from a printed edition, the difference is disclosed, not patched.
+
+THE BIBLE
+• The Douay-Rheims (Challoner), the Catholic Public Domain Version, and the Clementine Vulgate in Latin — all 73 books, bundled, fully offline
+• Own a licensed copy of the NABRE, RSV-2CE, or the Biblia Platense (Spanish)? Import it and read it in Fidelis — your copy never leaves your device
+• Typeset like a book: four Scripture faces, adjustable size, day and night themes
+
+THE LITURGY
+• The complete liturgical calendar, computed for the General Roman and USA calendars — every solemnity, feast, memorial, and feria, with correct precedence and transfers
+• The Mass readings for any day of any year, laid out as they are read at Mass
+• Let the app's accent follow the liturgical year — green in Ordinary Time, violet in Advent and Lent, red on the feasts of martyrs
+
+EVERY DAY
+• A Today page that never clutters: the day's celebration, a Verse of the Day, the Mass readings, and a verified quote from the saints — never more than five cards
+• Home-screen widgets for the Verse of the Day, today's Mass, and the daily quote — in light and dark
+• "What's today's Gospel?" — ask Siri
+
+STUDY
+• The Haydock Commentary across the whole canon and the Catena Aurea on the four Gospels — the Church Fathers on Scripture, verse by verse, earliest first
+• See where the Catechism cites a verse, with links to the official text — and read the Roman Catechism (Trent) offline
+• Fast search across the canon
+
+DEVOTION
+• The Rosary, with the Scripture of each mystery
+• Reading plans through the Scriptures
+• No streaks, no badges, no progress theater — the only acknowledgment the app makes is the Church's
+
+THE PLEDGE
+Free forever. No accounts. No ads. No tracking or analytics of any kind. No AI summaries or paraphrase. Every text's provenance is pinned to its exact source and sealed with a SHA-256 manifest the test suite re-verifies on every run.
+
+The simplicity is not a development phase. It is the product.
+```
+
+## Keywords (≤ 100 characters)
+
+```
+catholic,bible,douay,rheims,vulgate,latin,mass,readings,lectionary,catechism,rosary,liturgy
+```
+
+(Words already in the app name are wasted in keywords; "Fidelis" contributes
+itself. Comma-separated, no spaces.)
+
+## Support URL
+
+```
+https://github.com/ogprotege/Fidelis
+```
+
+## Marketing URL
+
+```
+https://github.com/ogprotege/Fidelis
+```
+
+## Copyright (≤ 200 characters)
+
+```
+2026 Wilson W. Warren
+```
+
+Format: year rights obtained + owner name, no URL. (21 characters ✓)
+
+## Privacy Policy URL (App Information / App Privacy)
+
+```
+https://github.com/ogprotege/Fidelis/blob/main/PRIVACY.md
+```
+
+App Privacy questionnaire: **Data Not Collected** (truthful — no server, no
+analytics, no accounts; see `PRIVACY.md`). Requires `PRIVACY.md` to be on
+`main` before pasting the URL.
+
+## Subtitle (≤ 30 characters, App Information)
+
+```
+The Catholic Bible & Missal
+```
+
+(27 characters. Alternative: "Bible, Missal, Catechism" — 24.)
+
+## Age rating / Category
+
+Questionnaire: all "None" → **4+**. Category — Primary: **Reference**,
+Secondary: **Books**.
+
+## Routing App Coverage File
+
+Not applicable — Fidelis is not a routing/navigation app. Leave empty.
+
+## App Clip / iMessage App
+
+Not applicable. Leave empty.
+
+## Notes for App Review (≤ 4,000 characters)
+
+```
+Fidelis is a Catholic Bible and liturgical-calendar app. Notes for review:
+
+• No account, no sign-in, no server. The app is fully functional offline from first launch; all content ships in the binary. There are no test credentials because there is nothing to log into.
+
+• All bundled texts are public domain: the Douay-Rheims Bible (Challoner revision), the Catholic Public Domain Version, the Clementine Vulgate (Latin), and the 1923 McHugh–Callan English translation of the Roman Catechism. Provenance is pinned to exact upstream sources and sealed with a SHA-256 manifest verified by the test suite.
+
+• Copyrighted translations (NABRE, RSV-2CE, Biblia Platense) are NOT included and are never downloaded by the app. A user who already owns a licensed digital copy may import it from a file on their device for personal use; the imported file is stored on-device only (IndexedDB in the system WebView) and never transmitted. When no import is present, the app falls back to the bundled public-domain Douay-Rheims.
+
+• The text of the Catechism of the Catholic Church is likewise not bundled: the app ships only citation numbers and links out to the official text on vatican.va (opens in the browser).
+
+• Photo library access (add-only) is requested solely when the user taps "Save image" on the Scripture share card.
+
+• The app includes three home-screen widgets (Verse of the Day, today's Mass readings, daily quote) and a Siri App Intent ("What's today's Gospel?").
+
+• No analytics or tracking SDKs. The app makes no network requests of its own; the only egress is user-tapped external links.
+
+Quick tour for review: the Today tab shows the liturgical day, Verse of the Day, Mass readings, and daily quote. The Read tab is the Bible reader — tap a verse for commentary, Catechism links, and sharing. The Mass tab shows the day's full readings. More → Translations shows the (optional) licensed-copy import screen.
+```
+
+## Screenshots
+
+Requirement: JPG/PNG, RGB, portrait 1284 × 2778 (or 1242 × 2688). Up to 10;
+the first 3 appear on the install sheet. Shot list (day theme unless noted):
+
+Captured 2026-07-13 (all verified 1284×2778) via the CDP capture script
+(428×926 CSS @ 3× against the production build):
+
+1. **01-today** — the five-card front page: liturgical day, Verse of the Day, quote
+2. **02-reader-john1** — John 1 in EB Garamond, gold Haydock dots + purple CCC marks
+3. **03-mass-readings** — the day's readings (shows the honest NABRE-import notice);
+   **03b-mass-readings-drb** — same page with DRB selected, no notice (pick one)
+4. **04-commentary-john3** — Commentary sheet on John 3:16 (Witham, St. Augustine)
+5. **05-search-charity** — 87 results with OT/NT/Gospels filters and highlights
+6. **06-reader-psalm22-night** — Psalm 22 in the night theme
+7. **07-settings** — Scripture preview, version cards, text size
+8. **08-canon** — the 73-book canon in Vulgate order
+
+Generated files land in `appstore/screenshots/` (gitignored; regenerate with
+the capture script — session scratchpad `capture.mjs`, headless Chrome on
+port 9333 against `npm run preview`).
+
+---
+
+### Character-count verification record
+
+Counted as unicode code points (how ASC counts). Verified 2026-07-13:
+
+- Promotional text: 163 / 170 ✓
+- Description: 2,329 / 4,000 ✓
+- Keywords: 91 / 100 ✓
+- Copyright: 21 / 200 ✓
+- Review notes: 1,916 / 4,000 ✓
