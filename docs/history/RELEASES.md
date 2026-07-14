@@ -901,6 +901,65 @@ artifact exposed.
 
 No engine, bundled text, or golden snapshot changed.
 
+## Upon the candlestick (v1.16.0)
+
+*"Neither do men light a candle, and put it under a bushel, but upon a candlestick." (Matthew 5:15)*
+**The Collapsing Masthead — the navigation leaves the bottom of the phone screen.**
+
+Three motives, gathered in the owner brainstorm: the bottom bar felt hidden and cramped (five
+columns plus a More popover at the screen's foot); it spent vertical room that belongs to
+Scripture — the Reader independently stacked a brand header, a two-row toolbar, and an
+"← All books" line before verse 1; and a bottom tab bar reads as a social app, where a masthead
+over a section line reads as a missal. Fidelis is a book. The governing principle, owner-set:
+*relocate the chrome; redesign a page only where a control row is genuinely redundant* — Search
+taught that rule, and its page did not change at all.
+
+**The masthead.** At the top of every page: the gold brand row (`✠ Fidelis`) with the tab row
+beneath it. On scroll the brand folds away and the slim tab row stays pinned. The collapse is
+pure document flow — no JavaScript, no animation, nothing to gate behind
+`prefers-reduced-motion`. The mechanism: on phones the header's boxes dissolve
+(`display: contents` on `.header`/`.header-inner`), so the brand link and the nav lay out as
+rows of the full-height `.app` column — the brand in normal flow scrolls off; the tab row,
+`position: sticky; top: env(safe-area-inset-top)`, pins against `.app` (a sticky row nested in
+a header-sized box could never outlive its parent — the dissolve is what frees it). A fixed,
+`aria-hidden` **status strip** (`height: env(safe-area-inset-top)`, `--bg-1`, z 29) always
+paints under the iOS status bar: a sticky element cannot grow env() padding only-when-pinned,
+and the strip also keeps the notch filled during rubber-band overscroll. The More menu becomes
+the drop-down it always was on desktop, now at the opposite end of the screen from the
+verse-actions bar — so the old `z-index: 45` header escalation is deleted rather than
+rebalanced, along with the footer's `3.25rem` clearance and the verse-actions `3.75rem` lift.
+`--header-h` re-derives on phones to `calc(2.75rem + env(safe-area-inset-top))` — the pinned
+tab row — and everything that hangs off it (SectionNav chip bars, the Reader toolbar,
+`--anchor-offset`) follows automatically. Desktop ≥640px is visually unchanged; the
+breakpoint's meaning flips from "move the nav to the bottom" to "stack brand over tabs." Every
+tab link keeps a 44px flex-centered touch box.
+
+**The Reader folio line.** Two slim pinned rows while reading: the tab row, then
+**`John 1 ▾ · DRB ▾ · Aa`**. The book+chapter control opens the chapter-picker sheet, extended
+with the full book list, so the "← All books" crumb retired; the translation select keeps its
+one-tap switch; **Aa** gathers text size (A−/A+ with the live px), the Scripture-face pills
+(mirroring the Settings row, so the two surfaces cannot drift), and the parallel-view select
+into a "Text options" sheet — set-and-forget controls no longer outrank the book being read.
+Unchanged: gold Haydock dots, purple CCC marks, verse selection and the sheets, the
+end-of-passage chapter links; the verse-actions bar keeps its bottom-floating position but
+drops to just above the home indicator, since there is no bar left to clear.
+
+**One-row Mass controls.** `[← Previous] [date] [Today] / [Next →] [select]` became
+**`‹ · July 14, 2026 ▾ · ›`** with a **Today** chip only when the shown date is off-today and
+the translation select right-aligned. The visible date is a facade over a transparent native
+`<input type="date">` stretched across it — a tap opens the platform date picker and assistive
+tech reads one labelled control ("Choose date"). Below 480px the facade shows a short, yearless
+date ("Jul 14" — the full date repeats in gold in the day card directly beneath) and the label
+ellipsizes rather than ever overlapping its neighbors, so the single row holds even with the
+Today chip and the widest translation label stacked on a 375-pixel phone.
+
+**The record.** Harness §11's identity-release acceptance checks were rewritten from the
+bottom bar to the masthead, and §26–§28 pin the new shape in the v1.15.1 source-shape manner.
+No engine, data, or golden changes — a golden diff during this work would have signalled a
+mistake. Service-worker shell cache v5→v6; iOS `MARKETING_VERSION`/Android `versionName` to
+1.16.0, `versionCode` 11600. Design spec:
+`docs/superpowers/specs/2026-07-13-collapsing-masthead-nav-design.md`.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

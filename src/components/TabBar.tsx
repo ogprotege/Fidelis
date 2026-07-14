@@ -8,11 +8,12 @@ import { pushOverlay, removeOverlay } from "../lib/overlays";
  *   Today · Read · Search · Mass · More
  *
  * One component, two presentations driven entirely by CSS (no router changes):
- * the header row on wide viewports, a bottom tab bar pinned to the screen edge
- * on phones (`.tabbar` in styles.css). "More" is a popover over the four
- * secondary destinations — Library, Translations, Settings, About — not a route
- * of its own, so the URL space is unchanged. The popover drops down under the
- * header link on desktop and rises above the bottom bar on phones.
+ * the header row on wide viewports; on phones its own full-width sticky row
+ * beneath the brand — the collapsing masthead (v1.16.0): the brand scrolls
+ * away, this row pins below the status bar (`.tabbar` in styles.css). "More"
+ * is a popover over the four secondary destinations — Library, Translations,
+ * Settings, About — not a route of its own, so the URL space is unchanged.
+ * The popover drops down under the More button at every width.
  *
  * Purple acts (§1.2): the active tab — and the More button while you are on one
  * of its routes — colors in --purple via `.nav a.active` / `.more-btn.active`.

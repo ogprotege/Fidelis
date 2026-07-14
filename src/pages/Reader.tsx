@@ -24,7 +24,7 @@ import Sheet from "../components/Sheet";
 import CommentarySheet from "../components/CommentarySheet";
 import CCCSheet from "../components/CCCSheet";
 import ShareSheet from "../components/ShareSheet";
-import { clampFontSize } from "../lib/typography";
+import { SCRIPTURE_FONTS, clampFontSize } from "../lib/typography";
 import { useSettings, useUpdateSettings } from "../SettingsContext";
 import { activePlan, updatePlan } from "../lib/storage";
 import { isComplete, todayPortion, markPortionRead } from "../lib/plans";
@@ -62,7 +62,12 @@ export default function Reader() {
   const [shareFor, setShareFor] = useState<number | null>(null);
   // §5 catechism: the verse whose inline Catechism sheet is open.
   const [cccFor, setCccFor] = useState<number | null>(null);
-  const [chapterPickerOpen, setChapterPickerOpen] = useState(false);
+  // v1.16.0 folio line (spec §4): the extended book+chapter picker and the
+  // "Aa" type menu. pickBook is the book the picker grid is showing — it
+  // resets to the open book each time the picker opens.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickBook, setPickBook] = useState(bookSlug);
+  const [typeOpen, setTypeOpen] = useState(false);
   // §5 CCC links: the small index+url maps, loaded once when enabled.
   const [ccc, setCcc] = useState<CCCData | null>(null);
   const wantHaydockDots = settings.commentaryEnabled && settings.commentaryHaydock;
@@ -155,7 +160,8 @@ export default function Reader() {
     setCommentaryFor(null);
     setShareFor(null);
     setCccFor(null);
-    setChapterPickerOpen(false);
+    setPickerOpen(false);
+    setTypeOpen(false);
     // Scroll position is owned by <ScrollManager> now (top on a fresh chapter,
     // your place restored on Back); the ?v= effect below still wins when present.
     // Runs on navigation only; settings.translation/update are read to persist
@@ -245,6 +251,16 @@ export default function Reader() {
 
   const go = (t: string, b: string, c: number) => navigate(`/read/${t}/${b}/${c}`);
 
+  // The picker grid's book: the open book uses the loaded text's real chapter
+  // count; any other book falls back to the canon maximum (P1-8 clamps after
+  // navigation, exactly as the old toolbar selects did).
+  const pickBookDef = getBook(pickBook) ?? book;
+  const pickChapters = pickBook === bookSlug ? chapterCount : pickBookDef.chapters;
+  const openPicker = () => {
+    setPickBook(bookSlug);
+    setPickerOpen(true);
+  };
+
   const onSelectVerse = (v: number) => {
     setSelected(selected === v ? null : v);
     setNoteOpen(false);
@@ -322,7 +338,31 @@ export default function Reader() {
   return (
     <div className={parallelData ? "parallel" : ""}>
       <div className="reader-toolbar">
+        <button
+          type="button"
+          className="folio-pick"
+          aria-haspopup="dialog"
+          aria-label={`${displayName} chapter ${chapter} — choose book and chapter`}
+          onClick={openPicker}
+        >
+          <span className="folio-name" lang={langAttr(translation)}>
+            {displayName} {chapter}
+          </span>
+          <svg
+            className="icon folio-caret"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.6}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
         <select
+          className="folio-trans"
           value={translation}
           onChange={(e) => go(e.target.value, bookSlug, Math.min(chapter, getBook(bookSlug)!.chapters))}
           title="Translation"
@@ -334,64 +374,17 @@ export default function Reader() {
             </option>
           ))}
         </select>
-        <select
-          value={bookSlug}
-          onChange={(e) => go(translation, e.target.value, 1)}
-          title="Book"
-          aria-label="Book"
+        <button
+          type="button"
+          className="icon-btn folio-type"
+          aria-haspopup="dialog"
+          aria-label="Text options"
+          title="Text options"
+          onClick={() => setTypeOpen(true)}
         >
-          {BOOKS.map((b) => (
-            <option key={b.slug} value={b.slug}>
-              {bookDisplayName(b, translation)}
-            </option>
-          ))}
-        </select>
-        <select
-          value={chapter}
-          onChange={(e) => go(translation, bookSlug, parseInt(e.target.value, 10))}
-          title="Chapter"
-          aria-label="Chapter"
-        >
-          {Array.from({ length: chapterCount }, (_, i) => (
-            <option key={i + 1} value={i + 1}>
-              {i + 1}
-            </option>
-          ))}
-        </select>
-        <div className="toolbar-right">
-          <select
-            value={parallel ?? ""}
-            onChange={(e) => update({ parallel: e.target.value || null })}
-            title="Parallel translation"
-            aria-label="Parallel translation"
-          >
-            <option value="">No parallel</option>
-            {TRANSLATIONS.filter((t) => t.id !== translation).map((t) => (
-              <option key={t.id} value={t.id}>
-                ∥ {t.abbrev}
-              </option>
-            ))}
-          </select>
-          <button
-            className="icon-btn"
-            onClick={() => update({ fontSize: clampFontSize(fontSize - 1), followSystemTextSize: false })}
-            title="Smaller text"
-          >
-            A−
-          </button>
-          <button
-            className="icon-btn"
-            onClick={() => update({ fontSize: clampFontSize(fontSize + 1), followSystemTextSize: false })}
-            title="Larger text"
-          >
-            A+
-          </button>
-        </div>
+          Aa
+        </button>
       </div>
-
-      <p className="reader-crumb">
-        <Link to="/read">← All books</Link>
-      </p>
 
       <h1 className="chapter-title" lang={langAttr(translation)}>
         {displayName}{" "}
@@ -400,8 +393,8 @@ export default function Reader() {
             type="button"
             className="chapter-pick"
             aria-haspopup="dialog"
-            onClick={() => setChapterPickerOpen(true)}
-            title="Choose a chapter"
+            onClick={openPicker}
+            title="Choose book and chapter"
           >
             {chapter}
           </button>
@@ -625,26 +618,99 @@ export default function Reader() {
         </Sheet>
       )}
 
-      {chapterPickerOpen && (
-        <Sheet titleId="chapter-grid-title" onClose={() => setChapterPickerOpen(false)}>
-          <h2 id="chapter-grid-title" className="chapter-grid-title">
-            {displayName} — chapters
+      {pickerOpen && (
+        <Sheet titleId="passage-pick-title" onClose={() => setPickerOpen(false)}>
+          <h2 id="passage-pick-title" className="chapter-grid-title" lang={langAttr(translation)}>
+            {bookDisplayName(pickBookDef, translation)} — chapters
           </h2>
           <div className="chapter-grid">
-            {Array.from({ length: chapterCount }, (_, i) => i + 1).map((c) => (
+            {Array.from({ length: pickChapters }, (_, i) => i + 1).map((c) => (
               <button
                 key={c}
                 type="button"
-                className={c === chapter ? "chapter-cell current" : "chapter-cell"}
-                aria-current={c === chapter ? "true" : undefined}
+                className={
+                  pickBook === bookSlug && c === chapter ? "chapter-cell current" : "chapter-cell"
+                }
+                aria-current={pickBook === bookSlug && c === chapter ? "true" : undefined}
                 onClick={() => {
-                  setChapterPickerOpen(false);
-                  void go(translation, bookSlug, c);
+                  setPickerOpen(false);
+                  void go(translation, pickBook, c);
                 }}
               >
                 {c}
               </button>
             ))}
+          </div>
+          <h3 className="picker-books-title">Books</h3>
+          <div className="picker-books">
+            {BOOKS.map((b) => (
+              <button
+                key={b.slug}
+                type="button"
+                className={b.slug === pickBook ? "picker-book current" : "picker-book"}
+                aria-pressed={b.slug === pickBook}
+                onClick={() => setPickBook(b.slug)}
+              >
+                {bookDisplayName(b, translation)}
+              </button>
+            ))}
+          </div>
+        </Sheet>
+      )}
+
+      {typeOpen && (
+        <Sheet titleId="type-title" onClose={() => setTypeOpen(false)}>
+          <h2 id="type-title" className="chapter-grid-title">Text options</h2>
+          <div className="setting-row">
+            <span className="setting-label">Text size</span>
+            <span className="type-size">
+              <button
+                className="icon-btn"
+                onClick={() => update({ fontSize: clampFontSize(fontSize - 1), followSystemTextSize: false })}
+                aria-label="Smaller text"
+              >
+                A−
+              </button>
+              <span className="muted sans type-size-px">{fontSize}px</span>
+              <button
+                className="icon-btn"
+                onClick={() => update({ fontSize: clampFontSize(fontSize + 1), followSystemTextSize: false })}
+                aria-label="Larger text"
+              >
+                A+
+              </button>
+            </span>
+          </div>
+          <div className="type-group">
+            <div className="setting-label">Scripture face</div>
+            <div className="pill-row" role="group" aria-label="Scripture font">
+              {SCRIPTURE_FONTS.map((f) => (
+                <button
+                  key={f.id}
+                  className={`pill ${settings.scriptureFont === f.id ? "active" : ""}`}
+                  aria-pressed={settings.scriptureFont === f.id}
+                  style={{ fontFamily: `var(${f.cssVar})` }}
+                  onClick={() => update({ scriptureFont: f.id })}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="setting-row">
+            <span className="setting-label">Parallel translation</span>
+            <select
+              value={parallel ?? ""}
+              onChange={(e) => update({ parallel: e.target.value || null })}
+              aria-label="Parallel translation"
+            >
+              <option value="">No parallel</option>
+              {TRANSLATIONS.filter((t) => t.id !== translation).map((t) => (
+                <option key={t.id} value={t.id}>
+                  ∥ {t.abbrev}
+                </option>
+              ))}
+            </select>
           </div>
         </Sheet>
       )}

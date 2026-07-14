@@ -33,6 +33,7 @@ These documents are the working design artifacts: feature specs written before i
 - [CCC P1: Trent inline sheet (2026-06-27)](plans/2026-06-27-ccc-p1-trent-inline-sheet.md) — bundled public-domain Trent (McHugh–Callan 1923; Donovan deferred) in an inline catechism sheet. ✓ shipped v1.14.0
 - [CCC P2: personal CCC import (2026-06-27)](plans/2026-06-27-ccc-p2-personal-import.md) — import your own CCC copy (paragraph JSON + Mac converter) to supersede Trent. ✓ shipped v1.14.0
 - [Quote-of-the-Day intake/build (2026-06-27)](plans/2026-06-27-quotes-intake-build.md) — validate the owner-authored corpus, build, and resync the widgets. ✓ shipped v1.14.0
+- [Collapsing Masthead navigation plan (2026-07-14)](plans/2026-07-14-collapsing-masthead-nav.md) — step-by-step implementation plan for the top-navigation pass: the masthead dissolve, the Reader folio line, one-row Mass controls, and the harness source-shape guards. ✓ shipped v1.16.0
 
 ---
 [← Docs index](../INDEX.md) · Related: [code review](../review/Fidelis_Code_Review_V1_2026-06-11.md) · [feature design spec](../review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md)

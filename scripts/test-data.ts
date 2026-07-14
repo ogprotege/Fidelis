@@ -1074,11 +1074,13 @@ console.log("");
 }
 
 // ── 11. Tab bar (spec §2.1): five-tab navigation — Today · Read · Search · Mass
-//        · More — as the desktop header row and a phone bottom bar, by CSS only.
-//        These lock the three acceptance criteria the build/type-check cannot see
-//        (the fourth, a green build, is `npm run build`): the header cannot wrap
-//        at phone widths, the active tab is purple, and the bar honors the iOS
-//        safe-area inset.
+//        · More — as the desktop header row and, on phones, the collapsing
+//        masthead (v1.16.0): the brand row in normal flow, the tab row its own
+//        sticky top bar — by CSS only. These lock the acceptance criteria the
+//        build/type-check cannot see (the last, a green build, is `npm run
+//        build`): the header dissolves at phone widths, the tab row pins to the
+//        top, the active tab is purple, and the row honors the landscape
+//        safe-areas.
 {
   let tab = "";
   try {
@@ -1122,14 +1124,14 @@ console.log("");
   check("Header renders <TabBar> in place of the inline nav (spec §2.1)",
     header.includes("<TabBar") && !/<nav className="nav">/.test(header));
 
-  // Acceptance: the phone breakpoint pins the bar to the bottom edge and forces
-  // the header onto one line so it cannot wrap at 390px.
+  // Acceptance: the phone breakpoint dissolves the header's boxes (display:
+  // contents) so the tab row can pin to the top as its own sticky row.
   check("phone media query (max-width: 640px) exists (spec §2.1)",
     /@media\s*\(max-width:\s*640px\)/.test(css));
-  check("acceptance: header cannot wrap at phone width — .header-inner flex-wrap: nowrap",
-    /\.header-inner\s*\{[^}]*flex-wrap:\s*nowrap/.test(css));
-  check("acceptance: the bar pins to the bottom edge — .tabbar position: fixed; bottom: 0",
-    /\.tabbar\s*\{[^}]*position:\s*fixed[^}]*bottom:\s*0/.test(css));
+  check("acceptance: the masthead dissolves on phones — .header/.header-inner display: contents (v1.16.0)",
+    /\.header,\s*\.header-inner\s*\{\s*display:\s*contents/.test(css));
+  check("acceptance: the tab row pins to the top — .tabbar position: sticky; top: env(safe-area-inset-top)",
+    /\.tabbar\s*\{[^}]*position:\s*sticky[^}]*top:\s*env\(safe-area-inset-top\)/.test(css));
 
   // Acceptance: the active tab is purple (purple acts, §1.2) — for both the
   // NavLink tabs and the More button.
@@ -1138,9 +1140,9 @@ console.log("");
   check("acceptance: active More button is purple — .more-btn.active uses var(--purple)",
     /\.more-btn\.active\s*\{[^}]*color:\s*var\(--purple\)/.test(css));
 
-  // Acceptance: the bar respects the iOS home-indicator inset.
-  check("acceptance: bar respects iOS safe-area inset — env(safe-area-inset-bottom) on .tabbar",
-    /\.tabbar\s*\{[^}]*env\(safe-area-inset-bottom\)/.test(css));
+  // Acceptance: the tab row clears the rounded corners in landscape (spec §6).
+  check("acceptance: the tab row respects the landscape safe-areas — env(safe-area-inset-left/right)",
+    /\.tabbar\s*\{[^}]*env\(safe-area-inset-right\)[^}]*env\(safe-area-inset-left\)/.test(css));
 }
 
 // ── 12. The one Settings screen (spec §2.2): live preview + SettingsContext,
@@ -2506,6 +2508,80 @@ console.log("");
     vqSrc.includes('loadBook("drc", book)'));
   check("VerseQuote lang attribute follows the translation actually shown",
     vqSrc.includes("langAttr(shownTranslation)"));
+}
+
+// ── 26. v1.16.0 "upon the candlestick" — the collapsing masthead (design spec
+//        docs/superpowers/specs/2026-07-13-collapsing-masthead-nav-design.md §3, §8).
+//        Source-shape guards in the §25 manner: none of these has a runtime
+//        surface the harness can drive, so each pins the load-bearing token of
+//        the layout; a silent revert to the bottom bar goes red here.
+console.log("");
+{
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const tab = readFileSync(join(ROOT, "src/components/TabBar.tsx"), "utf8");
+  const app = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+
+  // A sticky row cannot grow env() padding only-when-pinned, so a FIXED strip
+  // paints the notch area at all times (spec §3) — and App mounts it decoratively.
+  check("masthead: the status strip paints the notch (height: env(safe-area-inset-top))",
+    /\.status-strip\s*\{[^}]*height:\s*env\(safe-area-inset-top\)/.test(css));
+  check("masthead: App mounts the strip aria-hidden",
+    /className="status-strip"\s+aria-hidden="true"/.test(app));
+
+  // The bottom bar and everything that existed to clear it are gone (spec §3).
+  check("masthead: the bottom tab bar is gone (no .tabbar position: fixed)",
+    !/\.tabbar\s*\{[^}]*position:\s*fixed/.test(css));
+  check("masthead: the fixed-bar clearances are gone (no 3.25rem footer / 3.75rem verse-actions lift)",
+    !css.includes("3.25rem") && !css.includes("3.75rem"));
+  check("masthead: the header no longer escalates over the verse-actions bar (no z-index: 45)",
+    !css.includes("z-index: 45"));
+
+  // The More dropdown still closes under Android Back / Escape (spec §6).
+  check("masthead: the More menu still registers with the overlay-back stack",
+    tab.includes("pushOverlay("));
+
+  // Everything sticky hangs off --header-h; on phones it must equal the pinned
+  // tab row (44px links = 2.75rem) plus the notch inset (spec §3).
+  check("masthead: --header-h re-derives to the pinned tab row on phones",
+    css.includes("--header-h: calc(2.75rem + env(safe-area-inset-top))"));
+}
+
+// ── 27. v1.16.0 — the Reader folio line (spec §4): Book Ch ▾ · translation ▾ · Aa.
+console.log("");
+{
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const reader = readFileSync(join(ROOT, "src/pages/Reader.tsx"), "utf8");
+
+  // The compound control names itself to screen readers (spec §7).
+  check("folio: the book+chapter control is labelled 'choose book and chapter'",
+    reader.includes("choose book and chapter"));
+  // The type menu gathers the set-and-forget controls under one spoken name.
+  check("folio: the type menu opens as 'Text options'",
+    reader.includes("Text options"));
+  // The picker sheet reaches every book, so the crumb could retire.
+  check("folio: the picker sheet lists the books (picker-book buttons)",
+    reader.includes("picker-book"));
+  check("folio: the '← All books' crumb is retired",
+    !reader.includes("reader-crumb") && !css.includes(".reader-crumb"));
+}
+
+// ── 28. v1.16.0 — one-row Mass controls (spec §5): ‹ · date ▾ · › [Today] … NABRE ▾.
+console.log("");
+{
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const readings = readFileSync(join(ROOT, "src/pages/Readings.tsx"), "utf8");
+
+  check("mass: the day-steppers carry spoken names (Previous/Next day)",
+    readings.includes('aria-label="Previous day"') && readings.includes('aria-label="Next day"'));
+  // The visible date text is a facade; the REAL control is a transparent native
+  // date input stretched over it, labelled for assistive tech (spec §5/§7).
+  check("mass: the date facade fronts a native input labelled 'Choose date'",
+    readings.includes('aria-label="Choose date"') &&
+      /\.date-pick-input\s*\{[^}]*opacity:\s*0/.test(css));
+  check("mass: the Today chip appears only when the shown date is off-today",
+    readings.includes("!isToday &&"));
+  check("mass: the controls hold one row (.readings-toolbar flex-wrap: nowrap)",
+    /\.readings-toolbar\s*\{[^}]*flex-wrap:\s*nowrap/.test(css));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

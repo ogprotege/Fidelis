@@ -166,6 +166,10 @@ export default function App() {
         Skip to content
       </a>
       <ScrollManager />
+      {/* v1.16.0: fixed status-bar backdrop (spec §3) — keeps the notch area
+          painted after the brand row scrolls away and during rubber-band
+          overscroll. Zero-height off-notch and on desktop. Decorative. */}
+      <div className="status-strip" aria-hidden="true" />
       <Header />
       <main className="page" id="main" tabIndex={-1}>
         <Routes>

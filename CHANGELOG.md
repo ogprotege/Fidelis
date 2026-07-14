@@ -6,6 +6,60 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.16.0] — 2026-07-14 — upon the candlestick
+
+*"Neither do men light a candle, and put it under a bushel, but upon a candlestick, that it may
+shine to all that are in the house." (Matthew 5:15)*
+
+The navigation leaves the bottom of the phone screen and takes its place at the top — the
+Collapsing Masthead — with the Reader and Mass pages each giving a row of chrome back to the
+text. Design spec: `docs/superpowers/specs/2026-07-13-collapsing-masthead-nav-design.md`.
+No engine, data, or golden changes.
+
+### Changed
+
+- **The Collapsing Masthead (spec §3).** On phones the five-tab bar no longer pins to the
+  bottom edge. At the top of every page: the gold brand row with the tab row beneath it; on
+  scroll the brand row folds away (normal document flow — no JavaScript, no animation) and the
+  slim tab row stays pinned below the status bar. A fixed, `aria-hidden` backdrop strip
+  (`height: env(safe-area-inset-top)`, `--bg-1`) keeps the notch painted after the brand
+  scrolls off and during rubber-band overscroll. The More menu becomes the same drop-*down*
+  it is on desktop; Android Back / Escape / outside-tap dismissal are unchanged. Deleted with
+  the bottom bar: the header's `z-index: 45` escalation, the footer's `3.25rem` bottom
+  clearance, and the verse-actions `3.75rem` lift (the bar now floats just above the home
+  indicator). `--header-h` re-derives on phones to the pinned tab row; the SectionNav chip
+  bars, the Reader toolbar, and `--anchor-offset` re-anchor automatically. Desktop ≥640px is
+  visually unchanged. Every tab keeps its 44px touch box.
+- **The Reader folio line (spec §4).** The brand header + two-row toolbar + "← All books"
+  crumb above verse 1 become one slim pinned row: **`John 1 ▾ · DRB ▾ · Aa`**. The book+chapter
+  control opens the chapter picker, now extended with the full book list (one tap re-targets
+  the grid; the crumb is retired); the translation select keeps its one-tap switch; **Aa**
+  gathers the set-and-forget controls (A−/A+ with the live px, the Scripture-face pills, the
+  parallel-view select) into a "Text options" sheet. Gold dots, CCC marks, verse selection,
+  the sheets, and the end-of-passage ‹ › chapter links are untouched.
+- **One-row Mass controls (spec §5).** The two control rows become
+  **`‹ · July 14, 2026 ▾ · ›`** — the date text is a facade over the real native date input
+  (spoken as "Choose date"), a **Today** chip appears only when the shown date is off-today,
+  and the translation select right-aligns. Same functions, half the chrome. Below 480px the
+  date shows a short, yearless form ("Jul 14" — the full date repeats in gold in the day card
+  directly beneath) and the label clips with an ellipsis rather than ever overlapping its
+  neighbors, so the row genuinely holds one line on phones.
+- **Search: no page changes** (owner correction) — it simply sits under the masthead.
+
+### Added
+
+- **Source-shape guards (§26–§28)** in the v1.15.1 convention: the sticky tab row and status
+  strip must exist, the fixed bottom bar and its clearances must stay gone, the More menu must
+  stay on the overlay-back stack, the folio picker/type menu keep their spoken names, and the
+  Mass date facade keeps its labelled native input. The §11 identity-release acceptance checks
+  are rewritten from the bottom bar to the masthead.
+
+### Release mechanics
+
+- Service-worker shell cache v5→v6 (app shell CSS/JS changed). iOS `MARKETING_VERSION` and
+  Android `versionName` 1.15.1→1.16.0, `versionCode` 11501→11600 (shells version with the web
+  app — the v1.15.1 lesson). App Store screenshots regenerate after this ships.
+
 ## [1.15.1] — 2026-07-05 — the lamp trimmed
 
 *"Then all those virgins arose and trimmed their lamps." (Matthew 25:7)*

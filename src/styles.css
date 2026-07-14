@@ -128,7 +128,6 @@
   --on-accent: #FFFFFF;     /* text/icon on a filled purple control */
   --shadow: 0 1px 3px rgba(38, 36, 31, 0.08), 0 8px 24px -12px rgba(38, 36, 31, 0.18);
   --shadow-soft: 0 1px 2px rgba(38, 36, 31, 0.22);
-  --shadow-tabbar: 0 -1px 3px rgba(38, 36, 31, 0.08), 0 -8px 24px -12px rgba(38, 36, 31, 0.18);
   --scrim: rgba(38, 36, 31, 0.45); /* modal backdrop (warm dark) */
 
   /* User highlight washes ("gold" is highlight color one, the sacred one). */
@@ -159,7 +158,6 @@
   --on-accent: #FFFFFF;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-tabbar: 0 -1px 3px rgba(0, 0, 0, 0.4), 0 -8px 24px -12px rgba(0, 0, 0, 0.5);
   --scrim: rgba(0, 0, 0, 0.6); /* modal backdrop */
 
   --hl-gold: #4A3D1D;
@@ -301,6 +299,23 @@ option { background: var(--bg-1); color: var(--text); }
   gap: 1rem;
   flex-wrap: wrap;
 }
+/* v1.16.0: the status-bar backdrop strip (spec §3). A sticky row cannot grow
+   env() padding only-when-pinned, so this fixed strip always paints the notch
+   area in --bg-1 — over scrolled page content and the section bars, under the
+   pinned tab row (z 30). Height 0 (invisible) off-notch and on desktop; it also
+   keeps the notch filled during rubber-band overscroll. Decorative — App.tsx
+   mounts it aria-hidden. */
+.status-strip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top);
+  background: var(--bg-1);
+  z-index: 29;
+}
+/* The brand link (Header.tsx) — the wordmark never underlines. */
+.brand-link, .brand-link:hover { text-decoration: none; }
 /* Brand is gold — a fixed identity constant (spec §1.3), the masthead, not a
    generic action; cross and wordmark read as one gold mark. */
 .brand {
@@ -330,12 +345,13 @@ option { background: var(--bg-1); color: var(--text); }
 .nav a.active { color: var(--purple); font-weight: 600; }
 .nav a:hover { text-decoration: none; color: var(--purple); }
 
-/* ── Tab bar (spec §2.1) ─────────────────────────────────────────────────────
+/* ── Tab bar (spec §2.1, v1.16.0 masthead) ───────────────────────────────────
    <TabBar> wears the .nav look on wide viewports — Today · Read · Search · Mass
-   · More as the header row. The bottom-bar layout for phones lives in the media
-   query at the foot of this file (CSS-only swap, no router changes). "More" is a
-   popover over Library/Translations/Settings/About — a dropdown here, rising
-   above the bar on phones — not a route, so the URL space is unchanged. */
+   · More as the header row. The phone layout — its own slim sticky row beneath
+   the brand, the collapsing masthead — lives in the media query at the foot of
+   this file (CSS-only swap, no router changes). "More" is a popover over
+   Library/Translations/Settings/About — a dropdown below the row at every
+   width — not a route, so the URL space is unchanged. */
 .tabbar .more { position: relative; display: flex; }
 .tabbar .more-btn {
   border: none;
@@ -595,35 +611,45 @@ h1.page-title {
 .book-grid a .deutero-mark { color: var(--text-muted); margin-left: 0.25rem; }
 
 /* ---------- Reader ---------- */
+/* v1.16.0 the folio line (spec §4): Book Chapter ▾ · translation ▾ · Aa — one
+   slim row pinned under the tab row. The set-and-forget controls (size, face,
+   parallel) moved into the Aa type menu, so the book being read outranks them. */
 .reader-toolbar {
   position: sticky;
-  top: var(--header-h); /* the header's true height incl. the notch safe-area inset */
+  top: var(--header-h); /* under the pinned chrome incl. the notch safe-area inset */
   z-index: 20;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
   align-items: center;
   background: var(--bg-0);
-  padding: 0.6rem 0;
+  padding: 0.3rem 0;
   border-bottom: var(--hairline) solid var(--border);
   font-family: var(--sans);
   font-size: 0.9rem;
 }
-.reader-toolbar select {
-  background: var(--bg-1);
-  border: var(--hairline) solid var(--border);
-  border-radius: 0.5rem;
-  padding: 0.35rem 0.5rem;
-  font-size: 0.9rem;
-  max-width: 14rem;
+.reader-toolbar select { max-width: 8.5rem; font-size: 0.9rem; padding: 0.35rem 0.5rem; }
+/* The folio's book+chapter control — the page you are on, so it acts. */
+.folio-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  min-height: 44px;
+  background: none;
+  border: none;
+  padding: 0 0.2rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
 }
-.toolbar-right { margin-left: auto; display: flex; gap: 0.4rem; align-items: center; }
-@media (max-width: 640px) {
-  .reader-toolbar { gap: 0.35rem; padding: 0.45rem 0; }
-  .reader-toolbar select { max-width: 9rem; padding: 0.3rem 0.4rem; font-size: 0.85rem; }
-  .toolbar-right { gap: 0.3rem; }
-  .reader-toolbar .icon-btn { padding: 0.3rem 0.45rem; }
-}
+.folio-pick .folio-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (hover: hover) { .folio-pick:hover { color: var(--purple); } }
+.folio-pick:active { color: var(--purple); }
+.folio-caret { color: var(--text-muted); flex-shrink: 0; }
+/* Aa sits at the row's end; the serif face makes it read as a type specimen. */
+.folio-type { margin-left: auto; font-family: var(--serif); }
 
 .chapter-pick {
   background: none;
@@ -659,13 +685,35 @@ h1.page-title {
 @media (hover: hover) { .chapter-cell:hover { border-color: var(--purple); } }
 .chapter-cell:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .chapter-cell.current { border-color: var(--gold); color: var(--gold-text); font-weight: 600; }
-/* Orientation breadcrumb back to the book list — purple acts. */
-.reader-crumb {
+/* v1.16.0: the picker sheet's book list (spec §4) — one tap re-targets the
+   chapter grid; gold marks the shown book, as on the chapter cells. */
+.picker-books-title {
+  margin: 1.1rem 0 0.4rem;
   font-family: var(--sans);
-  font-size: 0.85rem;
-  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--text-muted);
 }
-.reader-crumb a { color: var(--purple); }
+.picker-books { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.picker-book {
+  background: var(--bg-1);
+  border: var(--hairline) solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  cursor: pointer;
+}
+@media (hover: hover) { .picker-book:hover { border-color: var(--purple); } }
+.picker-book:active { background: var(--bg-2); }
+.picker-book:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.picker-book.current { border-color: var(--gold); color: var(--gold-text); font-weight: 600; }
+/* The Aa type menu's rows. */
+.type-size { display: inline-flex; align-items: center; gap: 0.5rem; }
+.type-size-px { min-width: 2.6rem; text-align: center; font-variant-numeric: tabular-nums; }
+.type-group { margin-top: 0.8rem; }
 .chapter-title {
   text-align: center;
   margin: 0.8rem 0 0.2rem;
@@ -901,7 +949,8 @@ h1.page-title {
 .verse-actions {
   position: fixed;
   left: 50%;
-  bottom: 1.2rem;
+  /* v1.16.0: no bar left to clear — just the home indicator (spec §4). */
+  bottom: calc(1.2rem + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   background: var(--bg-1);
   border: var(--hairline) solid var(--border);
@@ -1104,18 +1153,59 @@ body.widget-mode { background: transparent; }
 }
 
 /* ---------- Daily readings ---------- */
+/* v1.16.0 one-row Mass controls (spec §5): ‹ · date ▾ · › [Today] … NABRE ▾.
+   Same functions, half the chrome; the day card moves up. The visible date is
+   a facade — the real control is a transparent native date input stretched
+   over it, so a tap opens the platform picker and assistive tech reads one
+   labelled control ("Choose date"). */
 .readings-toolbar {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
   align-items: center;
 }
-.readings-toolbar input[type="date"], .readings-toolbar select {
-  padding: 0.4rem 0.6rem;
-  border: var(--hairline) solid var(--border);
-  border-radius: 0.5rem;
-  background: var(--bg-1);
-  font-size: 0.9rem;
+.readings-toolbar select { margin-left: auto; font-size: 0.9rem; max-width: 8rem; }
+.readings-toolbar .icon-btn { min-width: 44px; font-size: 1.15rem; line-height: 1; padding: 0.3rem 0.6rem; }
+.date-pick { position: relative; display: inline-flex; align-items: center; min-height: 44px; min-width: 0; }
+.date-pick-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.date-pick-input:focus-visible ~ .date-pick-label {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.date-pick-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  min-width: 0;
+}
+/* Only .date-pick can shrink in the nowrap row, so the date itself must yield:
+   the long-form date is the design at wide widths; below 480px the short month
+   + a tighter gap keep the mandated single row from overflowing once the Today
+   chip appears. The ellipsis is the never-overlap safety net for long locales.
+   (The clip lives on the inner spans, not .date-pick — clipping there would
+   truncate the focus ring drawn on the label.) */
+.date-pick-label > span { overflow: hidden; text-overflow: ellipsis; }
+/* The caret never compresses — the date text ellipsizes first. */
+.date-pick-label .icon { flex-shrink: 0; }
+.date-short { display: none; }
+@media (max-width: 480px) {
+  .readings-toolbar { gap: 0.35rem; }
+  .date-long { display: none; }
+  .date-short { display: inline; }
 }
 .reading-group { margin: 1.4rem 0; }
 .reading { margin-bottom: 1.1rem; }
@@ -1338,7 +1428,8 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
 
 .footer {
   border-top: var(--hairline) solid var(--border);
-  padding: 1.2rem 1rem 2rem;
+  /* v1.16.0: normal bottom padding again (no fixed bar), plus the home-indicator inset. */
+  padding: 1.2rem 1rem calc(2rem + env(safe-area-inset-bottom));
   text-align: center;
   font-family: var(--sans);
   font-size: 0.8rem;
@@ -1373,49 +1464,48 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
 .mb-0 { margin-bottom: 0; }
 .hl-dot.lib-swatch { display: inline-block; vertical-align: -0.3rem; margin-right: 0.5rem; }
 
-/* ── Tab bar on phones (spec §2.1) ───────────────────────────────────────────
-   The five-tab nav drops to the bottom edge; the header keeps the brand and the
-   control cluster only, so it never wraps at phone widths. The bar respects the
-   iOS home-indicator inset via env(safe-area-inset-bottom). This block sits at
-   the foot of the file so its overrides win on equal specificity. */
+/* ── The collapsing masthead on phones (v1.16.0, spec §3) ────────────────────
+   The header's boxes dissolve (display: contents), so the brand row and the
+   tab row lay out as rows of the .app column: the gold brand row sits in
+   normal flow and scrolls off the page — the "fold" is pure document flow, no
+   JS, no animation — while the slim tab row pins below the status bar. The
+   fixed .status-strip (base rules above) keeps the notch painted once the
+   brand has scrolled away. The old bottom bar, its header stacking-context
+   escalation, and the footer/verse-actions clearances are gone with it. */
 @media (max-width: 640px) {
-  /* Header holds one line and drops the wordmark subtitle, so it cannot wrap. */
-  .header-inner { flex-wrap: nowrap; gap: 0.6rem; }
+  .header,
+  .header-inner { display: contents; }
+
+  /* The brand row: full-width, normal flow, scrolls away. Its own safe-area
+     padding starts it below the notch at rest; after that the strip owns the
+     notch area (spec §3). */
+  .brand-link {
+    display: block;
+    background: var(--bg-1);
+    padding: calc(0.55rem + env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+             0.35rem max(1rem, env(safe-area-inset-left));
+  }
   .brand { font-size: 1.2rem; }
   .brand small { display: none; }
-  /* The desktop nav's margin-left:auto pushed the control cluster to the right
-     edge; the nav leaves the flow on phones, so re-create that with an auto
-     margin on the brand — keeps the accent/theme/gear cluster right-aligned. */
-  .header-inner > :first-child { margin-right: auto; }
-  /* Lift the header's stacking context above the Reader's floating verse-action
-     bar (z-index 40): the bar and its More popover live inside this context, so
-     the popover must out-rank verse-actions when both show on the Reader page.
-     (Raising .tabbar alone cannot escape .header's context — the gate is here.) */
-  .header { z-index: 45; }
 
-  /* Pin the bar to the bottom edge as five equal columns. */
+  /* The tab row: the one slim pinned bar. Sticky against .app (the header's
+     boxes are gone), pinned below the status bar. Visually slim, but every
+     link keeps a 44px flex-centered touch box (iOS HIG, spec §3); the side
+     insets clear the rounded corners in landscape (spec §6). */
   .tabbar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 35;
+    position: sticky;
+    top: env(safe-area-inset-top);
+    z-index: 30;
     margin-left: 0;
     gap: 0;
     flex-wrap: nowrap;
     background: var(--bg-1);
-    border-top: var(--hairline) solid var(--border);
-    box-shadow: var(--shadow-tabbar);
-    /* Bottom inset clears the home indicator; left/right clear the rounded
-       corners in landscape. */
-    padding: 0.25rem max(0.25rem, env(safe-area-inset-right))
-             calc(0.25rem + env(safe-area-inset-bottom))
-             max(0.25rem, env(safe-area-inset-left));
+    border-bottom: var(--hairline) solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 0 max(0.25rem, env(safe-area-inset-right)) 0 max(0.25rem, env(safe-area-inset-left));
   }
   .tabbar > a,
   .tabbar .more { flex: 1 1 0; }
-  /* Each tab a comfortable thumb target (≥44px, iOS HIG) — flex-centered so the
-     min-height is honored and the label sits centred in the column. */
   .tabbar > a,
   .tabbar .more-btn {
     display: flex;
@@ -1427,22 +1517,14 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
     padding: 0.4rem 0.2rem;
     border-radius: 0.5rem;
   }
+  /* More keeps the desktop dropdown (base .more-menu rules): it falls BELOW the
+     pinned row now, at the opposite end of the screen from the verse-actions
+     bar, so the old z-index fight is simply gone (spec §3). */
 
-  /* The popover rises above the bar, spanning the width. Making .more static
-     lets the fixed .tabbar be the positioning context for the menu. */
-  .tabbar .more { position: static; }
-  .more-menu {
-    top: auto;
-    bottom: calc(100% + 0.5rem);
-    left: 0.5rem;
-    right: 0.5rem;
-    min-width: 0;
-  }
-
-  /* Clear the fixed bar: the footer's motto and the Reader's floating verse
-     action bar both sit above it. */
-  .footer { padding-bottom: calc(2rem + 3.25rem + env(safe-area-inset-bottom)); }
-  .verse-actions { bottom: calc(3.75rem + env(safe-area-inset-bottom)); }
+  /* The pinned chrome is now just the tab row (44px links = 2.75rem) plus the
+     notch. Everything that hangs off --header-h — the SectionNav chip bars,
+     the Reader toolbar, --anchor-offset — re-anchors automatically (spec §3). */
+  :root { --header-h: calc(2.75rem + env(safe-area-inset-top)); }
 }
 
 /* Rosary mystery sheet — Today card 4 (v1.2 B1). Purple acts, gold honors. */

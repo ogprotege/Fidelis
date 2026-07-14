@@ -50,6 +50,9 @@ export default function Readings() {
   }, []);
   const [readings, setReadings] = useState<DayReadings | null | "loading">("loading");
   const lit = liturgicalDay(date, region);
+  // v1.16.0 (spec §5): the Today chip shows only when the visible date is not
+  // today; compare by calendar day, not instant.
+  const isToday = toISO(date) === toISO(today);
 
   useEffect(() => {
     let alive = true;
@@ -102,21 +105,46 @@ export default function Readings() {
     <div className="page-narrow" style={{ margin: "0 auto" }}>
       <h1 className="page-title">Daily Mass Readings</h1>
       <div className="readings-toolbar sans">
-        <button className="icon-btn" onClick={() => shift(-1)}>
-          ← Previous
+        <button className="icon-btn" onClick={() => shift(-1)} aria-label="Previous day" title="Previous day">
+          ‹
         </button>
-        <input
-          type="date"
-          value={toISO(date)}
-          onChange={(e) => e.target.value && setParams({ date: e.target.value }, { replace: true })}
-          aria-label="Readings date"
-        />
-        <button className="icon-btn" onClick={() => go(new Date())}>
-          Today
+        <span className="date-pick">
+          <input
+            type="date"
+            className="date-pick-input"
+            value={toISO(date)}
+            onChange={(e) => e.target.value && setParams({ date: e.target.value }, { replace: true })}
+            aria-label="Choose date"
+          />
+          <span className="date-pick-label" aria-hidden="true">
+            <span className="date-long">
+              {date.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+            </span>
+            <span className="date-short">
+              {date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+            </span>
+            <svg
+              className="icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.6}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </span>
+        </span>
+        <button className="icon-btn" onClick={() => shift(1)} aria-label="Next day" title="Next day">
+          ›
         </button>
-        <button className="icon-btn" onClick={() => shift(1)}>
-          Next →
-        </button>
+        {!isToday && (
+          <button className="chip" onClick={() => go(today)}>
+            Today
+          </button>
+        )}
         <select
           value={translation}
           onChange={(e) => setTranslation(e.target.value)}
