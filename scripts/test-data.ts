@@ -1074,11 +1074,13 @@ console.log("");
 }
 
 // ── 11. Tab bar (spec §2.1): five-tab navigation — Today · Read · Search · Mass
-//        · More — as the desktop header row and a phone bottom bar, by CSS only.
-//        These lock the three acceptance criteria the build/type-check cannot see
-//        (the fourth, a green build, is `npm run build`): the header cannot wrap
-//        at phone widths, the active tab is purple, and the bar honors the iOS
-//        safe-area inset.
+//        · More — as the desktop header row and, on phones, the collapsing
+//        masthead (v1.16.0): the brand row in normal flow, the tab row its own
+//        sticky top bar — by CSS only. These lock the acceptance criteria the
+//        build/type-check cannot see (the last, a green build, is `npm run
+//        build`): the header dissolves at phone widths, the tab row pins to the
+//        top, the active tab is purple, and the row honors the landscape
+//        safe-areas.
 {
   let tab = "";
   try {
@@ -1122,12 +1124,12 @@ console.log("");
   check("Header renders <TabBar> in place of the inline nav (spec §2.1)",
     header.includes("<TabBar") && !/<nav className="nav">/.test(header));
 
-  // Acceptance: the phone breakpoint pins the bar to the bottom edge and forces
-  // the header onto one line so it cannot wrap at 390px.
+  // Acceptance: the phone breakpoint dissolves the header's boxes (display:
+  // contents) so the tab row can pin to the top as its own sticky row.
   check("phone media query (max-width: 640px) exists (spec §2.1)",
     /@media\s*\(max-width:\s*640px\)/.test(css));
-  check("acceptance: the masthead dissolves on phones — .header-inner display: contents (v1.16.0)",
-    /\.header-inner\s*\{[^}]*display:\s*contents/.test(css));
+  check("acceptance: the masthead dissolves on phones — .header/.header-inner display: contents (v1.16.0)",
+    /\.header,\s*\.header-inner\s*\{\s*display:\s*contents/.test(css));
   check("acceptance: the tab row pins to the top — .tabbar position: sticky; top: env(safe-area-inset-top)",
     /\.tabbar\s*\{[^}]*position:\s*sticky[^}]*top:\s*env\(safe-area-inset-top\)/.test(css));
 
