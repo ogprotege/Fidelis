@@ -949,7 +949,7 @@ drops to just above the home indicator, since there is no bar left to clear.
 the translation select right-aligned. The visible date is a facade over a transparent native
 `<input type="date">` stretched across it — a tap opens the platform date picker and assistive
 tech reads one labelled control ("Choose date"). Below 480px the facade shows a short, yearless
-date ("Jul 13" — the full date repeats in gold in the day card directly beneath) and the label
+date ("Jul 14" — the full date repeats in gold in the day card directly beneath) and the label
 ellipsizes rather than ever overlapping its neighbors, so the single row holds even with the
 Today chip and the widest translation label stacked on a 375-pixel phone.
 
