@@ -315,7 +315,7 @@ option { background: var(--bg-1); color: var(--text); }
   z-index: 29;
 }
 /* The brand link (Header.tsx) — the wordmark never underlines. */
-.brand-link { text-decoration: none; }
+.brand-link, .brand-link:hover { text-decoration: none; }
 /* Brand is gold — a fixed identity constant (spec §1.3), the masthead, not a
    generic action; cross and wordmark read as one gold mark. */
 .brand {
@@ -1199,6 +1199,8 @@ body.widget-mode { background: transparent; }
    (The clip lives on the inner spans, not .date-pick — clipping there would
    truncate the focus ring drawn on the label.) */
 .date-pick-label > span { overflow: hidden; text-overflow: ellipsis; }
+/* The caret never compresses — the date text ellipsizes first. */
+.date-pick-label .icon { flex-shrink: 0; }
 .date-short { display: none; }
 @media (max-width: 480px) {
   .readings-toolbar { gap: 0.35rem; }

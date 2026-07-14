@@ -394,7 +394,7 @@ export default function Reader() {
             className="chapter-pick"
             aria-haspopup="dialog"
             onClick={openPicker}
-            title="Choose a chapter"
+            title="Choose book and chapter"
           >
             {chapter}
           </button>
