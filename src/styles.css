@@ -611,35 +611,45 @@ h1.page-title {
 .book-grid a .deutero-mark { color: var(--text-muted); margin-left: 0.25rem; }
 
 /* ---------- Reader ---------- */
+/* v1.16.0 the folio line (spec §4): Book Chapter ▾ · translation ▾ · Aa — one
+   slim row pinned under the tab row. The set-and-forget controls (size, face,
+   parallel) moved into the Aa type menu, so the book being read outranks them. */
 .reader-toolbar {
   position: sticky;
-  top: var(--header-h); /* the header's true height incl. the notch safe-area inset */
+  top: var(--header-h); /* under the pinned chrome incl. the notch safe-area inset */
   z-index: 20;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
   align-items: center;
   background: var(--bg-0);
-  padding: 0.6rem 0;
+  padding: 0.3rem 0;
   border-bottom: var(--hairline) solid var(--border);
   font-family: var(--sans);
   font-size: 0.9rem;
 }
-.reader-toolbar select {
-  background: var(--bg-1);
-  border: var(--hairline) solid var(--border);
-  border-radius: 0.5rem;
-  padding: 0.35rem 0.5rem;
-  font-size: 0.9rem;
-  max-width: 14rem;
+.reader-toolbar select { max-width: 8.5rem; font-size: 0.9rem; padding: 0.35rem 0.5rem; }
+/* The folio's book+chapter control — the page you are on, so it acts. */
+.folio-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  min-height: 44px;
+  background: none;
+  border: none;
+  padding: 0 0.2rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
 }
-.toolbar-right { margin-left: auto; display: flex; gap: 0.4rem; align-items: center; }
-@media (max-width: 640px) {
-  .reader-toolbar { gap: 0.35rem; padding: 0.45rem 0; }
-  .reader-toolbar select { max-width: 9rem; padding: 0.3rem 0.4rem; font-size: 0.85rem; }
-  .toolbar-right { gap: 0.3rem; }
-  .reader-toolbar .icon-btn { padding: 0.3rem 0.45rem; }
-}
+.folio-pick .folio-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (hover: hover) { .folio-pick:hover { color: var(--purple); } }
+.folio-pick:active { color: var(--purple); }
+.folio-caret { color: var(--text-muted); flex-shrink: 0; }
+/* Aa sits at the row's end; the serif face makes it read as a type specimen. */
+.folio-type { margin-left: auto; font-family: var(--serif); }
 
 .chapter-pick {
   background: none;
@@ -675,13 +685,35 @@ h1.page-title {
 @media (hover: hover) { .chapter-cell:hover { border-color: var(--purple); } }
 .chapter-cell:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .chapter-cell.current { border-color: var(--gold); color: var(--gold-text); font-weight: 600; }
-/* Orientation breadcrumb back to the book list — purple acts. */
-.reader-crumb {
+/* v1.16.0: the picker sheet's book list (spec §4) — one tap re-targets the
+   chapter grid; gold marks the shown book, as on the chapter cells. */
+.picker-books-title {
+  margin: 1.1rem 0 0.4rem;
   font-family: var(--sans);
-  font-size: 0.85rem;
-  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--text-muted);
 }
-.reader-crumb a { color: var(--purple); }
+.picker-books { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.picker-book {
+  background: var(--bg-1);
+  border: var(--hairline) solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  cursor: pointer;
+}
+@media (hover: hover) { .picker-book:hover { border-color: var(--purple); } }
+.picker-book:active { background: var(--bg-2); }
+.picker-book:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.picker-book.current { border-color: var(--gold); color: var(--gold-text); font-weight: 600; }
+/* The Aa type menu's rows. */
+.type-size { display: inline-flex; align-items: center; gap: 0.5rem; }
+.type-size-px { min-width: 2.6rem; text-align: center; font-variant-numeric: tabular-nums; }
+.type-group { margin-top: 0.8rem; }
 .chapter-title {
   text-align: center;
   margin: 0.8rem 0 0.2rem;

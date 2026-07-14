@@ -2546,5 +2546,24 @@ console.log("");
     css.includes("--header-h: calc(2.75rem + env(safe-area-inset-top))"));
 }
 
+// ── 27. v1.16.0 — the Reader folio line (spec §4): Book Ch ▾ · translation ▾ · Aa.
+console.log("");
+{
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const reader = readFileSync(join(ROOT, "src/pages/Reader.tsx"), "utf8");
+
+  // The compound control names itself to screen readers (spec §7).
+  check("folio: the book+chapter control is labelled 'choose book and chapter'",
+    reader.includes("choose book and chapter"));
+  // The type menu gathers the set-and-forget controls under one spoken name.
+  check("folio: the type menu opens as 'Text options'",
+    reader.includes("Text options"));
+  // The picker sheet reaches every book, so the crumb could retire.
+  check("folio: the picker sheet lists the books (picker-book buttons)",
+    reader.includes("picker-book"));
+  check("folio: the '← All books' crumb is retired",
+    !reader.includes("reader-crumb") && !css.includes(".reader-crumb"));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;
