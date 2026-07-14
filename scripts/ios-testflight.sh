@@ -75,7 +75,12 @@ cat > "$EXPORT_PLIST" <<PLIST
 </dict>
 </plist>
 PLIST
-xcodebuild -exportArchive \
+# PATH is sanitized to the system dirs for this one step: Xcode's create-IPA
+# copy runs Apple's /usr/bin/rsync (openrsync) as the client but resolves the
+# server-side rsync through $PATH --- a Homebrew rsync there (samba 3.x) rejects
+# Apple's --extended-attributes flag and the export dies with the bare message
+# "Copy failed" (rsync "syntax or usage error" in the xcdistributionlogs).
+env PATH="/usr/bin:/bin:/usr/sbin:/sbin" xcodebuild -exportArchive \
   -archivePath "$ARCHIVE" -exportPath "$EXPORT_DIR" \
   -exportOptionsPlist "$EXPORT_PLIST" -allowProvisioningUpdates \
   -authenticationKeyPath "$ASC_KEY_PATH" \
