@@ -1126,10 +1126,10 @@ console.log("");
   // the header onto one line so it cannot wrap at 390px.
   check("phone media query (max-width: 640px) exists (spec §2.1)",
     /@media\s*\(max-width:\s*640px\)/.test(css));
-  check("acceptance: header cannot wrap at phone width — .header-inner flex-wrap: nowrap",
-    /\.header-inner\s*\{[^}]*flex-wrap:\s*nowrap/.test(css));
-  check("acceptance: the bar pins to the bottom edge — .tabbar position: fixed; bottom: 0",
-    /\.tabbar\s*\{[^}]*position:\s*fixed[^}]*bottom:\s*0/.test(css));
+  check("acceptance: the masthead dissolves on phones — .header-inner display: contents (v1.16.0)",
+    /\.header-inner\s*\{[^}]*display:\s*contents/.test(css));
+  check("acceptance: the tab row pins to the top — .tabbar position: sticky; top: env(safe-area-inset-top)",
+    /\.tabbar\s*\{[^}]*position:\s*sticky[^}]*top:\s*env\(safe-area-inset-top\)/.test(css));
 
   // Acceptance: the active tab is purple (purple acts, §1.2) — for both the
   // NavLink tabs and the More button.
@@ -1138,9 +1138,9 @@ console.log("");
   check("acceptance: active More button is purple — .more-btn.active uses var(--purple)",
     /\.more-btn\.active\s*\{[^}]*color:\s*var\(--purple\)/.test(css));
 
-  // Acceptance: the bar respects the iOS home-indicator inset.
-  check("acceptance: bar respects iOS safe-area inset — env(safe-area-inset-bottom) on .tabbar",
-    /\.tabbar\s*\{[^}]*env\(safe-area-inset-bottom\)/.test(css));
+  // Acceptance: the tab row clears the rounded corners in landscape (spec §6).
+  check("acceptance: the tab row respects the landscape safe-areas — env(safe-area-inset-left/right)",
+    /\.tabbar\s*\{[^}]*env\(safe-area-inset-right\)[^}]*env\(safe-area-inset-left\)/.test(css));
 }
 
 // ── 12. The one Settings screen (spec §2.2): live preview + SettingsContext,
@@ -2506,6 +2506,42 @@ console.log("");
     vqSrc.includes('loadBook("drc", book)'));
   check("VerseQuote lang attribute follows the translation actually shown",
     vqSrc.includes("langAttr(shownTranslation)"));
+}
+
+// ── 26. v1.16.0 "upon the candlestick" — the collapsing masthead (design spec
+//        docs/superpowers/specs/2026-07-13-collapsing-masthead-nav-design.md §3, §8).
+//        Source-shape guards in the §25 manner: none of these has a runtime
+//        surface the harness can drive, so each pins the load-bearing token of
+//        the layout; a silent revert to the bottom bar goes red here.
+console.log("");
+{
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const tab = readFileSync(join(ROOT, "src/components/TabBar.tsx"), "utf8");
+  const app = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+
+  // A sticky row cannot grow env() padding only-when-pinned, so a FIXED strip
+  // paints the notch area at all times (spec §3) — and App mounts it decoratively.
+  check("masthead: the status strip paints the notch (height: env(safe-area-inset-top))",
+    /\.status-strip\s*\{[^}]*height:\s*env\(safe-area-inset-top\)/.test(css));
+  check("masthead: App mounts the strip aria-hidden",
+    /className="status-strip"\s+aria-hidden="true"/.test(app));
+
+  // The bottom bar and everything that existed to clear it are gone (spec §3).
+  check("masthead: the bottom tab bar is gone (no .tabbar position: fixed)",
+    !/\.tabbar\s*\{[^}]*position:\s*fixed/.test(css));
+  check("masthead: the fixed-bar clearances are gone (no 3.25rem footer / 3.75rem verse-actions lift)",
+    !css.includes("3.25rem") && !css.includes("3.75rem"));
+  check("masthead: the header no longer escalates over the verse-actions bar (no z-index: 45)",
+    !css.includes("z-index: 45"));
+
+  // The More dropdown still closes under Android Back / Escape (spec §6).
+  check("masthead: the More menu still registers with the overlay-back stack",
+    tab.includes("pushOverlay("));
+
+  // Everything sticky hangs off --header-h; on phones it must equal the pinned
+  // tab row (44px links = 2.75rem) plus the notch inset (spec §3).
+  check("masthead: --header-h re-derives to the pinned tab row on phones",
+    css.includes("--header-h: calc(2.75rem + env(safe-area-inset-top))"));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
