@@ -1190,6 +1190,20 @@ body.widget-mode { background: transparent; }
   font-weight: 600;
   font-size: 0.95rem;
   white-space: nowrap;
+  min-width: 0;
+}
+/* Only .date-pick can shrink in the nowrap row, so the date itself must yield:
+   the long-form date is the design at wide widths; below 480px the short month
+   + a tighter gap keep the mandated single row from overflowing once the Today
+   chip appears. The ellipsis is the never-overlap safety net for long locales.
+   (The clip lives on the inner spans, not .date-pick — clipping there would
+   truncate the focus ring drawn on the label.) */
+.date-pick-label > span { overflow: hidden; text-overflow: ellipsis; }
+.date-short { display: none; }
+@media (max-width: 480px) {
+  .readings-toolbar { gap: 0.35rem; }
+  .date-long { display: none; }
+  .date-short { display: inline; }
 }
 .reading-group { margin: 1.4rem 0; }
 .reading { margin-bottom: 1.1rem; }

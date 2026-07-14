@@ -117,7 +117,12 @@ export default function Readings() {
             aria-label="Choose date"
           />
           <span className="date-pick-label" aria-hidden="true">
-            {date.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+            <span className="date-long">
+              {date.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+            </span>
+            <span className="date-short">
+              {date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+            </span>
             <svg
               className="icon"
               viewBox="0 0 24 24"
