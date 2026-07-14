@@ -11,13 +11,24 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.15.1
+1.16.0
 ```
 
-ASC creates the first version as "1.0" — edit the field to `1.15.1` so it
-matches the uploaded build's `MARKETING_VERSION`. Apple recommends (and the
-release ledger assumes) the store version string equals the build's
-`CFBundleShortVersionString`.
+The store version string always equals the uploaded build's
+`MARKETING_VERSION` (`CFBundleShortVersionString`). For an update, create the
+new version in ASC (the "+" beside "iOS App") with exactly this string. (The
+first submission, 1.15.1, needed the auto-created "1.0" edited to match — an
+update starts from the right place.)
+
+## What's New in This Version (≤ 4,000 characters — updates only)
+
+```
+The navigation takes its place at the top, where a book keeps it. A gold masthead folds away as you read, leaving one slim row of tabs — nothing covers the Scripture from below anymore. The Reader gains a folio line: book, chapter, translation, and an Aa text menu in a single slim row, with a picker that reaches any book and chapter in a tap. The Mass page's controls fit one line, with the native date picker behind the date. Same texts, same pledge — more room for the Word.
+```
+
+Also serves as the TestFlight "What to Test" notes: scroll any page (the
+masthead should fold away and the tab row stay pinned), open More, turn
+chapters from the folio line, step days on the Mass page, rotate to landscape.
 
 ## Promotional Text (≤ 170 characters)
 
@@ -150,6 +161,10 @@ Quick tour for review: the Today tab shows the liturgical day, Verse of the Day,
 Requirement: JPG/PNG, RGB, portrait 1284 × 2778 (or 1242 × 2688). Up to 10;
 the first 3 appear on the install sheet. Shot list (day theme unless noted):
 
+**STALE for 1.16.0:** the 2026-07-13 set below shows the retired bottom tab
+bar — regenerate the full set against a 1.16.0 build (same shot list; the
+masthead now tops every frame) before submitting the update.
+
 Captured 2026-07-13 (all verified 1284×2778) via the CDP capture script
 (428×926 CSS @ 3× against the production build):
 
@@ -178,3 +193,4 @@ Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
+- What's New (1.16.0): 478 / 4,000 ✓ (verified 2026-07-14)
