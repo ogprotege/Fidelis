@@ -121,7 +121,7 @@ export default function Readings() {
               {date.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
             </span>
             <span className="date-short">
-              {date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+              {date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
             </span>
             <svg
               className="icon"
