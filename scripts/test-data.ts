@@ -2565,5 +2565,24 @@ console.log("");
     !reader.includes("reader-crumb") && !css.includes(".reader-crumb"));
 }
 
+// ── 28. v1.16.0 — one-row Mass controls (spec §5): ‹ · date ▾ · › [Today] … NABRE ▾.
+console.log("");
+{
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const readings = readFileSync(join(ROOT, "src/pages/Readings.tsx"), "utf8");
+
+  check("mass: the day-steppers carry spoken names (Previous/Next day)",
+    readings.includes('aria-label="Previous day"') && readings.includes('aria-label="Next day"'));
+  // The visible date text is a facade; the REAL control is a transparent native
+  // date input stretched over it, labelled for assistive tech (spec §5/§7).
+  check("mass: the date facade fronts a native input labelled 'Choose date'",
+    readings.includes('aria-label="Choose date"') &&
+      /\.date-pick-input\s*\{[^}]*opacity:\s*0/.test(css));
+  check("mass: the Today chip appears only when the shown date is off-today",
+    readings.includes("!isToday &&"));
+  check("mass: the controls hold one row (.readings-toolbar flex-wrap: nowrap)",
+    /\.readings-toolbar\s*\{[^}]*flex-wrap:\s*nowrap/.test(css));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;
