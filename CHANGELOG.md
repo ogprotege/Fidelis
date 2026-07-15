@@ -6,6 +6,59 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.18.0] — 2026-07-15 — the memory of the just
+
+*"The memory of the just is with praises: and the name of the wicked shall rot." (Proverbs 10:7)*
+
+Two catechetical layers, sourced from the public domain and never AI-paraphrased (design spec
+§13), each keyed by the calendar date: **Saint of the Day** and **Today in Church History**. The
+saints hang off the memorial name already on the Today card; church history earns a new card.
+This is the one deliberate raising of the five-card standing rule — now **six** (see below). The
+corpora ship as a small verified-`false` seed drawn from Butler's *Lives of the Saints* and the
+1913 Catholic Encyclopedia; they grow afterward with no code change (new dated files are sealed
+by the manifest walk automatically). No engine, lectionary, or golden changes; no service-worker
+cache bump.
+
+### Added
+
+- **Saint of the Day.** When the day's memorial has a life in the collection, its name on the
+  Today card (and the Mass page) becomes a purple-affordance link to a full **Saint page** —
+  name, title, rank, dates, life, what they are known for, patronage, canonization, an associated
+  public-domain prayer where one exists, and a footnoted **Sources** section — deep-linkable at
+  `/saint/:day/:id` and shareable through the existing share card. The page reconciles to the
+  liturgical engine by matching the day's celebration name (`saintForCelebration`, token overlap),
+  so the card and the page never disagree across regions or transfers, though the engine carries
+  no saint id.
+- **Today in Church History** — the sixth Today card (inserted under the Mass card, before the
+  Verse of the Day). Four honest states in the v1.17.0 manner: a skeleton while loading, the lead
+  event's year + title + a blurb when present, a calm "No entry is recorded for today yet." when
+  the growing corpus has nothing for the date (never an error), and a quiet failure notice
+  offline. "Read more" opens the **History page** (`/history/:day`) listing every event for the
+  date, sorted oldest-first, each with its body, footnoted sources, and share.
+- **Two new bundled corpora and their pipeline** — `scripts/build-saints.mjs` /
+  `scripts/build-history.mjs` (mirroring `build-quotes.mjs`) emit
+  `public/data/saints/<MM-DD>.json` and `public/data/history/<MM-DD>.json` from the hand-edited
+  `scripts/*.corpus.json`, validate every entry, **hard-fail any entry lacking a public-domain
+  source** (this layer's provenance gate — the §3.3 analog), count `verified` vs draft (the §3.4
+  ledger — the corpus is the ledger), and re-seal the manifest. Lazy, memoized,
+  retry-after-rejection loaders (`loadSaints`/`loadHistory`, the `loadCommentary` pattern).
+- **Harness §33** — real logic tests for `dayKey` and `saintForCelebration`, integrity checks on
+  the sealed corpora (every entry cites a public-domain source), and source-shape guards for the
+  six-card change, the History card's four states, the saint chip, the loaders, and the routes.
+
+### Changed
+
+- **Standing rule 2 raised from five to six Today cards** — a deliberate, recorded change for the
+  Church History card, reconciled across `CLAUDE.md`, the executable harness guard, `Home.tsx`,
+  and the feature design spec. It is the only such raise; the discipline (a new feature earns a
+  line inside a card, or a tab, before it earns a card) still governs.
+
+### Release mechanics
+
+- iOS `MARKETING_VERSION` and Android `versionName` 1.17.1→1.18.0, `versionCode` 11701→11800.
+  New `saints`/`history` bundle rows in the sealed manifest. The seed entries ship `verified:
+  false` (drafts pending verification against the named editions); the corpus fills over time.
+
 ## [1.17.1] — 2026-07-15 — touch and see
 
 *"See my hands and feet, that it is I myself; handle, and see." (Luke 24:39)*

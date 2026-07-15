@@ -1,0 +1,125 @@
+{
+  "note": "Hand-edited source corpus for the Today in Church History layer (feature: the memory of the just). Build with `npm run history` — never hand-edit public/data/history. Every entry cites at least one public-domain source; text is drawn from those works, NOT AI-paraphrased. `verified` is false until checked against the named edition (the §3.4 ledger convention). Multiple events may share a `day` (different years); the build groups and sorts them by year.",
+  "events": [
+    {
+      "id": "camillus-de-lellis-dies",
+      "day": "07-14",
+      "year": 1614,
+      "title": "St. Camillus de Lellis dies in Rome",
+      "shortBlurb": "The soldier-turned-servant of the sick, founder of the Ministers of the Infirm, died in Rome — a pioneer of organized, tender care for the dying whose red cross went before the Red Cross by centuries…",
+      "body": [
+        "Camillus de Lellis, a onetime soldier and gambler converted to a life of penance, founded at Rome the Order of Clerks Regular, Ministers of the Infirm (the Camillians), to serve the sick in body and soul. His followers wore a large red cross on their habits and pledged to attend the plague-stricken and the dying even at the risk of their lives.",
+        "He died in Rome on 14 July 1614. Beatified in 1742 and canonized in 1746, he was later named, with St. John of God, patron of the sick and of hospitals, and patron of nurses and of the Red Cross tradition of mercy to the wounded."
+      ],
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “St. Camillus de Lellis”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "oxford-movement-national-apostasy",
+      "day": "07-14",
+      "year": 1833,
+      "title": "Keble’s “National Apostasy” sermon begins the Oxford Movement",
+      "shortBlurb": "John Keble mounted the pulpit of the University Church at Oxford and preached against the State’s meddling in the Church — the sermon John Henry Newman would later date as the true start of the movement that led many toward Rome…",
+      "body": [
+        "On 14 July 1833 John Keble preached the Assize Sermon, “National Apostasy,” at St. Mary’s, the University Church of Oxford, protesting the British government’s suppression of Irish bishoprics as an intrusion upon the divine constitution of the Church.",
+        "John Henry Newman afterward reckoned this sermon the beginning of the Oxford Movement, which sought to recover the Catholic heritage of the English Church. Its studies of antiquity led Newman and many others, over the following years, into full communion with the Catholic Church."
+      ],
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “The Oxford Movement (1833-1845)”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "jerusalem-taken-first-crusade",
+      "day": "07-15",
+      "year": 1099,
+      "title": "The First Crusade captures Jerusalem",
+      "shortBlurb": "After a long march and siege, the armies of the First Crusade breached the walls and took the Holy City, ending the expedition summoned four years earlier at Clermont…",
+      "body": [
+        "On 15 July 1099 the soldiers of the First Crusade, after a siege of some weeks, stormed the walls and captured Jerusalem, the goal of the expedition preached by Pope Urban II at Clermont in 1095. A Latin kingdom of Jerusalem was set up in the aftermath.",
+        "The capture was marked by great slaughter of the city’s inhabitants, a violence later generations remembered with sorrow. The crusader hold on Jerusalem lasted until Saladin retook it in 1187."
+      ],
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “Crusades”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "council-of-nicaea-opens",
+      "day": "05-20",
+      "year": 325,
+      "title": "The First Council of Nicaea opens",
+      "shortBlurb": "The first ecumenical council of the Church gathered at Nicaea under the Emperor Constantine to answer the Arian denial of Christ’s divinity, and gave the Church its Creed…",
+      "body": [
+        "In 325 some three hundred bishops assembled at Nicaea in Asia Minor for the first ecumenical council, convened to settle the crisis raised by Arius, who taught that the Son was a creature and not truly God. Against him the council professed the Son “consubstantial (homoousios) with the Father.”",
+        "From this council comes the heart of the Nicene Creed still professed at Mass, together with a common rule for computing the date of Easter. It stands as the pattern of the Church’s conciliar teaching."
+      ],
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “The First Council of Nicaea”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "urban-ii-preaches-first-crusade",
+      "day": "11-27",
+      "year": 1095,
+      "title": "Urban II preaches the First Crusade at Clermont",
+      "shortBlurb": "At the Council of Clermont Pope Urban II called Christendom to aid the Eastern churches and free the holy places, and the crowd is said to have answered, “Deus vult” — God wills it…",
+      "body": [
+        "At the close of the Council of Clermont in France, on 27 November 1095, Pope Urban II preached to a great throng, urging the knights of the West to cease their private wars and go to the aid of the Christians of the East and the holy places of Jerusalem.",
+        "The response, tradition records, was the cry “Deus vult” — God wills it — and the taking of the cross. So began the First Crusade, which reached Jerusalem in 1099."
+      ],
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “Council of Clermont”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "coronation-of-charlemagne",
+      "day": "12-25",
+      "year": 800,
+      "title": "Pope Leo III crowns Charlemagne Emperor",
+      "shortBlurb": "On Christmas Day in St. Peter’s, Pope Leo III set a crown on the head of the Frankish king Charlemagne and hailed him Emperor, binding the fortunes of the Papacy and the West…",
+      "body": [
+        "During Mass on Christmas Day of the year 800, in the basilica of St. Peter at Rome, Pope Leo III crowned Charles the Great, king of the Franks, as Emperor of the Romans, and the people acclaimed him.",
+        "The event marked the rise of a Christian empire in the West and set the pattern of relations between the Papacy and the emperors for centuries — a partnership, and often a struggle, at the heart of medieval Christendom."
+      ],
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “Charlemagne”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "definition-immaculate-conception",
+      "day": "12-08",
+      "year": 1854,
+      "title": "Pius IX defines the Immaculate Conception",
+      "shortBlurb": "In the bull Ineffabilis Deus, Pope Pius IX solemnly defined that the Blessed Virgin Mary was preserved free from original sin from the first moment of her conception…",
+      "body": [
+        "On 8 December 1854, in the Apostolic Constitution Ineffabilis Deus, Pope Pius IX defined as a dogma of faith that the Blessed Virgin Mary, in the first instant of her conception, was by a singular grace of God and in view of the merits of Christ preserved free from all stain of original sin.",
+        "Four years later the apparitions at Lourdes, in which the Lady named herself “the Immaculate Conception,” were widely received as a confirmation of the definition."
+      ],
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “Immaculate Conception”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "ninety-five-theses",
+      "day": "10-31",
+      "year": 1517,
+      "title": "Luther posts the Ninety-Five Theses",
+      "shortBlurb": "At Wittenberg an Augustinian friar named Martin Luther set out ninety-five theses against the preaching of indulgences — the spark, by long tradition, of the Protestant Reformation…",
+      "body": [
+        "On 31 October 1517 Martin Luther, an Augustinian friar and professor at Wittenberg, published ninety-five theses disputing the preaching of indulgences. What began as an academic protest widened rapidly into a break with the Church that divided Western Christendom.",
+        "In answer the Church undertook the reform and definition of doctrine at the Council of Trent (1545–1563), the great work of the Catholic Reformation."
+      ],
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “Martin Luther”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" }
+      ],
+      "verified": false
+    }
+  ]
+}

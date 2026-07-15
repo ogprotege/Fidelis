@@ -8,7 +8,10 @@ import Sheet from "../components/Sheet";
 import MysterySheet from "../components/MysterySheet";
 import ShareSheet from "../components/ShareSheet";
 import { getBook, bookDisplayName } from "../lib/canon";
-import { loadBook } from "../lib/data";
+import { loadBook, loadSaints, loadHistory } from "../lib/data";
+import { dayKey } from "../lib/dateKey";
+import { SaintDay, saintForCelebration } from "../lib/saints";
+import { HistoryDay } from "../lib/history";
 import { passageText } from "../lib/passage";
 import { getTranslation } from "../lib/translations";
 import {
@@ -28,10 +31,12 @@ import { verseOfTheDay, formatVotdRef } from "../lib/votd";
 import { useSettings } from "../SettingsContext";
 import { useToday } from "../useToday";
 
-/* The Today page never exceeds five cards (CLAUDE.md standing rule):
+/* The Today page holds at most six cards (CLAUDE.md standing rule 2 — raised from
+   five in v1.18.0 for Today in Church History):
    1 Today in the Church (liturgical day + Mass readings + Marian antiphon, merged
-   per spec §6) — the time-sensitive card leads on a phone, right under the date ·
-   2 Verse of the Day · 3 Quote of the Day · 4 The Holy Rosary · 5 Continue Reading. */
+   per spec §6; its memorial name links to the Saint of the Day) — the time-sensitive
+   card leads on a phone, right under the date · 2 Today in Church History ·
+   3 Verse of the Day · 4 Quote of the Day · 5 The Holy Rosary · 6 Continue Reading. */
 export default function Home() {
   // Live "today": rolls at local midnight and on foreground resume, so a phone
   // that keeps Fidelis resident overnight never shows yesterday's page.
@@ -53,6 +58,15 @@ export default function Home() {
   // Distinguish "still loading" (skeleton) from "failed" (a quiet notice) —
   // otherwise an offline load leaves the skeleton shimmering forever.
   const [quoteFailed, setQuoteFailed] = useState(false);
+  // Today in Church History: four honest states. "empty" (a resolved null — no
+  // entry yet in the growing corpus) is calm, not a failure (the memory of the just).
+  const dayToday = dayKey(today);
+  const [history, setHistory] = useState<HistoryDay | null>(null);
+  const [historyState, setHistoryState] = useState<"loading" | "ready" | "empty" | "failed">(
+    "loading"
+  );
+  // Today's saints, for linking the memorial name to its life when we have it.
+  const [saintDay, setSaintDay] = useState<SaintDay | null>(null);
   const [openMystery, setOpenMystery] = useState<Mystery | null>(null);
   const [share, setShare] = useState<
     { text: string; citation: string; source?: string; filename: string } | null
@@ -100,6 +114,30 @@ export default function Home() {
     };
     // Re-resolve when the day rolls (midnight / foreground resume).
   }, [today]);
+
+  useEffect(() => {
+    let alive = true;
+    setHistory(null);
+    setHistoryState("loading");
+    loadHistory(dayToday)
+      .then((h) => {
+        if (!alive) return;
+        if (h && h.events.length) {
+          setHistory(h);
+          setHistoryState("ready");
+        } else {
+          setHistoryState("empty");
+        }
+      })
+      .catch(() => alive && setHistoryState("failed"));
+    loadSaints(dayToday)
+      .then((s) => alive && setSaintDay(s))
+      .catch(() => alive && setSaintDay(null));
+    return () => {
+      alive = false;
+    };
+  }, [dayToday]);
+
   const dateLabel = today.toLocaleDateString(undefined, {
     weekday: "long",
     year: "numeric",
@@ -170,12 +208,26 @@ export default function Home() {
             Season of {lit.season} · Sunday Cycle {sundayCycle(today)} · Weekday Year{" "}
             {weekdayCycle(today) === "1" ? "I" : "II"}
           </div>
-          {lit.celebrations.map((c) => (
-            <div className="lit-celebration" key={c.name}>
-              <span className="rank">{c.rank}</span>
-              {c.name}
-            </div>
-          ))}
+          {lit.celebrations.map((c) => {
+            const s = saintDay ? saintForCelebration(saintDay.saints, [c.name]) : null;
+            return s ? (
+              <Link
+                className="lit-celebration lit-celebration-link"
+                key={c.name}
+                to={`/saint/${dayToday}/${s.id}`}
+              >
+                <span className="rank">{c.rank}</span>
+                {c.name}
+                <span className="lit-celebration-go" aria-hidden="true">›</span>
+                <span className="sr-only"> — read the life of {s.name}</span>
+              </Link>
+            ) : (
+              <div className="lit-celebration" key={c.name}>
+                <span className="rank">{c.rank}</span>
+                {c.name}
+              </div>
+            );
+          })}
           {!mass && !massFailed && <Skeleton lines={4} className="mass-skeleton" />}
           {!mass && massFailed && (
             <p className="muted small sans" role="status">
@@ -209,6 +261,35 @@ export default function Home() {
           <Link className="continue-cta" to="/readings">
             Read at Mass →
           </Link>
+        </div>
+
+        <div className="card">
+          <h2><span className="cross"><Icon name="cross" /></span> Today in Church History</h2>
+          {historyState === "loading" && <Skeleton lines={3} className="mass-skeleton" />}
+          {historyState === "failed" && (
+            <p className="muted small sans" role="status">
+              Church history couldn&rsquo;t be loaded — it will return with your connection.
+            </p>
+          )}
+          {historyState === "empty" && (
+            <p className="muted small sans" role="status">
+              No entry is recorded for today yet.
+            </p>
+          )}
+          {historyState === "ready" && history && (
+            <>
+              <div className="history-lead">
+                <span className="history-year">{history.events[0].year}</span>{" "}
+                <strong>{history.events[0].title}</strong>
+              </div>
+              <p className="history-blurb">{history.events[0].shortBlurb}</p>
+              <Link className="continue-cta" to={`/history/${dayToday}`}>
+                {history.events.length > 1
+                  ? `Read more · ${history.events.length} events →`
+                  : "Read more →"}
+              </Link>
+            </>
+          )}
         </div>
 
         <div className="card">

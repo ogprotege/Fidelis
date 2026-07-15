@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.17.1%20·%20touch%20and%20see-5B3A8E)
+![version](https://img.shields.io/badge/version-1.18.0%20·%20the%20memory%20of%20the%20just-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -164,19 +164,25 @@ verses are shown and the citation marked "(approx.)" — the text itself is neve
 
 ## The Today page
 
-Five cards, always exactly five — a standing rule, so the page never sprawls. On a phone the
-time-sensitive card leads, right under the date:
+Six cards, always exactly six — a standing rule (five through v1.17.x; raised once, to six, in
+v1.18.0 for Today in Church History), so the page never sprawls. On a phone the time-sensitive
+card leads, right under the date:
 
 1. **Today in the Church** — season, week, liturgical color, the principal celebrations of the
-   General Roman Calendar, today's Mass citations, and the hour's Marian antiphon.
-2. **✠ Verse of the Day** — a fixed, curated cycle, deterministic by date (web and the iOS
+   General Roman Calendar, today's Mass citations, and the hour's Marian antiphon. When the day's
+   saint has a life in the collection, the memorial name links to a full **Saint of the Day** page.
+2. **✠ Today in Church History** — the most significant events of the Church on this calendar day,
+   drawn from public-domain sources with footnote citations; a blurb on the card, the full
+   account (all of the day's events) one tap away.
+3. **✠ Verse of the Day** — a fixed, curated cycle, deterministic by date (web and the iOS
    widget select the same verse from the same calendar math).
-3. **Quote of the Day** — from the Fathers, Doctors, and saints; public-domain, attributed.
-4. **The Holy Rosary** — the day's mysteries, now **tappable** (see below).
-5. **Continue Reading** — picks up where you left off, and surfaces your active reading plan.
+4. **Quote of the Day** — from the Fathers, Doctors, and saints; public-domain, attributed.
+5. **The Holy Rosary** — the day's mysteries, now **tappable** (see below).
+6. **Continue Reading** — picks up where you left off, and surfaces your active reading plan.
 
 The Verse of the Day and Quote of the Day each carry a **Share** affordance — a card for the
-native share sheet (see *Reading &amp; study*).
+native share sheet (see *Reading &amp; study*); the Saint and Church History pages share too. The
+Saint and Church History text is public-domain, sourced, and never AI-paraphrased.
 
 ---
 
@@ -349,8 +355,9 @@ pipeline and the two assertion harnesses; `public/data/` is the generated, manif
 
 The full architecture map — every engine, primitive, and pipeline, with file paths — is the
 **"Architecture" section of [CLAUDE.md](CLAUDE.md#architecture)** (single source of truth).
-Design constants are encoded once and asserted: the liturgical day never exceeds **five cards**,
-the chrome speaks in **two accents**, and the Word is **never printed in red**.
+Design constants are encoded once and asserted: the Today page never exceeds **six cards** (five
+through v1.17.x; raised once in v1.18.0), the chrome speaks in **two accents**, and the Word is
+**never printed in red**.
 
 ---
 
