@@ -6,6 +6,39 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.18.5] — 2026-07-15 — the ancient bounds
+
+*"Pass not beyond the ancient bounds which thy fathers have set." (Proverbs 22:28)*
+
+A harness-hardening release — no application code, no behavior change. It closes the two items a
+post-ship adversarial review confirmed as the only loose threads after the v1.18.4 audit finish:
+a region policy that was explicit but unpinned, and a CSP drift-guard that watched the wrong file.
+The review found **no runtime bug** anywhere in the shipped v1.18.2–v1.18.4 code (widget deep
+links, the Report-Only CSP, and all nine P3 fixes verified correct).
+
+### Fixed
+
+- **The widget/Siri region is now harness-pinned (FID-NATIVE-001).** `build-calendar-widget.ts`
+  fixes `REGION = "usa"` by design (the widgets and Siri follow the USCCB calendar, documented in
+  the iOS guide's "Region policy"), but nothing turned `npm test` red if it were flipped —
+  precisely the gap the v1.18.4 pass recorded as a standing concern. A one-line source-shape guard
+  now pins it; verified to fail the suite if the region is changed to `universal`.
+- **The CSP drift-guard now also pins the *built* artifact (FID-SEC-002).** The §36 hash gate
+  computed the pre-paint script's sha256 from the *source* `index.html`, but the browser loads the
+  *built* `dist/index.html`. They are byte-identical today (Vite passes the inline script through
+  verbatim — recomputed and confirmed), so nothing was wrong; but the guard watched the file that
+  isn't shipped. It now additionally asserts, whenever a build exists, that `dist`'s pre-paint
+  script matches source — so a future HTML-transform that silently diverged them (invalidating the
+  shipped hash and the deferred enforcing-`<meta>` migration) turns red instead of sailing through.
+  Skipped on a bare `npm test` with no `dist`, so it never false-fails in CI.
+- **README version badge corrected.** It had drifted to 1.18.2 (the v1.18.3/v1.18.4 releases never
+  bumped it); now reads 1.18.5.
+
+### Release mechanics
+
+- iOS `MARKETING_VERSION` and Android `versionName` 1.18.4→1.18.5, `versionCode` 11804→11805. No
+  engine, data, golden, or service-worker change; no `dist`-shipped code change.
+
 ## [1.18.4] — 2026-07-15 — come and see
 
 *"Philip saith to him: Come and see." (John 1:46)*

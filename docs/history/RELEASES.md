@@ -1601,6 +1601,45 @@ and docs but not pinned by any harness assertion — both written down under "St
 behavior to guard); `APP_STORE.md` refreshed to drop the stale banner and describe the six-card Today
 page and the post-masthead controls.
 
+## The ancient bounds (v1.18.5)
+
+*"Pass not beyond the ancient bounds which thy fathers have set." (Proverbs 22:28)*
+
+A harness-hardening release. It changes no application code and no behavior; it exists only to turn
+two written-down policies into red-`npm test` guarantees. After the v1.18.4 audit finish, a
+post-ship adversarial review swept the whole v1.18.2–v1.18.4 range for runtime defects and found
+**none** — the widget deep links, the Report-Only CSP, and all nine P3 fixes were verified correct
+against the shipped code. What it did find were two policies that lived only in prose and comments,
+where a later edit could quietly cross them without any test noticing. This release moves both
+inside the fence.
+
+**The region policy, now pinned (FID-NATIVE-001).** The home-screen widgets and the Siri intent
+read a pre-resolved `calendar.json` that `scripts/build-calendar-widget.ts` fixes to the USCCB
+(`REGION = "usa"`) region by design — so out of the box the widgets and Siri agree with the app's
+default calendar, and a user who switches the app to the Universal calendar still sees USCCB content
+on the glass (region-configurable widgets are deliberately deferred; see the iOS guide's "Region
+policy"). That choice was explicit in code and documented in two places, but nothing failed if it
+were flipped — exactly the standing concern the v1.18.4 pass recorded. A one-line source-shape guard
+in harness §36 now asserts the pin, and it was verified to fail the suite when the region is changed
+to `universal`. The fence is now a wall.
+
+**The CSP drift-guard, now watching the shipped file (FID-SEC-002).** v1.18.3 shipped a
+Content-Security-Policy in Report-Only mode (`public/_headers`) that admits the inline pre-paint
+script by a SHA-256 hash, with a harness gate that recomputes the hash so a silent edit to the
+script turns red. But the gate hashed the *source* `index.html`, while the browser loads the *built*
+`dist/index.html`. Today those two inline scripts are byte-identical — Vite passes the pre-paint
+`<script>` through verbatim, recomputed and confirmed both here and in the adversarial review — so
+nothing was actually wrong; the guard was simply watching the file that doesn't ship. §36 now adds a
+build-aware assertion: whenever a `dist/` exists, it checks that `dist/index.html`'s pre-paint script
+is identical to source, so a future HTML transform that diverged them — invalidating the shipped hash
+and the deferred enforcing-`<meta>` migration — turns red instead of sailing through. The check is
+skipped on a bare `npm test` with no build present, so it never false-fails in CI's test-before-build
+ordering.
+
+No engine, data, golden, or service-worker change; no `dist`-shipped code change. The stale README
+version badge — which had drifted to 1.18.2 because the v1.18.3 and v1.18.4 releases never bumped it
+— is corrected to 1.18.5. Native version strings 1.18.4→1.18.5 (`versionCode` 11804→11805).
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

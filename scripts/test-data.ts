@@ -2428,6 +2428,12 @@ console.log("");
   const calBuilder = readFileSync(join(ROOT, "scripts/build-calendar-widget.ts"), "utf8");
   check("widget builder cites via formatLectionaryCitation (not bookDisplayName/translation)",
     calBuilder.includes("formatLectionaryCitation") && !calBuilder.includes("bookDisplayName"));
+  // FID-NATIVE-001: the widget/Siri calendar is pinned to the USCCB (USA) region
+  // by design (see docs/guides/IOS.md "Region policy"). Pin it here so a silent
+  // flip to "universal" — which would make the home-screen widgets and Siri
+  // disagree with the app's default calendar — turns npm test red.
+  check('widget builder is pinned to the USA region (FID-NATIVE-001)',
+    /const REGION = "usa" as const;/.test(calBuilder));
   // and the committed, generated widget data must carry no Douay-only book names
   for (const rel of ["ios/WidgetExtension/calendar.json", "android/app/src/main/res/raw/calendar.json"]) {
     const cal = readFileSync(join(ROOT, rel), "utf8");
@@ -3314,6 +3320,19 @@ console.log("");
   check("§36 SEC-002: the CSP pins the EXACT pre-paint script hash (drift gate)",
     !!preScript && headers.includes(`'${preHash}'`),
     preHash ? `expected ${preHash} in _headers` : "no inline <script> in index.html");
+  // The hash above is computed from SOURCE index.html, but the browser loads the
+  // BUILT dist/index.html. Vite passes the attribute-less pre-paint <script>
+  // through verbatim, so they agree — pin that: when a build exists, assert the
+  // dist script is byte-identical to source, so a future HTML transform that
+  // diverged them (silently invalidating the shipped hash, and breaking the
+  // deferred enforcing-<meta> migration) turns red instead of sailing through.
+  // Skipped on a bare `npm test` with no dist (existsSync guard) — never a false red.
+  const distIndexPath = join(ROOT, "dist/index.html");
+  if (existsSync(distIndexPath)) {
+    const distScript = /<script>([\s\S]*?)<\/script>/.exec(readFileSync(distIndexPath, "utf8"));
+    check("§36 SEC-002: the built dist pre-paint script matches source (CSP hash stays valid)",
+      !!distScript && !!preScript && distScript[1] === preScript[1]);
+  }
   check("§36 SEC-002: docs/SECURITY.md documents the CSP + integrity model",
     existsSync(join(ROOT, "docs/SECURITY.md")));
 }
