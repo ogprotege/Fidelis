@@ -2682,5 +2682,81 @@ console.log("");
       planCreator.includes("setDateError("));
 }
 
+// ── 31. v1.17.0 "nothing hidden" — the docked phone action bar, honest Today
+// Mass states, and the semantic a11y batch (audit FID-UX-001, FID-FUNC-006,
+// FID-A11Y-001/002/003). All UI wiring — no new pure logic exists to test, so
+// these are source-shape guards in the §25 manner. The forbidden fixed-
+// clearance strings stay pinned by §26.
+console.log("");
+{
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const reader = readFileSync(join(ROOT, "src/pages/Reader.tsx"), "utf8");
+  const home = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
+  const readings = readFileSync(join(ROOT, "src/pages/Readings.tsx"), "utf8");
+  const library = readFileSync(join(ROOT, "src/pages/Library.tsx"), "utf8");
+  const vq = readFileSync(join(ROOT, "src/components/VerseQuote.tsx"), "utf8");
+
+  // FID-UX-001: the phone bar docks full-bleed; the desktop pill survives.
+  const phoneBar = css.match(
+    /@media \(max-width: 640px\)\s*\{[^@]*?\.verse-actions\s*\{([^}]*)\}/
+  );
+  check("docked bar: the phone override docks it (left/right/bottom 0, no transform, grid)",
+    !!phoneBar &&
+      ["left: 0", "right: 0", "bottom: 0", "transform: none", "display: grid"].every((s) =>
+        phoneBar![1].includes(s)
+      ));
+  check("docked bar: the desktop pill is untouched (base rule keeps left: 50%)",
+    /\.verse-actions\s*\{[^}]*left:\s*50%/.test(css));
+  check("docked bar: the Reader measures the bar's live height into --verse-actions-h",
+    reader.includes("ResizeObserver") && reader.includes('setProperty("--verse-actions-h"'));
+  check("docked bar: the measurement cleans up on close (fallback returns to 0)",
+    reader.includes('removeProperty("--verse-actions-h")'));
+  check("docked bar: the page reserves the bar's height on phones",
+    /\.reader-page\s*\{[^}]*padding-bottom:\s*var\(--verse-actions-h/.test(css));
+  check("docked bar: focus scrolls clear of the bar (.verse scroll-margin-bottom)",
+    /scroll-margin-bottom:\s*calc\(var\(--verse-actions-h/.test(css));
+  check("docked bar: selecting scrolls the verse clear (bounded, reduced-motion aware)",
+    reader.includes("window.scrollBy(") &&
+      (reader.match(/prefers-reduced-motion/g) || []).length >= 2);
+  check("docked bar: the bar is a named group",
+    reader.includes('aria-label="Verse actions"'));
+  check("docked bar: Bookmark speaks pressed state; Note speaks its disclosure",
+    reader.includes("aria-pressed={bookmarks.has(selKey)}") &&
+      reader.includes("aria-expanded={noteOpen}"));
+
+  // FID-FUNC-006: the Today Mass list is three-state with a real retry.
+  check("today mass: a standalone effect with a failed state and a retry counter",
+    home.includes("massRetry") && home.includes("setMassFailed(true)"));
+  check("today mass: a resolved-null day settles as failed too (no eternal skeleton)",
+    (home.match(/setMassFailed\(true\)/g) || []).length >= 2);
+  check("today mass: the skeleton reserves the list's approximate height",
+    home.includes('className="mass-skeleton"'));
+
+  // FID-A11Y-001: the chip is decorative; the color is spoken.
+  check("liturgical color: the sr-only utility uses the clip pattern",
+    /\.sr-only\s*\{[^}]*clip-path:\s*inset\(50%\)/.test(css));
+  check("liturgical color: both pages hide the chip and speak the name",
+    [home, readings].every(
+      (s) => s.includes("Liturgical color: {lit.color}") && s.includes('className="sr-only"')
+    ));
+
+  // FID-A11Y-002: Library is an honest segmented group.
+  check("library: a labelled group of aria-pressed views",
+    library.includes('aria-label="Library view"') &&
+      library.includes("aria-pressed={tab === t}"));
+
+  // FID-A11Y-003: restrained polite status at the async boundaries only.
+  check("live regions: Reader loading/error speak politely",
+    (reader.match(/role="status"/g) || []).length >= 2);
+  check("live regions: Readings loading/notice speak politely",
+    (readings.match(/role="status"/g) || []).length >= 2);
+  check("live regions: both Today failure notices speak politely",
+    (home.match(/role="status"/g) || []).length >= 2);
+  check("verse quote: the bare em dash is gone; failure and the gap speak plainly",
+    !vq.includes(">—<") &&
+      vq.includes("couldn&rsquo;t be loaded") &&
+      vq.includes("not numbered in this translation"));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

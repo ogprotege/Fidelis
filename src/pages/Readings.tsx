@@ -173,7 +173,9 @@ export default function Readings() {
             className="lit-color-chip"
             style={{ background: COLOR_HEX[lit.color] }}
             title={`Liturgical color: ${lit.color}`}
+            aria-hidden="true"
           />
+          <span className="sr-only">Liturgical color: {lit.color}</span>
         </h2>
         <div className="lit-season">
           <strong>{lit.seasonLabel}</strong>
@@ -191,9 +193,13 @@ export default function Readings() {
 
       {navItems.length >= 3 && <SectionNav sections={navItems} />}
 
-      {readings === "loading" && <p className="loading">Finding the readings…</p>}
+      {readings === "loading" && (
+        <p className="loading" role="status">
+          Finding the readings…
+        </p>
+      )}
       {readings === null && (
-        <div className="notice">
+        <div className="notice" role="status">
           Readings for this date aren't available here.
           <div className="browse-links">
             <Link className="continue-cta" to="/read">

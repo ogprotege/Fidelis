@@ -76,10 +76,23 @@ export default function VerseQuote({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [translation, book, chapter, verse, endVerse]);
 
-  if (error) return <p className={className}>—</p>;
+  // A failure speaks plainly (and politely, via role="status") instead of the
+  // old bare em dash — this renders on Today, the rosary sheet, and the embed.
+  if (error)
+    return (
+      <p className={`${className ?? ""} muted small sans`.trim()} role="status">
+        The verse couldn&rsquo;t be loaded — it will return with your connection.
+      </p>
+    );
   // Reserve the verse's height while it loads so the card never reflows on land.
   if (text === null) return <p className={className}><Skeleton lines={2} /></p>;
-  if (!text.trim()) return <p className={className}>—</p>;
+  // An empty grid slot is content truth (a versification gap), not a transition.
+  if (!text.trim())
+    return (
+      <p className={`${className ?? ""} muted small sans`.trim()}>
+        This passage is not numbered in this translation.
+      </p>
+    );
   // The quotation marks are gold (sacred); the verse text is not (spec §1.2).
   return (
     <p className={className} lang={langAttr(shownTranslation)}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { BOOKS, bookDisplayName, bookIndex, getBook } from "../lib/canon";
 import { BookData, CCCData, CommentaryBook, loadBook, loadCCC, loadCommentary } from "../lib/data";
@@ -209,6 +209,52 @@ export default function Reader() {
     }
   }, [data, chapter, translation, bookSlug, navigate]);
 
+  const pageRef = useRef<HTMLDivElement | null>(null);
+  const barRef = useRef<HTMLDivElement | null>(null);
+
+  // v1.17.0 (audit FID-UX-001): while the action bar is open, the page reserves
+  // the bar's LIVE height via --verse-actions-h — the note editor and the
+  // conditional Commentary/Catechism actions change it — so the selected verse
+  // and the chapter links can always scroll clear. Consumed phone-only in CSS;
+  // .verse scroll-margin-bottom rides it on every viewport. The observer writes
+  // to the page, never the observed bar, so it cannot loop.
+  useEffect(() => {
+    if (selected === null || !data) return; // no bar rendered
+    const bar = barRef.current;
+    const page = pageRef.current;
+    if (!bar || !page) return;
+    const write = () => page.style.setProperty("--verse-actions-h", `${bar.offsetHeight}px`);
+    write();
+    const ro = new ResizeObserver(write);
+    ro.observe(bar);
+    return () => {
+      ro.disconnect();
+      page.style.removeProperty("--verse-actions-h");
+    };
+  }, [selected, data]);
+
+  // A verse tapped near the bottom scrolls clear of the bar — by the overlap
+  // only, bounded so the verse's own first line never passes under the pinned
+  // toolbar. Selection is not navigation: ScrollManager's POP-restore aborts
+  // the moment scrollY diverges, so this scroll can never fight it.
+  useEffect(() => {
+    if (selected === null) return;
+    const el = document.getElementById(`v-${selected}`);
+    const bar = barRef.current;
+    if (!el || !bar) return;
+    const barTop = bar.getBoundingClientRect().top;
+    const r = el.getBoundingClientRect();
+    const overlap = r.bottom - barTop + 8;
+    if (overlap <= 0) return;
+    const chrome = document.querySelector(".reader-toolbar")?.getBoundingClientRect().bottom ?? 0;
+    const dy = Math.min(overlap, Math.max(0, r.top - chrome - 8));
+    if (dy <= 0) return;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollBy({ top: dy, behavior: reduce ? "auto" : "smooth" });
+  }, [selected]);
+
   if (!book) {
     return <p className="notice">Unknown book. <Link to="/read">Browse the books</Link>.</p>;
   }
@@ -343,7 +389,7 @@ export default function Reader() {
   );
 
   return (
-    <div className={parallelData ? "parallel" : ""}>
+    <div className={parallelData ? "reader-page parallel" : "reader-page"} ref={pageRef}>
       <div className="reader-toolbar">
         <button
           type="button"
@@ -414,7 +460,7 @@ export default function Reader() {
       <IndulgenceNotice enabled={settings.showIndulgence} />
 
       {error && (
-        <div className="notice">
+        <div className="notice" role="status">
           {error}
           {trans && !trans.bundled && (
             <>
@@ -424,7 +470,11 @@ export default function Reader() {
           )}
         </div>
       )}
-      {!error && !data && <p className="loading">Loading the sacred text…</p>}
+      {!error && !data && (
+        <p className="loading" role="status">
+          Loading the sacred text…
+        </p>
+      )}
       {!error && data && !verses && (
         <p className="notice">
           Chapter {chapter} is not present in {trans?.name ?? translation}
@@ -489,18 +539,19 @@ export default function Reader() {
       )}
 
       {selRef && verses && (
-        <div className="verse-actions">
+        <div className="verse-actions" role="group" aria-label="Verse actions" ref={barRef}>
           <span className="ref">
             {book.abbrev} {chapter}:{selRef.verse}
           </span>
           <button
             className="icon-btn"
+            aria-pressed={bookmarks.has(selKey)}
             onClick={() => {
               toggleBookmark({ ...selRef, translation });
               setMarksVersion((x) => x + 1);
             }}
           >
-            <Icon name="bookmark" /> {bookmarks.has(selKey) ? "Unbookmark" : "Bookmark"}
+            <Icon name="bookmark" /> Bookmark
           </button>
           <span className="hl-group">
             {(["gold", "rose", "sky", "olive"] as HighlightColor[]).map((c) => (
@@ -532,6 +583,7 @@ export default function Reader() {
           </span>
           <button
             className="icon-btn"
+            aria-expanded={noteOpen}
             onClick={() => {
               setNoteDraft(getNote(selRef)?.text ?? "");
               setNoteOpen(!noteOpen);
@@ -546,16 +598,26 @@ export default function Reader() {
             <Icon name="share" /> Share
           </button>
           {commentaryAvailable(selRef.verse) && (
-            <button className="icon-btn" onClick={() => setCommentaryFor(selRef.verse)}>
+            <button className="icon-btn va-wide" onClick={() => setCommentaryFor(selRef.verse)}>
               <Icon name="commentary" /> Commentary
             </button>
           )}
           {cccParas.length > 0 && (
-            <button className="icon-btn" onClick={() => setCccFor(selRef.verse)}>
+            <button className="icon-btn va-wide" onClick={() => setCccFor(selRef.verse)}>
               <Icon name="book" /> Catechism
             </button>
           )}
-          <button className="icon-btn" onClick={() => setSelected(null)} title="Close" aria-label="Close">
+          <button
+            className="icon-btn va-close"
+            onClick={() => {
+              const v = selected;
+              setSelected(null);
+              // Keyboard users came from the verse — return them to it.
+              if (v) document.getElementById(`v-${v}`)?.focus({ preventScroll: true });
+            }}
+            title="Close"
+            aria-label="Close"
+          >
             <Icon name="close" />
           </button>
           {noteOpen && (
@@ -564,6 +626,7 @@ export default function Reader() {
                 value={noteDraft}
                 onChange={(e) => setNoteDraft(e.target.value)}
                 placeholder="Your note on this verse…"
+                aria-label="Your note on this verse"
               />
               <button
                 className="icon-btn"
