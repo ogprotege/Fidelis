@@ -27,3 +27,6 @@ scripts/ios-release.local.env
 
 # Visual-companion brainstorm sessions (mockups, server state) — never committed.
 /.superpowers/
+
+# One-shot corpus-merge/expansion helper scripts (throwaway tooling) — never committed.
+/scripts/_*.mjs
