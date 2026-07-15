@@ -2,9 +2,9 @@
 
 *For maintainers deciding what to fix, preserve, simplify, or defer.* · [← Docs index](../INDEX.md)
 
-**Audit date:** 2026-07-15  
-**Version:** 1.16.0, “upon the candlestick”  
-**Commit:** `0e8a703f1d68d3ab6a897fdab87f65f22c67086f`  
+- **Audit date:** 2026-07-15
+- **Version:** 1.16.0, “upon the candlestick”
+- **Commit:** `0e8a703f1d68d3ab6a897fdab87f65f22c67086f`
 **Scope:** React application, generated-data runtime, PWA, iOS and Android shells,
 native widgets, release workflows, product documentation, usability,
 accessibility, performance, privacy, and security posture.
@@ -143,9 +143,9 @@ The 32 MB bundle is an intentional offline-native tradeoff, not itself a defect.
 
 ### FID-FUNC-001 — Search result caps make section filters factually wrong
 
-**Status:** Runtime confirmed  
-**Evidence:** `src/pages/Search.tsx:82-99`, manual Search run, bundled NT files  
-**Impact:** Core content discovery returns a false negative.
+- **Status:** Runtime confirmed
+- **Evidence:** `src/pages/Search.tsx:82-99`, manual Search run, bundled NT files
+- **Impact:** Core content discovery returns a false negative.
 
 Search appends results in canonical book order and stops the entire scan when
 `found.length` reaches 300. The section chips then count only that truncated
@@ -183,9 +183,9 @@ before the cap. Do not show zero unless that section was actually scanned.
 
 ### FID-FUNC-002 — Reader persists an unavailable translation as the global default
 
-**Status:** Runtime confirmed  
-**Evidence:** `src/pages/Reader.tsx:92-103`, `151-170`; browser storage inspection  
-**Impact:** One failed selection can poison later Today, Reader, Search, Library,
+- **Status:** Runtime confirmed
+- **Evidence:** `src/pages/Reader.tsx:92-103`, `151-170`; browser storage inspection
+- **Impact:** One failed selection can poison later Today, Reader, Search, Library,
 and last-read navigation.
 
 The Reader persists `translation` and `lastRead` when the route has a valid book,
@@ -223,10 +223,10 @@ Keep an unavailable option visible as an import route, not as an active default.
 
 ### FID-UX-001 — The phone Reader action bar obscures selected Scripture
 
-**Status:** Runtime confirmed  
-**Evidence:** `src/styles.css:948-968`, `src/pages/Reader.tsx:264-268`,
-`484-574`; Chrome geometry probe  
-**Impact:** The app’s primary reading surface hides the verse the user just acted on.
+- **Status:** Runtime confirmed
+- **Evidence:** `src/styles.css:948-968`, `src/pages/Reader.tsx:264-268`,
+  `484-574`; Chrome geometry probe
+- **Impact:** The app’s primary reading surface hides the verse the user just acted on.
 
 At 390×844, the verse-action bar measured about 188–195 px wide and 330 px tall.
 At the end of John 3 it overlapped:
@@ -260,10 +260,10 @@ Use a deliberate phone action surface rather than intrinsic flex wrapping:
 
 ### FID-DATA-001 — Bible import is unbounded and non-atomic
 
-**Status:** Code-confirmed failure path; quota injection still required  
-**Evidence:** `src/pages/Translations.tsx:24-48`,
-`src/lib/data.ts:55-99`  
-**Impact:** A large or interrupted import can freeze the UI or leave a partial,
+- **Status:** Code-confirmed failure path; quota injection still required
+- **Evidence:** `src/pages/Translations.tsx:24-48`,
+  `src/lib/data.ts:55-99`
+- **Impact:** A large or interrupted import can freeze the UI or leave a partial,
 mixed translation.
 
 The importer:
@@ -297,9 +297,9 @@ that were absent from the replacement file.
 
 ### FID-REL-001 — Current App Store screenshots are stale
 
-**Status:** Documentation-confirmed release blocker  
-**Evidence:** `docs/guides/APP_STORE.md:159-183`  
-**Impact:** A 1.16.0 submission would advertise the retired bottom navigation.
+- **Status:** Documentation-confirmed release blocker
+- **Evidence:** `docs/guides/APP_STORE.md:159-183`
+- **Impact:** A 1.16.0 submission would advertise the retired bottom navigation.
 
 The App Store guide explicitly marks the 2026-07-13 screenshots stale. Version
 1.16.0’s primary visual change is the collapsing masthead, so this is not a
@@ -324,10 +324,10 @@ masthead and current Reader/Mass controls.
 
 ### FID-FUNC-003 — Library bookmarks ignore their saved translation
 
-**Status:** Runtime and code confirmed  
-**Evidence:** `src/lib/storage.ts:20-23`,
-`src/pages/Library.tsx:25`, `56-63`, `110-112`  
-**Impact:** A bookmark can open different wording from the text the user saved.
+- **Status:** Runtime and code confirmed
+- **Evidence:** `src/lib/storage.ts:20-23`,
+  `src/pages/Library.tsx:25`, `56-63`, `110-112`
+- **Impact:** A bookmark can open different wording from the text the user saved.
 
 Bookmarks store `translation`, but `Library.refLink()` always uses the current
 global setting. A CPDV bookmark opened under the later NABRE/DRB default.
@@ -340,11 +340,11 @@ translation-specific; their current model has no translation.
 
 ### FID-FUNC-004 — Fallback text and navigation can name different translations
 
-**Status:** Code confirmed  
-**Evidence:** `src/components/VerseQuote.tsx:16-70`,
-`src/pages/Home.tsx:85-111`, `178-193`,
-`src/components/MysterySheet.tsx:17-40`  
-**Impact:** Today and Rosary may show DRB fallback text, then link into an
+- **Status:** Code confirmed
+- **Evidence:** `src/components/VerseQuote.tsx:16-70`,
+  `src/pages/Home.tsx:85-111`, `178-193`,
+  `src/components/MysterySheet.tsx:17-40`
+- **Impact:** Today and Rosary may show DRB fallback text, then link into an
 unavailable NABRE/RSV-2CE Reader route.
 
 `VerseQuote` privately tracks the translation actually rendered, but the parent
@@ -357,10 +357,10 @@ effective translation for text, language, citation, link, and sharing.
 
 ### FID-FUNC-005 — Search cannot search imported translations despite Settings copy
 
-**Status:** Code and UI confirmed  
-**Evidence:** `src/pages/Search.tsx:175-184`,
-`src/pages/Settings.tsx:263-266`  
-**Impact:** An imported NABRE, RSV-2CE, or Straubinger can be selected as the
+- **Status:** Code and UI confirmed
+- **Evidence:** `src/pages/Search.tsx:175-184`,
+  `src/pages/Settings.tsx:263-266`
+- **Impact:** An imported NABRE, RSV-2CE, or Straubinger can be selected as the
 default but cannot be searched.
 
 Settings says the chosen version is the default “everywhere — Today, the book
@@ -374,9 +374,9 @@ available imported corpus is the more coherent behavior.
 
 ### FID-FUNC-006 — Today silently removes Mass readings on load failure
 
-**Status:** Runtime confirmed with request blocking  
-**Evidence:** `src/pages/Home.tsx:47-60`, `152-171`  
-**Impact:** The first card looks complete while a core portion is missing.
+- **Status:** Runtime confirmed with request blocking
+- **Evidence:** `src/pages/Home.tsx:47-60`, `152-171`
+- **Impact:** The first card looks complete while a core portion is missing.
 
 Blocking `data/lectionary.json` removed First Reading, Psalm, and Gospel without
 loading text, error copy, or retry affordance. The same late insertion causes a
@@ -390,10 +390,10 @@ a retry or the Mass route on failure.
 
 ### FID-FUNC-007 — Past plan dates are accepted as one-day plans
 
-**Status:** Runtime confirmed  
-**Evidence:** `src/lib/plans.ts:41-47`,
-`src/pages/PlanCreator.tsx:34-42`, `98-108`  
-**Impact:** A malformed plan is created with no explanation.
+- **Status:** Runtime confirmed
+- **Evidence:** `src/lib/plans.ts:41-47`,
+  `src/pages/PlanCreator.tsx:34-42`, `98-108`
+- **Impact:** A malformed plan is created with no explanation.
 
 `targetDateToPerDay(50, now, 2020-01-01)` returns 50 chapters/day and one total
 day because negative duration is clamped to one.
@@ -405,10 +405,10 @@ Keep the form in place with an inline error instead of creating the plan.
 
 ### FID-FUNC-008 — “Saved” offline state is not cache truth
 
-**Status:** Runtime confirmed  
-**Evidence:** `src/lib/storage.ts:188-200`,
-`src/pages/Settings.tsx:77-99`, `587-632`  
-**Impact:** The app can promise offline availability after browser cache eviction.
+- **Status:** Runtime confirmed
+- **Evidence:** `src/lib/storage.ts:188-200`,
+  `src/pages/Settings.tsx:77-99`, `587-632`
+- **Impact:** The app can promise offline availability after browser cache eviction.
 
 After setting the DRB offline record and deleting `fidelis-data-v2`, Settings
 still rendered `Saved · Update` while the backing data cache did not exist.
@@ -421,10 +421,10 @@ presentation metadata only.
 
 ### FID-FUNC-009 — Re-importing a smaller Bible retains stale books
 
-**Status:** Code confirmed  
-**Evidence:** `src/pages/Translations.tsx:33-46`,
-`src/lib/data.ts:115-130`  
-**Impact:** A replacement corpus can become a hybrid of two editions.
+- **Status:** Code confirmed
+- **Evidence:** `src/pages/Translations.tsx:33-46`,
+  `src/lib/data.ts:115-130`
+- **Impact:** A replacement corpus can become a hybrid of two editions.
 
 The importer overwrites books present in the new file but removes nothing absent
 from it. The only full clear is the separate “Remove imported text” action.
@@ -437,9 +437,9 @@ replacement.
 
 ### FID-STOR-001 — Local persistence failures are silent
 
-**Status:** Code confirmed  
-**Evidence:** `src/lib/storage.ts:94-110`  
-**Impact:** Settings, plans, notes, bookmarks, reading state, and offline flags
+- **Status:** Code confirmed
+- **Evidence:** `src/lib/storage.ts:94-110`
+- **Impact:** Settings, plans, notes, bookmarks, reading state, and offline flags
 can appear saved when quota or storage policy rejected the write.
 
 Every localStorage write catches and discards the error.
@@ -452,10 +452,10 @@ toasts for routine successful writes.
 
 ### FID-A11Y-001 — Liturgical color has no reliable accessible name
 
-**Status:** Code confirmed  
-**Evidence:** `src/pages/Home.tsx:129-138`,
-`src/pages/Readings.tsx:172-176`  
-**Impact:** The design spec’s “color not alone” requirement is not met.
+- **Status:** Code confirmed
+- **Evidence:** `src/pages/Home.tsx:129-138`,
+  `src/pages/Readings.tsx:172-176`
+- **Impact:** The design spec’s “color not alone” requirement is not met.
 
 The visual chip is an empty span with a background and `title`; it has no
 visible label, `aria-label`, or semantic image role.
@@ -467,9 +467,9 @@ green,” or render a concise visible name where it does not add clutter.
 
 ### FID-A11Y-002 — Library controls look like tabs but are not tabs
 
-**Status:** Runtime and code confirmed  
-**Evidence:** `src/pages/Library.tsx:68-99`  
-**Impact:** Screen-reader users do not hear selection or tab relationships.
+- **Status:** Runtime and code confirmed
+- **Evidence:** `src/pages/Library.tsx:68-99`
+- **Impact:** Screen-reader users do not hear selection or tab relationships.
 
 The container and buttons have no `tablist`, `tab`, `aria-selected`, or
 `tabpanel` semantics.
@@ -482,10 +482,10 @@ Export/Import outside the tab group.
 
 ### FID-A11Y-003 — Async content is not announced
 
-**Status:** Code confirmed  
-**Evidence:** no `aria-live`/`aria-busy` in dynamic Today/Reader regions;
-`src/components/Skeleton.tsx`; `src/components/VerseQuote.tsx:60-63`  
-**Impact:** A screen-reader user can hear silence while content appears or fails.
+- **Status:** Code confirmed
+- **Evidence:** no `aria-live`/`aria-busy` in dynamic Today/Reader regions;
+  `src/components/Skeleton.tsx`; `src/components/VerseQuote.tsx:60-63`
+- **Impact:** A screen-reader user can hear silence while content appears or fails.
 
 Only Search errors use `role="alert"`. Today Mass, VOTD, Quote, commentary, and
 other asynchronous regions do not expose polite status. `VerseQuote` reduces
@@ -498,9 +498,9 @@ boundaries. Replace the bare dash with a contextual, visually quiet message.
 
 ### FID-A11Y-004 — Day-theme accent text and inline links fail automated contrast checks
 
-**Status:** Runtime confirmed by Lighthouse and independent token calculation  
-**Evidence:** `src/styles.css:104-197`, global link rules, Mass fallback copy  
-**Impact:** Small text can be unreadable or indistinguishable as a link.
+- **Status:** Runtime confirmed by Lighthouse and independent token calculation
+- **Evidence:** `src/styles.css:104-197`, global link rules, Mass fallback copy
+- **Impact:** Small text can be unreadable or indistinguishable as a link.
 
 Observed failures include:
 
@@ -520,9 +520,9 @@ keeping the existing mark/text token split.
 
 ### FID-UX-002 — Many native-facing controls are below 44×44 CSS px
 
-**Status:** Runtime measured  
-**Evidence:** `src/styles.css` control rules; Chrome geometry probes  
-**Impact:** Higher mis-tap risk, especially in filters and destructive actions.
+- **Status:** Runtime measured
+- **Evidence:** `src/styles.css` control rules; Chrome geometry probes
+- **Impact:** Higher mis-tap risk, especially in filters and destructive actions.
 
 Representative measured heights at 390 CSS px:
 
@@ -549,9 +549,9 @@ filter chips, switches, mysteries, Share, and destructive Library actions.
 
 ### FID-PERF-001 — Async layout shifts miss the Core Web Vitals target
 
-**Status:** Runtime confirmed  
-**Evidence:** Mobile Lighthouse  
-**Impact:** Content moves after first paint, especially on Today and Mass.
+- **Status:** Runtime confirmed
+- **Evidence:** Mobile Lighthouse
+- **Impact:** Content moves after first paint, especially on Today and Mass.
 
 | Page | Performance | LCP | TBT | CLS |
 |---|---:|---:|---:|---:|
@@ -572,9 +572,9 @@ notices, and route-split before adding animation or visual effects.
 
 ### FID-PERF-002 — Every route ships in the initial JavaScript graph
 
-**Status:** Build confirmed  
-**Evidence:** `src/App.tsx:1-25`, `vite.config.ts`, build output  
-**Impact:** Today pays for Settings, import formats, plans, Search, and study
+- **Status:** Build confirmed
+- **Evidence:** `src/App.tsx:1-25`, `vite.config.ts`, build output
+- **Impact:** Today pays for Settings, import formats, plans, Search, and study
 surfaces before they are used.
 
 The build emits one 423 kB main chunk (134 kB gzip). Lighthouse estimates about
@@ -588,9 +588,9 @@ critical path simple; do not add a chunking framework.
 
 ### FID-NATIVE-001 — Native Mass/Quote/Siri data is permanently USA-region
 
-**Status:** Code confirmed  
-**Evidence:** `scripts/build-calendar-widget.ts:30-35`, `49-95`  
-**Impact:** A user who selects Universal in the app can see a different
+- **Status:** Code confirmed
+- **Evidence:** `scripts/build-calendar-widget.ts:30-35`, `49-95`
+- **Impact:** A user who selects Universal in the app can see a different
 celebration/readings/quote on widgets and Siri.
 
 The generated `calendar.json` hardcodes `REGION = "usa"`. Native surfaces have
@@ -609,9 +609,9 @@ the default setting.
 
 ### FID-QUAL-001 — UI reliability is guarded by source text, not browser behavior
 
-**Status:** Repository confirmed  
-**Evidence:** no component/E2E tests; `scripts/test-data.ts` source-shape checks  
-**Impact:** Focus traps, scroll restoration, imports, service-worker updates,
+- **Status:** Repository confirmed
+- **Evidence:** no component/E2E tests; `scripts/test-data.ts` source-shape checks
+- **Impact:** Focus traps, scroll restoration, imports, service-worker updates,
 and navigation can regress while regex checks stay green.
 
 The pure-engine harnesses are excellent. The gap is a small browser layer, not a
@@ -631,10 +631,10 @@ need to replace the existing harnesses.
 
 ### FID-REL-002 — Native workflow filters do not cover native tooling scripts
 
-**Status:** Workflow confirmed  
-**Evidence:** `.github/workflows/ios.yml:13-33`,
-`.github/workflows/android.yml:14-34`  
-**Impact:** Project-wiring, widget-builder, and release-script changes can land
+- **Status:** Workflow confirmed
+- **Evidence:** `.github/workflows/ios.yml:13-33`,
+  `.github/workflows/android.yml:14-34`
+- **Impact:** Project-wiring, widget-builder, and release-script changes can land
 without the native workflow running.
 
 The latest audited head changed `scripts/ios-testflight.sh`, but the latest iOS
@@ -650,9 +650,9 @@ simulator build. Keep Debug if it provides useful diagnostics.
 
 ### FID-DOC-001 — Public and maintainer documentation describes old product state
 
-**Status:** Documentation confirmed  
-**Evidence:** `README.md:104`, `254-285`; `docs/guides/IOS.md`; historical release text  
-**Impact:** Users and maintainers receive contradictory platform/navigation instructions.
+- **Status:** Documentation confirmed
+- **Evidence:** `README.md:104`, `254-285`; `docs/guides/IOS.md`; historical release text
+- **Impact:** Users and maintainers receive contradictory platform/navigation instructions.
 
 Current README claims:
 
