@@ -22,6 +22,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- FID-NATIVE-002: the fidelis:// deep-link scheme the home-screen
+                 widgets open (fidelis://mass, fidelis://today). Capacitor delivers
+                 the intent's data URI to the web layer via appUrlOpen; src/App.tsx
+                 routes it (mass → the Mass readings, today → Today). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="fidelis" />
+            </intent-filter>
+
         </activity>
 
         <provider

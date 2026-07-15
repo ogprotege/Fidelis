@@ -10,4 +10,4 @@
 
 **The design rationale?** → [full product audit (2026-07-15)](review/Fidelis_Full_Product_Audit_2026-07-15.md) · [specs & plans](superpowers/INDEX.md) · [code review](review/Fidelis_Code_Review_V1_2026-06-11.md) · [feature design spec](review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md) · [commentary sources survey](review/Commentary_Sources_Survey.md).
 
-**Maintainer / AI assistant?** → [CLAUDE.md](../CLAUDE.md) · [AGENTS.md](../AGENTS.md) · [Releasing](guides/RELEASING.md).
+**Maintainer / AI assistant?** → [CLAUDE.md](../CLAUDE.md) · [AGENTS.md](../AGENTS.md) · [Releasing](guides/RELEASING.md) · [Security notes](SECURITY.md).

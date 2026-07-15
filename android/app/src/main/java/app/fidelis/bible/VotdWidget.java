@@ -7,6 +7,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.widget.RemoteViews;
 
 import org.json.JSONArray;
@@ -92,8 +93,11 @@ public class VotdWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.votd_text, q1 + text + q2);
         views.setTextViewText(R.id.votd_reference, reference);
 
-        // Tapping the widget opens the app (its default Today view).
-        Intent open = new Intent(context, MainActivity.class)
+        // FID-NATIVE-002: tapping the widget opens Today, where the verse card
+        // lives — now via the explicit fidelis://today deep link so all three
+        // widgets share one mechanism (Capacitor appUrlOpen → src/App.tsx routes it).
+        Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse("fidelis://today"),
+                context, MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(context, 0, open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

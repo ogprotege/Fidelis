@@ -1,0 +1,21 @@
+# Fidelis security response headers.
+#
+# Content-Security-Policy-Report-Only (FID-SEC-002): a REPORT-ONLY policy. It
+# observes and logs violations to the browser console; it never blocks a load.
+# This is the first, deliberately non-breaking step of the CSP journey — see
+# docs/SECURITY.md for the enforcing-meta migration, which is deferred.
+#
+# Report-Only cannot ride a <meta> tag (browsers ignore the report-only form
+# there), so it ships as a real response header here. This file is honored by
+# hosts that read a _headers file (Netlify, Cloudflare Pages) and is simply inert
+# on hosts that do not (e.g. GitHub Pages) and inside the Capacitor shells (which
+# are code-signed and serve from capacitor://localhost / https://localhost).
+#
+# The 'sha256-…' below is the hash of the index.html pre-paint <script>. Keep the
+# two in lockstep: the data harness (scripts/test-data.ts §36) recomputes the
+# hash from index.html and fails on drift, so editing that script means updating
+# this line.
+/*
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-SgqSy4Wwk0PBcKCQWZSQ246Vmhsq6qvZN6fohPlZ3O8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer

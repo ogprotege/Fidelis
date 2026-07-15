@@ -55,6 +55,18 @@ export default function Search() {
   const runId = useRef(0);
   const navigate = useNavigate();
 
+  // FID-UX-005: autofocus pops the on-screen keyboard the instant the Search tab
+  // is selected on a touch phone, hiding results behind it. Only claim focus in a
+  // keyboard/desktop context — a fine primary pointer with hover — so touch users
+  // reach the field on their own terms. Computed once (autoFocus is read only at
+  // mount); default to focusing where matchMedia is absent (non-browser).
+  const [autoFocusSearch] = useState(
+    () =>
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function" ||
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  );
+
   const run = async (qArg?: string, tArg?: string) => {
     const t = tArg ?? translation;
     const q = (qArg ?? query).trim();
@@ -190,7 +202,7 @@ export default function Search() {
           onKeyDown={(e) => e.key === "Enter" && !tooShort && run()}
           placeholder="Word, phrase, or reference…"
           aria-label="Search the Scriptures by word, phrase, or reference"
-          autoFocus
+          autoFocus={autoFocusSearch}
         />
         <select
           value={translation}

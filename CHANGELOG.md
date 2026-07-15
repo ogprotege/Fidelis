@@ -6,6 +6,73 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.18.3] — 2026-07-15 — faithful in little
+
+*"He that is faithful in that which is least, is faithful also in that which is greater." (Luke 16:10)*
+
+The audit's P3 polish sweep — nine small items, none of them load-bearing on their own, closed
+together. Behavior refinements to the embeddable widget, the Reader, and Search; the home-screen
+widgets gain real tap targets; the native calendar decode is memoized; and the first, non-breaking
+step of a Content Security Policy ships in Report-Only mode. No engine, data, golden, or
+service-worker changes.
+
+### Fixed
+
+- **Embeddable VOTD rolls at midnight (FID-FUNC-010).** `WidgetVotd` read the verse once at render;
+  a long-lived `<iframe>` embed could show yesterday's verse for days. It now draws the date from
+  `useToday()` (the midnight-timer + foreground-resume hook), so the embed rolls when the civil day
+  turns — the same hook the Today page and the liturgical accent already use.
+- **Parallel-text load failure is no longer silent (FID-FUNC-011).** A parallel pane that failed to
+  load (usually an import-only second translation absent on the device) fell back to a single column
+  with no word said. The Reader now records the error and shows a quiet notice, with a link to
+  Translations when the pane is an import-only text.
+- **Copy now confirms itself (FID-UX-003).** The verse-action **Copy** silently swallowed both
+  success and clipboard failure. It now flashes one brief, polite `role="status"` line near the
+  action bar — "Copied to the clipboard." or a plain failure note — that clears after a moment.
+- **Even card gutters at 320 px (FID-UX-004).** `.widget-grid`'s 300 px minimum track overhung the
+  grid on the narrowest phones, leaving an uneven right gutter. The minimum is now
+  `min(300px, 100%)`, so a single card shrinks to the column width and the gutters stay even; wider
+  viewports keep the 300 px minimum unchanged.
+- **Search no longer forces the keyboard open on phones (FID-UX-005).** `autoFocus` fired on every
+  visit to the Search tab, popping the on-screen keyboard over the results on touch devices. It is
+  now gated on a `(hover: hover) and (pointer: fine)` query, so only a keyboard/desktop context
+  autofocuses; touch users reach the field on their own terms.
+
+### Added
+
+- **Home-screen widgets have deep links (FID-NATIVE-002).** A new custom `fidelis://` URL scheme
+  lets a tapped widget open the right place: the Mass widget opens the Mass readings
+  (`fidelis://mass` → `/readings`), the Verse and Quote widgets open Today (`fidelis://today`).
+  iOS widgets carry a `widgetURL`; the scheme is registered in the App's `Info.plist`; Android
+  widgets set the same URL as the intent's data (with a matching `MainActivity` intent-filter). The
+  web layer routes it through Capacitor's `appUrlOpen` (and `getLaunchUrl` for a cold launch) in
+  `src/App.tsx`, on both platforms.
+- **A Content Security Policy in Report-Only mode (FID-SEC-002).** `public/_headers` ships a
+  `Content-Security-Policy-Report-Only` policy (plus `X-Content-Type-Options` and `Referrer-Policy`):
+  it observes and logs violations, never blocks. The single inline pre-paint `<script>` is allowed by
+  its SHA-256 hash — not `'unsafe-inline'` — and the data harness (§36) recomputes that hash from
+  `index.html` and fails on drift. Honored by hosts that read `_headers`; inert (and harmless)
+  elsewhere and in the code-signed shells. The enforcing-`<meta>` migration is documented and deferred
+  in the new [docs/SECURITY.md](docs/SECURITY.md).
+
+### Changed
+
+- **Native widgets memoize the calendar decode (FID-PERF-004).** The ~400 kB `calendar.json` was
+  decoded in the placeholder, snapshot, and timeline paths of both the Mass and Quote providers on
+  every reload. iOS now caches the decode process-locally (lock-guarded; the ephemeral extension
+  process releases it); Android shares one `SoftReference`-backed decode across `CalendarWidget` and
+  `QuoteWidget` (reclaimable under memory pressure, re-parsed on demand).
+- **"Texts verified" now reads "verified at build" (FID-SEC-001).** The Settings and About wording is
+  clarified so the SHA-256 manifest seal is understood as a build-time guarantee proven in CI — not a
+  live checksum of the device's cache. Runtime trust comes from native code-signing and the immutable,
+  cache-first corpus, as [docs/SECURITY.md](docs/SECURITY.md) now records.
+
+### Release mechanics
+
+- `package.json` 1.18.2→1.18.3; iOS `MARKETING_VERSION` and Android `versionName` 1.18.2→1.18.3,
+  `versionCode` 11802→11803. New harness section **§36** guards all nine items (shape guards plus the
+  CSP hash drift gate). No engine, data, golden, or service-worker changes.
+
 ## [1.18.2] — 2026-07-15 — the mended net
 
 *"And when they had done this, they enclosed a very great multitude of fishes, and their net

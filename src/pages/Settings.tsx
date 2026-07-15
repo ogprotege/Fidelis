@@ -713,7 +713,7 @@ export default function Settings() {
         <p className="muted small sans" style={{ marginBottom: 0 }}>
           {manifest?.rootHash && (
             <>
-              Texts verified · manifest <code>{manifest.rootHash.slice(0, 12)}</code> ·{" "}
+              Texts verified at build · manifest <code>{manifest.rootHash.slice(0, 12)}</code> ·{" "}
             </>
           )}
           <Link to="/about">About &amp; sources →</Link>

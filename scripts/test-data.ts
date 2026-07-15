@@ -3215,5 +3215,108 @@ console.log("");
   check("§34 suite: CI runs the browser suite", ci.includes("playwright"));
 }
 
+// ── 36. v1.18.3 "faithful in little" — the P3 polish sweep (audit FID-FUNC-010/
+// 011, FID-UX-003/004/005, FID-PERF-004, FID-NATIVE-002, FID-SEC-001/002). These
+// are UI / native-shell / host-config fixes the pure engines can't reach, so this
+// section is shape guards (§25 manner) plus one real computation: the CSP hash
+// drift gate, which recomputes the pre-paint script's sha256 and pins it to the
+// value shipped in public/_headers.
+console.log("");
+{
+  const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
+  const widgetVotd = read("src/pages/WidgetVotd.tsx");
+  const reader = read("src/pages/Reader.tsx");
+  const search = read("src/pages/Search.tsx");
+  const css = read("src/styles.css");
+  const app = read("src/App.tsx");
+  const settings = read("src/pages/Settings.tsx");
+  const about = read("src/pages/About.tsx");
+  const html = read("index.html");
+  const headers = read("public/_headers");
+
+  // FID-FUNC-010: a long-lived VOTD embed rolls at midnight via useToday().
+  check("§36 FUNC-010: WidgetVotd drives verseOfTheDay from useToday()",
+    /import \{ useToday \}/.test(widgetVotd) && widgetVotd.includes("verseOfTheDay(today)"));
+
+  // FID-FUNC-011: a parallel-pane load failure raises a quiet notice instead of a
+  // silent single-column fallback.
+  check("§36 FUNC-011: Reader records the parallel-load error and speaks it",
+    reader.includes("parallelError") &&
+      reader.includes("setParallelError(e instanceof Error") &&
+      reader.includes("{parallelError && parallel"));
+
+  // FID-UX-003: Copy reports BOTH success and failure near the action surface.
+  check("§36 UX-003: Reader flashes a copy status for both outcomes",
+    reader.includes('flashCopyStatus("copied")') &&
+      reader.includes('flashCopyStatus("failed")') &&
+      reader.includes('className="va-status"'));
+  check("§36 UX-003: the copy-status region collapses when idle (:empty)",
+    css.includes(".va-status") && css.includes(".va-status:empty"));
+
+  // FID-UX-004: the small-phone card gutter — clamp the min track to the column.
+  check("§36 UX-004: .widget-grid clamps its min track to the column width",
+    css.includes("minmax(min(300px, 100%), 1fr)"));
+
+  // FID-UX-005: Search autofocuses only in a keyboard/desktop context.
+  check("§36 UX-005: Search gates autoFocus on a fine-pointer + hover query",
+    search.includes("autoFocus={autoFocusSearch}") &&
+      search.includes("(hover: hover) and (pointer: fine)"));
+
+  // FID-NATIVE-002 (web): App routes the fidelis:// widget deep links, on both a
+  // cold launch (getLaunchUrl) and a tap while running (appUrlOpen).
+  check("§36 NATIVE-002 (web): App handles appUrlOpen AND the cold-launch URL",
+    app.includes('addListener("appUrlOpen"') && app.includes("getLaunchUrl"));
+  check("§36 NATIVE-002 (web): fidelis://mass → Mass readings, today → Today",
+    app.includes("fidelis:") && app.includes('return "/readings"') && app.includes('return "/"'));
+
+  // ── Native shells (source-shape guards; the iOS/Android CI builds prove them) ──
+  const calSwift = read("ios/WidgetExtension/CalendarWidgets.swift");
+  const votdSwift = read("ios/WidgetExtension/FidelisWidget.swift");
+  const infoPlist = read("ios/App/App/Info.plist");
+  const calData = read("android/app/src/main/java/app/fidelis/bible/CalendarData.java");
+  const calJava = read("android/app/src/main/java/app/fidelis/bible/CalendarWidget.java");
+  const quoteJava = read("android/app/src/main/java/app/fidelis/bible/QuoteWidget.java");
+  const manifest = read("android/app/src/main/AndroidManifest.xml");
+
+  // FID-PERF-004: memoize the widgets' calendar.json decode.
+  check("§36 PERF-004 (iOS): CalendarWidgets memoizes the calendar decode",
+    calSwift.includes("calendarCache"));
+  check("§36 PERF-004 (Android): CalendarData memoizes; both widgets delegate",
+    calData.includes("SoftReference") &&
+      calJava.includes("CalendarData.load(context)") &&
+      quoteJava.includes("CalendarData.load(context)"));
+
+  // FID-NATIVE-002 (iOS): every widget carries a widgetURL; the scheme is registered.
+  check("§36 NATIVE-002 (iOS): the three widgets carry widgetURL(fidelis://…)",
+    votdSwift.includes('widgetURL(URL(string: "fidelis://today"))') &&
+      calSwift.includes('widgetURL(URL(string: "fidelis://mass"))') &&
+      calSwift.includes('widgetURL(URL(string: "fidelis://today"))'));
+  check("§36 NATIVE-002 (iOS): Info.plist registers the fidelis URL scheme",
+    infoPlist.includes("CFBundleURLTypes") && infoPlist.includes("<string>fidelis</string>"));
+
+  // FID-NATIVE-002 (Android): the scheme is filtered; the Mass widget carries mass.
+  check("§36 NATIVE-002 (Android): MainActivity filters the fidelis scheme",
+    manifest.includes('android:scheme="fidelis"'));
+  check("§36 NATIVE-002 (Android): the Mass widget opens fidelis://mass",
+    calJava.includes('Uri.parse("fidelis://mass")'));
+
+  // ── Security (FID-SEC-001 wording, FID-SEC-002 Report-Only CSP) ───────────────
+  check("§36 SEC-001: Settings names the build-time seal", settings.includes("verified at build"));
+  check("§36 SEC-001: About names the build-time seal, not a runtime check",
+    about.includes("Verified at build") && about.includes("build-time seal"));
+
+  check("§36 SEC-002: public/_headers ships a Report-Only CSP",
+    headers.includes("Content-Security-Policy-Report-Only"));
+  const preScript = /<script>([\s\S]*?)<\/script>/.exec(html);
+  const preHash = preScript
+    ? "sha256-" + createHash("sha256").update(preScript[1], "utf8").digest("base64")
+    : "";
+  check("§36 SEC-002: the CSP pins the EXACT pre-paint script hash (drift gate)",
+    !!preScript && headers.includes(`'${preHash}'`),
+    preHash ? `expected ${preHash} in _headers` : "no inline <script> in index.html");
+  check("§36 SEC-002: docs/SECURITY.md documents the CSP + integrity model",
+    existsSync(join(ROOT, "docs/SECURITY.md")));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;
