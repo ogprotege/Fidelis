@@ -167,6 +167,14 @@ expect("Seton suppressed by Epiphany Jan 4 2026 (USA)", !hasR(d(2026, 1, 4), "us
 expect("St. John Neumann Jan 5 2026 (USA)", hasR(d(2026, 1, 5), "usa", "Neumann"));
 expect("St. Kateri Tekakwitha Jul 14 2026 (USA)", hasR(d(2026, 7, 14), "usa", "Kateri"));
 expect("No Kateri in the universal calendar", !hasR(d(2026, 7, 14), "universal", "Kateri"));
+// v1.19.0 — St. Bonaventure (universal memorial, Doctor) was missing from the
+// sanctoral table, so Jul 15 resolved as a plain green feria (the "no Saint" bug).
+expect(
+  "St. Bonaventure Jul 15 2026 is a white memorial in both regions",
+  hasR(d(2026, 7, 15), "usa", "Bonaventure") &&
+    hasR(d(2026, 7, 15), "universal", "Bonaventure") &&
+    liturgicalDay(d(2026, 7, 15), "usa").color === "white"
+);
 expect("St. Peter Claver Sep 9 2026 (USA)", hasR(d(2026, 9, 9), "usa", "Claver"));
 expect(
   "Sts. Brébeuf and Jogues Oct 19 2026 (USA), red",

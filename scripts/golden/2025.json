@@ -3141,8 +3141,10 @@
    "season": "Ordinary Time",
    "label": "Tuesday of the Fifteenth Week in Ordinary Time",
    "week": 15,
-   "color": "green",
-   "cel": [],
+   "color": "white",
+   "cel": [
+    "Memorial: St. Bonaventure, Bishop and Doctor"
+   ],
    "groups": [
     [
      "OW15-2Tue 1",
@@ -9065,8 +9067,10 @@
    "season": "Ordinary Time",
    "label": "Tuesday of the Fifteenth Week in Ordinary Time",
    "week": 15,
-   "color": "green",
-   "cel": [],
+   "color": "white",
+   "cel": [
+    "Memorial: St. Bonaventure, Bishop and Doctor"
+   ],
    "groups": [
     [
      "OW15-2Tue 1",

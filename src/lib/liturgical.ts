@@ -201,6 +201,7 @@ const FIXED: { m: number; d: number; name: string; rank: Rank; color?: Liturgica
   { m: 6, d: 29, name: "Sts. Peter and Paul, Apostles", rank: "Solemnity", color: "red" },
   { m: 7, d: 3, name: "St. Thomas, Apostle", rank: "Feast", color: "red" },
   { m: 7, d: 11, name: "St. Benedict, Abbot", rank: "Memorial", color: "white" },
+  { m: 7, d: 15, name: "St. Bonaventure, Bishop and Doctor", rank: "Memorial", color: "white" },
   { m: 7, d: 16, name: "Our Lady of Mount Carmel", rank: "Memorial", color: "white", opt: true },
   { m: 7, d: 22, name: "St. Mary Magdalene", rank: "Feast", color: "white" },
   { m: 7, d: 25, name: "St. James, Apostle", rank: "Feast", color: "red" },

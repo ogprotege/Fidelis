@@ -6,8 +6,8 @@ import { expect, test } from "@playwright/test";
 test("Today loads its six cards and the Mass readings settle", async ({ page }) => {
   await page.goto("/#/");
   for (const h of [
+    "Today at Mass",
     "Today in the Church",
-    "Today in Church History",
     "Verse of the Day",
     "Quote of the Day",
     "The Holy Rosary",

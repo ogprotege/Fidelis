@@ -6,6 +6,84 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.19.0] — 2026-07-15 — men of renown
+
+*"Let us now praise men of renown, and our fathers in their generation." (Ecclesiasticus 44:1)*
+
+The Saint of the Day, made visible. The v1.18.0 "memory of the just" release added the saints
+and history corpora but surfaced the Saint only as a faint tappable memorial name — and even that
+failed on any day the calendar engine did not already celebrate. This release gives the Saint of
+the Day real presence, fixes the engine gap that hid it, and broadens the corpus across the whole
+calendar.
+
+### Fixed
+
+- **The Saint of the Day now appears (the "no Saint at all" bug).** St. Bonaventure (July 15), an
+  obligatory memorial of a Doctor of the Church, was missing from the engine's sanctoral table, so
+  the day resolved as a plain green feria and the Saint never showed. He is added; July 15 is now a
+  white memorial in both regions (`liturgical.ts`; golden re-blessed; explicit harness assertion).
+
+### Added
+
+- **The "Today in the Church" card.** The former "Today in Church History" card is reworked to lead
+  with the **Saint of the Day** — a gold monogram medallion, name, title, rank, dates, a blurb, the
+  patronage, and a "Read the life →" link to the full page — with the day's Church-history event
+  below a hairline. The Saint is now **decoupled from the sanctoral engine**: it shows on any day
+  for which a life exists, even a feria, not only on celebrated days.
+- **Corpus expansion.** The saints corpus grows from 10 to **53** lives and the history corpus from
+  8 to **15** events, spanning every month — drawn faithfully from public-domain sources (Catholic
+  Encyclopedia 1913; Butler's Lives of the Saints; the Jesuit Relations; *The Story of a Soul*),
+  each `verified: false` as a sourced draft pending human check (the §3.4 ledger). Truly modern
+  saints with no public-domain source are deliberately left for later rather than falsely cited.
+
+### Changed
+
+- **The Mass card is retitled "Today at Mass"** (its own home-screen-widget name), freeing the
+  "Today in the Church" banner for the Saint card and resolving the old near-duplicate with the
+  history card's title. The memorial name in the Mass card still links to the Saint's life.
+- **The native widget `calendar.json` is regenerated** — carrying St. Bonaventure on July 15 and
+  re-syncing the deterministic Quote-of-the-Day rotation to the current engine (the artifact had
+  been stale since v1.14.1). iOS/Android byte-parity holds; the fill is a seeded (mulberry32)
+  permutation, so the output is reproducible.
+
+### Release mechanics
+
+- iOS `MARKETING_VERSION` and Android `versionName` 1.18.5→1.19.0, `versionCode` 11805→11900. The
+  engine change re-blesses the golden snapshots (July 15 only); no service-worker change.
+
+## [1.18.5] — 2026-07-15 — the ancient bounds
+
+*"Pass not beyond the ancient bounds which thy fathers have set." (Proverbs 22:28)*
+
+A harness-hardening release — no application code, no behavior change. It closes the two items a
+post-ship adversarial review confirmed as the only loose threads after the v1.18.4 audit finish:
+a region policy that was explicit but unpinned, and a CSP drift-guard that watched the wrong file.
+The review found **no runtime bug** anywhere in the shipped v1.18.2–v1.18.4 code (widget deep
+links, the Report-Only CSP, and all nine P3 fixes verified correct).
+
+### Fixed
+
+- **The widget/Siri region is now harness-pinned (FID-NATIVE-001).** `build-calendar-widget.ts`
+  fixes `REGION = "usa"` by design (the widgets and Siri follow the USCCB calendar, documented in
+  the iOS guide's "Region policy"), but nothing turned `npm test` red if it were flipped —
+  precisely the gap the v1.18.4 pass recorded as a standing concern. A one-line source-shape guard
+  now pins it; verified to fail the suite if the region is changed to `universal`.
+- **The CSP drift-guard now also pins the *built* artifact (FID-SEC-002).** The §36 hash gate
+  computed the pre-paint script's sha256 from the *source* `index.html`, but the browser loads the
+  *built* `dist/index.html`. They are byte-identical today (Vite passes the inline script through
+  verbatim — recomputed and confirmed), so nothing was wrong; but the guard watched the file that
+  isn't shipped. It now additionally asserts, whenever a build exists, that `dist`'s pre-paint
+  script matches source — so a future HTML-transform that silently diverged them (invalidating the
+  shipped hash and the deferred enforcing-`<meta>` migration) turns red instead of sailing through.
+  Skipped on a bare `npm test` with no `dist`, so it never false-fails in CI.
+- **README version badge corrected.** It had drifted to 1.18.2 (the v1.18.3/v1.18.4 releases never
+  bumped it); now reads 1.18.5.
+
+### Release mechanics
+
+- iOS `MARKETING_VERSION` and Android `versionName` 1.18.4→1.18.5, `versionCode` 11804→11805. No
+  engine, data, golden, or service-worker change; no `dist`-shipped code change.
+
 ## [1.18.4] — 2026-07-15 — come and see
 
 *"Philip saith to him: Come and see." (John 1:46)*

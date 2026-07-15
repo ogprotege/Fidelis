@@ -1304,7 +1304,8 @@ check(
 );
 
 // Standing rule 2: the Today page renders exactly six cards (raised from five
-// in v1.18.0 "the memory of the just" for the Today in Church History card).
+// in v1.18.0 "the memory of the just"; in v1.19.0 the history card became the
+// Saint-led "Today in the Church" card and the Mass card became "Today at Mass").
 const homeSrc = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
 check(
   "Today page renders exactly six cards (standing rule 2)",
@@ -2428,6 +2429,12 @@ console.log("");
   const calBuilder = readFileSync(join(ROOT, "scripts/build-calendar-widget.ts"), "utf8");
   check("widget builder cites via formatLectionaryCitation (not bookDisplayName/translation)",
     calBuilder.includes("formatLectionaryCitation") && !calBuilder.includes("bookDisplayName"));
+  // FID-NATIVE-001: the widget/Siri calendar is pinned to the USCCB (USA) region
+  // by design (see docs/guides/IOS.md "Region policy"). Pin it here so a silent
+  // flip to "universal" — which would make the home-screen widgets and Siri
+  // disagree with the app's default calendar — turns npm test red.
+  check('widget builder is pinned to the USA region (FID-NATIVE-001)',
+    /const REGION = "usa" as const;/.test(calBuilder));
   // and the committed, generated widget data must carry no Douay-only book names
   for (const rel of ["ios/WidgetExtension/calendar.json", "android/app/src/main/res/raw/calendar.json"]) {
     const cal = readFileSync(join(ROOT, rel), "utf8");
@@ -2919,16 +2926,33 @@ console.log("");
         (e: { sources: { license: string }[]; verified: unknown }) =>
           e.sources.some((src) => src.license === "public-domain") && typeof e.verified === "boolean"
       ));
+  // v1.19.0 broadened coverage across the calendar (a floor, not a ceiling — the
+  // corpus keeps growing). Every id and MM-DD day must stay unique per corpus.
+  check("memory: the corpus covers a broad calendar (v1.19.0 expansion)",
+    allSaints.length >= 50 && allEvents.length >= 14,
+    `${allSaints.length} saints, ${allEvents.length} events`);
+  const saintIds = allSaints.map((x: { id: string }) => x.id);
+  const eventIds = allEvents.map((x: { id: string }) => x.id);
+  check("memory: saint and event ids are unique across the corpus",
+    new Set(saintIds).size === saintIds.length && new Set(eventIds).size === eventIds.length);
 
-  // Source-shape guards for the UI wiring.
+  // Source-shape guards for the UI wiring. v1.19.0 reworked the history card into
+  // the Saint-led "Today in the Church" card (Mass card → "Today at Mass").
   const home = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
   const app = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
   const dataLib = readFileSync(join(ROOT, "src/lib/data.ts"), "utf8");
-  check("memory: the Today in Church History card exists",
-    home.includes("Today in Church History"));
-  check("memory: the History card carries all four states (loading/ready/empty/failed)",
-    ["loading", "ready", "empty", "failed"].every((s) => home.includes(`historyState === "${s}"`)));
-  check("memory: the memorial name links to the Saint of the Day when matched",
+  check("memory: the 'Today in the Church' card leads with the Saint of the Day",
+    home.includes("Today in the Church") && home.includes("Saint of the Day"));
+  check("memory: the Mass card is now titled 'Today at Mass' (no title clash)",
+    home.includes("Today at Mass"));
+  check("memory: the card keeps the 'In Church History' section with all four states",
+    home.includes("In Church History") &&
+      ["loading", "ready", "empty", "failed"].every((s) => home.includes(`historyState === "${s}"`)));
+  check("memory: the Saint of the Day is decoupled from the sanctoral engine (any day with a life shows)",
+    home.includes("lit.celebrations.map((c) => c.name)") && home.includes("saintDay.saints[0]"));
+  check("memory: the Saint lead renders a monogram medallion and links to the life",
+    home.includes("saint-medallion") && home.includes("monogram(") && home.includes("Read the life"));
+  check("memory: the memorial name in the Mass card still links to the Saint of the Day",
     home.includes("saintForCelebration(saintDay.saints, [c.name])") &&
       home.includes("`/saint/${dayToday}/${s.id}`"));
   check("memory: loadSaints and loadHistory are memoized, retry-after-rejection loaders",
@@ -3314,6 +3338,19 @@ console.log("");
   check("§36 SEC-002: the CSP pins the EXACT pre-paint script hash (drift gate)",
     !!preScript && headers.includes(`'${preHash}'`),
     preHash ? `expected ${preHash} in _headers` : "no inline <script> in index.html");
+  // The hash above is computed from SOURCE index.html, but the browser loads the
+  // BUILT dist/index.html. Vite passes the attribute-less pre-paint <script>
+  // through verbatim, so they agree — pin that: when a build exists, assert the
+  // dist script is byte-identical to source, so a future HTML transform that
+  // diverged them (silently invalidating the shipped hash, and breaking the
+  // deferred enforcing-<meta> migration) turns red instead of sailing through.
+  // Skipped on a bare `npm test` with no dist (existsSync guard) — never a false red.
+  const distIndexPath = join(ROOT, "dist/index.html");
+  if (existsSync(distIndexPath)) {
+    const distScript = /<script>([\s\S]*?)<\/script>/.exec(readFileSync(distIndexPath, "utf8"));
+    check("§36 SEC-002: the built dist pre-paint script matches source (CSP hash stays valid)",
+      !!distScript && !!preScript && distScript[1] === preScript[1]);
+  }
   check("§36 SEC-002: docs/SECURITY.md documents the CSP + integrity model",
     existsSync(join(ROOT, "docs/SECURITY.md")));
 }
