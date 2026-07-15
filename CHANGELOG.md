@@ -6,6 +6,49 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.20.0] — 2026-07-15 — a great multitude
+
+*"After this, I saw a great multitude, which no man could number, of all nations and tribes and peoples and tongues, standing before the throne…" (Apocalypse 7:9)*
+
+A Saint of the Day for **every day of the year**, and a far richer chronicle. v1.19.0 gave the
+Saint a home on the Today page but a corpus of only 53 lives; most days still showed the calm
+"being gathered" placeholder. This release fills the calendar: **366 saints (one for every date,
+including Feb 29)** and **183 Church-history events** across 150 days, all drawn from public-domain
+sources — and, for saints too modern for one, from official Vatican biographies.
+
+### Added
+
+- **A saint for all 366 dates.** The saints corpus grows 53 → **366** — the principal Saint of the
+  Day for every calendar date, drawn from the General Roman Calendar and the Roman Martyrology. The
+  "Today in the Church" card is now populated year-round.
+- **A far fuller chronicle.** The history corpus grows 15 → **183** events across 150 days, each a
+  richer multi-paragraph account.
+
+### Changed
+
+- **The provenance gate now accepts an official-Church source.** Genuinely modern saints and events
+  (Maximilian Kolbe, Padre Pio, John Paul II, Faustina Kowalska, Edith Stein, Josephine Bakhita,
+  Maria Goretti, the Korean and Ugandan martyrs…) have **no public-domain biography** — so citing a
+  1913 encyclopedia for them would be a false footnote. A new `"church-official"` source license
+  (vatican.va), drawn faithfully and labelled honestly, sits alongside `"public-domain"`; the build
+  gate (`build-saints.mjs` / `build-history.mjs`) and harness now require at least one of the two.
+  Pre-1900 figures still stand on public-domain works (Catholic Encyclopedia 1913, Butler's *Lives*,
+  the Roman Martyrology); an honest label always beats a false citation.
+
+### Integrity
+
+- Every one of the 366 saints and 183 events is `verified: false` — a **sourced draft** pending
+  human verification against the cited edition (the §3.4 ledger). The content was drafted from the
+  standard reference works and audited for coverage, schema, unique ids, and sourcing, but a
+  proof-read remains the intended next step before any entry is marked verified.
+- Harness §35 now **requires a saint for every one of the 366 calendar dates** (a red build if any
+  day is missing) and accepts either accepted license.
+
+### Release mechanics
+
+- iOS `MARKETING_VERSION` and Android `versionName` 1.19.0→1.20.0, `versionCode` 11900→12000. No
+  engine, golden, or service-worker change — pure data + the sourcing-gate widening.
+
 ## [1.19.0] — 2026-07-15 — men of renown
 
 *"Let us now praise men of renown, and our fathers in their generation." (Ecclesiasticus 44:1)*

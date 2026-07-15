@@ -2899,10 +2899,14 @@ console.log("");
   check("memory: saintForCelebration returns null when no celebration matches",
     saintForCelebration(kateriDay.saints, ["Saint Nobody of Nowhere"]) === null);
 
-  // History: 07-14 holds two events, grouped and sorted oldest-first.
+  // History: 07-14 holds multiple events, grouped and sorted oldest-first (the
+  // build sorts by year ascending; the exact count grows as the corpus does).
   const hist0714 = JSON.parse(readFileSync(join(ROOT, "public/data/history/07-14.json"), "utf8"));
   check("memory: 07-14 history groups multiple events sorted oldest-first",
-    hist0714.events.length === 2 && hist0714.events[0].year < hist0714.events[1].year);
+    hist0714.events.length >= 2 &&
+      hist0714.events.every(
+        (e: { year: number }, i: number) => i === 0 || hist0714.events[i - 1].year <= e.year
+      ));
 
   // Every emitted entry, both corpora, carries a PD source and a verified flag
   // (the build gate; re-checked here on the sealed output).
