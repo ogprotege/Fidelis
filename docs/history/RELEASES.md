@@ -1231,6 +1231,68 @@ and were widened to what Chrome actually measures; and the first Mass-page run r
 async readings load, a test bug the second run fixed. Shells to 1.17.1/11701; no sw cache
 bump. Next: the storage/import-resilience batch.
 
+## The memory of the just (v1.18.0)
+
+*"The memory of the just is with praises: and the name of the wicked shall rot." (Proverbs 10:7)*
+**Two catechetical layers — the Saint of the Day and Today in Church History — sourced from the
+public domain, never paraphrased, keyed by the calendar.**
+
+The first release since the identity layer to add a genuinely new surface rather than close an
+audit finding — an owner request, designed to fit the app's grain rather than stretch it. The
+governing constraints were the app's own: nothing paraphrased by a machine (design spec §13), so
+the text is drawn from public-domain works (Butler's *Lives of the Saints*, the 1913 Catholic
+Encyclopedia) and every entry carries its footnote sources; nothing keyed to an identity the
+engine doesn't have, so the corpora key by the sanctoral "MM-DD" the way the quote cycle already
+does; and the Today page's discipline, which this release deliberately — and for the only time —
+loosens by one card.
+
+**The Saint of the Day.** The memorial name was already on the Today card ("St. Kateri
+Tekakwitha, Virgin"), inert. Now, when that day's saint has a life in the collection, the name
+becomes a quiet purple-affordance link — purple acts — to a full Saint page: title, rank, dates,
+the life in a few faithful paragraphs, what the saint is known for, patronage, the canonization,
+a public-domain prayer where one belongs, and a footnoted Sources block that says plainly when an
+entry is still a draft. The page reconciles to the day the engine actually resolved by matching
+the celebration name token-for-token (`saintForCelebration`, the `quotes.celebratesAuthor`
+pattern), so a regional or transferred feast never shows one name on the card and another on the
+page — the correctness the engine's id-less `Celebration` could not otherwise guarantee. The same
+chip lives on the Mass page, keyed to whatever date is being browsed.
+
+**Today in Church History.** This one earned a card — the sixth, set under the Mass card and
+before the Verse of the Day, exactly where the owner pictured it. It wears the four honest states
+v1.17.0 established: a skeleton that reserves its height, the lead event (year · title · a blurb
+trailing into an ellipsis) when the day has one, a calm "No entry is recorded for today yet." when
+the growing corpus does not — a resolved absence, not a failure — and a quiet offline notice.
+"Read more" opens the History page, every event for the date oldest-first, each with its fuller
+telling, its sources, and its share. A date may hold several years' events; the build groups and
+sorts them.
+
+**The pipeline, and the provenance gate.** Both corpora follow the quote layer's shape exactly:
+hand-edited `scripts/*.corpus.json` → a build script that validates every field, groups by date,
+and re-seals the manifest → lazy, memoized, retry-after-rejection loaders. The one addition is a
+gate this content demanded: **an entry that cites no public-domain source fails the build** — the
+§3.3 red-list's analog, enforcing at the pipeline what §13 asks of the text. `verified` counts
+drafts against checked entries, so the debt stays visible; the seed ships entirely `verified:
+false`, honestly flagged as drawn-but-unchecked against the named editions, to be verified (or
+replaced with faithful public-domain prose) as the corpus grows — the same draft→verified
+lifecycle the 47-quote corpus walked before v1.8.3 closed it.
+
+**The one loosened rule.** Standing rule 2 held the Today page at five cards through seventeen
+minor releases; the audit even made it executable (`test-data.ts` counts the cards). Raising it to
+six was therefore not a thing to do quietly. It is changed in the open and in one place-of-record
+after another — the harness guard, `CLAUDE.md`, `Home.tsx`, and the feature design spec all now
+say six, each noting the deliberate raise and its reason. The discipline behind the rule — earn a
+line, or a tab, before a card — is restated, not retired; this is the single exception, and the
+guard will hold the line at six.
+
+**The record.** Harness §33 tests the pure helpers (`dayKey`, `saintForCelebration`) as real
+logic and re-checks the sealed corpora (every entry stands on a public-domain source), plus
+source-shape guards for the six-card change, the card's four states, the chip, the loaders, and
+the routes. Verified end-to-end in a real browser at a pinned date: the six-card layout with
+History second, the card's states, the memorial chip linking to St. Kateri, both detail pages,
+the two-event ordering, share, and the graceful empty state on an unseeded date. Shells to
+1.18.0/11800; new `saints`/`history` bundle rows in the manifest; no engine, lectionary, golden,
+or service-worker change. The seed is small on purpose — the machinery is the deliverable; the
+memory grows.
 ## Both are preserved (v1.18.0)
 
 *"But new wine they put into new bottles: and both are preserved." (Matthew 9:17)*

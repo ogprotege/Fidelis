@@ -81,7 +81,8 @@ Reader falls back to the bundled Douay-Rheims when an import-only translation is
 **The identity system** lives in the day/night token blocks of `src/styles.css`; nothing outside
 them carries a raw hex. The **two-accent rule** is binding — **purple acts, gold honors**: `--purple`
 is every interactive/structural accent, `--gold` is the sacred marks (the ✠, quote-marks, the
-selected-verse rule), and no element wears both. The **Today page never exceeds five cards**.
+selected-verse rule), and no element wears both. The **Today page never exceeds six cards**
+(raised from five in v1.18.0 for Today in Church History).
 `src/App.tsx` is the single writer of `<html data-theme>` / `<html data-font>` / `<html data-accent>`
 (the `index.html` pre-paint script sets theme + font before React mounts, so there is no flash;
 `viewport-fit=cover` makes the `env(safe-area-inset-*)` insets resolve). `resolveTheme()`
@@ -185,5 +186,5 @@ One line per release. The unabridged narrative is
 ## Standing rules
 
 1. **Never hand-edit any file under `public/data/`.** The texts regenerate only via `scripts/build-data.mjs`.
-2. **The Today page never exceeds five cards.** A new feature earns a line inside an existing card or lives on another tab.
+2. **The Today page never exceeds six cards** (raised from five in v1.18.0 for Today in Church History). A new feature earns a line inside an existing card or lives on another tab before it earns a card.
 3. **Section 13 of the design spec (the refusal list) is binding:** no accounts or cloud sync, no AI summaries/paraphrase/chat, no social layer, no streaks/badges/progress theater, no ads or in-app purchases, no notification pressure, no red-letter text or inspirational stock imagery.

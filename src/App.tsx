@@ -7,6 +7,12 @@ import BookList from "./pages/BookList";
 import Reader from "./pages/Reader";
 import Readings from "./pages/Readings";
 import Search from "./pages/Search";
+import Library from "./pages/Library";
+import Translations from "./pages/Translations";
+import Settings from "./pages/Settings";
+import About from "./pages/About";
+import Saint from "./pages/Saint";
+import History from "./pages/History";
 import WidgetVotd from "./pages/WidgetVotd";
 
 /* v1.18.1 (audit FID-PERF-002): the worship-critical path — Today, the Reader,
@@ -219,6 +225,9 @@ export default function App() {
           <Route path="/translations" element={<Translations />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/about" element={<About />} />
+          <Route path="/saint/:day" element={<Saint />} />
+          <Route path="/saint/:day/:id" element={<Saint />} />
+          <Route path="/history/:day" element={<History />} />
           <Route path="*" element={<Home />} />
         </Routes>
         </Suspense>

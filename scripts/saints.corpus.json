@@ -1,0 +1,265 @@
+{
+  "note": "Hand-edited source corpus for the Saint of the Day layer (feature: the memory of the just). Build with `npm run saints` — never hand-edit public/data/saints. Every entry cites at least one public-domain source; text is drawn from those works, NOT AI-paraphrased. `verified` is false until the entry has been checked against the named edition (the §3.4 ledger convention). `day` is the sanctoral MM-DD on the USCCB/USA calendar where it differs (noted in sources).",
+  "saints": [
+    {
+      "id": "kateri-tekakwitha",
+      "day": "07-14",
+      "name": "St. Kateri Tekakwitha",
+      "title": "Virgin",
+      "rank": "Memorial",
+      "bornYear": "1656",
+      "diedYear": "1680",
+      "shortBlurb": "The “Lily of the Mohawks,” a young Mohawk-Algonquin convert of New France whose purity and penance shone amid great opposition, and the first Native American…",
+      "biography": [
+        "Kateri Tekakwitha was born in 1656 at Ossernenon, in the Mohawk country of what is now upstate New York, the daughter of a Mohawk chief and a Christian Algonquin mother. Smallpox in her childhood killed her parents and left her face scarred and her eyesight weak. She was baptized by the Jesuit missionary Jacques de Lamberville on Easter of 1676.",
+        "For her faith she met scorn and threats from her own people, and about 1677 she fled some two hundred miles to the Christian mission of Kahnawake, near Montreal. There she gave herself to prayer, penance, and the care of the sick and aged, taking a vow of perpetual virginity. She died on 17 April 1680; witnesses reported that the scars vanished from her face soon after death."
+      ],
+      "knownFor": "Heroic purity, penance, and constancy under persecution among the Mohawk of New France.",
+      "patronage": ["ecology and the environment", "Native and Indigenous peoples", "people in exile", "the loss of parents"],
+      "canonization": {
+        "beatified": "1980 by Pope John Paul II",
+        "canonized": "2012 by Pope Benedict XVI — the first Native American saint"
+      },
+      "prayer": null,
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “Catherine Tekakwitha”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" },
+        { "text": "USCCB liturgical calendar — optional memorial, 14 July (USA); the general Roman calendar keeps her on 17 April", "license": "reference" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "bonaventure",
+      "day": "07-15",
+      "name": "St. Bonaventure",
+      "title": "Bishop and Doctor of the Church",
+      "rank": "Memorial",
+      "bornYear": "c. 1221",
+      "diedYear": "1274",
+      "shortBlurb": "The “Seraphic Doctor,” Franciscan Minister General and cardinal, who wed learning to love and wrote the classic ascent of the soul to God…",
+      "biography": [
+        "Born at Bagnoregio in Tuscany about 1221, John of Fidanza — called Bonaventure — entered the Order of Friars Minor and studied at Paris alongside Thomas Aquinas. Elected Minister General of the Franciscans in 1257, he governed and reformed the order so wisely that he is often called its “second founder,” and he composed the standard life of St. Francis, the Legenda Maior.",
+        "He was named Cardinal Bishop of Albano and took a leading part in the Second Council of Lyons, which sought reunion with the Greek Church; he died during the council in 1274. His writings, above all The Journey of the Mind to God, unite theology and mysticism, earning him the title Doctor Seraphicus."
+      ],
+      "knownFor": "Uniting rigorous theology with Franciscan mysticism; reforming and shaping the Friars Minor.",
+      "patronage": ["theologians", "the Franciscan order"],
+      "canonization": {
+        "beatified": "",
+        "canonized": "1482 by Pope Sixtus IV; declared a Doctor of the Church in 1588 by Pope Sixtus V"
+      },
+      "prayer": null,
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “St. Bonaventure”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" },
+        { "text": "Butler, Lives of the Saints (1866 ed.), 14 July", "license": "public-domain" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "thomas-aquinas",
+      "day": "01-28",
+      "name": "St. Thomas Aquinas",
+      "title": "Priest and Doctor of the Church",
+      "rank": "Memorial",
+      "bornYear": "1225",
+      "diedYear": "1274",
+      "shortBlurb": "The “Angelic Doctor,” Dominican friar whose Summa Theologiae joined faith and reason so profoundly that the Church has held him up as a master of theology…",
+      "biography": [
+        "Born about 1225 at Roccasecca near Aquino, Thomas joined the Order of Preachers against his family’s wishes and studied under St. Albert the Great. He taught at Paris and in Italy, producing the Summa contra Gentiles and the unfinished Summa Theologiae, works that set out the Catholic faith with unmatched order and depth.",
+        "Late in life, after a mystical experience at Mass, he laid down his pen, saying all he had written seemed “as straw.” He died on 7 March 1274 on the way to the Council of Lyons. His feast is kept on 28 January, the translation of his relics."
+      ],
+      "knownFor": "The synthesis of faith and reason; the Summa Theologiae; Eucharistic hymns such as the Pange Lingua.",
+      "patronage": ["students", "universities and schools", "theologians", "booksellers"],
+      "canonization": {
+        "beatified": "",
+        "canonized": "1323 by Pope John XXII; declared a Doctor of the Church in 1567 by Pope St. Pius V"
+      },
+      "prayer": null,
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “St. Thomas Aquinas”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" },
+        { "text": "Butler, Lives of the Saints (1866 ed.), 7 March", "license": "public-domain" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "augustine-of-hippo",
+      "day": "08-28",
+      "name": "St. Augustine of Hippo",
+      "title": "Bishop and Doctor of the Church",
+      "rank": "Memorial",
+      "bornYear": "354",
+      "diedYear": "430",
+      "shortBlurb": "Bishop of Hippo and the West’s greatest theologian, whose restless heart found rest in God at last and left the Church the Confessions and the City of God…",
+      "biography": [
+        "Born in 354 at Thagaste in North Africa to St. Monica, Augustine pursued rhetoric and philosophy and for years resisted the faith, falling in with the Manichaeans. Through the preaching of St. Ambrose at Milan and his mother’s prayers he was converted, and was baptized at Easter of 387.",
+        "Ordained and made Bishop of Hippo, he defended the faith against Manichaeans, Donatists, and Pelagians, and wrote works that shaped Western thought for a thousand years — above all the Confessions and The City of God. He died in 430 as the Vandals besieged his city."
+      ],
+      "knownFor": "The Confessions; the doctrine of grace; the City of God.",
+      "patronage": ["theologians", "printers", "brewers"],
+      "canonization": {
+        "beatified": "",
+        "canonized": "Pre-Congregation; declared a Doctor of the Church in 1298 by Pope Boniface VIII"
+      },
+      "prayer": null,
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “St. Augustine of Hippo”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" },
+        { "text": "Butler, Lives of the Saints (1866 ed.), 28 August", "license": "public-domain" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "jerome",
+      "day": "09-30",
+      "name": "St. Jerome",
+      "title": "Priest and Doctor of the Church",
+      "rank": "Memorial",
+      "bornYear": "c. 347",
+      "diedYear": "420",
+      "shortBlurb": "The fiery scholar of Bethlehem who gave the Latin Church its Bible, the Vulgate, translating the Scriptures from the original tongues…",
+      "biography": [
+        "Born about 347 at Stridon in Dalmatia, Jerome was schooled in Rome and became the most learned scripture scholar of his age, mastering Latin, Greek, and Hebrew. At the request of Pope St. Damasus he undertook to revise and translate the Bible into Latin, the version that became the Vulgate.",
+        "He settled at Bethlehem, near the place of the Lord’s birth, where he wrote commentaries, defended the faith, and guided a community of monks and holy women until his death about 420. He is often shown with a lion, a skull, and his books."
+      ],
+      "knownFor": "The Vulgate; scripture scholarship; “Ignorance of Scripture is ignorance of Christ.”",
+      "patronage": ["translators", "librarians", "scripture scholars"],
+      "canonization": {
+        "beatified": "",
+        "canonized": "Pre-Congregation; named a Doctor of the Church in 1298 by Pope Boniface VIII"
+      },
+      "prayer": null,
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “St. Jerome”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" },
+        { "text": "Butler, Lives of the Saints (1866 ed.), 30 September", "license": "public-domain" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "francis-of-assisi",
+      "day": "10-04",
+      "name": "St. Francis of Assisi",
+      "title": "Religious",
+      "rank": "Feast",
+      "bornYear": "1181",
+      "diedYear": "1226",
+      "shortBlurb": "The Poverello of Assisi, who wedded Lady Poverty, founded the Friars Minor, and bore in his own flesh the wounds of the Crucified…",
+      "biography": [
+        "Born about 1181 to a wealthy cloth merchant of Assisi, Francis renounced his inheritance to follow Christ in poverty, hearing in a ruined chapel the command to “rebuild my church.” Companions gathered, and in 1209 Pope Innocent III approved his rule, the beginning of the Order of Friars Minor.",
+        "He preached penance and peace, loved all creatures as God’s handiwork, and composed the Canticle of the Sun. On Mount La Verna in 1224 he received the stigmata, the first recorded bearer of the wounds of Christ. He died at the Portiuncula on 3 October 1226."
+      ],
+      "knownFor": "Radical poverty; love of creation; the stigmata; the first Christmas crèche.",
+      "patronage": ["ecology and animals", "Italy", "merchants"],
+      "canonization": {
+        "beatified": "",
+        "canonized": "1228 by Pope Gregory IX"
+      },
+      "prayer": null,
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “St. Francis of Assisi”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" },
+        { "text": "Butler, Lives of the Saints (1866 ed.), 4 October", "license": "public-domain" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "mary-magdalen",
+      "day": "07-22",
+      "name": "St. Mary Magdalen",
+      "title": "Disciple of the Lord",
+      "rank": "Feast",
+      "bornYear": "1st century",
+      "diedYear": "1st century",
+      "shortBlurb": "Freed of seven demons, faithful at the Cross and first to the empty tomb, she was sent by the Risen Lord to tell the Apostles — the apostola apostolorum…",
+      "biography": [
+        "Mary of Magdala, a town on the Sea of Galilee, was healed by the Lord of seven demons and followed him with the women who ministered to him. She stood by the Cross when most had fled and came to the tomb on the first day of the week.",
+        "There the Risen Christ appeared to her first and sent her to announce his resurrection to the Apostles, so that the Fathers call her “the apostle to the apostles.” In 2016 her ancient memorial was raised to a feast."
+      ],
+      "knownFor": "First witness of the Resurrection; the apostola apostolorum.",
+      "patronage": ["penitents", "contemplatives", "perfumers"],
+      "canonization": {
+        "beatified": "",
+        "canonized": "Pre-Congregation"
+      },
+      "prayer": null,
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “St. Mary Magdalen”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" },
+        { "text": "Butler, Lives of the Saints (1866 ed.), 22 July", "license": "public-domain" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "patrick",
+      "day": "03-17",
+      "name": "St. Patrick",
+      "title": "Bishop",
+      "rank": "Optional Memorial",
+      "bornYear": "5th century",
+      "diedYear": "5th century",
+      "shortBlurb": "Carried off to Ireland as a slave and returning as its bishop, he won a nation to Christ and left behind his own Confession of God’s mercy…",
+      "biography": [
+        "Born in Roman Britain in the fifth century, Patrick was seized by raiders at sixteen and enslaved in Ireland, where in his hardship he turned to God. Escaping home, he was later ordained and returned as a bishop to the land of his captivity.",
+        "He preached tirelessly across Ireland, baptizing, ordaining clergy, and founding churches, and he recorded God’s dealings with him in his Confessio, one of the earliest documents of the Irish Church. He is honored as the apostle of Ireland."
+      ],
+      "knownFor": "The evangelization of Ireland; the Confessio; the “Breastplate” prayer attributed to him.",
+      "patronage": ["Ireland", "engineers", "against snakes"],
+      "canonization": {
+        "beatified": "",
+        "canonized": "Pre-Congregation"
+      },
+      "prayer": null,
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “St. Patrick”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" },
+        { "text": "Butler, Lives of the Saints (1866 ed.), 17 March", "license": "public-domain" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "agnes",
+      "day": "01-21",
+      "name": "St. Agnes",
+      "title": "Virgin and Martyr",
+      "rank": "Memorial",
+      "bornYear": "c. 291",
+      "diedYear": "c. 304",
+      "shortBlurb": "A Roman girl of about thirteen who gave her life rather than her virginity, and whose name has been honored in the Church’s prayers ever since…",
+      "biography": [
+        "Agnes was a Roman maiden of about thirteen, of a noble Christian family, who in the persecution of Diocletian refused marriage and sacrifice to the idols, professing Christ as her only spouse. For this she was put to death about the year 304.",
+        "Her tomb on the Via Nomentana became one of Rome’s most venerated shrines, and her name was placed in the Canon of the Mass. Each year on her feast two lambs are blessed, from whose wool the pallia of archbishops are woven."
+      ],
+      "knownFor": "Virgin-martyr of the early Roman Church; her name in the Roman Canon.",
+      "patronage": ["young girls", "chastity", "the Children of Mary"],
+      "canonization": {
+        "beatified": "",
+        "canonized": "Pre-Congregation"
+      },
+      "prayer": null,
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “St. Agnes of Rome”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" },
+        { "text": "Butler, Lives of the Saints (1866 ed.), 21 January", "license": "public-domain" }
+      ],
+      "verified": false
+    },
+    {
+      "id": "lawrence",
+      "day": "08-10",
+      "name": "St. Lawrence",
+      "title": "Deacon and Martyr",
+      "rank": "Feast",
+      "bornYear": "c. 225",
+      "diedYear": "258",
+      "shortBlurb": "A deacon of Rome who, ordered to hand over the Church’s treasures, gathered the poor and said, “These are the treasures of the Church”…",
+      "biography": [
+        "Lawrence was one of the seven deacons of Rome under Pope St. Sixtus II, charged with the care of the Church’s goods and the poor. In the persecution of Valerian in 258, commanded by the prefect to surrender the Church’s wealth, he distributed it to the needy and presented the poor of the city as its true treasure.",
+        "For this he was put to death, and ancient tradition holds that he was roasted on a gridiron. His courage and cheerfulness in death made him one of the most honored martyrs of Rome, and his name too stands in the Canon of the Mass."
+      ],
+      "knownFor": "“The treasures of the Church are the poor”; martyrdom on the gridiron.",
+      "patronage": ["deacons", "cooks", "the poor"],
+      "canonization": {
+        "beatified": "",
+        "canonized": "Pre-Congregation"
+      },
+      "prayer": null,
+      "sources": [
+        { "text": "Catholic Encyclopedia (1913), “St. Lawrence”", "license": "public-domain", "url": "https://www.newadvent.org/cathen/" },
+        { "text": "Butler, Lives of the Saints (1866 ed.), 10 August", "license": "public-domain" }
+      ],
+      "verified": false
+    }
+  ]
+}

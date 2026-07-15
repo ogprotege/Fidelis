@@ -13,7 +13,7 @@
 
 The Catena app earns its place on your phone with one trick: everything you touch daily is one tap deep, and everything scholarly is one tap deeper, collapsed until wanted. Fidelis adopts that as a hard rule, stated so it can be enforced in code review:
 
-1. **The Today page holds five cards, never more.** A new feature does not get a new card; it earns a line inside an existing card or it lives on another tab.
+1. **The Today page holds a fixed, small number of cards, never more.** A new feature does not get a new card; it earns a line inside an existing card or it lives on another tab. *(Superseded 2026-07-15, v1.18.0: the cap was deliberately raised from five to **six** for the Today in Church History card — the only such raise; the discipline holds.)*
 2. **Every deep feature ships collapsed.** Commentary, cross-links, Latin texts: present, discoverable, silent until summoned.
 3. **First launch requires zero decisions.** No onboarding carousel, no account, no permission prompts. The user lands on Today and reads.
 4. **The grandmother test.** If a feature needs explanation, it fails. If a control needs a label longer than two words, it fails.
@@ -229,7 +229,7 @@ Three to five days, most of it index compilation.
 
 ## 6. THE TODAY PAGE, EVOLVED WITHOUT GROWING
 
-Five cards, fixed, in this order:
+Five cards, fixed, in this order (a sixth — **Today in Church History** — was added in v1.18.0; see the note in Section 0):
 
 1. **Verse of the Day** (as now, restyled; gold quotation marks).
 2. **Quote of the Day** (Section 3).
@@ -323,7 +323,7 @@ The creed deserves a visible apparatus. On About:
 | **v2.0 — The library** | Catechism module (Baltimore + Roman Catechism bundled, CCC importable); LibriVox Douay audio; additional widgets and App Intents | scoped per item |
 | **v2.x — The patrimony** | 1962 calendar toggle; conciliar-document links; parish-embeddable readings widget | scoped per item |
 
-Each release is independently shippable, and each leaves the Today page at exactly five cards.
+Each release is independently shippable, and each leaves the Today page at its fixed card count (five through v1.17.x; six from v1.18.0 — see Section 0).
 
 ---
 
