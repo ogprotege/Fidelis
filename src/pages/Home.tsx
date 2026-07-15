@@ -53,6 +53,10 @@ export default function Home() {
   const [share, setShare] = useState<
     { text: string; citation: string; source?: string; filename: string } | null
   >(null);
+  // The translation whose text the VOTD card actually shows (VerseQuote may
+  // fall back to drc) — the citation and Reader link must follow the text,
+  // never an unavailable ask (FID-FUNC-004).
+  const [votdShown, setVotdShown] = useState(translation);
   useEffect(() => {
     let alive = true;
     readingsForDate(today)
@@ -82,8 +86,8 @@ export default function Home() {
     day: "numeric"
   });
 
-  const readerLink = (book: string, chapter: number, verse?: number) =>
-    `/read/${translation}/${book}/${chapter}${verse ? `?v=${verse}` : ""}`;
+  const readerLink = (book: string, chapter: number, verse?: number, t: string = translation) =>
+    `/read/${t}/${book}/${chapter}${verse ? `?v=${verse}` : ""}`;
 
   async function shareVotd() {
     // An import-only translation that isn't imported (or an offline miss) must
@@ -184,10 +188,12 @@ export default function Home() {
             verse={votd.verse}
             endVerse={votd.endVerse}
             className="votd-text"
+            onShownTranslation={setVotdShown}
           />
           <div className="votd-ref">
-            <Link to={readerLink(votd.book, votd.chapter, votd.verse)}>
-              {formatVotdRef(votd, bookDisplayName(votdBook, translation))}
+            <Link to={readerLink(votd.book, votd.chapter, votd.verse, votdShown)}>
+              {formatVotdRef(votd, bookDisplayName(votdBook, votdShown))}
+              {votdShown !== translation && ` · ${getTranslation(votdShown)?.abbrev}`}
             </Link>
             {votd.book === "psalms" && " · Vulgate Psalm numbering"}
           </div>

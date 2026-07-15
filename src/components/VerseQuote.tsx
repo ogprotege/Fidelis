@@ -11,6 +11,12 @@ interface Props {
   verse: number;
   endVerse?: number;
   className?: string;
+  /** Reports which translation's text actually rendered (the request, or the
+   *  drc fallback), so the parent's citation and Reader link can follow the
+   *  text instead of the ask (FID-FUNC-004). Pass a state setter — its stable
+   *  identity keeps this out of the load effect's dependencies. Never feed
+   *  the reported value back into the `translation` prop. */
+  onShownTranslation?: (t: string) => void;
 }
 
 /**
@@ -18,7 +24,15 @@ interface Props {
  * falling back to the bundled Douay-Rheims when the requested one won't load —
  * the same convention the Reader and the Home-page share path follow.
  */
-export default function VerseQuote({ translation, book, chapter, verse, endVerse, className }: Props) {
+export default function VerseQuote({
+  translation,
+  book,
+  chapter,
+  verse,
+  endVerse,
+  className,
+  onShownTranslation
+}: Props) {
   const [text, setText] = useState<string | null>(null);
   // The translation whose text is actually on screen — it may be the drc
   // fallback, and the lang attribute must describe the text shown, not the ask.
@@ -34,6 +48,7 @@ export default function VerseQuote({ translation, book, chapter, verse, endVerse
       .then((data) => {
         if (!alive) return;
         setText(passageText(data, chapter, verse, endVerse));
+        onShownTranslation?.(translation);
       })
       .catch(() => {
         // An import-only translation (NABRE, RSV-2CE, …) not yet imported
@@ -49,12 +64,16 @@ export default function VerseQuote({ translation, book, chapter, verse, endVerse
             if (!alive) return;
             setShownTranslation("drc");
             setText(passageText(data, chapter, verse, endVerse));
+            onShownTranslation?.("drc");
           })
           .catch(() => alive && setError(true));
       });
     return () => {
       alive = false;
     };
+    // onShownTranslation is notification-only (a stable state setter);
+    // re-running the load on a parent re-render would flash the skeleton.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [translation, book, chapter, verse, endVerse]);
 
   if (error) return <p className={className}>—</p>;

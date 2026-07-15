@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import VerseQuote from "./VerseQuote";
 import { getBook, bookDisplayName } from "../lib/canon";
 import { Mystery } from "../lib/rosary";
 import { PRAYERS } from "../lib/prayers";
+import { getTranslation } from "../lib/translations";
 
 interface Props {
   mystery: Mystery;
@@ -17,7 +19,10 @@ interface Props {
 export default function MysterySheet({ mystery, translation, titleId }: Props) {
   const [book, chapter, start] = mystery.ref;
   const end = mystery.end;
-  const name = bookDisplayName(getBook(book)!, translation);
+  // The translation the passage actually rendered in (VerseQuote may fall
+  // back to drc) — the cite and the Reader link follow the text shown.
+  const [shown, setShown] = useState(translation);
+  const name = bookDisplayName(getBook(book)!, shown);
   const range = end && end !== start ? `${start}–${end}` : `${start}`;
 
   return (
@@ -25,6 +30,7 @@ export default function MysterySheet({ mystery, translation, titleId }: Props) {
       <h2 id={titleId} className="mystery-sheet-title">{mystery.title}</h2>
       <div className="mystery-sheet-cite muted small sans">
         {name} {chapter}:{range}
+        {shown !== translation && ` · ${getTranslation(shown)?.abbrev}`}
         {book === "psalms" && " · Vulgate Psalm numbering"}
       </div>
       <VerseQuote
@@ -34,8 +40,9 @@ export default function MysterySheet({ mystery, translation, titleId }: Props) {
         verse={start}
         endVerse={end}
         className="mystery-sheet-passage"
+        onShownTranslation={setShown}
       />
-      <Link className="mref" to={`/read/${translation}/${book}/${chapter}?v=${start}`}>
+      <Link className="mref" to={`/read/${shown}/${book}/${chapter}?v=${start}`}>
         Read in context →
       </Link>
 

@@ -1019,6 +1019,74 @@ cache bump — no shell asset changed. Still open from the audit's release-safet
 mac-bound: the stale App Store screenshots (FID-REL-001) gate any 1.16.x store submission,
 and the §10 device-acceptance checklist awaits real hardware.
 
+## A just weight (v1.16.2)
+
+*"A deceitful balance is an abomination before the Lord: and a just weight is his will."
+(Proverbs 11:1)*
+**The correctness batch — five surfaces that disagreed with each other, or with the truth,
+now agree.**
+
+The second release cut from the verified 2026-07-15 audit (the first, v1.16.1, reconciled the
+release layer). These are the audit's core-correctness findings — the ones a reader can hit on
+an ordinary day. No engine, data, or golden change; no service-worker cache bump (the shell is
+network-first — hashed JS reaches installed PWAs on the next online visit, the v1.15.1
+precedent).
+
+**Search told a falsehood under load (FID-FUNC-001).** The scan stopped the moment 300 matches
+accumulated — in canonical order, so the Old Testament always ate the cap first — and the
+section chips then counted only that truncated array. A DRB search for *mercy* claimed
+**New Testament: 0** while Matthew 5:7 sat unscanned. Now the sweep always covers all 78 books
+and the counts are exact tallies over every match; only the *rendered* list is bounded — and
+bounded **per section**, so the New Testament list keeps filling after the overall cap is full
+(that per-section fill is precisely what makes the fix real, and harness §29 pins it with the
+collector's load-bearing case). The same honesty extends to the frame around the numbers: the
+count line gives the exact total and admits truncation ("Showing the first 300 in this
+section."), "No verses in this section." appears only when the true count is zero, and a failed
+sweep no longer renders chips at all — a partial tally presented as exact would be the same lie
+in a new place. The collector lives as pure functions in `src/lib/search.ts`
+(`groupsOf`, `emptyGroupedHits`, `addHit`, `snapshotGroupedHits` — counts never capped, lists
+capped, snapshots for React streaming), built on the existing `inFilter` so the partition can
+never drift from the chips. Measured on the real corpus: *mercy* → All 434 · OT 377 · NT 57 ·
+Gospels 22, first NT hit Matthew 5:7 — "Blessed are the merciful."
+
+**The Reader adopted translations it could not read (FID-FUNC-002).** Persistence was gated on
+the route naming a real book, not on the text arriving — so selecting unimported NABRE showed
+the honest error page while quietly writing `translation: "nabre"` into settings and lastRead,
+poisoning Today, Search, the book list, and the continue-reading pointer. The one effect split
+in two: the navigation resets (close the selection, close every sheet) still fire on every
+route change, but `saveLastRead` + the default-translation write now run only when the loaded
+data's **own identity** matches the route (`data.translation`/`data.book` — fields both the
+bundled corpus and the IndexedDB import path carry). That identity guard is what makes the
+timing airtight: a naive data-keyed effect would persist book B's route in the commit where
+book A's text is still in hand. Verified in the browser: the failed NABRE selection leaves
+storage untouched; the successful DRC read persists normally.
+
+**Bookmarks, quotes, and citations follow the text, not the ask (FID-FUNC-003, FID-FUNC-004).**
+A CPDV bookmark opened under whatever the current default happened to be; now `refLink` carries
+the bookmark's own saved translation (with a quiet ` · CPDV` tag when it differs), while
+highlights and notes stay passage-level by design. And the Verse of the Day card could show
+Douay-Rheims fallback text under a citation and link that both claimed NABRE — the link landing
+on the Reader's error page. `VerseQuote` now reports what it actually rendered
+(`onShownTranslation`, fired on both resolution paths, received as a bare state setter so it
+stays out of the load effect's dependencies), and the Today card, the rosary mystery sheet, and
+the embeddable VOTD widget all follow the shown translation in their cite and link — the
+convention the Share path had already established alone.
+
+**A past finish date built a fifty-chapter day (FID-FUNC-007).** `targetDateToPerDay` clamps a
+negative duration to one day, so "finish by 2020" silently created a plan demanding the whole
+selection at once. The date input now floors at tomorrow (computed per render — a constant
+would go stale at midnight), and submit validation keeps the form with a quiet inline
+`role="alert"` error for a past, today, or — tightened from the old silent per-day fallback —
+empty date. The engine helper is untouched; `liturgical.ts`'s `isoKey` stays unexported (an
+engine file has no business in this diff), the two-line local-date helper living in the page.
+
+**The record.** Harness §29 (real collector logic) + §30 (source-shape pins for all five
+fixes); every fix also verified end-to-end in a real browser against the built app (eleven
+checks: chips, counts, truncation, storage integrity, fallback citation/link, date floor,
+inline error). Shells to 1.16.2/11602. Still open from the audit, next in line: the Reader
+action-bar redesign (FID-UX-001, the last P1), the Today/Mass honest-failure states, and the
+import-atomicity batch.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

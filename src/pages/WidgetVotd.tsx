@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import VerseQuote from "../components/VerseQuote";
@@ -18,6 +19,9 @@ export default function WidgetVotd() {
 
   const votd = verseOfTheDay();
   const book = getBook(votd.book)!;
+  // Even a bundled book can miss offline-uncached; the citation follows the
+  // text VerseQuote actually rendered (FID-FUNC-004).
+  const [shown, setShown] = useState(translation);
 
   return (
     <div className="widget-votd">
@@ -29,10 +33,11 @@ export default function WidgetVotd() {
         verse={votd.verse}
         endVerse={votd.endVerse}
         className="votd-text"
+        onShownTranslation={setShown}
       />
       <div className="votd-ref">
-        {formatVotdRef(votd, bookDisplayName(book, translation))} (
-        {getTranslation(translation)?.abbrev})
+        {formatVotdRef(votd, bookDisplayName(book, shown))} (
+        {getTranslation(shown)?.abbrev})
       </div>
     </div>
   );

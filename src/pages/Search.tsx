@@ -3,17 +3,18 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { BOOKS, bookDisplayName, getBook } from "../lib/canon";
 import { loadBook } from "../lib/data";
 import { parseReference } from "../lib/refparse";
-import { GroupFilter, inFilter } from "../lib/search";
+import {
+  GroupFilter,
+  GroupedHits,
+  addHit,
+  emptyGroupedHits,
+  snapshotGroupedHits
+} from "../lib/search";
 import { TRANSLATIONS } from "../lib/translations";
 import { useSettings } from "../SettingsContext";
 
-interface Result {
-  book: string;
-  chapter: number;
-  verse: number;
-  text: string;
-}
-
+/** Per-SECTION display cap. Counts are exact over the whole scan; only the
+ *  rendered list is bounded, so a chip can never claim zero falsely. */
 const MAX_RESULTS = 300;
 
 const CHIPS: { key: GroupFilter; label: string }[] = [
@@ -38,7 +39,7 @@ export default function Search() {
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState(() => params.get("q") ?? "");
   const [translation, setTranslation] = useState(() => params.get("t") || settings.translation);
-  const [results, setResults] = useState<Result[]>([]);
+  const [results, setResults] = useState<GroupedHits>(emptyGroupedHits);
   const [progress, setProgress] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   // A failed sweep must never masquerade as "No verses found" — offline, that
@@ -74,8 +75,10 @@ export default function Search() {
 
     const id = ++runId.current;
     const needle = fold(q);
-    const found: Result[] = [];
-    setResults([]);
+    // Every book is scanned — the counts must be the whole truth, so there is
+    // no early exit; only the per-section display lists are capped (FID-FUNC-001).
+    const acc = emptyGroupedHits();
+    setResults(emptyGroupedHits());
     setSearched(true);
     setError(null);
     setRanNeedle(needle);
@@ -88,14 +91,13 @@ export default function Search() {
         data.chapters.forEach((ch, ci) => {
           ch.forEach((text, vi) => {
             if (!text) return; // grid-empty slot (see data-report.txt)
-            if (found.length < MAX_RESULTS && fold(text).includes(needle)) {
-              found.push({ book: b.slug, chapter: ci + 1, verse: vi + 1, text });
+            if (fold(text).includes(needle)) {
+              addHit(acc, { book: b.slug, chapter: ci + 1, verse: vi + 1, text }, MAX_RESULTS);
             }
           });
         });
         if (runId.current !== id) return;
-        setResults([...found]);
-        if (found.length >= MAX_RESULTS) break;
+        setResults(snapshotGroupedHits(acc));
       } catch {
         if (runId.current !== id) return;
         setProgress(null);
@@ -153,7 +155,7 @@ export default function Search() {
   }, []);
 
   const tooShort = query.trim().length < 2;
-  const shown = results.filter((r) => inFilter(r.book, group));
+  const shown = results.lists[group];
 
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
@@ -195,12 +197,18 @@ export default function Search() {
       )}
       {!progress && !error && searched && (
         <div className="search-progress">
-          {results.length === 0
+          {results.counts.all === 0
             ? "No verses found."
-            : `${results.length}${results.length >= MAX_RESULTS ? "+" : ""} verses found.`}
+            : `${results.counts.all} verses found.${
+                results.counts[group] > shown.length
+                  ? ` Showing the first ${MAX_RESULTS} in this section.`
+                  : ""
+              }`}
         </div>
       )}
-      {!progress && results.length > 0 && (
+      {/* A failed sweep must not present its partial tally as exact — the
+          chips render only after a complete, error-free scan. */}
+      {!progress && !error && results.counts.all > 0 && (
         <div className="search-chips" role="group" aria-label="Filter results by section">
           {CHIPS.map((c) => (
             <button
@@ -217,10 +225,7 @@ export default function Search() {
                 }
               }}
             >
-              {c.label}{" "}
-              <span className="chip-count">
-                {results.filter((r) => inFilter(r.book, c.key)).length}
-              </span>
+              {c.label} <span className="chip-count">{results.counts[c.key]}</span>
             </button>
           ))}
         </div>
@@ -238,7 +243,7 @@ export default function Search() {
           </div>
         );
       })}
-      {!progress && results.length > 0 && shown.length === 0 && (
+      {!progress && !error && results.counts.all > 0 && results.counts[group] === 0 && (
         <div className="search-progress">No verses in this section.</div>
       )}
     </div>
