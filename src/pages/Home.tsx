@@ -45,6 +45,10 @@ export default function Home() {
   const plan = activePlan();
   const planPortion = plan && !isComplete(plan) ? todayPortion(plan) : [];
   const [mass, setMass] = useState<DayReadings | null>(null);
+  // Mirror quoteFailed: the Mass list must never look complete while missing,
+  // nor leave the skeleton shimmering forever (audit FID-FUNC-006).
+  const [massFailed, setMassFailed] = useState(false);
+  const [massRetry, setMassRetry] = useState(0);
   const [quote, setQuote] = useState<DailyQuote | null>(null);
   // Distinguish "still loading" (skeleton) from "failed" (a quiet notice) —
   // otherwise an offline load leaves the skeleton shimmering forever.
@@ -57,11 +61,28 @@ export default function Home() {
   // fall back to drc) — the citation and Reader link must follow the text,
   // never an unavailable ask (FID-FUNC-004).
   const [votdShown, setVotdShown] = useState(translation);
+  // The Mass load stands alone so "Try again" can re-fire it without touching
+  // the quote. A RESOLVED null (a date outside the bundled window) settles as
+  // failed too — only .catch would leave the skeleton shimmering forever.
+  // loadLectionary never memoizes a rejection, so a retry is a real fetch.
   useEffect(() => {
     let alive = true;
+    setMass(null);
+    setMassFailed(false);
     readingsForDate(today)
-      .then((m) => alive && setMass(m))
-      .catch(() => alive && setMass(null));
+      .then((m) => {
+        if (!alive) return;
+        if (m) setMass(m);
+        else setMassFailed(true);
+      })
+      .catch(() => alive && setMassFailed(true));
+    return () => {
+      alive = false;
+    };
+  }, [today, massRetry]);
+
+  useEffect(() => {
+    let alive = true;
     setQuoteFailed(false);
     loadQuotes()
       .then(
@@ -138,7 +159,9 @@ export default function Home() {
               className="lit-color-chip"
               style={{ background: COLOR_HEX[lit.color] }}
               title={`Liturgical color: ${lit.color}`}
+              aria-hidden="true"
             />
+            <span className="sr-only">Liturgical color: {lit.color}</span>
           </h2>
           <div className="lit-season">
             <strong>{lit.seasonLabel}</strong>
@@ -153,6 +176,15 @@ export default function Home() {
               {c.name}
             </div>
           ))}
+          {!mass && !massFailed && <Skeleton lines={4} className="mass-skeleton" />}
+          {!mass && massFailed && (
+            <p className="muted small sans" role="status">
+              Today&rsquo;s readings couldn&rsquo;t be loaded.{" "}
+              <button type="button" className="link-btn" onClick={() => setMassRetry((x) => x + 1)}>
+                Try again
+              </button>
+            </p>
+          )}
           {mass && (
             <ul className="mass-list">
               {Object.entries(
@@ -206,7 +238,7 @@ export default function Home() {
           <h2>Quote of the Day</h2>
           {!quote && !quoteFailed && <Skeleton lines={4} className="qotd-skeleton" />}
           {!quote && quoteFailed && (
-            <p className="muted small sans">
+            <p className="muted small sans" role="status">
               The quote couldn't be loaded — it will return with your connection.
             </p>
           )}

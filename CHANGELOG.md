@@ -6,6 +6,77 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.17.0] — 2026-07-15 — nothing hidden
+
+*"For there is not any thing secret that shall not be made manifest, nor hidden that shall not
+be known and come abroad." (Luke 8:17)*
+
+The behavioral half of the audit's sacred-page + accessibility pass (audit §9.3 —
+FID-UX-001, FID-FUNC-006, FID-A11Y-001/002/003): nothing hides the selected verse, no failure
+hides behind a complete-looking card, and nothing is hidden from the accessibility tree. The
+visual-calibration half (day-theme contrast FID-A11Y-004, touch targets FID-UX-002) is
+deliberately deferred to v1.17.1. No engine, data, or golden changes; no service-worker cache
+bump (network-first shell; no sw.js/precache/index.html change — v1.16.0's bump was for a
+shell-architecture change, this restyles an existing element).
+
+### Fixed
+
+- **The phone Reader action bar no longer covers the verse it acts on (audit FID-UX-001, the
+  audit's last open P1).** The root cause: `position: fixed; left: 50%` gives a box only half
+  the viewport to wrap in, so the bar stacked into a ~190px-wide, ~330px-tall tower over the
+  text. On phones it is now a **docked, full-width bottom bar** — a deliberate four-column
+  grid (reference + Close, the highlight swatches, then Bookmark · Note · Copy · Share with
+  icon-over-label, the study actions Commentary/Catechism half-width each on their own row,
+  the note editor full-width) that holds its shape at 320, 390, and 430 px. The page
+  **reserves the bar's live height** (`--verse-actions-h`, measured by a ResizeObserver — the
+  note editor and conditional actions change it) so the selected verse and the end-of-chapter
+  links can always scroll clear, and selecting a verse near the bottom **scrolls it clear by
+  the overlap** — bounded so the verse's first line never passes under the pinned toolbar,
+  honoring reduced motion. Desktop ≥640px keeps the floating centered pill unchanged.
+- **The Today card no longer hides a failed Mass load (audit FID-FUNC-006).** The Mass list
+  has honest loading/ready/failed states: a skeleton reserves the list's approximate height
+  (no more layout jump when it lands), and on failure a quiet notice with a real **Try again**
+  appears — including for a date outside the bundled window, which *resolves* null rather than
+  rejecting and previously read as a complete card missing its readings.
+- **The liturgical color now has a spoken name (audit FID-A11Y-001).** The color chip on Today
+  and the Mass page is marked decorative and an adjacent visually-hidden span speaks
+  "Liturgical color: green/violet/white/red/rose/black" (white says "white" while painting
+  gold — the token borrowing is design, the name is liturgy). New `.sr-only` utility.
+- **Library's view switcher speaks its state (audit FID-A11Y-002).** Bookmarks · Highlights ·
+  Notes are now an honest segmented group — `role="group"` ("Library view") with `aria-pressed`
+  on each button, the repo's established idiom — with Export/Import outside the group. A real
+  nested flex wrapper, not `display: contents` (which can strip the role from the a11y tree).
+- **Async boundaries announce themselves, with restraint (audit FID-A11Y-003).**
+  `role="status"` on state-transition text only — the Reader's loading/error, the Mass page's
+  loading/unavailable notices, both Today failure notices, Library's export/import result —
+  never on content containers (no read-the-whole-list regressions), and no `aria-busy`
+  anywhere (erratic support). `VerseQuote`'s bare "—" is gone: a failure says "The verse
+  couldn't be loaded — it will return with your connection." and an empty versification slot
+  says "This passage is not numbered in this translation."
+
+### Changed
+
+- Small deliberate deltas visible on desktop too: the Bookmark toggle keeps a **constant
+  label** with `aria-pressed` + a gold pressed ring (the APG toggle rule — it said
+  "Unbookmark" before; gold honors, a bookmark is an honor mark), the Note button speaks its
+  disclosure (`aria-expanded`), Close returns focus to the verse, and the overlap-only
+  scroll-clear also protects the desktop pill (it scrolls only when the verse is actually
+  covered). Verses carry `scroll-margin` so keyboard focus lands clear of the pinned chrome
+  and the bar on every viewport.
+
+### Added
+
+- **Harness §31**: source-shape guards pinning the docked-bar CSS (while the desktop pill's
+  `left: 50%` survives), the measure/reserve/cleanup wiring, the scroll-clear, the bar's group
+  name and toggle semantics, the Mass three-state (both settle arms), the `.sr-only` clip
+  pattern and spoken color on both pages, the Library group, the status roles, and the
+  banished bare em dash.
+
+### Release mechanics
+
+- iOS `MARKETING_VERSION` and Android `versionName` 1.16.2→1.17.0, `versionCode` 11602→11700
+  (shells version with the web app — the v1.15.1 lesson).
+
 ## [1.16.2] — 2026-07-15 — a just weight
 
 *"A deceitful balance is an abomination before the Lord: and a just weight is his will."

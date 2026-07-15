@@ -1087,6 +1087,78 @@ inline error). Shells to 1.16.2/11602. Still open from the audit, next in line: 
 action-bar redesign (FID-UX-001, the last P1), the Today/Mass honest-failure states, and the
 import-atomicity batch.
 
+## Nothing hidden (v1.17.0)
+
+*"For there is not any thing secret that shall not be made manifest, nor hidden that shall not
+be known and come abroad." (Luke 8:17)*
+**The behavioral half of the sacred-page pass: nothing hides the verse, no failure hides
+behind a complete card, nothing is hidden from the accessibility tree.**
+
+The third release cut from the verified 2026-07-15 audit, and the one that closes its last
+open P1. Scoped by owner decision: behavior first — the docked action bar, the honest Mass
+card, and the semantic accessibility batch ship here; the visual calibration (day-theme
+contrast, 44px touch targets) waits for v1.17.1 as its own reviewable diff.
+
+**The bar that covered the Word (FID-UX-001).** The verse-action bar was a floating pill —
+`position: fixed; left: 50%` — and that placement was the whole defect: a fixed box offset to
+50% gets only the remaining half of the viewport to lay out in, so on a 390px phone the pill
+wrapped its labeled actions and swatches into a ~190×330px tower that sat on the very verse
+the reader had just chosen, and on top of the chapter links besides. The audit measured it
+covering 116 px of the selected verse; the fix removes the bug class rather than the symptom.
+On phones the bar now docks — full width, bottom edge, safe-area aware — as a deliberate
+four-column grid: the reference and Close on the first row, the highlight swatches centered
+on their own row, Bookmark · Note · Copy · Share as icon-over-label cells that hold at 320,
+390, and 430 px, the two long study actions (Commentary, Catechism) half-width each on their
+own row, and the note editor across the full bar. Two mechanisms keep Scripture visible. The
+page **reserves the bar's live height**: a ResizeObserver measures the bar — whose height
+genuinely varies with the note editor and the per-verse study actions — into
+`--verse-actions-h`, consumed as phone-only bottom padding and released to zero on close, so
+the end-of-chapter links can always scroll clear. And selection **scrolls the verse clear by
+its overlap only**, bounded so the verse's first line never passes under the pinned toolbar,
+honoring reduced motion, and safe beside the scroll authority (selection is not navigation;
+a user-divergence is ScrollManager's own documented abort signal). Desktop keeps the centered
+pill byte-for-byte; its verses simply gained the same protection, since the pill could cover
+text there too. The toggles also learned to speak: Bookmark keeps a constant label with
+`aria-pressed` and a gold pressed ring (a bookmark is an honor mark), Note discloses with
+`aria-expanded`, the bar names itself "Verse actions," and Close returns focus to the verse.
+
+**The card that looked complete while missing Mass (FID-FUNC-006).** Blocking the lectionary
+made Today's first card render without its readings — no error, no gap, just a card that
+looked finished. And the fix had a trap the design pass caught: `readingsForDate` *resolves*
+null for a date outside the bundled window and only *rejects* on transport failure, so a
+catch-only failed state would leave the skeleton shimmering forever on the stale-data path.
+The Mass list now has the quote card's honest three states — a skeleton that reserves the
+list's approximate height (the layout no longer jumps when readings land), and a quiet notice
+with a real **Try again** (the lectionary loader never memoizes a rejection, so the retry is a
+real fetch) — with both settle arms feeding the failed state. Five cards, still.
+
+**The tree that couldn't be heard (FID-A11Y-001/002/003).** Three quiet semantic gaps, closed
+in the repo's own idiom: the liturgical color chip — an empty span whose meaning lived in a
+hover-only title — is now decorative beside a visually-hidden "Liturgical color: …" (the new
+`.sr-only` utility; "white" speaks *white* while painting gold, because the borrowing is
+theme and the name is liturgy); Library's Bookmarks · Highlights · Notes became an honest
+`aria-pressed` segmented group named "Library view" (a real nested flex wrapper — not
+`display: contents`, which browsers have historically punished by dropping the very role the
+fix adds), with Export/Import outside it; and the async boundaries now announce themselves
+with restraint — `role="status"` on transition text only (Reader loading/error, Mass-page
+loading/unavailable, both Today failure notices, Library's transfer result), never on content
+containers, and no `aria-busy` anywhere. `VerseQuote`'s bare em dash — which could be an
+entire card's content on the app's front page — now speaks: a failure names the connection,
+an empty slot names the versification gap.
+
+**The record.** Harness §31 pins all of it in source shape (there is no new pure logic — the
+release is UI wiring by nature); §26's forbidden-string guards (`3.25rem`, `3.75rem`,
+`z-index: 45`) stayed green throughout, which is exactly what they were built for. Verified
+end-to-end in a real browser: thirty-one checks across 320/390/430/1280 viewports — docking,
+non-intersection, exact reservation tracking through note-editor growth, pressed/disclosure
+semantics, the mass failure-and-retry round trip, spoken color on both pages, group
+semantics, the embed's failure copy, and a one-step reduced-motion clear. The 320px sweep
+caught one real defect pre-ship ("Commentary" overflowing its quarter-width cell — hence the
+half-width study row). Shells to 1.17.0/11700; no sw cache bump (network-first shell — the
+bar restyles an existing element; v1.16.0's bump was for a shell-architecture change). Next:
+the v1.17.1 calibration pass (contrast through the token seams, priority touch targets), then
+the storage/import-resilience batch.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

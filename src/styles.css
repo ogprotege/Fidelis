@@ -734,6 +734,10 @@ h1.page-title {
   padding: 0.1rem 0.3rem;
   border-radius: 0.3rem;
   cursor: pointer;
+  /* Focus/deep-link scrolls land clear of the pinned chrome above and the
+     verse-action bar below (the bar's live height rides --verse-actions-h). */
+  scroll-margin-top: var(--anchor-offset);
+  scroll-margin-bottom: calc(var(--verse-actions-h, 0px) + 0.75rem);
 }
 .verse:hover { background: var(--bg-2); }
 /* The rule beside a selected verse — gold honors. */
@@ -1032,6 +1036,68 @@ h1.page-title {
   font-size: 1rem;
 }
 
+/* A pressed toggle in the bar (Bookmark) wears the gold register — a bookmark
+   is an honor mark, like the verse rule (two-accent §1.2). */
+.verse-actions .icon-btn[aria-pressed="true"] {
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+
+/* v1.17.0 (audit FID-UX-001): on phones the floating pill — whose left: 50%
+   shrink-to-fit gave it only half the viewport to wrap in, stacking into a
+   ~190px tower over the selected verse — becomes a docked, full-width bottom
+   bar: a deliberate compact grid, labels kept. The page reserves the bar's
+   live height (--verse-actions-h, measured in Reader.tsx) so the selected
+   verse and the chapter links can always scroll clear. Desktop ≥640px keeps
+   the centered pill above, untouched. */
+@media (max-width: 640px) {
+  .verse-actions {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    max-width: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem 0.4rem;
+    border: 0;
+    border-top: var(--hairline) solid var(--border);
+    border-radius: 0.9rem 0.9rem 0 0;
+    padding: 0.6rem max(0.8rem, env(safe-area-inset-right))
+      calc(0.6rem + env(safe-area-inset-bottom)) max(0.8rem, env(safe-area-inset-left));
+  }
+  /* Explicit placement: the ref and Close share row 1; without a definite row
+     on .hl-group, sparse auto-placement would strand Bookmark alone on row 2. */
+  .verse-actions .ref { grid-row: 1; grid-column: 1 / 4; align-self: center; margin-right: 0; }
+  .verse-actions .va-close { grid-row: 1; grid-column: 4; justify-self: end; min-width: 44px; }
+  .verse-actions .hl-group {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    justify-content: center;
+    border-left: 0;
+    border-right: 0;
+    padding: 0.1rem 0;
+  }
+  /* Compact labelled actions: icon above label, so every label fits a
+     4-column cell down to 320px without truncation. The > combinator leaves
+     the note editor's own Save button in its normal form. */
+  .verse-actions > .icon-btn {
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.1rem;
+  }
+  .verse-actions > .icon-btn .icon { width: 1.25rem; height: 1.25rem; }
+  /* The two study actions carry the longest labels and always land on their
+     own row (after Bookmark·Note·Copy·Share fill theirs) — give each half the
+     bar so "Commentary" fits even at 320px. */
+  .verse-actions .va-wide { grid-column: span 2; }
+  .verse-actions .note-editor { grid-column: 1 / -1; }
+  /* The reservation: exact measured height, so with the bar closed the page
+     is pixel-identical to before. */
+  .reader-page { padding-bottom: var(--verse-actions-h, 0px); }
+}
+
 /* ---------- Search ---------- */
 .search-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; font-family: var(--sans); }
 .search-bar input[type="search"] {
@@ -1087,6 +1153,10 @@ h1.page-title {
   cursor: pointer;
 }
 .tabs button.active { background: var(--bg-2); color: var(--text); border-color: var(--purple); box-shadow: inset 0 0 0 1px var(--purple); }
+/* The three view buttons form a named group for assistive tech; a real nested
+   flex box (not display: contents, which can strip the group role from the
+   accessibility tree). Same gap as .tabs — visually identical. */
+.tabs .tab-group { display: flex; gap: 0.4rem; }
 .lib-item { padding: 0.75rem 0; border-bottom: var(--hairline) solid var(--border); }
 .lib-item .when { font-family: var(--sans); font-size: 0.75rem; color: var(--text-muted); }
 .lib-item .actions { margin-top: 0.3rem; }
@@ -1421,6 +1491,30 @@ body.widget-mode { background: transparent; }
   font-size: 0.9rem;
   line-height: 1.5;
 }
+/* Visually hidden, spoken — the standard clip pattern. Pairs with aria-hidden
+   on a decorative twin (the liturgical color chip). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+/* An inline action inside prose (the Mass card's "Try again") — purple acts. */
+.link-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--purple);
+  text-decoration: underline;
+  cursor: pointer;
+}
 .muted { color: var(--text-muted); }
 .small { font-size: 0.85rem; }
 .sans { font-family: var(--sans); }
@@ -1459,6 +1553,7 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
 /* Standalone (not nested in a text element): carry the body's own block spacing,
    and match the larger quote body so its placeholder reserves the right height. */
 .qotd-skeleton { margin: 0.25rem 0 0.75rem; font-size: 1.1rem; }
+.mass-skeleton { margin: 0.35rem 0 0.9rem; }
 .browse-links { margin-top: 0.9rem; }
 .card-spaced { margin: 1rem 0; }
 .mb-0 { margin-bottom: 0; }

@@ -72,11 +72,18 @@ export default function Library() {
     <div className="page-narrow" style={{ margin: "0 auto" }}>
       <h1 className="page-title">My Library</h1>
       <div className="tabs">
-        {(["bookmarks", "highlights", "notes"] as Tab[]).map((t) => (
-          <button key={t} className={tab === t ? "active" : ""} onClick={() => setTab(t)}>
-            {t[0].toUpperCase() + t.slice(1)}
-          </button>
-        ))}
+        <div className="tab-group" role="group" aria-label="Library view">
+          {(["bookmarks", "highlights", "notes"] as Tab[]).map((t) => (
+            <button
+              key={t}
+              className={tab === t ? "active" : ""}
+              aria-pressed={tab === t}
+              onClick={() => setTab(t)}
+            >
+              {t[0].toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
         <span className="spacer" />
         <button className="icon-btn" onClick={doExport} title="Download bookmarks, highlights, and notes as JSON">
           <Icon name="download" /> Export
@@ -100,7 +107,11 @@ export default function Library() {
           }}
         />
       </div>
-      {transfer && <p className="muted small sans">{transfer}</p>}
+      {transfer && (
+        <p className="muted small sans" role="status">
+          {transfer}
+        </p>
+      )}
       <p className="muted small sans">
         Your library lives only in this browser — export it now and then so a
         lost device does not take your marginalia with it.
