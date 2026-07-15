@@ -18,7 +18,7 @@ The Cloud Agent VM is set up by the environment update script (it runs
   `.github/workflows/ci.yml`). Node 22 is required and is what the VM provides.
 - **`npm test` is custom, not a test framework.** It runs the `tsx` harnesses
   (`scripts/test-liturgical.ts`, `scripts/test-data.ts`), a data-manifest verify,
-  and `eslint src`. Hard assertions exit non-zero on failure. After a deliberate
+  and `eslint src scripts e2e`. Hard assertions exit non-zero on failure. After a deliberate
   liturgical-engine change you must re-bless golden snapshots with `npm run golden`
   and review the diff (see `CLAUDE.md`).
 - **Never hand-edit files under `public/data/`** — they are generated; regenerate
