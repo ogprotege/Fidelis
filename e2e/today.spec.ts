@@ -3,10 +3,11 @@
  *  actually sees the lectionary request (a SW's fetches bypass page routes). */
 import { expect, test } from "@playwright/test";
 
-test("Today loads its five cards and the Mass readings settle", async ({ page }) => {
+test("Today loads its six cards and the Mass readings settle", async ({ page }) => {
   await page.goto("/#/");
   for (const h of [
     "Today in the Church",
+    "Today in Church History",
     "Verse of the Day",
     "Quote of the Day",
     "The Holy Rosary",

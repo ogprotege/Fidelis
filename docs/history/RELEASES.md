@@ -1442,6 +1442,39 @@ is reported for honesty but describes the sweep, not the page. Shells to 1.18.1/
 sw cache bump. Remaining from the audit: the FID-PERF-001 LCP tail, FID-NATIVE-001 (the
 region decision), FID-REL-001 (store screenshots), and the P3 notes.
 
+## The mended net (v1.18.2)
+
+*"And when they had done this, they enclosed a very great multitude of fishes, and their net
+broke." (Luke 5:6) — mended, it held.*
+**A repair release: three v1.18 feature branches, built in parallel, collided on merge and left
+main red. No new behavior — the seams reconciled, every feature intact.**
+
+The v1.18 line was written by two hands at once — this session building "the memory of the just"
+(Saint of the Day + Today in Church History) while the desktop shipped "both are preserved" (the
+atomic Bible import) and "prove all things" (route-splitting and the committed browser suite).
+Each branch was cut from a different main and each passed CI in isolation; merged in sequence,
+GitHub's 3-way merge stitched their edits into duplicates at three seams, and main went red — a
+lint parse error and two type errors, all merge artifacts, no defect in any branch's own work.
+
+The three repairs were mechanical de-duplication, each keeping both features. `App.tsx` had both
+the static `import Library` and the lazy `const Library = lazy(...)`; the fix drops the static
+imports and **folds the memory-of-the-just detail pages into the perf branch's route-split** — the
+Saint and Church History pages are secondary surfaces reached from the Today card, their routes
+already under `<Suspense>`, so they became their own lazy chunks, which is where they belonged.
+`data.ts` had the `CccTextDoc` import twice (the atomic-import branch had widened it); one line
+removed. `test-data.ts` had lost the closing brace of the memory §33 block and collided its
+number with the atomic-import §33; the brace was restored and the memory section renumbered §35,
+leaving the atomic-import (§33) and perf (§34) numbers — which their own check labels quote —
+untouched. The committed `e2e/today.spec.ts`, written before the sixth card existed, was updated
+from five cards to six.
+
+The proof that both features survived is the thing the parallel work had already built: the
+committed Playwright suite (13 specs — import atomicity, offline cache truth, the docked bar, axe,
+Search counts) passes alongside the fourteen saints/history browser checks, the harness runs 624
+green (the memory §35, the six-card guard, the atomic-import §33, and the perf §34 all together),
+and the Today page shows six cards while the Translations page still imports atomically. Shells to
+1.18.2/11802; no engine, data, golden, or service-worker change. The net held.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
