@@ -1592,6 +1592,10 @@ body.widget-mode { background: transparent; }
   text-decoration: underline;
   cursor: pointer;
 }
+/* The one quiet storage warning (v1.18.0 FID-STOR-001) — a .notice at the top
+   of the page column, on every route until dismissed. No new color: a failed
+   save is a fact, not an alarm. */
+.storage-banner { margin-bottom: 1rem; }
 .muted { color: var(--text-muted); }
 .small { font-size: 0.85rem; }
 .sans { font-family: var(--sans); }

@@ -1,17 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import Icon from "../components/Icon";
 import SectionNav from "../components/SectionNav";
 import {
   ManifestDoc,
+  OfflineBundleStatus,
   downloadBundle,
   idbClearCcc,
   idbPutCcc,
   importedTranslations,
   loadBook,
   loadCCCText,
-  loadManifest
+  loadManifest,
+  verifyOfflineBundle
 } from "../lib/data";
 import { parseCccText } from "../lib/import-formats";
 import {
@@ -78,6 +80,37 @@ export default function Settings() {
   const [progress, setProgress] = useState<Record<string, { done: number; total: number }>>({});
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
+  // FID-FUNC-008 (v1.18.0): "Saved" is CACHE truth. The probe checks Cache
+  // Storage for every file the manifest lists under each bundle — the browser
+  // can evict the data cache while the localStorage record still says yes.
+  const [cacheStatus, setCacheStatus] = useState<Record<string, OfflineBundleStatus | null>>({});
+  const probeOffline = useCallback(async () => {
+    const ids = [...TRANSLATIONS.filter((t) => t.bundled).map((t) => t.id), "commentary"];
+    const entries = await Promise.all(
+      ids.map(async (id) => [id, await verifyOfflineBundle(id)] as const)
+    );
+    setCacheStatus(Object.fromEntries(entries));
+  }, []);
+  useEffect(() => {
+    if (manifest) void probeOffline();
+  }, [manifest, probeOffline]);
+
+  /** What the row may claim. The probe is TRUTH about completeness; the
+   *  localStorage record is the user's INTENT (presentation metadata only):
+   *  "Saved" needs a cache-complete bundle; "Repair" needs intent AND a
+   *  partly-evicted cache (ordinary reading incidentally caches a few files —
+   *  that is not a broken download); a fully evicted bundle plainly reads
+   *  "Download" again. Probe null (no manifest / no CacheStorage / not yet
+   *  run) falls back to the record alone. */
+  const offlineState = (id: string): { state: "saved" | "partial" | "none"; missing: number } => {
+    const s = cacheStatus[id];
+    const intended = offline.includes(id);
+    if (s == null) return { state: intended ? "saved" : "none", missing: 0 };
+    if (s.complete) return { state: "saved", missing: 0 };
+    if (intended && s.present > 0) return { state: "partial", missing: s.total - s.present };
+    return { state: "none", missing: 0 };
+  };
+
   const download = async (id: string) => {
     setDownloadError(null);
     setProgress((p) => ({ ...p, [id]: { done: 0, total: 0 } }));
@@ -96,6 +129,9 @@ export default function Settings() {
         delete next[id];
         return next;
       });
+      // Whatever happened, the row shows what the cache now actually holds —
+      // a partial download honestly reads "Repair", not "Saved".
+      await probeOffline();
     }
   };
 
@@ -587,7 +623,7 @@ export default function Settings() {
         {TRANSLATIONS.filter((t) => t.bundled).map((t) => {
           const bytes = manifest?.bundles?.[t.id]?.bytes;
           const prog = progress[t.id];
-          const saved = offline.includes(t.id);
+          const st = offlineState(t.id);
           return (
             <div className="download-row" key={t.id}>
               <span>
@@ -600,7 +636,13 @@ export default function Settings() {
                 </span>
               ) : (
                 <button className="pill" onClick={() => download(t.id)}>
-                  {saved ? <>Saved <Icon name="check" /> · Update</> : "Download"}
+                  {st.state === "saved" ? (
+                    <>Saved <Icon name="check" /> · Update</>
+                  ) : st.state === "partial" ? (
+                    `Repair (${st.missing} missing)`
+                  ) : (
+                    "Download"
+                  )}
                 </button>
               )}
             </div>
@@ -609,7 +651,7 @@ export default function Settings() {
         {(() => {
           const bytes = manifest?.bundles?.commentary?.bytes;
           const prog = progress.commentary;
-          const saved = offline.includes("commentary");
+          const st = offlineState("commentary");
           return (
             <div className="download-row">
               <span>
@@ -624,7 +666,13 @@ export default function Settings() {
                 </span>
               ) : (
                 <button className="pill" onClick={() => download("commentary")}>
-                  {saved ? <>Saved <Icon name="check" /> · Update</> : "Download"}
+                  {st.state === "saved" ? (
+                    <>Saved <Icon name="check" /> · Update</>
+                  ) : st.state === "partial" ? (
+                    `Repair (${st.missing} missing)`
+                  ) : (
+                    "Download"
+                  )}
                 </button>
               )}
             </div>

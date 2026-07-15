@@ -2372,10 +2372,13 @@ console.log("");
     sc.paragraphs["103"] === "Body of one oh three.");
 
   // CCC-text storage (data.ts). IndexedDB cannot run under tsx, so these guard the
-  // upgrade discipline by SOURCE: DB v2, the ccc store created WITHOUT dropping
-  // books, and loadCCCText's memo invalidated on write.
+  // upgrade discipline by SOURCE: DB v3 (v2 added the ccc store; v1.18.0's v3 the
+  // meta store), each store created WITHOUT dropping the others, and loadCCCText's
+  // memo invalidated on write.
   const ds = readFileSync(join(ROOT, "src/lib/data.ts"), "utf8");
-  check("data.ts bumps DB_VERSION to 2", /DB_VERSION\s*=\s*2\b/.test(ds));
+  check("data.ts bumps DB_VERSION to 3", /DB_VERSION\s*=\s*3\b/.test(ds));
+  check("data.ts creates the meta store (the active-version markers)",
+    /createObjectStore\(\s*META_STORE\s*\)/.test(ds));
   check("data.ts creates the ccc object store", /createObjectStore\(\s*CCC_STORE\s*\)/.test(ds));
   check("data.ts still creates the books store (upgrade preserves imports)", /createObjectStore\(\s*STORE\s*\)/.test(ds));
   check("data.ts exports loadCCCText + idbPutCcc/idbGetCcc/idbClearCcc",
@@ -2858,6 +2861,230 @@ console.log("");
     /\.rosary-list \.rosary-mystery\s*\{[^}]*padding:\s*0\.65rem 0/.test(css));
   check("§32 hit slop: the wrap gaps that keep adjacent rows' slop from overlapping",
     ["gap: 1.2rem 0.4rem", "gap: 0.8rem 0.4rem", "gap: 0.7rem 0.5rem"].every((s) => css.includes(s)));
+}
+
+// ── 33. v1.18.0 "new wineskins" — the atomic Bible import (audit FID-DATA-001,
+// FID-FUNC-009), honest local persistence (FID-STOR-001), and cache-truth
+// offline state (FID-FUNC-008). The staging/swap logic is a PURE module
+// (src/lib/importPlan.ts) driven here through a fake store, so the audit's
+// acceptance criteria — an injected mid-import write failure leaves the prior
+// corpus untouched; a smaller re-import retains no stale books — are REAL
+// LOGIC tests. The UI wiring is pinned by §25-style shape guards below.
+console.log("");
+{
+  const {
+    MAX_IMPORT_BYTES,
+    checkImportSize,
+    keyFor,
+    parseKey,
+    validateCorpus,
+    planImport,
+    executeImportPlan,
+    describeStorageError
+  } = await import("../src/lib/importPlan");
+  type BookData = import("../src/lib/data").BookData;
+  type ImportStorePlan = import("../src/lib/importPlan").ImportPlan;
+
+  // The key grammar: generation 0 IS the legacy key shape, so every existing
+  // install is already "at gen 0" — migration by construction, no data moves.
+  check("§33 keyFor gen 0 is the legacy key shape", keyFor("nabre", 0, "john") === "nabre/john");
+  check("§33 keyFor gen 3 is the staged namespace", keyFor("nabre", 3, "john") === "nabre@3/john");
+  const pk0 = parseKey("nabre/john");
+  check("§33 parseKey reads a legacy key as gen 0",
+    pk0.translation === "nabre" && pk0.gen === 0 && pk0.book === "john");
+  const pk12 = parseKey("rsv2ce@12/1-corinthians");
+  check("§33 parseKey round-trips a staged key (hyphenated slug intact)",
+    pk12.translation === "rsv2ce" && pk12.gen === 12 && pk12.book === "1-corinthians");
+  check("§33 key round-trip is exact for both shapes",
+    keyFor(pk0.translation, pk0.gen, pk0.book) === "nabre/john" &&
+      keyFor(pk12.translation, pk12.gen, pk12.book) === "rsv2ce@12/1-corinthians");
+
+  // The size bound rejects BEFORE any read/parse; the message names the bound.
+  check("§33 size gate passes a corpus-sized file", checkImportSize(MAX_IMPORT_BYTES) === null);
+  const oversize = checkImportSize(MAX_IMPORT_BYTES + 1);
+  check("§33 size gate rejects an oversized file, naming the 64 MB bound",
+    !!oversize && oversize.includes("64 MB"));
+
+  // validateCorpus: the whole normalized corpus is validated before ANY write.
+  const mkBook = (name: string, text = "In the beginning God created heaven, and earth.") => ({
+    name,
+    chapters: [[text]]
+  });
+  const validated = validateCorpus("nabre", [mkBook("Genesis"), mkBook("I Esdras", " ")]);
+  check("§33 validateCorpus resolves names and skips textless placeholders (alias-clobber guard)",
+    validated.length === 1 && validated[0].slug === "genesis" &&
+      validated[0].data.translation === "nabre" && validated[0].data.book === "genesis" &&
+      validated[0].data.chapters[0][0].startsWith("In the beginning"));
+  let emptyErr = "";
+  try {
+    validateCorpus("nabre", []);
+  } catch (e) {
+    emptyErr = e instanceof Error ? e.message : String(e);
+  }
+  check("§33 validateCorpus rejects an empty corpus with a named error",
+    emptyErr.includes("No recognizable books"));
+  let shapeErr = "";
+  try {
+    validateCorpus("nabre", [
+      { name: "Genesis", chapters: [[{ bad: true } as unknown as string]] }
+    ]);
+  } catch (e) {
+    shapeErr = e instanceof Error ? e.message : String(e);
+  }
+  check("§33 validateCorpus rejects a malformed book, naming it", shapeErr.includes("Genesis"));
+
+  // planImport — FID-FUNC-009's core: EVERY old key of the translation becomes
+  // obsolete (legacy gen, orphaned staging gens), other translations untouched.
+  const existing = ["nabre/genesis", "nabre/john", "nabre@2/matthew", "cpdv/psalms"];
+  const john = validateCorpus("nabre", [mkBook("John")]);
+  const plan = planImport("nabre", 0, existing, john);
+  check("§33 plan stages ABOVE every existing gen (orphans included)", plan.gen === 3);
+  check("§33 plan writes carry the staged namespace",
+    plan.writes.length === 1 && plan.writes[0].key === "nabre@3/john");
+  check("§33 plan obsoletes every old key of the translation — stale books leave (FID-FUNC-009)",
+    [...plan.obsoleteKeys].sort().join(",") === "nabre/genesis,nabre/john,nabre@2/matthew");
+  check("§33 plan never touches another translation's corpus",
+    plan.obsoleteKeys.every((k) => !k.startsWith("cpdv/")));
+
+  // executeImportPlan against a fake store — the FID-DATA-001 acceptance run.
+  const mkStore = (failAtPut = Infinity) => {
+    const map = new Map<string, BookData>();
+    const meta = new Map<string, number>();
+    let armed = failAtPut;
+    let puts = 0;
+    return {
+      map,
+      meta,
+      disarm: () => {
+        armed = Infinity;
+      },
+      put: async (k: string, v: BookData) => {
+        if (++puts > armed) throw new DOMException("write refused", "QuotaExceededError");
+        map.set(k, v);
+      },
+      setActive: async (t: string, g: number) => {
+        meta.set(t, g);
+      },
+      deleteKeys: async (ks: string[]) => {
+        for (const k of ks) map.delete(k);
+      }
+    };
+  };
+  const seed = (store: ReturnType<typeof mkStore>) => {
+    store.map.set("nabre/genesis", { translation: "nabre", book: "genesis", chapters: [["old"]] });
+    store.map.set("nabre/john", { translation: "nabre", book: "john", chapters: [["old"]] });
+    store.map.set("nabre@2/matthew", { translation: "nabre", book: "matthew", chapters: [["orphan"]] });
+    store.map.set("cpdv/psalms", { translation: "cpdv", book: "psalms", chapters: [["other"]] });
+  };
+  const visible = (store: ReturnType<typeof mkStore>, t: string) => {
+    const gen = store.meta.get(t) ?? 0;
+    return [...store.map.keys()]
+      .filter((k) => {
+        const p = parseKey(k);
+        return p.translation === t && p.gen === gen;
+      })
+      .sort();
+  };
+
+  // Success path: writes → flip → sweep; the visible corpus is the new one.
+  const ok = mkStore();
+  seed(ok);
+  const wrote = await executeImportPlan(plan, ok);
+  check("§33 swap: the marker flips only after every write (returns the count)",
+    wrote === 1 && ok.meta.get("nabre") === 3);
+  check("§33 swap: the new corpus is visible, stale books are gone",
+    visible(ok, "nabre").join(",") === "nabre@3/john" && !ok.map.has("nabre/genesis"));
+  check("§33 swap: the other translation is untouched", ok.map.has("cpdv/psalms"));
+
+  // Failure path: the SECOND write fails mid-import → the marker never flips
+  // and the prior corpus is untouched (the audit's acceptance, as real logic).
+  const two = validateCorpus("nabre", [mkBook("John"), mkBook("Mark")]);
+  const plan2 = planImport("nabre", 0, existing, two);
+  const failing = mkStore(1);
+  seed(failing);
+  let failErr: unknown = null;
+  try {
+    await executeImportPlan(plan2, failing);
+  } catch (e) {
+    failErr = e;
+  }
+  check("§33 injected mid-import write failure rejects", failErr !== null);
+  check("§33 …the marker never flipped (prior gen still active)",
+    failing.meta.get("nabre") === undefined);
+  check("§33 …the prior corpus is byte-for-byte untouched (FID-DATA-001)",
+    visible(failing, "nabre").join(",") === "nabre/genesis,nabre/john" &&
+      failing.map.get("nabre/genesis")?.chapters[0][0] === "old");
+  // …and the next successful import (the quota freed) sweeps the crash's orphans.
+  failing.disarm();
+  const retryPlan = planImport("nabre", 0, [...failing.map.keys()], john);
+  await executeImportPlan(retryPlan, failing);
+  check("§33 the next import sweeps a crashed import's orphans",
+    [...failing.map.keys()].filter((k) => k.startsWith("nabre")).join(",") ===
+      `nabre@${retryPlan.gen}/john`);
+
+  // Quota errors name the cause and the recovery.
+  const quotaMsg = describeStorageError(new DOMException("x", "QuotaExceededError"));
+  check("§33 quota error names the cause (storage is full)", /storage is full/i.test(quotaMsg));
+  check("§33 quota error names a recovery path", /free up|remove/i.test(quotaMsg));
+  check("§33 other errors pass their message through",
+    describeStorageError(new Error("boom")).includes("boom"));
+  void (0 as unknown as ImportStorePlan);
+
+  // FID-STOR-001 — localStorage write failures surface exactly once (deduped).
+  const storage = await import("../src/lib/storage");
+  const realLocalStorage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  let fired = 0;
+  const unsub = storage.subscribeStorageWarning(() => fired++);
+  try {
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: {
+        getItem: () => null,
+        setItem: () => {
+          throw new DOMException("full", "QuotaExceededError");
+        },
+        removeItem: () => {}
+      }
+    });
+    check("§33 storage: no warning before any failure", storage.isStorageWarned() === false);
+    storage.saveLastRead({ translation: "drc", book: "john", chapter: 1 });
+    storage.saveLastRead({ translation: "drc", book: "john", chapter: 2 });
+    check("§33 storage: a failed write raises the warning", storage.isStorageWarned() === true);
+    check("§33 storage: the warning is deduplicated (one signal for two failures)", fired === 1);
+  } finally {
+    unsub();
+    if (realLocalStorage) Object.defineProperty(globalThis, "localStorage", realLocalStorage);
+  }
+
+  // ── Shape guards (§25 manner) for the UI wiring the pure module can't see ──
+  const translations = readFileSync(join(ROOT, "src/pages/Translations.tsx"), "utf8");
+  const dataSrc = readFileSync(join(ROOT, "src/lib/data.ts"), "utf8");
+  const swSrc = readFileSync(join(ROOT, "public/sw.js"), "utf8");
+  const settingsSrc = readFileSync(join(ROOT, "src/pages/Settings.tsx"), "utf8");
+  const appSrc = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+
+  check("§33 import UI: the size gate runs BEFORE the file is read",
+    translations.includes("checkImportSize(file.size)") &&
+      translations.indexOf("checkImportSize(file.size)") < translations.indexOf("file.text()"));
+  check("§33 import UI: parsing runs in a Worker (main-thread fallback kept)",
+    translations.includes('new URL("../lib/import.worker.ts", import.meta.url)') &&
+      translations.includes('typeof Worker === "undefined"'));
+  check("§33 import UI: the write path is the staged swap, never bare idbPut",
+    translations.includes("stageAndSwapImport(") && !translations.includes("idbPut("));
+  check("§33 import UI: failures speak through describeStorageError",
+    translations.includes("describeStorageError("));
+
+  // The page-side cache probe and the service worker must name the SAME cache.
+  const dataCacheInData = dataSrc.match(/DATA_CACHE = "([^"]+)"/)?.[1];
+  const dataCacheInSw = swSrc.match(/DATA_CACHE = "([^"]+)"/)?.[1];
+  check("§33 offline probe: data.ts and sw.js agree on the data-cache name",
+    !!dataCacheInData && dataCacheInData === dataCacheInSw);
+  check("§33 offline probe: Settings shows Saved only from cache truth (verifyOfflineBundle)",
+    settingsSrc.includes("verifyOfflineBundle(") && settingsSrc.includes("Repair"));
+  check("§33 storage banner: App mounts the deduped warning with Export as recovery",
+    appSrc.includes("subscribeStorageWarning") &&
+      appSrc.includes("isStorageWarned") &&
+      appSrc.includes('to="/settings#data"'));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

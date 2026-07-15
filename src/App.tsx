@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import ScrollManager from "./components/ScrollManager";
 import Home from "./pages/Home";
@@ -23,6 +23,30 @@ import { useToday } from "./useToday";
 import { accentFor, liturgicalDay } from "./lib/liturgical";
 import { resolveTheme } from "./lib/theme";
 import { installDynamicTypeBridge } from "./lib/dynamicType";
+import {
+  dismissStorageWarning,
+  isStorageWarned,
+  subscribeStorageWarning
+} from "./lib/storage";
+
+/** The ONE quiet storage warning (v1.18.0, audit FID-STOR-001): the first
+ *  localStorage write the browser refuses raises it — deduplicated for the
+ *  session, never shown for successful writes — and Export is the recovery.
+ *  role="status": spoken politely, never interrupts the reading. */
+function StorageWarning() {
+  const warned = useSyncExternalStore(subscribeStorageWarning, isStorageWarned);
+  if (!warned) return null;
+  return (
+    <div className="notice storage-banner" role="status">
+      This device is not saving changes — its browser storage is full or restricted, so new
+      notes, highlights, and settings may be lost when the app closes.{" "}
+      <Link to="/settings#data">Export your library</Link> to keep it safe.{" "}
+      <button type="button" className="link-btn" onClick={dismissStorageWarning}>
+        Dismiss
+      </button>
+    </div>
+  );
+}
 
 /** A robust read of the OS dark-mode preference; false where matchMedia is
  *  unavailable so the default palette is always defined. */
@@ -172,6 +196,7 @@ export default function App() {
       <div className="status-strip" aria-hidden="true" />
       <Header />
       <main className="page" id="main" tabIndex={-1}>
+        <StorageWarning />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/read" element={<BookList />} />

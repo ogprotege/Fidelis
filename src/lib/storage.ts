@@ -102,12 +102,51 @@ function read<T>(key: string, fallback: T): T {
   }
 }
 
-function write(key: string, value: unknown): void {
+/** True: persisted. False: the browser refused the write (quota, private-mode
+ *  policy) — the data lives only in memory now, and the ONE deduplicated
+ *  session warning below is raised so the UI can offer Export as the recovery
+ *  (v1.18.0, audit FID-STOR-001). Never throws — a failed save must not take
+ *  the reading session down with it. */
+function write(key: string, value: unknown): boolean {
   try {
     localStorage.setItem(PREFIX + key, JSON.stringify(value));
+    return true;
   } catch {
-    // storage full or unavailable — non-fatal
+    reportWriteFailure();
+    return false;
   }
+}
+
+/* ── The quiet storage warning (FID-STOR-001) ────────────────────────────────
+   One deduplicated signal per session: the FIRST failed write raises it, every
+   later failure is silent (the banner is already up), successes never signal.
+   App.tsx subscribes (useSyncExternalStore) and shows a quiet notice with
+   Export as the recovery action; Dismiss quiets it for the session. */
+let storageWarned = false;
+let storageWarningDismissed = false;
+const storageWarningListeners = new Set<() => void>();
+
+function reportWriteFailure(): void {
+  if (storageWarned || storageWarningDismissed) return;
+  storageWarned = true;
+  for (const cb of storageWarningListeners) cb();
+}
+
+/** Is the (undismissed) warning up? Stable snapshot for useSyncExternalStore. */
+export function isStorageWarned(): boolean {
+  return storageWarned && !storageWarningDismissed;
+}
+
+export function subscribeStorageWarning(cb: () => void): () => void {
+  storageWarningListeners.add(cb);
+  return () => storageWarningListeners.delete(cb);
+}
+
+/** Quiet the banner for the rest of the session (failures keep returning
+ *  false to their callers; the user chose not to be reminded again). */
+export function dismissStorageWarning(): void {
+  storageWarningDismissed = true;
+  for (const cb of storageWarningListeners) cb();
 }
 
 export const refKey = (r: VerseRef) => `${r.book}/${r.chapter}/${r.verse}`;
@@ -185,10 +224,12 @@ export function massTranslationFor(s: Settings): string {
   return s.calendarRegion === "usa" ? "nabre" : s.translation;
 }
 
-/** Which bundled translations the user has explicitly saved for offline
- *  reading (spec §2.2 Data). The service-worker data cache is the real source
- *  of truth for offline availability; this is the lightweight UI record of
- *  which downloads the user has run, so the Settings cards can show a ✓. */
+/** Which bundles the user has explicitly saved for offline reading (spec §2.2
+ *  Data). This is the user's INTENT only — presentation metadata. Since
+ *  v1.18.0 (audit FID-FUNC-008) the Settings rows claim "Saved" from CACHE
+ *  truth (verifyOfflineBundle probes the data cache against the manifest);
+ *  this record merely distinguishes a broken download ("Repair") from
+ *  incidental caching, and is the fallback where Cache Storage can't be asked. */
 export function getOfflineTranslations(): string[] {
   return read<string[]>("offline", []);
 }

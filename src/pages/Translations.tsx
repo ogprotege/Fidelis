@@ -1,11 +1,39 @@
 import { useEffect, useRef, useState } from "react";
-import { idbClearTranslation, idbPut, importedTranslations } from "../lib/data";
+import { idbClearTranslation, importedTranslations, stageAndSwapImport } from "../lib/data";
 import { TRANSLATIONS, languageLabel } from "../lib/translations";
-import { importedBookHasText, normalizeImport, parseImport, resolveBookSlug } from "../lib/import-formats";
+import { checkImportSize, describeStorageError } from "../lib/importPlan";
+import { normalizeImport, parseImport, type ImportedBook } from "../lib/import-formats";
+import type { ImportWorkerRequest, ImportWorkerResponse } from "../lib/import.worker";
+
+/** Parse + normalize off the main thread (v1.18.0, audit FID-DATA-001): a
+ *  whole-Bible parse over tens of MB froze the UI. One short-lived Worker per
+ *  import; the direct call remains as the no-Worker fallback (old WebViews,
+ *  test environments) — same pure functions either way. */
+function parseInWorker(id: string, filename: string, text: string): Promise<ImportedBook[]> {
+  if (typeof Worker === "undefined") {
+    return Promise.resolve(normalizeImport(id, parseImport(filename, text)));
+  }
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL("../lib/import.worker.ts", import.meta.url), {
+      type: "module"
+    });
+    worker.onmessage = (e: MessageEvent<ImportWorkerResponse>) => {
+      worker.terminate();
+      if (e.data.ok) resolve(e.data.books);
+      else reject(new Error(e.data.error));
+    };
+    worker.onerror = () => {
+      worker.terminate();
+      reject(new Error("The import parser failed to start — please try again."));
+    };
+    worker.postMessage({ id, filename, text } satisfies ImportWorkerRequest);
+  });
+}
 
 export default function Translations() {
   const [imported, setImported] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingId = useRef<string>("");
@@ -24,30 +52,34 @@ export default function Translations() {
   const onFile = async (file: File | undefined) => {
     const id = pendingId.current;
     if (!file || !id) return;
-    setBusy(id);
     setMessage(null);
+    // The size gate runs BEFORE the file is read into memory (FID-DATA-001:
+    // oversized files fail before full read/parse).
+    const oversize = checkImportSize(file.size);
+    if (oversize) {
+      setMessage(`Import failed: ${oversize}`);
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+    setBusy(id);
     try {
-      // normalizeImport places the text on the app's Vulgate grid (verified
-      // per-translation coordinate moves — e.g. the Platense's four
-      // Hebrew-numbered chapters); it never alters the text itself.
-      const books = normalizeImport(id, parseImport(file.name, await file.text()));
-      if (!books.length) throw new Error("No books found — expected a JSON, USFM, or OSIS Bible file.");
-      let count = 0;
-      for (const book of books) {
-        const slug = resolveBookSlug(book.name);
-        // Skip textless placeholder books (an untranslated appendix) — via a
-        // name alias an empty one could even overwrite a real book.
-        if (!slug || !book.chapters.length || !importedBookHasText(book)) continue;
-        await idbPut(`${id}/${slug}`, { translation: id, book: slug, chapters: book.chapters });
-        count++;
-      }
-      if (count === 0) throw new Error("No recognizable books found");
+      // normalizeImport (inside the worker) places the text on the app's
+      // Vulgate grid; it never alters the text itself. stageAndSwapImport then
+      // validates the WHOLE corpus, stages it under a fresh generation, flips
+      // the active marker only after every write succeeded, and sweeps the old
+      // keys — so a mid-import failure leaves the prior text untouched, and a
+      // smaller replacement corpus retains no stale books.
+      const books = await parseInWorker(id, file.name, await file.text());
+      const count = await stageAndSwapImport(id, books, (done, total) =>
+        setProgress({ done, total })
+      );
       setMessage(`Imported ${count} books into ${id.toUpperCase()}. Stored only on this device.`);
       await refresh();
     } catch (e) {
-      setMessage(`Import failed: ${e instanceof Error ? e.message : String(e)}`);
+      setMessage(`Import failed: ${describeStorageError(e)}`);
     } finally {
       setBusy(null);
+      setProgress(null);
       if (fileRef.current) fileRef.current.value = "";
     }
   };
@@ -92,13 +124,29 @@ export default function Translations() {
           {!t.bundled && (
             <div className="import-zone">
               {imported.has(t.id) ? (
-                <button className="icon-btn" onClick={() => remove(t.id)}>
-                  Remove imported text
-                </button>
+                <>
+                  {/* Replace rides the same atomic swap as a first import: the
+                      old text stays readable until the new corpus has fully
+                      landed, and nothing of it survives the sweep (v1.18.0). */}
+                  <button className="icon-btn" onClick={() => startImport(t.id)} disabled={busy !== null}>
+                    {busy === t.id
+                      ? progress
+                        ? `Importing… ${progress.done}/${progress.total}`
+                        : "Importing…"
+                      : "Replace imported text"}
+                  </button>{" "}
+                  <button className="icon-btn" onClick={() => remove(t.id)} disabled={busy !== null}>
+                    Remove imported text
+                  </button>
+                </>
               ) : (
                 <>
                   <button className="icon-btn" onClick={() => startImport(t.id)} disabled={busy !== null}>
-                    {busy === t.id ? "Importing…" : `Import your licensed ${t.abbrev}`}
+                    {busy === t.id
+                      ? progress
+                        ? `Importing… ${progress.done}/${progress.total}`
+                        : "Importing…"
+                      : `Import your licensed ${t.abbrev}`}
                   </button>
                   <p className="muted small" style={{ marginTop: "0.4rem" }}>
                     Accepts <strong>USFM</strong> (.usfm), <strong>OSIS</strong> (.xml), or
