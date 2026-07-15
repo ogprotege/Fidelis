@@ -5,6 +5,10 @@
 
 export interface HistorySource {
   text: string;
+  /** "public-domain" for the primary source(s); "church-official" for an official
+   *  Church source (e.g. vatican.va) for a modern event with no public-domain
+   *  account; "reference" for notes. The build gate requires at least one
+   *  "public-domain" OR "church-official" source. */
   license: string;
   url?: string;
 }
