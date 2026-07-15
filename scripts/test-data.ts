@@ -2584,5 +2584,103 @@ console.log("");
     /\.readings-toolbar\s*\{[^}]*flex-wrap:\s*nowrap/.test(css));
 }
 
+// ── 29. v1.16.2 "a just weight" — the Search group collector (audit FID-FUNC-001).
+// Real logic tests: counts are EXACT over every match, lists are bounded per
+// group, and — the load-bearing case — a section's list keeps filling after
+// the "All" list is full, so New Testament can never read 0 just because the
+// Old Testament filled the display cap first.
+console.log("");
+{
+  const { groupsOf, emptyGroupedHits, addHit, snapshotGroupedHits } = await import(
+    "../src/lib/search"
+  );
+
+  check("groupsOf: genesis → all+ot", groupsOf("genesis").join(",") === "all,ot");
+  check("groupsOf: matthew → all+nt+gospels", groupsOf("matthew").join(",") === "all,nt,gospels");
+  check("groupsOf: romans → all+nt", groupsOf("romans").join(",") === "all,nt");
+
+  const acc = emptyGroupedHits();
+  const hit = (book: string, n: number) => ({ book, chapter: 1, verse: n, text: `v${n}` });
+  const CAP = 2;
+  const g1 = hit("genesis", 1);
+  const m1 = hit("matthew", 2);
+  const r1 = hit("romans", 3);
+  addHit(acc, g1, CAP);
+  addHit(acc, m1, CAP);
+  addHit(acc, r1, CAP); // arrives AFTER "all" hit its cap
+  check(
+    "collector: exact counts across groups (all 3 / ot 1 / nt 2 / gospels 1)",
+    acc.counts.all === 3 && acc.counts.ot === 1 && acc.counts.nt === 2 && acc.counts.gospels === 1
+  );
+  check(
+    "collector: a section list keeps filling after 'all' is full (romans in nt)",
+    acc.lists.all.length === CAP && acc.lists.nt.length === 2 && acc.lists.nt[1] === r1
+  );
+  addHit(acc, hit("genesis", 4), CAP);
+  addHit(acc, hit("genesis", 5), CAP);
+  check(
+    "collector: counts keep tallying past the cap; lists stay bounded",
+    acc.counts.all === 5 &&
+      acc.counts.ot === 3 &&
+      acc.lists.all.length === CAP &&
+      acc.lists.ot.length === CAP
+  );
+  check(
+    "collector: canon order preserved; hit objects shared across lists",
+    acc.lists.all[0] === g1 && acc.lists.gospels[0] === acc.lists.all[1]
+  );
+  const snap = snapshotGroupedHits(acc);
+  check(
+    "collector: snapshot has fresh references but the same hits (React streaming)",
+    snap !== acc &&
+      snap.lists !== acc.lists &&
+      snap.lists.nt !== acc.lists.nt &&
+      snap.lists.nt[0] === acc.lists.nt[0] &&
+      snap.counts.all === acc.counts.all
+  );
+}
+
+// ── 30. v1.16.2 "a just weight" — source-shape guards for the correctness batch
+// (audit FID-FUNC-001/002/003/004/007): the fixes below are UI wiring the pure
+// harnesses can't reach, so pin their shape in the source.
+console.log("");
+{
+  const search = readFileSync(join(ROOT, "src/pages/Search.tsx"), "utf8");
+  const reader = readFileSync(join(ROOT, "src/pages/Reader.tsx"), "utf8");
+  const library = readFileSync(join(ROOT, "src/pages/Library.tsx"), "utf8");
+  const verseQuote = readFileSync(join(ROOT, "src/components/VerseQuote.tsx"), "utf8");
+  const home = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
+  const mystery = readFileSync(join(ROOT, "src/components/MysterySheet.tsx"), "utf8");
+  const planCreator = readFileSync(join(ROOT, "src/pages/PlanCreator.tsx"), "utf8");
+
+  // FID-FUNC-001: the scan never breaks early, chips read the exact tallies,
+  // and a failed sweep never presents its partial counts as truth.
+  check("search: the book scan has no early break (counts need the full sweep)",
+    !/\bbreak\b/.test(search) && search.includes("addHit(acc,"));
+  check("search: chips read the exact counts", search.includes("results.counts[c.key]"));
+  check("search: chips and the empty-section notice are gated on !error",
+    (search.match(/!progress && !error && results\.counts\.all > 0/g) || []).length >= 2);
+  // FID-FUNC-002: persistence waits for the loaded text and verifies its identity.
+  check("reader: persistence is gated on the loaded book's identity",
+    reader.includes("data.translation !== translation || data.book !== bookSlug"));
+  check("reader: saveLastRead is called exactly once (inside the gated effect)",
+    (reader.match(/saveLastRead\(/g) || []).length === 1);
+  // FID-FUNC-003: a bookmark opens the translation it was saved in.
+  check("library: bookmark links carry bm.translation",
+    library.includes("refLink(bm.book, bm.chapter, bm.verse, bm.translation ?? translation)"));
+  // FID-FUNC-004: the quote reports what it rendered; citations/links follow it.
+  check("verse-quote: both resolution paths report the shown translation",
+    (verseQuote.match(/onShownTranslation\?\.\(/g) || []).length >= 2);
+  check("home: the VOTD citation follows the shown translation, never fed back",
+    home.includes("onShownTranslation={setVotdShown}") && !home.includes("translation={votdShown}"));
+  check("mystery sheet: the cite and link follow the shown translation",
+    mystery.includes("onShownTranslation={setShown}"));
+  // FID-FUNC-007: a past target date is rejected, not clamped into a one-day plan.
+  check("plan creator: the date input floors at tomorrow and errors inline",
+    planCreator.includes("min={tomorrowISO()}") &&
+      planCreator.includes('role="alert"') &&
+      planCreator.includes("setDateError("));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

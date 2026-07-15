@@ -12,6 +12,7 @@ import {
   setNote,
   toggleBookmark
 } from "../lib/storage";
+import { getTranslation } from "../lib/translations";
 import { useSettings } from "../SettingsContext";
 
 type Tab = "bookmarks" | "highlights" | "notes";
@@ -53,12 +54,14 @@ export default function Library() {
   const highlights = getHighlights();
   const notes = getNotes();
 
-  const refLink = (book: string, chapter: number, verse: number) => {
+  // A bookmark opens the translation it was SAVED in (highlights and notes are
+  // passage-level, so they follow the current default) — FID-FUNC-003.
+  const refLink = (book: string, chapter: number, verse: number, t: string = translation) => {
     const b = getBook(book);
     if (!b) return null;
     return (
-      <Link to={`/read/${translation}/${book}/${chapter}?v=${verse}`}>
-        {bookDisplayName(b, translation)} {chapter}:{verse}
+      <Link to={`/read/${t}/${book}/${chapter}?v=${verse}`}>
+        {bookDisplayName(b, t)} {chapter}:{verse}
       </Link>
     );
   };
@@ -109,7 +112,11 @@ export default function Library() {
         ) : (
           bookmarks.map((bm) => (
             <div className="lib-item" key={`${bm.book}-${bm.chapter}-${bm.verse}`}>
-              <span className="lib-mark"><Icon name="bookmark" /></span> {refLink(bm.book, bm.chapter, bm.verse)}{" "}
+              <span className="lib-mark"><Icon name="bookmark" /></span>{" "}
+              {refLink(bm.book, bm.chapter, bm.verse, bm.translation ?? translation)}
+              {bm.translation !== translation && getTranslation(bm.translation) && (
+                <span className="muted small sans"> · {getTranslation(bm.translation)!.abbrev}</span>
+              )}{" "}
               <span className="when">added {when(bm.createdAt)}</span>
               <div className="actions">
                 <button

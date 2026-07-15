@@ -6,6 +6,61 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.16.2] — 2026-07-15 — a just weight
+
+*"A deceitful balance is an abomination before the Lord: and a just weight is his will."
+(Proverbs 11:1)*
+
+The correctness batch from the 2026-07-15 full product audit: five places where the app's
+surfaces disagreed with each other — or with the truth — now agree
+(`docs/review/Fidelis_Full_Product_Audit_2026-07-15.md` — FID-FUNC-001/002/003/004/007).
+No engine, data, or golden changes; no service-worker cache bump (the shell is network-first;
+the v1.15.1 precedent).
+
+### Fixed
+
+- **Search section counts are now the whole truth (audit FID-FUNC-001).** The scan no longer
+  stops at the display cap — it sweeps all 78 books, tallying **exact** per-section counts,
+  while only the rendered list stays bounded (first 300 per section, so New Testament results
+  are displayable even when the Old Testament fills the overall cap first). A DRB search for
+  *mercy* now reads All 434 · OT 377 · **NT 57 · Gospels 22** where the NT and Gospels chips
+  falsely read 0 before. The count line reports the exact total (with a quiet "Showing the
+  first 300 in this section." when truncated), "No verses in this section." appears only when
+  a section's true count is zero, and the chips no longer render after a failed sweep — a
+  partial tally must not present itself as exact. New pure collector
+  (`groupsOf`/`emptyGroupedHits`/`addHit`/`snapshotGroupedHits` in `src/lib/search.ts`),
+  directly asserted by harness §29.
+- **The Reader no longer adopts a translation that failed to load (audit FID-FUNC-002).**
+  `lastRead` and the global default persist only once the text actually arrives, gated on the
+  loaded book's own identity (`data.translation`/`data.book`), which also closes the
+  navigation window where the previous book's data is still in hand. Selecting unimported
+  NABRE shows the error page and changes nothing; the navigation resets (selection, sheets)
+  still fire on every route change.
+- **Bookmarks open in the translation they were saved in (audit FID-FUNC-003).** Library
+  bookmark links and display names now carry `bm.translation`, with a quiet ` · abbrev` tag
+  when it differs from the current default. Highlights and notes remain passage-level by
+  design — they follow the current translation.
+- **The Verse of the Day cites the text it shows (audit FID-FUNC-004).** `VerseQuote` reports
+  the translation actually rendered (`onShownTranslation`), and the Today card, the rosary
+  mystery sheet, and the embeddable widget follow it in their citation and Reader link — so a
+  DRB fallback can no longer sit under a NABRE citation linking to an unavailable route. The
+  shown abbrev is named when it differs from the ask; the Share path already did this.
+- **A past target date no longer creates a one-day reading plan (audit FID-FUNC-007).** The
+  plan creator's date input floors at tomorrow, and submitting a past — or now, an empty —
+  date keeps the form with a quiet inline error instead of silently clamping the whole
+  selection into a single day (an empty date previously fell back to the per-day pace).
+
+### Added
+
+- **Harness §29–§30**: real logic tests for the Search group collector (exact counts vs
+  bounded lists; the load-bearing case — a section list keeps filling after "All" is full;
+  canon order; snapshot semantics) and source-shape guards pinning all five fixes.
+
+### Release mechanics
+
+- iOS `MARKETING_VERSION` and Android `versionName` 1.16.1→1.16.2, `versionCode` 11601→11602
+  (shells version with the web app — the v1.15.1 lesson).
+
 ## [1.16.1] — 2026-07-15 — a faithful witness
 
 *"A faithful witness will not lie: but a deceitful witness uttereth a lie." (Proverbs 14:5)*

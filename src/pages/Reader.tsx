@@ -148,13 +148,11 @@ export default function Reader() {
     };
   }, [settings.cccLinksEnabled]);
 
+  // Navigation reset: close the selection and every sheet on any route change,
+  // whether or not the text loads. Scroll position is owned by <ScrollManager>
+  // (top on a fresh chapter, your place restored on Back); the ?v= effect
+  // below still wins when present.
   useEffect(() => {
-    if (book) {
-      saveLastRead({ translation, book: bookSlug, chapter });
-      // Remember the chosen translation as the default — but only when it
-      // actually changes, so turning chapters doesn't churn the context.
-      if (settings.translation !== translation) update({ translation });
-    }
     setSelected(null);
     setNoteOpen(false);
     setCommentaryFor(null);
@@ -162,12 +160,21 @@ export default function Reader() {
     setCccFor(null);
     setPickerOpen(false);
     setTypeOpen(false);
-    // Scroll position is owned by <ScrollManager> now (top on a fresh chapter,
-    // your place restored on Back); the ?v= effect below still wins when present.
-    // Runs on navigation only; settings.translation/update are read to persist
-    // the chosen translation, not to re-fire this effect.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [translation, bookSlug, chapter, book]);
+
+  // Persistence: remember lastRead and the chosen translation only once the
+  // text has actually loaded — a failed load (an import-only translation not
+  // on this device) must never become the global default or the last-read
+  // pointer (FID-FUNC-002). The identity guard closes the navigation window
+  // where `data` still holds the PREVIOUS book/translation in the same commit.
+  useEffect(() => {
+    if (!data || data.translation !== translation || data.book !== bookSlug) return;
+    saveLastRead({ translation, book: bookSlug, chapter });
+    // Only when it actually changes, so turning chapters doesn't churn the context.
+    if (settings.translation !== translation) update({ translation });
+    // settings.translation/update are read to persist, not to re-fire.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, translation, bookSlug, chapter]);
 
   // A deep-linked verse (?v=) gets a transient gold rule for ~3s — gold honors
   // a scripture-focus mark — rather than staying permanently selected (which

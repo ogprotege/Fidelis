@@ -5,6 +5,19 @@ import { PRESETS, chaptersForBooks, targetDateToPerDay } from "../lib/plans";
 import { addPlan } from "../lib/storage";
 import { useSettings } from "../SettingsContext";
 
+/** Local-date ISO (not toISOString, which is UTC and wrong near midnight). */
+const localISODate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(
+    2,
+    "0"
+  )}`;
+/** The earliest honest finish date — a plan needs at least one full day. */
+const tomorrowISO = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return localISODate(d);
+};
+
 export default function PlanCreator() {
   const translation = useSettings().translation;
   const navigate = useNavigate();
@@ -12,6 +25,7 @@ export default function PlanCreator() {
   const [paceMode, setPaceMode] = useState<"perDay" | "date">("perDay");
   const [perDay, setPerDay] = useState(3);
   const [targetDate, setTargetDate] = useState("");
+  const [dateError, setDateError] = useState<string | null>(null);
   const [name, setName] = useState("");
 
   const toggle = (slug: string) =>
@@ -35,8 +49,19 @@ export default function PlanCreator() {
     const chapters = chaptersForBooks([...selected]);
     if (chapters.length === 0) return;
     let pd = Math.max(1, perDay);
-    if (paceMode === "date" && targetDate) {
-      pd = targetDateToPerDay(chapters.length, Date.now(), new Date(`${targetDate}T00:00:00`).getTime());
+    if (paceMode === "date") {
+      // A past (or empty) date must not silently become a one-day plan
+      // (FID-FUNC-007). `!(t > now)` also catches NaN from a cleared input.
+      const t = targetDate ? new Date(`${targetDate}T00:00:00`).getTime() : NaN;
+      if (!(t > Date.now())) {
+        setDateError(
+          targetDate
+            ? "Pick a date after today — a plan needs at least one full day."
+            : "Pick a finish date."
+        );
+        return;
+      }
+      pd = targetDateToPerDay(chapters.length, Date.now(), t);
     }
     addPlan({ name: name.trim() || "My reading plan", chapters, perDay: pd });
     void navigate("/plans");
@@ -96,18 +121,35 @@ export default function PlanCreator() {
             />
           )}
           <label>
-            <input type="radio" name="pace" checked={paceMode === "date"} onChange={() => setPaceMode("date")} />{" "}
+            <input
+              type="radio"
+              name="pace"
+              checked={paceMode === "date"}
+              onChange={() => {
+                setPaceMode("date");
+                setDateError(null);
+              }}
+            />{" "}
             Finish by a date
           </label>
           {paceMode === "date" && (
             <input
               type="date"
               value={targetDate}
+              min={tomorrowISO()}
               aria-label="Target end date"
-              onChange={(e) => setTargetDate(e.target.value)}
+              onChange={(e) => {
+                setTargetDate(e.target.value);
+                setDateError(null);
+              }}
             />
           )}
         </div>
+        {dateError && (
+          <p className="muted small sans" role="alert">
+            {dateError}
+          </p>
+        )}
 
         <input
           type="text"
