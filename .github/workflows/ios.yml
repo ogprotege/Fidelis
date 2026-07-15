@@ -22,6 +22,13 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/ios.yml"
+      # Native tooling: project wiring, widget data builders, release pipeline.
+      # These shape or feed the Xcode project even though they live in scripts/.
+      - "scripts/add-ios-widget-target.rb"
+      - "scripts/configure-ios-app-target.rb"
+      - "scripts/build-votd-widget.mjs"
+      - "scripts/build-calendar-widget.ts"
+      - "scripts/ios-testflight.sh"
   pull_request:
     paths:
       - "ios/**"
@@ -31,6 +38,11 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/ios.yml"
+      - "scripts/add-ios-widget-target.rb"
+      - "scripts/configure-ios-app-target.rb"
+      - "scripts/build-votd-widget.mjs"
+      - "scripts/build-calendar-widget.ts"
+      - "scripts/ios-testflight.sh"
 
 concurrency:
   group: ios-${{ github.ref }}
@@ -71,13 +83,15 @@ jobs:
       - name: Resolve Swift packages
         run: xcodebuild -resolvePackageDependencies -project ios/App/App.xcodeproj -scheme App
 
-      # Build the App target for a generic simulator, signing disabled.
-      - name: Build App (iOS Simulator, unsigned)
+      # Build the App target for a generic simulator, signing disabled. Release
+      # configuration — the one scripts/ios-testflight.sh archives — so CI proves
+      # the same optimization/settings profile that actually ships.
+      - name: Build App (iOS Simulator, Release, unsigned)
         run: |
           xcodebuild build \
             -project ios/App/App.xcodeproj \
             -scheme App \
-            -configuration Debug \
+            -configuration Release \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \

@@ -28,9 +28,13 @@ import { getBook } from "../src/lib/canon";
 import { DailyQuote, quoteOfTheDay } from "../src/lib/quotes";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-// The U.S. (USCCB) calendar — matches the app's default calendar region
-// (src/lib/storage.ts) so the home-screen "Today at Mass" widget never disagrees
-// with the app about the day's celebration, color, or reading citations.
+// The U.S. (USCCB) calendar — matches the app's DEFAULT calendar region
+// (src/lib/storage.ts), so out of the box the home-screen "Today at Mass"
+// widget agrees with the app about the day's celebration, color, and reading
+// citations. The generated data is FIXED to this region: a user who switches
+// the app to the Universal calendar still sees USCCB content on the widgets
+// and from Siri (region-configurable widgets are deliberately deferred — see
+// docs/guides/IOS.md §5, "Region policy").
 const REGION = "usa" as const;
 
 const lect: LectionaryData = JSON.parse(

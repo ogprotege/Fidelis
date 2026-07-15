@@ -960,6 +960,65 @@ mistake. Service-worker shell cache v5→v6; iOS `MARKETING_VERSION`/Android `ve
 1.16.0, `versionCode` 11600. Design spec:
 `docs/superpowers/specs/2026-07-13-collapsing-masthead-nav-design.md`.
 
+## A faithful witness (v1.16.1)
+
+*"A faithful witness will not lie: but a deceitful witness uttereth a lie." (Proverbs 14:5)*
+**The documentation reconciled with the shipped product, and the native workflows taught to
+watch their own tooling.**
+
+The 2026-07-15 full product audit
+(`docs/review/Fidelis_Full_Product_Audit_2026-07-15.md`) — independently verified claim by
+claim before acting on it — found the core sound and no P0 anywhere, but flagged a release
+layer that had drifted behind the app it describes. This release closes every release-safety
+finding that can be closed without a Mac: FID-DOC-001, FID-REL-002, FID-REL-003, and the
+documentation half of FID-NATIVE-001. No app code, engine, data, or golden changes.
+
+**The README told the story of an older app (FID-DOC-001).** Four claims, each once true,
+had quietly become false: that the Mass and Quote home-screen widgets were Android-only with
+iOS "spec'd to follow" (the iOS WidgetKit trio shipped in v1.13.1/v1.13.2 — and the README
+even contradicted itself, listing all three under Platforms); that creating the Widget
+Extension target "can't be scripted" (v1.13.2's `scripts/add-ios-widget-target.rb` creates it
+idempotently); that the App Intent and Dynamic Type "remain specified for that Xcode session"
+(both shipped in v1.13.3); and that phone navigation is a thumb-friendly bottom bar (v1.16.0
+moved it to the collapsing masthead). All four now state what ships. The iOS guide's
+notched-simulator verification — "confirm the tab bar lifts above the home indicator" — now
+verifies the masthead instead, and its §5 App Intent/Dynamic Type paragraphs describe the
+shipped Swift and bridge in the present tense rather than instructing the reader to build
+what already exists.
+
+**The half-truth in the widget comments (FID-NATIVE-001, the documentation half).**
+`build-calendar-widget.ts` claimed the generated data means the widget "never disagrees" with
+the app — true only at the default setting, since `calendar.json` is generated for the USCCB
+region and a user who switches the app to the Universal calendar keeps USCCB widgets and
+Siri answers. The comments in the builder and `TodaysGospelIntent.swift` now state the real
+policy, and the iOS guide gains an explicit **Region policy** note. The product decision —
+region-configurable widgets — is deliberately deferred; what shipped today is that the
+limitation is no longer undocumented.
+
+**The workflows that could not see their own tools (FID-REL-002).** The audit's proof case:
+its audited head changed `scripts/ios-testflight.sh`, and no native workflow ran, because the
+iOS/Android path filters watched `ios/**`, `src/**`, `public/**` — but not the `scripts/`
+tooling that wires the Xcode project (`add-ios-widget-target.rb`,
+`configure-ios-app-target.rb`), builds the widget data both shells bundle
+(`build-votd-widget.mjs`, `build-calendar-widget.ts`), or archives the release
+(`ios-testflight.sh`). Those five paths now trigger the iOS workflow and the two widget
+builders the Android one. And the iOS simulator build switches Debug → **Release**: CI was
+proving a configuration TestFlight never ships, so an optimization-profile breakage would
+have surfaced first at archive time on a release Mac — now it surfaces in CI.
+
+**The divergent duplicate hook (FID-REL-003).** Xcode Cloud's fallback
+`ci_scripts/ci_post_clone.sh` at the repo root installed an unpinned Homebrew `node` while
+the canonical hook beside the `.xcodeproj` pinned `node@22` — the exact drift the pin exists
+to prevent, one directory up. The root hook now pins identically, and the release guide's §4
+gives the exact `git checkout -- ios/App/CapApp-SPM/Package.swift` revert that
+`ios-testflight.sh` runs after its sync, instead of the bare instruction "revert."
+
+**The record.** Shells version with the web app (the v1.15.1 lesson): iOS
+`MARKETING_VERSION`/Android `versionName` to 1.16.1, `versionCode` 11601. No service-worker
+cache bump — no shell asset changed. Still open from the audit's release-safety list, and
+mac-bound: the stale App Store screenshots (FID-REL-001) gate any 1.16.x store submission,
+and the §10 device-acceptance checklist awaits real hardware.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

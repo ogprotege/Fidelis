@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.16.0%20·%20upon%20the%20candlestick-5B3A8E)
+![version](https://img.shields.io/badge/version-1.16.1%20·%20a%20faithful%20witness-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -101,7 +101,7 @@ five spokes:
 | **Sow a verse** | Any verse — or the daily quote — renders to a clean card (EB Garamond on a warm field, the gold cross) and goes out through your device's native share sheet. A seed and a citation at once; Scripture goes out, nothing comes back. |
 | **Yours, on your device** | Bookmarks, highlights, notes, and reading plans live in your browser. No account, no server, no telemetry. Export/import as JSON. |
 | **Reachable by everyone** | Every action the mouse can reach, the keyboard and screen reader can too — verses, the version picker, the chapter grid, all operable; loading is quiet text, and motion honors your system's reduce-motion setting. |
-| **Everywhere** | Installable PWA with offline reading (texts **and** the Fathers' commentary), native **iOS and Android** shells (Capacitor) with native **home-screen widgets** — Verse of the Day on both, plus **Today at Mass** and **Quote of the Day** on Android (iOS spec'd to follow) — and an embeddable Verse-of-the-Day iframe. |
+| **Everywhere** | Installable PWA with offline reading (texts **and** the Fathers' commentary), native **iOS and Android** shells (Capacitor) with native **home-screen widgets** — **Verse of the Day**, **Today at Mass**, and **Quote of the Day** on both platforms — and an embeddable Verse-of-the-Day iframe. |
 | **Free, forever** | No price, no ads, no in-app purchases, no subscription, no telemetry. The product is the text, not your attention. |
 
 ---
@@ -251,8 +251,9 @@ piety, never gamification.
 - **A hand-drawn icon set** — bookmark, note, share, commentary, sun/moon, and the cross are
   inline SVG on one 24×24 stroke grid, not platform emoji, so the marks look the same everywhere;
   the iOS widget draws the same cross natively.
-- **Five-tab navigation** — Today · Read · Search · Mass · More — a header row on wide screens, a
-  thumb-friendly bottom bar on phones (honoring the iOS home-indicator inset). "More" is a popover
+- **Five-tab navigation** — Today · Read · Search · Mass · More — one header row with the brand on
+  wide screens; on phones the **collapsing masthead**: the gold brand row scrolls away in normal
+  flow while a slim tab row stays pinned below the status bar. "More" is a popover
   over Library, Translations, Settings, and About — not a route, so deep links are unchanged.
 - **Seamless movement** — Back and Forward restore your scroll position; long pages (Mass readings,
   Settings, About, the book list) carry a sticky in-page **section jump-bar**; the Android hardware
@@ -279,10 +280,10 @@ piety, never gamification.
   deploys), so the app opens offline, with offline reading of any book you have opened.
 - **iOS** — via Capacitor, with native **WidgetKit home-screen widgets**: **Verse of the Day**,
   **Today at Mass**, and **Quote of the Day** (small / medium / large; offline). The Swift sources
-  for all three live in `ios/WidgetExtension/`; creating the Widget Extension target is a one-time
-  Xcode step (it can't be scripted), per [docs/guides/IOS.md §5](docs/guides/IOS.md). The iOS App target is built
-  in CI on macOS ([`.github/workflows/ios.yml`](.github/workflows/ios.yml)). A "today's Gospel" App
-  Intent (Siri/Shortcuts) and Dynamic Type remain specified for that Xcode session. Build requires
+  for all three live in `ios/WidgetExtension/`; the Widget Extension target is created idempotently
+  by `ruby scripts/add-ios-widget-target.rb`, per [docs/guides/IOS.md §2](docs/guides/IOS.md). The iOS App target is built
+  in CI on macOS ([`.github/workflows/ios.yml`](.github/workflows/ios.yml)). The "today's Gospel" App
+  Intent (Siri/Shortcuts) and the Dynamic Type bridge shipped in v1.13.3. Build requires
   **Xcode 17+ (Swift 6.2)**. See [docs/guides/IOS.md](docs/guides/IOS.md).
 - **Android** — via Capacitor: the full app in a native shell, offline by construction (the whole
   build ships inside the APK, exactly as on iOS), now with **three native home-screen widgets**
