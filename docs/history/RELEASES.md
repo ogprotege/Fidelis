@@ -1695,6 +1695,49 @@ Re-generating re-syncs the widgets to the engine; iOS and Android stay byte-iden
 
 No service-worker change. Native versions 1.18.5→1.19.0 (`versionCode` 11900).
 
+## A great multitude (v1.20.0)
+
+*"After this, I saw a great multitude, which no man could number, of all nations and tribes and peoples and tongues, standing before the throne and in sight of the Lamb, clothed with white robes, and palms in their hands." (Apocalypse 7:9)*
+
+A Saint of the Day for **every day of the year**. v1.19.0 gave the Saint a home — the "Today in the
+Church" card — but only 53 lives to fill it, so most mornings still showed the calm "the saints are
+being gathered" placeholder. This release finishes the gathering: **366 saints, one for every
+calendar date (Feb 29 included)**, and a **Church-history chronicle grown from 15 to 183 events**
+across 150 days. The card is now full year-round.
+
+**How it was built.** Twelve research passes — one per month — drafted the principal Saint of the
+Day for every date, choosing the General Roman Calendar's celebration where there is one and the
+most significant, best-documented saint of the Roman Martyrology otherwise, plus rich
+multi-paragraph history events for the notable days. Every draft was then run through the same
+provenance gate the seed corpus obeys, audited for full date coverage, unique ids, schema, and
+sourcing, and spot-checked for accuracy against known feasts (Anthony of Egypt, Agatha, Perpetua and
+Felicity, Philip Neri, Bernard of Clairvaux, Gregory the Great, Charles Borromeo, Francis Xavier —
+all correct, with correct dates and ranks). The 53 curated v1.19.0 lives were kept as-is; the merge
+only filled the empty days.
+
+**The honest-sourcing problem, solved.** The seed corpus deliberately left out modern saints
+(Kolbe, Padre Pio, John Paul II, Cabrini) because the app's provenance gate requires a
+**public-domain** source, and there is none for a twentieth-century saint — a 1913 encyclopedia
+could not have known them, and citing it would be a false footnote, exactly what §13 forbids. To
+reach a true 366 without that dishonesty, this release adds a second accepted source license,
+`"church-official"`: an official Vatican biography (vatican.va), drawn faithfully and **labelled as
+what it is** — not public domain, but not fabricated either. The build gate and harness now require
+at least one `public-domain` **or** `church-official` source; pre-1900 figures still stand on the
+Catholic Encyclopedia (1913), Butler's *Lives of the Saints*, and the Roman Martyrology, and
+`church-official` is reserved for the genuinely modern (Maria Goretti, Josephine Bakhita, Edith
+Stein, Faustina Kowalska, the Korean and Ugandan martyrs, and the rest). An audit confirmed **zero**
+false public-domain citations across all 366.
+
+**Still drafts.** Every one of the 366 saints and 183 events carries `verified: false` — the §3.4
+ledger's mark of a sourced draft pending human verification against the named edition. The facts
+were drawn from the standard works and audited, but the corpus is explicitly a careful draft, not a
+proof-read final; that pass remains the maintainer's to make. Harness §35 now turns **red if any of
+the 366 calendar dates lacks a saint**, so the coverage can never silently regress.
+
+No engine, golden, or service-worker change — this is pure corpus data plus the one-license widening
+of the provenance gate. Native versions 1.19.0→1.20.0 (`versionCode` 12000). The native build and
+TestFlight submission that carry this to devices are the maintainer's next step.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

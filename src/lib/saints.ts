@@ -6,7 +6,10 @@
 
 export interface SaintSource {
   text: string;
-  /** "public-domain" for the primary source(s); "reference" for calendar notes. */
+  /** "public-domain" for the primary source(s); "church-official" for an official
+   *  Church source (e.g. vatican.va) used, drawn faithfully, where a saint is too
+   *  modern to have a public-domain biography; "reference" for calendar notes. The
+   *  build gate requires at least one "public-domain" OR "church-official" source. */
   license: string;
   url?: string;
 }

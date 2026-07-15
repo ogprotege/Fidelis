@@ -37,10 +37,15 @@ for (const s of saints) {
   if (!Array.isArray(s.biography) || s.biography.length === 0 || s.biography.some((p) => !p.trim())) {
     throw new Error(`saint ${s.id}: biography must be a non-empty array of paragraphs`);
   }
-  // The provenance gate — every entry stands on a public-domain source.
-  if (!Array.isArray(s.sources) || !s.sources.some((src) => src && src.license === "public-domain")) {
+  // The provenance gate — every entry stands on a public-domain source, OR, for
+  // a saint too modern to have one, an official Church source (vatican.va),
+  // drawn faithfully and labelled honestly (spec §13 — sourced, never fabricated).
+  if (
+    !Array.isArray(s.sources) ||
+    !s.sources.some((src) => src && (src.license === "public-domain" || src.license === "church-official"))
+  ) {
     throw new Error(
-      `saint ${s.id}: needs at least one source with license "public-domain" (spec §13 — sourced, not paraphrased)`
+      `saint ${s.id}: needs at least one source licensed "public-domain" or "church-official" (spec §13 — sourced, not paraphrased)`
     );
   }
   if (typeof s.verified !== "boolean") throw new Error(`saint ${s.id}: verified must be a boolean`);

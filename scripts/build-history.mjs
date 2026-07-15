@@ -40,9 +40,12 @@ for (const e of events) {
   if (!Array.isArray(e.body) || e.body.length === 0 || e.body.some((p) => !p.trim())) {
     throw new Error(`event ${e.id}: body must be a non-empty array of paragraphs`);
   }
-  if (!Array.isArray(e.sources) || !e.sources.some((src) => src && src.license === "public-domain")) {
+  if (
+    !Array.isArray(e.sources) ||
+    !e.sources.some((src) => src && (src.license === "public-domain" || src.license === "church-official"))
+  ) {
     throw new Error(
-      `event ${e.id}: needs at least one source with license "public-domain" (spec §13 — sourced, not paraphrased)`
+      `event ${e.id}: needs at least one source licensed "public-domain" or "church-official" (spec §13 — sourced, not paraphrased)`
     );
   }
   if (typeof e.verified !== "boolean") throw new Error(`event ${e.id}: verified must be a boolean`);

@@ -2899,10 +2899,14 @@ console.log("");
   check("memory: saintForCelebration returns null when no celebration matches",
     saintForCelebration(kateriDay.saints, ["Saint Nobody of Nowhere"]) === null);
 
-  // History: 07-14 holds two events, grouped and sorted oldest-first.
+  // History: 07-14 holds multiple events, grouped and sorted oldest-first (the
+  // build sorts by year ascending; the exact count grows as the corpus does).
   const hist0714 = JSON.parse(readFileSync(join(ROOT, "public/data/history/07-14.json"), "utf8"));
   check("memory: 07-14 history groups multiple events sorted oldest-first",
-    hist0714.events.length === 2 && hist0714.events[0].year < hist0714.events[1].year);
+    hist0714.events.length >= 2 &&
+      hist0714.events.every(
+        (e: { year: number }, i: number) => i === 0 || hist0714.events[i - 1].year <= e.year
+      ));
 
   // Every emitted entry, both corpora, carries a PD source and a verified flag
   // (the build gate; re-checked here on the sealed output).
@@ -2914,23 +2918,35 @@ console.log("");
   const allEvents = histFiles.flatMap(
     (f) => JSON.parse(readFileSync(join(ROOT, "public/data/history", f), "utf8")).events
   );
-  check("memory: every saint cites a public-domain source and has a verified flag",
+  // The provenance gate (v1.20.0): every entry stands on a public-domain source,
+  // OR — for a figure too modern to have one — an official Church source
+  // (vatican.va), drawn faithfully and labelled honestly (§13, sourced not made up).
+  const isSourced = (srcs: { license: string }[]) =>
+    srcs.some((src) => src.license === "public-domain" || src.license === "church-official");
+  check("memory: every saint is sourced (public-domain or church-official) and has a verified flag",
     allSaints.length > 0 &&
       allSaints.every(
         (s: { sources: { license: string }[]; verified: unknown }) =>
-          s.sources.some((src) => src.license === "public-domain") && typeof s.verified === "boolean"
+          isSourced(s.sources) && typeof s.verified === "boolean"
       ));
-  check("memory: every history event cites a public-domain source and has a verified flag",
+  check("memory: every history event is sourced (public-domain or church-official) and has a verified flag",
     allEvents.length > 0 &&
       allEvents.every(
         (e: { sources: { license: string }[]; verified: unknown }) =>
-          e.sources.some((src) => src.license === "public-domain") && typeof e.verified === "boolean"
+          isSourced(e.sources) && typeof e.verified === "boolean"
       ));
-  // v1.19.0 broadened coverage across the calendar (a floor, not a ceiling — the
-  // corpus keeps growing). Every id and MM-DD day must stay unique per corpus.
-  check("memory: the corpus covers a broad calendar (v1.19.0 expansion)",
-    allSaints.length >= 50 && allEvents.length >= 14,
-    `${allSaints.length} saints, ${allEvents.length} events`);
+  // v1.20.0: a Saint of the Day for EVERY calendar date (all 366 incl. Feb 29).
+  const allDates: string[] = [];
+  for (let m = 1; m <= 12; m++) {
+    const dim = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1];
+    for (let dd = 1; dd <= dim; dd++)
+      allDates.push(`${String(m).padStart(2, "0")}-${String(dd).padStart(2, "0")}`);
+  }
+  const saintDays = new Set(allSaints.map((x: { day: string }) => x.day));
+  const missingSaintDays = allDates.filter((d) => !saintDays.has(d));
+  check("memory: a Saint of the Day exists for every calendar date (365/366)",
+    missingSaintDays.length === 0,
+    missingSaintDays.length ? `missing ${missingSaintDays.length}: ${missingSaintDays.slice(0, 8).join(", ")}…` : `${allSaints.length} saints`);
   const saintIds = allSaints.map((x: { id: string }) => x.id);
   const eventIds = allEvents.map((x: { id: string }) => x.id);
   check("memory: saint and event ids are unique across the corpus",
