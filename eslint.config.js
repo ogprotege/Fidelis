@@ -55,5 +55,22 @@ export default tseslint.config(
       // boundary is deliberate, not sloppy.
       "@typescript-eslint/no-explicit-any": "off",
     },
+  },
+  {
+    // e2e/ (the committed browser suite, v1.18.1 FID-QUAL-001): Playwright
+    // specs run under Node but drive browser code in page.evaluate callbacks,
+    // so both global sets apply. Non-type-aware, like scripts/.
+    files: ["e2e/**/*.ts"],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: { ...globals.node, ...globals.browser },
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrors: "none" },
+      ],
+    },
   }
 );

@@ -1374,6 +1374,74 @@ intent-plus-truth grammar above earned its shape. Shells to 1.18.0/11800; no sw 
 Next: the performance batch (FID-PERF-001/002) or the native-region decision
 (FID-NATIVE-001), owner's call.
 
+## Prove all things (v1.18.1)
+
+*"But prove all things; hold fast that which is good." (1 Thessalonians 5:21)*
+**The proving batch: a browser suite for what only a browser can prove, the secondary
+routes out of the boot path, and Lighthouse re-run with the numbers reported straight.**
+
+The sixth release cut from the verified 2026-07-15 audit — FID-QUAL-001 (the audit's one
+QUALITY finding), FID-PERF-002, FID-PERF-003, and FID-PERF-001 measured, part-addressed,
+and honestly bounded. No engine, data, golden, or service-worker changes.
+
+**The committed suite (FID-QUAL-001).** The audit's phrase was exact: "UI reliability is
+guarded by source text, not browser behavior" — the pure harnesses are excellent and the
+gap was never inside them; it was the layer only a real browser can prove. The releases
+since v1.16.2 had each verified in a browser through ad-hoc scratchpad scripts that died
+with their sessions; v1.18.1 commits that discipline as `e2e/` — thirteen Playwright tests,
+`npm run e2e`, riding CI as a second job on every PR (channel `chrome` uses the runner's
+preinstalled browser; no Playwright download; the suite drives the BUILT app through `vite
+preview`, service worker included). The coverage is the audit's own list, each item the
+regression class of a past fix: Today's honest failure state (the lectionary blocked at the
+network — with service workers blocked in that context, since a SW's fetches bypass route
+interception — then a real Try again recovering); Reader selection with the docked bar
+provably NOT covering the selected verse (boxes compared, the FID-UX-001 class); the
+Commentary sheet opening, passing axe OPEN (the audit's "axe on an open sheet", waiting out
+the 110ms entrance animation whose in-flight opacity otherwise reads as a phantom contrast
+failure), closing on Escape, and browser-Back navigating AWAY with the scroll lock released
+(the v1.14.2 class); Search's section counts EXACT against the sealed DRB corpus — All 434
+· OT 377 · NT 57 · Gospels 22 (the FID-FUNC-001 class, where NT read 0); a bookmark opening
+in its SAVED translation against a moved default (FID-FUNC-003); the injected mid-import
+IndexedDB failure leaving the prior corpus untouched (FID-DATA-001's browser half); offline
+"Saved" as cache truth through download → evict-one → Repair (1 missing) → repair → evict-all
+→ never-Saved (FID-FUNC-008); and axe WCAG A/AA at zero violations on Today, Reader, Mass,
+and Settings — the v1.17.1 contrast work holding under an independent checker. The `e2e/`
+tier joined the linter (`eslint src scripts e2e`), and §34 pins the suite's existence,
+runnability, and CI ride so it cannot quietly rot.
+
+**Out of the boot path (FID-PERF-002).** Every route shipped in the initial JavaScript
+graph — Today paid for the Settings screen, the import parsers' UI, plans, and About before
+first paint. Now the six secondary surfaces (Settings, Library, Translations, Plans, the
+plan creator, About) are route-level `React.lazy` chunks behind one quiet Suspense fallback,
+and the worship-critical path — Today, the Reader, Search, Mass, the book list — stays
+eager. No chunking framework, exactly as the audit directed. Main chunk 426 → 393 kB (gzip
+135 → 127); the chunks range from Plans' 1.2 kB to Settings' 18.6 kB.
+
+**Fewer round trips cold (FID-PERF-003).** The full-corpus search awaited its 78 books one
+round trip at a time. A six-book prefetch window now rides ahead of the scan: the FETCHES
+overlap, but PROCESSING stays strictly in canon order, so everything §29/§30 pin — exact
+counts, ordered lists, no early break, the error that names the unreachable book — is
+untouched; prefetch rejections are pre-handled and surface only when their book is reached
+in order.
+
+**The numbers, straight (FID-PERF-001).** Lighthouse 13.4, mobile emulation, against the
+built app; medians where runs were noisy. The real win came from geometry the audit's
+direction asked for: each Mass reading now reserves space scaled from its OWN citation (the
+verse spans are known before the text is — ~1.5 rendered lines per verse, whole-chapter
+spans capped), the page reserves a day's readings while the lectionary resolves, and the
+new lazy routes hold a screenful under their fallback so a cold visit's footer doesn't
+leap. Mass CLS 0.304 (audited) / 0.34 (re-measured pre-fix) → **0.042**; Settings **0.025**;
+the Search shell **0.000**; Today 0.241 → 0.10–0.16 across runs (async card arrivals + the
+font swap keep it just over the line); Reader steady at 0.107 (untouched this release).
+LCP: Search shell 2.7s, Settings 2.9s, Today 3.6s, Reader 3.8s, Mass 4.1s — none under the
+2.5s target on simulated slow-4G, and the residuals are named rather than half-fixed: the
+EB Garamond swap (a metric-compatible fallback via `size-adjust`, or preloading the two
+latin faces) and the 393 kB main chunk are the next real levers. The mid-sweep Search
+measurement (64/8.1s/0.166 with `?q=mercy` auto-running 73 book fetches inside the trace)
+is reported for honesty but describes the sweep, not the page. Shells to 1.18.1/11801; no
+sw cache bump. Remaining from the audit: the FID-PERF-001 LCP tail, FID-NATIVE-001 (the
+region decision), FID-REL-001 (store screenshots), and the P3 notes.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

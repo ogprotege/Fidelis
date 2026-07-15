@@ -82,12 +82,30 @@ export default function Search() {
     setSearched(true);
     setError(null);
     setRanNeedle(needle);
+    // FID-PERF-003 (v1.18.1): a cold web search paid 78 sequential round trips.
+    // A small prefetch window rides ahead of the scan — the FETCHES overlap,
+    // but PROCESSING stays strictly in canon order, so the exact counts, the
+    // ordered lists, and the named-book error (§29/§30) are unchanged. A
+    // prefetched rejection is pre-handled here and surfaces when its book is
+    // awaited in order below.
+    const SEARCH_PREFETCH = 6;
+    const pending = new Map<number, ReturnType<typeof loadBook>>();
+    const fetchAt = (idx: number) => {
+      let p = pending.get(idx);
+      if (!p) {
+        p = loadBook(t, BOOKS[idx].slug);
+        void p.catch(() => {});
+        pending.set(idx, p);
+      }
+      return p;
+    };
     for (let i = 0; i < BOOKS.length; i++) {
       if (runId.current !== id) return;
       const b = BOOKS[i];
       setProgress(`Searching ${b.name}… (${i + 1}/${BOOKS.length})`);
+      for (let j = i; j < Math.min(i + SEARCH_PREFETCH, BOOKS.length); j++) void fetchAt(j);
       try {
-        const data = await loadBook(t, b.slug);
+        const data = await fetchAt(i);
         data.chapters.forEach((ch, ci) => {
           ch.forEach((text, vi) => {
             if (!text) return; // grid-empty slot (see data-report.txt)

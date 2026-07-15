@@ -1,12 +1,10 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { Suspense, lazy, useEffect, useState, useSyncExternalStore } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import ScrollManager from "./components/ScrollManager";
 import Home from "./pages/Home";
 import BookList from "./pages/BookList";
 import Reader from "./pages/Reader";
-import Plans from "./pages/Plans";
-import PlanCreator from "./pages/PlanCreator";
 import Readings from "./pages/Readings";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
@@ -16,6 +14,17 @@ import About from "./pages/About";
 import Saint from "./pages/Saint";
 import History from "./pages/History";
 import WidgetVotd from "./pages/WidgetVotd";
+
+/* v1.18.1 (audit FID-PERF-002): the worship-critical path — Today, the Reader,
+   Search, Mass, the book list (and the widget embed) — stays eager; the
+   secondary surfaces load as route-level chunks the first time they are
+   visited. Plain React.lazy, no chunking framework. */
+const Plans = lazy(() => import("./pages/Plans"));
+const PlanCreator = lazy(() => import("./pages/PlanCreator"));
+const Library = lazy(() => import("./pages/Library"));
+const Translations = lazy(() => import("./pages/Translations"));
+const Settings = lazy(() => import("./pages/Settings"));
+const About = lazy(() => import("./pages/About"));
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { App as CapApp } from "@capacitor/app";
@@ -199,6 +208,11 @@ export default function App() {
       <Header />
       <main className="page" id="main" tabIndex={-1}>
         <StorageWarning />
+        {/* The fallback is the app's quiet loading line — chunk loads are
+            LAN-fast (same origin, tiny files) and never flash a spinner. The
+            route-fallback class reserves a screenful of geometry so the footer
+            doesn't leap up and back on a cold visit (FID-PERF-001). */}
+        <Suspense fallback={<p className="loading route-fallback" role="status">Loading…</p>}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/read" element={<BookList />} />
@@ -216,6 +230,7 @@ export default function App() {
           <Route path="/history/:day" element={<History />} />
           <Route path="*" element={<Home />} />
         </Routes>
+        </Suspense>
       </main>
       <footer className="footer">
         <div className="motto">Verbum Domini manet in æternum.</div>

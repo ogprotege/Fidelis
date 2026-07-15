@@ -1,6 +1,6 @@
 /** Data harness. Run: npx tsx scripts/test-data.ts */
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   dayCodeCandidates,
@@ -3156,6 +3156,58 @@ console.log("");
     appSrc.includes("subscribeStorageWarning") &&
       appSrc.includes("isStorageWarned") &&
       appSrc.includes('to="/settings#data"'));
+}
+
+// ── 34. v1.18.1 "prove all things" — the perf & browser-test batch (audit
+// FID-PERF-002/003, FID-QUAL-001). Route-splitting and the fetch window are UI
+// wiring (shape guards, §25 manner); the committed Playwright suite guards the
+// BROWSER behaviors the pure harnesses can't reach, so this section pins that
+// the suite exists, is runnable (script + deps + config), and rides CI.
+console.log("");
+{
+  const app = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+  const search = readFileSync(join(ROOT, "src/pages/Search.tsx"), "utf8");
+  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
+    scripts: Record<string, string>;
+    devDependencies: Record<string, string>;
+  };
+  const ci = readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf8");
+
+  // FID-PERF-002: the five secondary surfaces (and the plan creator) load
+  // lazily; the worship-critical path (Today, Reader, Search, Mass, the book
+  // list) stays eager — no chunking framework, just React.lazy.
+  for (const page of ["Settings", "Library", "Translations", "Plans", "PlanCreator", "About"]) {
+    check(`§34 route split: ${page} is a lazy route`,
+      app.includes(`lazy(() => import("./pages/${page}"))`) &&
+        !app.includes(`import ${page} from "./pages/${page}"`));
+  }
+  for (const page of ["Home", "Reader", "Search", "Readings", "BookList", "WidgetVotd"]) {
+    check(`§34 route split: ${page} stays eager (critical path)`,
+      app.includes(`import ${page} from "./pages/${page}"`));
+  }
+  check("§34 route split: a quiet Suspense fallback wraps the routes",
+    app.includes("<Suspense") && app.includes("fallback"));
+
+  // FID-PERF-003: the cold search pipelines its 78 book fetches through a
+  // small prefetch window while still PROCESSING strictly in canon order (the
+  // §29/§30 guarantees — exact counts, no early break — hold unchanged).
+  check("§34 search: a bounded prefetch window rides ahead of the scan",
+    /SEARCH_PREFETCH\s*=\s*\d/.test(search) && search.includes("SEARCH_PREFETCH"));
+  check("§34 search: prefetch rejections are pre-handled (no unhandled rejections)",
+    search.includes(".catch(() => {})"));
+
+  // FID-QUAL-001: the committed browser suite — specs, config, script, deps, CI.
+  const specs = ["today", "reader", "search", "library", "import", "offline", "axe"];
+  for (const s of specs) {
+    check(`§34 suite: e2e/${s}.spec.ts exists`, existsSync(join(ROOT, `e2e/${s}.spec.ts`)));
+  }
+  check("§34 suite: playwright.config.ts serves the built app (vite preview)",
+    existsSync(join(ROOT, "playwright.config.ts")) &&
+      readFileSync(join(ROOT, "playwright.config.ts"), "utf8").includes("preview"));
+  check("§34 suite: npm run e2e is wired", (pkg.scripts.e2e ?? "").includes("playwright test"));
+  check("§34 suite: @playwright/test and @axe-core/playwright are devDependencies",
+    !!pkg.devDependencies["@playwright/test"] && !!pkg.devDependencies["@axe-core/playwright"]);
+  check("§34 suite: CI runs the browser suite", ci.includes("playwright"));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

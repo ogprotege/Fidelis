@@ -6,6 +6,58 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.18.1] — 2026-07-15 — prove all things
+
+*"But prove all things; hold fast that which is good." (1 Thessalonians 5:21)*
+
+The perf & browser-test batch of the 2026-07-15 audit (FID-PERF-002, FID-QUAL-001,
+FID-PERF-001 measured and part-addressed, FID-PERF-003): the secondary routes leave the
+initial JavaScript graph, the behaviors only a browser can prove get a small committed
+Playwright suite that rides CI, the cold search stops paying 78 sequential round trips, and
+Lighthouse is re-run with the numbers reported honestly. No engine, data, golden, or
+service-worker changes.
+
+### Added
+
+- **The committed browser suite (audit FID-QUAL-001).** Thirteen Playwright tests in `e2e/`
+  — run with `npm run e2e` against the BUILT app (`vite preview`, service worker included),
+  and as a second CI job on every PR (channel `chrome`: the runner's preinstalled browser, no
+  Playwright download). Coverage is the audit's list: Today's load and failure states (the
+  lectionary blocked at the network, the quiet notice, a working Try again), Reader selection
+  with the docked action bar provably not covering the selected verse, the Commentary sheet's
+  open/Escape/browser-Back (Back navigates AND releases the scroll lock — the v1.14.2
+  regression class), Search's exact section counts against the sealed DRB corpus (All 434 ·
+  OT 377 · NT 57 · Gospels 22), a bookmark opening in its SAVED translation, the
+  mid-import IndexedDB write failure leaving the prior corpus untouched, offline "Saved" as
+  cache truth (download → evict → Repair → never lie), and axe WCAG A/AA passes on Today,
+  Reader, Mass, Settings, and an open sheet. The `e2e/` tier is linted with the rest.
+
+### Changed
+
+- **Secondary routes load lazily (audit FID-PERF-002).** Settings, Library, Translations,
+  Plans, the plan creator, and About are route-level `React.lazy` chunks behind one quiet
+  Suspense fallback; Today, the Reader, Search, Mass, and the book list stay eager — the
+  worship path pays nothing. No chunking framework. The main chunk drops 426 → 393 kB
+  (gzip 135 → 127 kB).
+- **Cold search batches its book fetches (audit FID-PERF-003).** A six-book prefetch window
+  rides ahead of the scan; fetches overlap but processing stays strictly in canon order, so
+  the exact counts, ordered lists, and the named-book error (§29/§30) are unchanged.
+
+### Fixed
+
+- **The Mass page's largest layout shift (audit FID-PERF-001).** Each reading reserved one
+  "Loading…" line and then shoved everything below it when the scripture landed (CLS 0.30 in
+  the audit, 0.34 re-measured). Each reading now reserves geometry scaled from its OWN
+  citation — the verse spans are known before the text is — and the page reserves a day's
+  readings while the lectionary resolves: CLS 0.34 → **0.04**. The new lazy routes reserve a
+  screenful under their fallback so a cold visit's footer doesn't leap (Settings CLS 0.025).
+  Re-measured (Lighthouse 13.4 mobile, median where noisy): Today 81/LCP 3.6s/CLS 0.10–0.16
+  (was 75/3.5/0.241), Reader 82/3.8/0.107 (unchanged), Search shell 92/2.7/**0.000**, Mass
+  83/4.1/**0.042** (was 74/3.2/0.304), Settings 91/2.9/**0.025**. CLS < 0.1 holds on
+  Mass/Settings/Search; Today and Reader sit just above it and LCP stays over 2.5s under
+  simulated slow-4G — the residuals are the EB Garamond swap and the main bundle, named for
+  a future batch rather than half-fixed in this one.
+
 ## [1.18.0] — 2026-07-15 — both are preserved
 
 *"But new wine they put into new bottles: and both are preserved." (Matthew 9:17)*
