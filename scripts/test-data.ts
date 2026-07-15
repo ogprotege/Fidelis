@@ -2501,6 +2501,40 @@ console.log("");
   check("ScrollManager recorder ignores pinned-body scrolls",
     smSrc.includes("if (isScrollLocked()) return;"));
 
+  // (b2) resetScrollLock self-heals a STRANDED lock (v1.20.1): an iOS WKWebView can
+  // tear a sheet down without running its cleanup (a native share/permission dialog
+  // or a background/foreground mid-teardown), leaving `position: fixed` pinned and
+  // the whole app seemingly unable to navigate until a restart. A real logic test:
+  // simulate the leak (two locks, one unlock), then heal.
+  {
+    const savedDoc = (globalThis as { document?: unknown }).document;
+    const savedWin = (globalThis as { window?: unknown }).window;
+    (globalThis as { document?: unknown }).document = { body: { style: {} as Record<string, string> } };
+    (globalThis as { window?: unknown }).window = { scrollY: 7, scrollTo: () => {} };
+    const sl = await import("../src/lib/scrollLock");
+    sl.lockScroll();
+    sl.lockScroll();
+    sl.unlockScroll();
+    const leaked = sl.isScrollLocked();
+    sl.resetScrollLock();
+    check("resetScrollLock releases a stranded body lock (v1.20.1)",
+      leaked === true && sl.isScrollLocked() === false);
+    sl.resetScrollLock();
+    check("resetScrollLock is idempotent (a second call is a no-op)",
+      sl.isScrollLocked() === false);
+    (globalThis as { document?: unknown }).document = savedDoc;
+    (globalThis as { window?: unknown }).window = savedWin;
+  }
+  // (b3) App wires the self-heal: on every route change / foreground resume it
+  // releases a pinned body when NO sheet is actually mounted (the .sheet-backdrop
+  // DOM check keeps it from ever unlocking a legitimately-open sheet).
+  const appSrc2 = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+  check("App self-heals a stranded scroll lock on route change (v1.20.1)",
+    /import\s*\{[^}]*\bresetScrollLock\b[^}]*\}\s*from\s*"\.\/lib\/scrollLock"/.test(appSrc2) &&
+      appSrc2.includes("isScrollLocked()") &&
+      appSrc2.includes('.sheet-backdrop') &&
+      appSrc2.includes("resetScrollLock()"));
+
   // (c) the sticky Reader toolbar sits UNDER the notch-safe header —
   // ".reader-toolbar { … top: var(--header-h); … }" — a raw `top: 0` would
   // slide it beneath the fixed header on iOS (the notch safe-area inset).
