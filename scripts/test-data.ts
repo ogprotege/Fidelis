@@ -2758,5 +2758,107 @@ console.log("");
       vq.includes("not numbered in this translation"));
 }
 
+// ── 32. v1.17.1 "touch and see" — day/night text contrast (audit FID-A11Y-004)
+// and the 44px touch targets (FID-UX-002). The contrast half is REAL LOGIC: the
+// token values are parsed out of styles.css and pushed through the WCAG 2.x
+// relative-luminance math, so any token drift that drops a text-on-surface pair
+// below AA (4.5:1) goes red here — on EVERY surface (bg-0/1/2), both themes,
+// including the six liturgical accent overrides that carry link text when
+// "follow the liturgical year" is on. The touch-target half is source-shape in
+// the §25 manner (the geometry itself is verified in a browser per release).
+console.log("");
+{
+  const css = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+
+  // WCAG 2.x: sRGB channel → linear, relative luminance, contrast ratio.
+  const lin = (c: number) => {
+    const s = c / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  const lum = (hex: string) =>
+    0.2126 * lin(parseInt(hex.slice(1, 3), 16)) +
+    0.7152 * lin(parseInt(hex.slice(3, 5), 16)) +
+    0.0722 * lin(parseInt(hex.slice(5, 7), 16));
+  const contrast = (a: string, b: string) => {
+    const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
+  // The first CSS block introduced by exactly this selector (the negative
+  // lookbehind keeps a bare [data-accent="x"] from matching the tail of the
+  // compound night selector, as in the liturgical harness §1.3), and one
+  // custom property's hex inside it.
+  const tokenOf = (selector: string, name: string): string => {
+    const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const rule = css.match(new RegExp("(?<!\\])" + esc + "\\s*\\{([^}]*)\\}"));
+    const decl = rule?.[1].match(new RegExp("--" + name + ":\\s*(#[0-9A-Fa-f]{6})"));
+    return decl ? decl[1] : "";
+  };
+
+  for (const theme of ["day", "night"] as const) {
+    const base = `[data-theme="${theme}"]`;
+    const night = theme === "night" ? '[data-theme="night"]' : "";
+    const surfaces = ["bg-0", "bg-1", "bg-2"].map((b) => tokenOf(base, b));
+    check(`§32 ${theme}: the three surface tokens parse`, surfaces.every(Boolean));
+
+    // Every token that colors RUNNING TEXT (the mark tokens --gold and
+    // --ccc-mark are non-text and stay out of this table by design).
+    const textTokens: Record<string, string> = {
+      "--text": tokenOf(base, "text"),
+      "--text-muted": tokenOf(base, "text-muted"),
+      "--gold-text": tokenOf(base, "gold-text"),
+      "--purple (brand)": tokenOf(base, "purple")
+    };
+    for (const accent of ["green", "violet", "white", "red", "rose", "black"]) {
+      textTokens[`--purple (${accent} accent)`] = tokenOf(`${night}[data-accent="${accent}"]`, "purple");
+    }
+    for (const [name, hex] of Object.entries(textTokens)) {
+      const worst = Math.min(...surfaces.map((bg) => contrast(hex, bg)));
+      check(
+        `§32 ${theme} ${name} ${hex} ≥ 4.5:1 on every surface (worst ${worst.toFixed(2)})`,
+        !!hex && worst >= 4.5
+      );
+    }
+
+    // Text on filled controls and the translation badges — their own pairs.
+    const onAccent = contrast(tokenOf(base, "on-accent"), tokenOf(base, "purple-strong"));
+    check(`§32 ${theme} --on-accent on --purple-strong ≥ 4.5:1 (${onAccent.toFixed(2)})`, onAccent >= 4.5);
+    const badge = contrast(tokenOf(base, "badge-pd-text"), tokenOf(base, "badge-pd-bg"));
+    check(`§32 ${theme} PD badge text on its badge ≥ 4.5:1 (${badge.toFixed(2)})`, badge >= 4.5);
+  }
+
+  // FID-A11Y-004, the other half: a link inside prose is underlined by default —
+  // on some liturgical days the accent link sits at ~1:1 against the muted copy
+  // around it (the Mass import line measured 1.07:1), so color alone cannot mark
+  // the link (WCAG 1.4.1).
+  check("§32 prose links underline by default (p a, li a, .notice a)",
+    /p a,\s*li a,\s*\.notice a\s*\{\s*text-decoration:\s*underline/.test(css));
+
+  // FID-UX-002 source shape: every audited under-44px control family carries a
+  // pseudo-element hit slop (or real height) that lifts its tap target to ≥44px
+  // without inflating the visible chrome. The wrap-gap widenings are load-bearing
+  // too: they are what keeps adjacent rows' slop from overlapping.
+  check("§32 hit slop: search/mass chips (.chip::after, ±0.6rem)",
+    /\.chip::after\s*\{[^}]*inset:\s*-0\.6rem 0/.test(css));
+  check("§32 hit slop: SectionNav chips (±0.5rem, inside the rail's padding)",
+    /\.section-nav-link::after\s*\{[^}]*inset:\s*-0\.5rem 0/.test(css));
+  check("§32 hit slop: book chips — grid and picker (±0.4rem)",
+    /\.book-grid a::after,\s*\.picker-book::after\s*\{[^}]*inset:\s*-0\.4rem 0/.test(css));
+  check("§32 hit slop: Settings pills (±0.3rem)",
+    /\.pill::after\s*\{[^}]*inset:\s*-0\.3rem 0/.test(css));
+  check("§32 hit slop: Settings switch (::before — ::after is the knob)",
+    /\.switch::before\s*\{[^}]*inset:\s*-0\.65rem -1px/.test(css));
+  check("§32 hit slop: Today card Share (asymmetric, inside the card's own padding)",
+    /\.card-share::after\s*\{[^}]*inset:\s*-0\.7rem 0 -1\.1rem/.test(css));
+  check("§32 hit slop: Library Remove/Delete (±0.9rem)",
+    /\.lib-item \.actions button::after\s*\{[^}]*inset:\s*-0\.9rem -0\.2rem/.test(css));
+  check("§32 hit slop: Commentary tabs (±0.4rem)",
+    /\.cmt-tab::after\s*\{[^}]*inset:\s*-0\.4rem 0/.test(css));
+  check("§32 hit height: rosary mystery rows grow to ≥44px via real padding",
+    /\.rosary-list \.rosary-mystery\s*\{[^}]*padding:\s*0\.65rem 0/.test(css));
+  check("§32 hit slop: the wrap gaps that keep adjacent rows' slop from overlapping",
+    ["gap: 1.2rem 0.4rem", "gap: 0.8rem 0.4rem", "gap: 0.7rem 0.5rem"].every((s) => css.includes(s)));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;
