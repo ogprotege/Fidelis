@@ -1615,6 +1615,13 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
 
 .loading { text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem 0; }
 .loading-inline { color: var(--text-muted); font-style: italic; }
+/* A lazy route's Suspense fallback (v1.18.1 FID-PERF-001): hold a screenful so
+   the footer doesn't leap up and back while the chunk loads. */
+.route-fallback { min-height: 75vh; }
+/* The Mass page's loading reservation — sized like a day's readings. */
+.readings-skeleton { margin: 1.4rem 0; }
+/* One reading's reservation, inside its mounted .reading group. */
+.reading-skeleton { display: flex; margin: 0.3rem 0 0.6rem; }
 
 /* Quiet, motion-free loading placeholders (spec §9 polish): dim bars that reserve
    the height the async text will take, so the Today cards don't reflow when it

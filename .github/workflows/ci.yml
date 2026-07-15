@@ -32,3 +32,21 @@ jobs:
       - run: npm run build
       - name: Check documentation links
         run: npm run check-docs
+
+  # v1.18.1 (audit FID-QUAL-001): the committed browser suite — the behaviors
+  # the pure harnesses can't reach (failure states, the action bar, sheets,
+  # offline cache truth, import atomicity, axe). Runs the BUILT app through
+  # `vite preview` (playwright.config.ts's webServer); channel "chrome" uses
+  # the runner's preinstalled Google Chrome, so no browser download.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Browser suite (Playwright)
+        run: npm run e2e

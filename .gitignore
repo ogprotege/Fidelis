@@ -3,6 +3,10 @@ node_modules/
 dist/
 .DS_Store
 
+# Playwright run artifacts (the committed suite lives in e2e/; its output does not).
+/test-results/
+/playwright-report/
+
 # Imported licensed translations (e.g. a NABRE you own) — on-device only, never committed.
 *.local.json
 nabre.local.json

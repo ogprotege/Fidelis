@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ReadingText from "../components/ReadingText";
 import SectionNav from "../components/SectionNav";
+import Skeleton from "../components/Skeleton";
 import {
   DayReadings,
   displayReadings,
@@ -194,9 +195,15 @@ export default function Readings() {
       {navItems.length >= 3 && <SectionNav sections={navItems} />}
 
       {readings === "loading" && (
-        <p className="loading" role="status">
-          Finding the readings…
-        </p>
+        <>
+          <p className="loading" role="status">
+            Finding the readings…
+          </p>
+          {/* v1.18.1 (audit FID-PERF-001): reserve roughly a day's readings of
+              geometry so the arriving text FILLS the page instead of shoving
+              the provenance line and footer down (the page's largest shift). */}
+          <Skeleton lines={18} className="readings-skeleton" />
+        </>
       )}
       {readings === null && (
         <div className="notice" role="status">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Skeleton from "./Skeleton";
 import { getBook } from "../lib/canon";
 import { BookData, loadBook } from "../lib/data";
 import { LectionaryRow, formatLectionaryCitation, hebrewSpanToVulgate } from "../lib/lectionary";
@@ -107,7 +108,32 @@ export default function ReadingText({ row, translation, label, id }: Props) {
         )}
       </div>
       {error && <p className="muted small">Text unavailable in this translation.</p>}
-      {!error && verses === null && <p className="loading-inline small">Loading…</p>}
+      {!error && verses === null && (
+        <>
+          <p className="loading-inline small">Loading…</p>
+          {/* v1.18.1 (audit FID-PERF-001): reserve the passage's rough geometry
+              so the arriving scripture FILLS the space instead of shoving every
+              reading below it — the Mass page's largest layout shift. The
+              citation's verse spans are known before the text is, so the
+              reservation scales with the actual passage (~1.5 rendered lines
+              per verse at phone width; whole-chapter spans capped). */}
+          <Skeleton
+            lines={Math.min(
+              24,
+              Math.max(
+                3,
+                Math.round(
+                  row.s.reduce(
+                    (n, [, from, to]) => n + (Math.min(to, from + 30) - from + 1),
+                    0
+                  ) * 1.5
+                )
+              )
+            )}
+            className="reading-skeleton"
+          />
+        </>
+      )}
       {fellBackFrom && (
         <p className="muted small sans">
           The U.S. lectionary uses the {fellBackFrom}, which is under copyright and not
