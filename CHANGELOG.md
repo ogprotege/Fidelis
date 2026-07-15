@@ -6,6 +6,54 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.18.4] — 2026-07-15 — come and see
+
+*"Philip saith to him: Come and see." (John 1:46)*
+
+The Mac-only pass — the release-ops and native-acceptance batch the Linux audit environment could
+not run (audit §2.2, §10, and FID-REL-001). **No engine, data, golden, or service-worker changes —
+no application code changes at all.** Only the App Store screenshots, native version strings, and
+docs move; the substance is verifying the finished build on Apple hardware and shipping it.
+
+### Fixed
+
+- **The App Store screenshots no longer misrepresent the app (FID-REL-001).** The submitted set was
+  captured 2026-07-13, before the Collapsing Masthead (v1.16.0) — every frame advertised the retired
+  bottom tab bar, which `docs/guides/APP_STORE.md` explicitly flagged as a release blocker. The full
+  set is regenerated against the v1.18.4 Release web bundle (the native shell *is* that bundle, so a
+  browser capture at the device's pixel size is faithful to what ships): the masthead tops every
+  frame, no frame shows a bottom bar, the day and night frames use the current tokens, and the first
+  three tell the Today → Reader → Mass story. iPhone 6.9″ (1284 × 2778) and iPad 12.9″ (2048 × 2732),
+  RGB, exact — the four acceptance criteria of FID-REL-001. The capture harness is now **committed**
+  (`scripts/capture-appstore.mjs`, documented in `docs/guides/APP_STORE.md`) rather than living in a
+  session scratchpad — the exact reason the set went stale in the first place — so it can be
+  regenerated in two commands and can never silently drift again.
+
+### Verified
+
+- **The §10 native acceptance checklist, run on this Mac.** Xcode 26.6 + the iOS Simulator, plus
+  source/build verification of the items the pure engines and the browser cannot reach (the archive
+  embeds the widget extension, app icon, privacy manifest, and current web bundle; the night
+  cold-launch has no Day-theme flash; safe-area insets resolve once; the region policy is explicit).
+  The items that genuinely require physical hardware — VoiceOver order and pronunciation, live
+  Dynamic Type at the largest accessibility category, the on-screen-keyboard-versus-docked-action-bar
+  interaction, edge-swipe Back over an open sheet, add-only Photos, widget midnight/time-zone
+  refresh, and Siri — are handed to the maintainer as a device checklist to run from this very
+  TestFlight build — the committed [device-acceptance checklist](docs/guides/DEVICE_ACCEPTANCE.md)
+  captures each with steps and pass criteria. Two concerns were surfaced and recorded (not fixed) in
+  this verify-only pass: the light-pinned native night-launch splash, and the region policy that is
+  explicit in code/docs but not harness-pinned. Full results:
+  [RELEASES.md → come and see](docs/history/RELEASES.md#come-and-see-v1184).
+
+### Changed
+
+- **Native version strings reconciled to 1.18.4** — the four iOS `MARKETING_VERSION` entries and the
+  Android `versionName` / `versionCode` (→ `11804`) — and the signed build shipped to TestFlight via
+  `scripts/ios-testflight.sh`.
+- **`docs/guides/APP_STORE.md` refreshed** — the stale-screenshot banner removed, the capture date
+  and shot list brought to the current (six-card) Today page and the post-masthead Reader/Mass
+  controls.
+
 ## [1.18.3] — 2026-07-15 — faithful in little
 
 *"He that is faithful in that which is least, is faithful also in that which is greater." (Luke 16:10)*

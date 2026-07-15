@@ -95,5 +95,13 @@ needs no registered devices), and uploads via the App Store Connect API key — 
 the full rationale. Add the build to a TestFlight group in App Store Connect
 (internal testing needs no Apple review).
 
+## 8. Run device acceptance (before the store submission)
+
+From the TestFlight build, work the hardware-only items in
+[Device acceptance](DEVICE_ACCEPTANCE.md) — VoiceOver, live Dynamic Type, the
+keyboard-vs-docked-bar interaction, widgets, Siri. Regenerate the App Store
+screenshots if any UI changed (`node scripts/capture-appstore.mjs`, see
+[App Store](APP_STORE.md)). Only then submit the update for review.
+
 ---
 [← Docs index](../INDEX.md) · Related: [CHANGELOG](../../CHANGELOG.md) · [iOS guide](IOS.md) · [Android guide](ANDROID.md)
