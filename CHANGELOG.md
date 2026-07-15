@@ -6,58 +6,70 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
-## [1.18.0] — 2026-07-15 — the memory of the just
+## [1.18.0] — 2026-07-15 — both are preserved
 
-*"The memory of the just is with praises: and the name of the wicked shall rot." (Proverbs 10:7)*
+*"But new wine they put into new bottles: and both are preserved." (Matthew 9:17)*
 
-Two catechetical layers, sourced from the public domain and never AI-paraphrased (design spec
-§13), each keyed by the calendar date: **Saint of the Day** and **Today in Church History**. The
-saints hang off the memorial name already on the Today card; church history earns a new card.
-This is the one deliberate raising of the five-card standing rule — now **six** (see below). The
-corpora ship as a small verified-`false` seed drawn from Butler's *Lives of the Saints* and the
-1913 Catholic Encyclopedia; they grow afterward with no code change (new dated files are sealed
-by the manifest walk automatically). No engine, lectionary, or golden changes; no service-worker
-cache bump.
+The storage & import resilience batch of the 2026-07-15 audit (FID-DATA-001, FID-FUNC-009,
+FID-STOR-001, FID-FUNC-008): the Bible import becomes atomic — new wine into a new vessel,
+the old untouched until the new is whole — every silent persistence failure gets one honest
+voice, and "Saved" for offline reading becomes a claim the cache must back. No engine, data,
+golden, or service-worker changes.
 
 ### Added
 
-- **Saint of the Day.** When the day's memorial has a life in the collection, its name on the
-  Today card (and the Mass page) becomes a purple-affordance link to a full **Saint page** —
-  name, title, rank, dates, life, what they are known for, patronage, canonization, an associated
-  public-domain prayer where one exists, and a footnoted **Sources** section — deep-linkable at
-  `/saint/:day/:id` and shareable through the existing share card. The page reconciles to the
-  liturgical engine by matching the day's celebration name (`saintForCelebration`, token overlap),
-  so the card and the page never disagree across regions or transfers, though the engine carries
-  no saint id.
-- **Today in Church History** — the sixth Today card (inserted under the Mass card, before the
-  Verse of the Day). Four honest states in the v1.17.0 manner: a skeleton while loading, the lead
-  event's year + title + a blurb when present, a calm "No entry is recorded for today yet." when
-  the growing corpus has nothing for the date (never an error), and a quiet failure notice
-  offline. "Read more" opens the **History page** (`/history/:day`) listing every event for the
-  date, sorted oldest-first, each with its body, footnoted sources, and share.
-- **Two new bundled corpora and their pipeline** — `scripts/build-saints.mjs` /
-  `scripts/build-history.mjs` (mirroring `build-quotes.mjs`) emit
-  `public/data/saints/<MM-DD>.json` and `public/data/history/<MM-DD>.json` from the hand-edited
-  `scripts/*.corpus.json`, validate every entry, **hard-fail any entry lacking a public-domain
-  source** (this layer's provenance gate — the §3.3 analog), count `verified` vs draft (the §3.4
-  ledger — the corpus is the ledger), and re-seal the manifest. Lazy, memoized,
-  retry-after-rejection loaders (`loadSaints`/`loadHistory`, the `loadCommentary` pattern).
-- **Harness §33** — real logic tests for `dayKey` and `saintForCelebration`, integrity checks on
-  the sealed corpora (every entry cites a public-domain source), and source-shape guards for the
-  six-card change, the History card's four states, the saint chip, the loaders, and the routes.
+- **Atomic Bible import (audit FID-DATA-001).** The importer used to read any file whole,
+  parse it on the main thread, and write books one-by-one over the previous corpus — a quota
+  failure at book N left a hybrid of two editions. Now: an oversized file is refused **before
+  it is read** (a documented 64 MB bound, far above any real corpus — `checkImportSize` runs
+  on `file.size`); parsing and Vulgate-grid normalization run **in a Worker**
+  (`src/lib/import.worker.ts` — the parsers are pure string work, the OSIS path regex-based,
+  so nothing changed but the thread); the **whole corpus is validated** before any write
+  (structure named per book, textless placeholders skipped, empty corpora refused); the books
+  are **staged under a fresh generation** in IndexedDB (`translation@gen/book`); the
+  **active-version marker flips only after every write succeeded** — one tiny write in a
+  `meta` store (DB v3) that is the entire swap — and only then are the old generation's keys
+  swept. Generation 0 *is* the legacy key shape, so every existing install reads on with no
+  migration. All of it is a pure, adapter-driven module (`src/lib/importPlan.ts`) that
+  harness §33 drives through a fake store: an injected mid-import write failure provably
+  leaves the prior corpus byte-for-byte untouched, and a quota error names the cause and the
+  recovery path.
+- **Replace imported text.** A translation card with an import now offers Replace beside
+  Remove — riding the same atomic swap, so the old text stays readable until the new corpus
+  has fully landed (previously re-importing required removing first, leaving a window with no
+  text at all).
 
-### Changed
+### Fixed
 
-- **Standing rule 2 raised from five to six Today cards** — a deliberate, recorded change for the
-  Church History card, reconciled across `CLAUDE.md`, the executable harness guard, `Home.tsx`,
-  and the feature design spec. It is the only such raise; the discipline (a new feature earns a
-  line inside a card, or a tab, before it earns a card) still governs.
+- **Re-importing a smaller Bible retains no stale books (audit FID-FUNC-009).** The old
+  importer overwrote books present in the new file and removed nothing absent from it. The
+  generation sweep removes every key outside the new generation — orphans of a crashed import
+  included — so a replacement corpus can never become a hybrid of two editions.
+- **Local persistence failures are no longer silent (audit FID-STOR-001).** Every
+  localStorage write was a catch-and-discard; settings, plans, notes, bookmarks, and reading
+  state could all vanish while looking saved. `write()` now reports success, and the first
+  refused write raises **one quiet, deduplicated session warning** (`role="status"`, on every
+  route) naming the risk plainly, with **Export your library** as the recovery action and a
+  Dismiss that keeps it quiet for the session. Successful writes never toast.
+- **"Saved" for offline reading is cache truth (audit FID-FUNC-008).** Settings claimed
+  `Saved · Update` from a localStorage record even after the browser evicted the entire data
+  cache. The rows now **probe Cache Storage against the manifest's file list**
+  (`verifyOfflineBundle`; the page-side `DATA_CACHE` constant is pinned against `sw.js` by
+  harness §33): "Saved" requires a complete cache; a partly evicted bundle the user had
+  downloaded reads **Repair (n missing)** — and repair re-fetches exactly the gap, since the
+  service worker's cache-first handler skips what it already holds; incidental caching from
+  ordinary reading never claims anything. The record is demoted to presentation metadata.
 
-### Release mechanics
+### Quality
 
-- iOS `MARKETING_VERSION` and Android `versionName` 1.17.1→1.18.0, `versionCode` 11701→11800.
-  New `saints`/`history` bundle rows in the sealed manifest. The seed entries ship `verified:
-  false` (drafts pending verification against the named editions); the corpus fills over time.
+- Harness §33: the staging/swap acceptance as REAL logic tests (fake store, injected
+  failures, orphan sweep), the size gate, corpus validation, quota naming, the storage-warning
+  dedup (driven through a throwing `localStorage`), plus shape guards for the UI wiring and
+  the `DATA_CACHE` name agreement. 35 e2e checks in real Chrome against `vite preview`:
+  import → replace-smaller → injected mid-import quota failure → recovery sweep, the 64 MB
+  refusal via a real 64 MB file, a seeded pre-v1.18 legacy corpus reading and replacing
+  cleanly, download → evict-one → Repair → evict-all → never-Saved, and the storage banner's
+  full dedup/dismiss lifecycle.
 
 ## [1.17.1] — 2026-07-15 — touch and see
 
