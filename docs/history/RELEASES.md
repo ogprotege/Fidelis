@@ -1231,6 +1231,87 @@ and were widened to what Chrome actually measures; and the first Mass-page run r
 async readings load, a test bug the second run fixed. Shells to 1.17.1/11701; no sw cache
 bump. Next: the storage/import-resilience batch.
 
+## Both are preserved (v1.18.0)
+
+*"But new wine they put into new bottles: and both are preserved." (Matthew 9:17)*
+**The storage batch: the import becomes atomic — the old text untouched until the new is
+whole — every silent save failure gets one honest voice, and "Saved" becomes a claim the
+cache must back.**
+
+The fifth release cut from the verified 2026-07-15 audit: FID-DATA-001, FID-FUNC-009,
+FID-STOR-001, FID-FUNC-008 — the batch about what the app *keeps*. A Bible someone imported
+under their own license, notes in the margins of a year's reading, a corpus saved for a
+connectionless retreat: all of it lived behind code that could fail silently and lie
+politely. No engine, data, golden, or service-worker changes.
+
+**The atomic import (FID-DATA-001).** The old importer was four hazards in a trench coat: it
+read any file whole into memory (`file.text()` unbounded), parsed it on the main thread (a
+frozen UI for the duration), wrote books one-at-a-time over the live corpus, and had no
+rollback — a quota failure at book N left books 1…N−1 of the new edition sitting beside the
+old books the new file didn't contain. The rebuild follows the audit's direction exactly,
+and the shape of the fix is the shape of the verse: new wine into a new vessel, and both are
+preserved until the swap. An oversized file is refused **before it is read** — the
+documented 64 MB bound runs against `file.size`, so the accidental video fails in
+milliseconds, not after a tab-killing read. Parse + Vulgate-grid normalization run **in a
+Worker** (the parsers were already pure string work — the OSIS path is regex, no DOMParser —
+so nothing changed but the thread). The **whole normalized corpus is validated first**:
+structure named per book, textless placeholders skipped (the v1.15.0 alias-clobber guard,
+now pre-write), empty corpora refused. The books are **staged under a fresh generation** —
+keys `translation@gen/book` — while the previous corpus keeps serving reads; the
+**active-version marker** (a new `meta` store, DB v3) **flips only after every write has
+succeeded**, one tiny write that IS the swap; only then are the superseded generation's keys
+swept. Generation 0 is defined as the legacy bare key shape, so every pre-v1.18 install is
+already "at gen 0" — existing imports read on through the same code path with no migration
+ever running. And the whole decision surface — bound, validation, staging keys, flip, sweep
+— is a pure module (`src/lib/importPlan.ts`) behind an `ImportStore` adapter, which is what
+makes the audit's acceptance criteria REAL LOGIC in harness §33: a fake store injects a
+quota failure at write two and the prior corpus provably survives byte-for-byte, marker
+unflipped; the next import plans the crash's orphans into its own sweep. Quota errors name
+the cause and the recovery in words ("This device's browser storage is full… free up
+space… the previous text (if any) is untouched").
+
+**No hybrid editions (FID-FUNC-009).** Because the sweep removes *every* key outside the
+new generation, a replacement corpus smaller than its predecessor cannot retain the
+predecessor's absent books — the exact hybrid the audit manufactured. The Translations card
+also gains **Replace imported text** beside Remove: replacement rides the same atomic swap,
+so the old text stays readable until the new corpus has fully landed (the old flow —
+remove, then import — left a window with no text at all).
+
+**One honest voice for a full disk (FID-STOR-001).** Every localStorage write in the app
+went through a `catch {}` that discarded the failure — settings, plans, notes, bookmarks,
+reading state, all able to vanish while looking saved. `write()` now reports success, and
+the first refused write raises **one quiet, deduplicated session warning** — a `.notice`
+with `role="status"` at the top of the page column on every route — that names the risk
+plainly and offers **Export your library** as the recovery. Dismiss keeps it quiet for the
+session; successes never toast; the dedup is driven through a throwing `localStorage` in
+§33 and the full raise/dedup/dismiss lifecycle in the browser.
+
+**"Saved" must be true (FID-FUNC-008).** Settings claimed `Saved · Update` from a
+localStorage record even after the entire `fidelis-data-v2` cache had been evicted — the
+audit's repro deleted the cache and the promise stood. The rows now **probe Cache Storage
+against the manifest's file list** (`verifyOfflineBundle`; the page-side `DATA_CACHE`
+constant is pinned against `sw.js`'s by §33, since a plain public file can't be imported
+from). The claim grammar: **Saved** requires a complete cache; **Repair (n missing)**
+requires the user's download intent AND a partly evicted cache — and repair re-fetches
+exactly the gap, because the service worker's cache-first handler skips what it already
+holds; incidental caching from ordinary reading (the Settings preview alone caches Genesis)
+never earns a claim. The record is demoted to what the audit asked: presentation metadata,
+the fallback only where Cache Storage can't be asked.
+
+**The browser is still the referee.** TDD throughout: §33 written first (29 red checks —
+the pure module stubbed to fail honestly, not error), then green module-by-module. 35 e2e
+checks in real Chrome against `vite preview`: import → replace-smaller → injected
+mid-import quota failure (an `IDBObjectStore.put` monkeypatch) → recovery sweep; the 64 MB
+refusal via an actual 64 MB file on disk; a hand-seeded pre-v1.18 legacy corpus reading
+without migration and replacing cleanly; download → evict one file → **Repair (1 missing)**
+→ repair → **Saved** → evict the whole cache → never-Saved-again while the record still
+claims it; and the storage banner's raise/dedup/dismiss/stay-quiet lifecycle. The e2e run
+corrected the design once: the first "Repair" rule flagged bundles the user never
+downloaded (ordinary reading had incidentally cached a file), which is how the
+intent-plus-truth grammar above earned its shape. Shells to 1.18.0/11800; no sw cache bump.
+Next: the performance batch (FID-PERF-001/002) or the native-region decision
+(FID-NATIVE-001), owner's call.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

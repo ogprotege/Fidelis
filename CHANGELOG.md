@@ -6,6 +6,71 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.18.0] — 2026-07-15 — both are preserved
+
+*"But new wine they put into new bottles: and both are preserved." (Matthew 9:17)*
+
+The storage & import resilience batch of the 2026-07-15 audit (FID-DATA-001, FID-FUNC-009,
+FID-STOR-001, FID-FUNC-008): the Bible import becomes atomic — new wine into a new vessel,
+the old untouched until the new is whole — every silent persistence failure gets one honest
+voice, and "Saved" for offline reading becomes a claim the cache must back. No engine, data,
+golden, or service-worker changes.
+
+### Added
+
+- **Atomic Bible import (audit FID-DATA-001).** The importer used to read any file whole,
+  parse it on the main thread, and write books one-by-one over the previous corpus — a quota
+  failure at book N left a hybrid of two editions. Now: an oversized file is refused **before
+  it is read** (a documented 64 MB bound, far above any real corpus — `checkImportSize` runs
+  on `file.size`); parsing and Vulgate-grid normalization run **in a Worker**
+  (`src/lib/import.worker.ts` — the parsers are pure string work, the OSIS path regex-based,
+  so nothing changed but the thread); the **whole corpus is validated** before any write
+  (structure named per book, textless placeholders skipped, empty corpora refused); the books
+  are **staged under a fresh generation** in IndexedDB (`translation@gen/book`); the
+  **active-version marker flips only after every write succeeded** — one tiny write in a
+  `meta` store (DB v3) that is the entire swap — and only then are the old generation's keys
+  swept. Generation 0 *is* the legacy key shape, so every existing install reads on with no
+  migration. All of it is a pure, adapter-driven module (`src/lib/importPlan.ts`) that
+  harness §33 drives through a fake store: an injected mid-import write failure provably
+  leaves the prior corpus byte-for-byte untouched, and a quota error names the cause and the
+  recovery path.
+- **Replace imported text.** A translation card with an import now offers Replace beside
+  Remove — riding the same atomic swap, so the old text stays readable until the new corpus
+  has fully landed (previously re-importing required removing first, leaving a window with no
+  text at all).
+
+### Fixed
+
+- **Re-importing a smaller Bible retains no stale books (audit FID-FUNC-009).** The old
+  importer overwrote books present in the new file and removed nothing absent from it. The
+  generation sweep removes every key outside the new generation — orphans of a crashed import
+  included — so a replacement corpus can never become a hybrid of two editions.
+- **Local persistence failures are no longer silent (audit FID-STOR-001).** Every
+  localStorage write was a catch-and-discard; settings, plans, notes, bookmarks, and reading
+  state could all vanish while looking saved. `write()` now reports success, and the first
+  refused write raises **one quiet, deduplicated session warning** (`role="status"`, on every
+  route) naming the risk plainly, with **Export your library** as the recovery action and a
+  Dismiss that keeps it quiet for the session. Successful writes never toast.
+- **"Saved" for offline reading is cache truth (audit FID-FUNC-008).** Settings claimed
+  `Saved · Update` from a localStorage record even after the browser evicted the entire data
+  cache. The rows now **probe Cache Storage against the manifest's file list**
+  (`verifyOfflineBundle`; the page-side `DATA_CACHE` constant is pinned against `sw.js` by
+  harness §33): "Saved" requires a complete cache; a partly evicted bundle the user had
+  downloaded reads **Repair (n missing)** — and repair re-fetches exactly the gap, since the
+  service worker's cache-first handler skips what it already holds; incidental caching from
+  ordinary reading never claims anything. The record is demoted to presentation metadata.
+
+### Quality
+
+- Harness §33: the staging/swap acceptance as REAL logic tests (fake store, injected
+  failures, orphan sweep), the size gate, corpus validation, quota naming, the storage-warning
+  dedup (driven through a throwing `localStorage`), plus shape guards for the UI wiring and
+  the `DATA_CACHE` name agreement. 35 e2e checks in real Chrome against `vite preview`:
+  import → replace-smaller → injected mid-import quota failure → recovery sweep, the 64 MB
+  refusal via a real 64 MB file, a seeded pre-v1.18 legacy corpus reading and replacing
+  cleanly, download → evict-one → Repair → evict-all → never-Saved, and the storage banner's
+  full dedup/dismiss lifecycle.
+
 ## [1.17.1] — 2026-07-15 — touch and see
 
 *"See my hands and feet, that it is I myself; handle, and see." (Luke 24:39)*

@@ -1,6 +1,14 @@
 import { getTranslation } from "./translations";
 import { expandCatenaSpans, isCatenaSpanDoc } from "./commentary";
-import type { CccTextDoc } from "./import-formats";
+import type { CccTextDoc, ImportedBook } from "./import-formats";
+import {
+  executeImportPlan,
+  keyFor,
+  parseKey,
+  planImport,
+  validateCorpus,
+  type ImportStore
+} from "./importPlan";
 
 export interface BookData {
   translation: string;
@@ -47,22 +55,32 @@ export function loadManifest(): Promise<ManifestDoc | null> {
 }
 
 const DB_NAME = "fidelis-imported";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE = "books";
 const CCC_STORE = "ccc";
 const CCC_KEY = "text";
+/** v1.18.0 (audit FID-DATA-001): the tiny store holding one `active:<translation>`
+ *  → generation record per import. The marker is the atomic swap — flipping it
+ *  is the single write that makes a freshly staged corpus visible. No marker =
+ *  generation 0 = the legacy `translation/book` keys, so pre-v1.18 imports
+ *  keep reading with no migration. */
+const META_STORE = "meta";
+const activeKey = (translation: string) => `active:${translation}`;
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
-      // Idempotent: covers a fresh install (oldVersion 0) and the 1→2 upgrade.
-      // The books store (NABRE/RSV-2CE imports) is preserved — only added if absent.
+      // Idempotent: covers a fresh install (oldVersion 0) and every upgrade
+      // path (1→3, 2→3). Existing stores are preserved — only added if absent.
       if (!req.result.objectStoreNames.contains(STORE)) {
         req.result.createObjectStore(STORE);
       }
       if (!req.result.objectStoreNames.contains(CCC_STORE)) {
         req.result.createObjectStore(CCC_STORE);
+      }
+      if (!req.result.objectStoreNames.contains(META_STORE)) {
+        req.result.createObjectStore(META_STORE);
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -70,58 +88,66 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
-async function idbGet(key: string): Promise<BookData | undefined> {
+/** One-shot request helpers against an open db (each in its own transaction). */
+function reqGet<T>(db: IDBDatabase, store: string, key: string): Promise<T | undefined> {
+  return new Promise((resolve, reject) => {
+    const req = db.transaction(store, "readonly").objectStore(store).get(key);
+    req.onsuccess = () => resolve(req.result as T | undefined);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function reqPut(db: IDBDatabase, store: string, key: string, value: unknown): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, "readwrite");
+    tx.objectStore(store).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+async function activeGenOf(db: IDBDatabase, translation: string): Promise<number> {
+  const gen = await reqGet<number>(db, META_STORE, activeKey(translation));
+  return typeof gen === "number" && Number.isFinite(gen) ? gen : 0;
+}
+
+/** Read a book from the translation's ACTIVE generation (staged writes from an
+ *  unfinished import are invisible by construction). */
+async function idbGetBook(translation: string, book: string): Promise<BookData | undefined> {
   const db = await openDb();
   try {
-    return await new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, "readonly");
-      const req = tx.objectStore(STORE).get(key);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
+    const gen = await activeGenOf(db, translation);
+    return await reqGet<BookData>(db, STORE, keyFor(translation, gen, book));
   } finally {
     db.close();
   }
 }
 
-export async function idbPut(key: string, value: BookData): Promise<void> {
-  const db = await openDb();
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).put(value, key);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  } finally {
-    db.close();
-  }
+async function idbListKeys(db: IDBDatabase): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    const req = db.transaction(STORE, "readonly").objectStore(STORE).getAllKeys();
+    req.onsuccess = () => resolve(req.result as string[]);
+    req.onerror = () => reject(req.error);
+  });
 }
 
-export async function idbListKeys(): Promise<string[]> {
-  const db = await openDb();
-  try {
-    return await new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, "readonly");
-      const req = tx.objectStore(STORE).getAllKeys();
-      req.onsuccess = () => resolve(req.result as string[]);
-      req.onerror = () => reject(req.error);
-    });
-  } finally {
-    db.close();
-  }
-}
-
+/** Remove an imported translation entirely: every generation's keys AND the
+ *  active marker, so a later import starts from a clean gen history. */
 export async function idbClearTranslation(translation: string): Promise<void> {
-  const keys = await idbListKeys();
   const db = await openDb();
   try {
+    const keys = (await idbListKeys(db)).filter(
+      (k) => parseKey(k).translation === translation
+    );
     await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE, "readwrite");
+      const tx = db.transaction([STORE, META_STORE], "readwrite");
       const store = tx.objectStore(STORE);
-      for (const k of keys) if (k.startsWith(`${translation}/`)) store.delete(k);
+      for (const k of keys) store.delete(k);
+      tx.objectStore(META_STORE).delete(activeKey(translation));
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
     });
   } finally {
     db.close();
@@ -129,13 +155,73 @@ export async function idbClearTranslation(translation: string): Promise<void> {
   for (const k of memCache.keys()) if (k.startsWith(`${translation}/`)) memCache.delete(k);
 }
 
-/** Which non-bundled translations have imported text available. */
+/** Which non-bundled translations have imported text available — a translation
+ *  counts only when its ACTIVE generation has books, so a crashed import's
+ *  orphaned staging keys can never present a translation as imported. */
 export async function importedTranslations(): Promise<Set<string>> {
   try {
-    const keys = await idbListKeys();
-    return new Set(keys.map((k) => k.split("/")[0]));
+    const db = await openDb();
+    try {
+      const keys = await idbListKeys(db);
+      const present = new Set<string>();
+      const gens = new Map<string, number>();
+      for (const key of keys) {
+        const { translation, gen } = parseKey(key);
+        if (present.has(translation)) continue;
+        let active = gens.get(translation);
+        if (active === undefined) {
+          active = await activeGenOf(db, translation);
+          gens.set(translation, active);
+        }
+        if (gen === active) present.add(translation);
+      }
+      return present;
+    } finally {
+      db.close();
+    }
   } catch {
     return new Set();
+  }
+}
+
+/** The atomic import (v1.18.0, FID-DATA-001/FID-FUNC-009): validate the whole
+ *  corpus, stage every book under a fresh generation, flip the active marker
+ *  only after every write succeeded, then sweep every superseded key. The
+ *  logic is the pure `importPlan` module; this supplies the IndexedDB store.
+ *  On any failure the marker is unflipped, so the prior corpus — including
+ *  "no corpus" — is untouched. */
+export async function stageAndSwapImport(
+  translation: string,
+  books: ImportedBook[],
+  onProgress?: (done: number, total: number) => void
+): Promise<number> {
+  const validated = validateCorpus(translation, books);
+  const db = await openDb();
+  try {
+    const plan = planImport(
+      translation,
+      await activeGenOf(db, translation),
+      await idbListKeys(db),
+      validated
+    );
+    const store: ImportStore = {
+      put: (key, data) => reqPut(db, STORE, key, data),
+      setActive: (t, gen) => reqPut(db, META_STORE, activeKey(t), gen),
+      deleteKeys: (keys) =>
+        new Promise<void>((resolve, reject) => {
+          const tx = db.transaction(STORE, "readwrite");
+          for (const k of keys) tx.objectStore(STORE).delete(k);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+          tx.onabort = () => reject(tx.error);
+        })
+    };
+    const count = await executeImportPlan(plan, store, onProgress);
+    // The swap changed what this translation's keys resolve to.
+    for (const k of memCache.keys()) if (k.startsWith(`${translation}/`)) memCache.delete(k);
+    return count;
+  } finally {
+    db.close();
   }
 }
 
@@ -211,7 +297,7 @@ export function loadBook(translation: string, book: string): Promise<BookData> {
     p = (async () => {
       const t = getTranslation(translation);
       if (t && !t.bundled) {
-        const data = await idbGet(key);
+        const data = await idbGetBook(translation, book);
         if (!data) {
           throw new Error(
             `${t.abbrev} is under copyright and not bundled. Import a licensed copy from the Translations page.`
@@ -367,4 +453,38 @@ export async function downloadBundle(
     throw new Error(`${failed} of ${files.length} files could not be saved — please retry with a connection.`);
   }
   return done;
+}
+
+/** The service worker's data cache. MUST equal public/sw.js's DATA_CACHE —
+ *  sw.js is a plain public file the app can't import from, so the harness
+ *  (§33) pins the two literals against each other instead. */
+export const DATA_CACHE = "fidelis-data-v2";
+
+export interface OfflineBundleStatus {
+  present: number;
+  total: number;
+  complete: boolean;
+}
+
+/** Cache TRUTH for a bundle's offline availability (v1.18.0, audit
+ *  FID-FUNC-008): probe Cache Storage for every file the manifest lists under
+ *  the bundle before the UI may say "Saved" — the browser can evict the data
+ *  cache while the lightweight localStorage record still says yes. Returns
+ *  null when the truth is unknowable (no manifest, no CacheStorage), in which
+ *  case the caller falls back to the record as presentation metadata only. */
+export async function verifyOfflineBundle(bundle: string): Promise<OfflineBundleStatus | null> {
+  const m = await loadManifest();
+  if (!m || !("caches" in globalThis)) return null;
+  const files = Object.keys(m.files).filter((rel) => rel.startsWith(`${bundle}/`));
+  if (files.length === 0) return null;
+  try {
+    const cache = await caches.open(DATA_CACHE);
+    let present = 0;
+    for (const rel of files) {
+      if (await cache.match(`${import.meta.env.BASE_URL}data/${rel}`)) present++;
+    }
+    return { present, total: files.length, complete: present === files.length };
+  } catch {
+    return null;
+  }
 }
