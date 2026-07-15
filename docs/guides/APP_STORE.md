@@ -54,7 +54,7 @@ THE LITURGY
 • Let the app's accent follow the liturgical year — green in Ordinary Time, violet in Advent and Lent, red on the feasts of martyrs
 
 EVERY DAY
-• A Today page that never clutters: the day's celebration, a Verse of the Day, the Mass readings, and a verified quote from the saints — never more than five cards
+• A Today page that never clutters: the day's celebration, the day in Church history, a Verse of the Day, the Mass readings, and a verified quote from the saints — never more than six cards
 • Home-screen widgets for the Verse of the Day, today's Mass, and the daily quote — in light and dark
 • "What's today's Gospel?" — ask Siri
 
@@ -158,17 +158,18 @@ Quick tour for review: the Today tab shows the liturgical day, Verse of the Day,
 
 ## Screenshots
 
-Requirement: JPG/PNG, RGB, portrait 1284 × 2778 (or 1242 × 2688). Up to 10;
-the first 3 appear on the install sheet. Shot list (day theme unless noted):
+Requirement: JPG/PNG, RGB, portrait. Fidelis is a universal app, so **both**
+sizes are required: iPhone 6.9″ **1284 × 2778** (`appstore/screenshots/`) and
+iPad 12.9″ **2048 × 2732** (`appstore/screenshots-ipad/`). Up to 10; the first 3
+appear on the install sheet. Shot list (day theme unless noted):
 
-**STALE for 1.16.0:** the 2026-07-13 set below shows the retired bottom tab
-bar — regenerate the full set against a 1.16.0 build (same shot list; the
-masthead now tops every frame) before submitting the update.
+Regenerated **2026-07-15 for v1.18.4** (FID-REL-001), replacing the 2026-07-13
+set that predated the Collapsing Masthead and still showed the retired bottom
+bar. Every frame now carries the masthead (iPhone) or the one-row desktop nav
+(iPad); none shows a bottom bar; the night frame uses current tokens. Sizes
+verified exact via `sips`.
 
-Captured 2026-07-13 (all verified 1284×2778) via the CDP capture script
-(428×926 CSS @ 3× against the production build):
-
-1. **01-today** — the five-card front page: liturgical day, Verse of the Day, quote
+1. **01-today** — the six-card front page: liturgical day, the day in Church history, Verse of the Day
 2. **02-reader-john1** — John 1 in EB Garamond, gold Haydock dots + purple CCC marks
 3. **03-mass-readings** — the day's readings (shows the honest NABRE-import notice);
    **03b-mass-readings-drb** — same page with DRB selected, no notice (pick one)
@@ -178,9 +179,19 @@ Captured 2026-07-13 (all verified 1284×2778) via the CDP capture script
 7. **07-settings** — Scripture preview, version cards, text size
 8. **08-canon** — the 73-book canon in Vulgate order
 
-Generated files land in `appstore/screenshots/` (gitignored; regenerate with
-the capture script — session scratchpad `capture.mjs`, headless Chrome on
-port 9333 against `npm run preview`).
+Generated files land in `appstore/screenshots/` and
+`appstore/screenshots-ipad/` (both gitignored — large, regenerable PNGs).
+Regenerate with the committed harness:
+
+```sh
+npm run build
+npm run preview -- --port 4173 --strictPort &   # serve the built app
+node scripts/capture-appstore.mjs               # writes both sets
+```
+
+It drives headless Chrome (channel "chrome") at each device's pixel geometry
+(428×926 @3× → iPhone; 1024×1366 @2× → iPad) and presets settings via
+localStorage before the pre-paint script, so the night frame has no Day-flash.
 
 ---
 
@@ -189,7 +200,7 @@ port 9333 against `npm run preview`).
 Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 
 - Promotional text: 163 / 170 ✓
-- Description: 2,329 / 4,000 ✓
+- Description: 2,355 / 4,000 ✓ (re-counted 2026-07-15 after the six-card edit)
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
