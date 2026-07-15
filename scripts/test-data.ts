@@ -1303,11 +1303,12 @@ check(
   PRAYERS.every((p) => /Amen\.?$/.test(p.la.trim()) && /Amen\.?$/.test(p.en.trim()))
 );
 
-// Standing rule 2: the Today page renders exactly five cards.
+// Standing rule 2: the Today page renders exactly six cards (raised from five
+// in v1.18.0 "the memory of the just" for the Today in Church History card).
 const homeSrc = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
 check(
-  "Today page renders exactly five cards (standing rule 2)",
-  (homeSrc.match(/className="card"/g) || []).length === 5,
+  "Today page renders exactly six cards (standing rule 2)",
+  (homeSrc.match(/className="card"/g) || []).length === 6,
   `${(homeSrc.match(/className="card"/g) || []).length} cards`
 );
 
@@ -2863,6 +2864,76 @@ console.log("");
     ["gap: 1.2rem 0.4rem", "gap: 0.8rem 0.4rem", "gap: 0.7rem 0.5rem"].every((s) => css.includes(s)));
 }
 
+// ── 33. v1.18.0 "the memory of the just" — Saint of the Day + Today in Church
+// History. Real logic tests for the pure helpers (dayKey, saintForCelebration)
+// and the emitted corpora, plus source-shape guards for the six-card change,
+// the saint chip, the History card's four states, and the routes.
+console.log("");
+{
+  const { dayKey: sanctoralKey } = await import("../src/lib/dateKey");
+  const { saintForCelebration } = await import("../src/lib/saints");
+
+  // dayKey: local-calendar "MM-DD" (Jan 5 → 01-05, Dec 25 → 12-25).
+  check("memory: dayKey pads to MM-DD",
+    sanctoralKey(new Date(2026, 0, 5)) === "01-05" && sanctoralKey(new Date(2026, 11, 25)) === "12-25",
+    `${sanctoralKey(new Date(2026, 0, 5))}, ${sanctoralKey(new Date(2026, 11, 25))}`);
+
+  // saintForCelebration against the real emitted 07-14 file (today's St. Kateri).
+  const kateriDay = JSON.parse(readFileSync(join(ROOT, "public/data/saints/07-14.json"), "utf8"));
+  check("memory: 07-14 seals St. Kateri as a public-domain-sourced draft",
+    kateriDay.day === "07-14" &&
+      kateriDay.saints[0].id === "kateri-tekakwitha" &&
+      kateriDay.saints[0].sources.some((s: { license: string }) => s.license === "public-domain"));
+  check("memory: saintForCelebration matches the engine's celebration name by token",
+    saintForCelebration(kateriDay.saints, ["St. Kateri Tekakwitha, Virgin"])?.id === "kateri-tekakwitha");
+  check("memory: saintForCelebration returns null when no celebration matches",
+    saintForCelebration(kateriDay.saints, ["Saint Nobody of Nowhere"]) === null);
+
+  // History: 07-14 holds two events, grouped and sorted oldest-first.
+  const hist0714 = JSON.parse(readFileSync(join(ROOT, "public/data/history/07-14.json"), "utf8"));
+  check("memory: 07-14 history groups multiple events sorted oldest-first",
+    hist0714.events.length === 2 && hist0714.events[0].year < hist0714.events[1].year);
+
+  // Every emitted entry, both corpora, carries a PD source and a verified flag
+  // (the build gate; re-checked here on the sealed output).
+  const saintFiles = readdirSync(join(ROOT, "public/data/saints"));
+  const histFiles = readdirSync(join(ROOT, "public/data/history"));
+  const allSaints = saintFiles.flatMap(
+    (f) => JSON.parse(readFileSync(join(ROOT, "public/data/saints", f), "utf8")).saints
+  );
+  const allEvents = histFiles.flatMap(
+    (f) => JSON.parse(readFileSync(join(ROOT, "public/data/history", f), "utf8")).events
+  );
+  check("memory: every saint cites a public-domain source and has a verified flag",
+    allSaints.length > 0 &&
+      allSaints.every(
+        (s: { sources: { license: string }[]; verified: unknown }) =>
+          s.sources.some((src) => src.license === "public-domain") && typeof s.verified === "boolean"
+      ));
+  check("memory: every history event cites a public-domain source and has a verified flag",
+    allEvents.length > 0 &&
+      allEvents.every(
+        (e: { sources: { license: string }[]; verified: unknown }) =>
+          e.sources.some((src) => src.license === "public-domain") && typeof e.verified === "boolean"
+      ));
+
+  // Source-shape guards for the UI wiring.
+  const home = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
+  const app = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+  const dataLib = readFileSync(join(ROOT, "src/lib/data.ts"), "utf8");
+  check("memory: the Today in Church History card exists",
+    home.includes("Today in Church History"));
+  check("memory: the History card carries all four states (loading/ready/empty/failed)",
+    ["loading", "ready", "empty", "failed"].every((s) => home.includes(`historyState === "${s}"`)));
+  check("memory: the memorial name links to the Saint of the Day when matched",
+    home.includes("saintForCelebration(saintDay.saints, [c.name])") &&
+      home.includes("`/saint/${dayToday}/${s.id}`"));
+  check("memory: loadSaints and loadHistory are memoized, retry-after-rejection loaders",
+    dataLib.includes("export function loadSaints(") && dataLib.includes("export function loadHistory("));
+  check("memory: the /saint and /history detail routes are declared",
+    app.includes('path="/saint/:day"') &&
+      app.includes('path="/saint/:day/:id"') &&
+      app.includes('path="/history/:day"'));
 // ── 33. v1.18.0 "new wineskins" — the atomic Bible import (audit FID-DATA-001,
 // FID-FUNC-009), honest local persistence (FID-STOR-001), and cache-truth
 // offline state (FID-FUNC-008). The staging/swap logic is a PURE module

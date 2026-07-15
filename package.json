@@ -18,6 +18,8 @@
     "data": "node scripts/build-data.mjs",
     "report": "node scripts/build-report.mjs",
     "quotes": "node scripts/build-quotes.mjs",
+    "saints": "node scripts/build-saints.mjs",
+    "history": "node scripts/build-history.mjs",
     "manifest": "node scripts/build-manifest.mjs",
     "verify-data": "node scripts/build-manifest.mjs --verify",
     "lectionary": "node scripts/build-lectionary.mjs",

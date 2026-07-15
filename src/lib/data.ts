@@ -1,5 +1,8 @@
 import { getTranslation } from "./translations";
 import { expandCatenaSpans, isCatenaSpanDoc } from "./commentary";
+import type { CccTextDoc } from "./import-formats";
+import type { SaintDay } from "./saints";
+import type { HistoryDay } from "./history";
 import type { CccTextDoc, ImportedBook } from "./import-formats";
 import {
   executeImportPlan,
@@ -417,6 +420,42 @@ export function loadTrent(): Promise<TrentFile | null> {
       return null;
     });
   return trentPromise;
+}
+
+/** The memory of the just — Saint of the Day. One file per calendar date; a 404
+ *  (no entry yet in the growing corpus) resolves to null and stays cached, a
+ *  transport failure drops the key so a later day recovers (the loadCommentary
+ *  per-key retry-after-rejection). */
+const saintsCache = new Map<string, Promise<SaintDay | null>>();
+export function loadSaints(day: string): Promise<SaintDay | null> {
+  let p = saintsCache.get(day);
+  if (!p) {
+    p = fetch(`${import.meta.env.BASE_URL}data/saints/${day}.json`)
+      .then((r) => (r.ok ? (r.json() as Promise<SaintDay>) : null))
+      .catch(() => {
+        saintsCache.delete(day);
+        return null;
+      });
+    saintsCache.set(day, p);
+  }
+  return p;
+}
+
+/** The memory of the just — Today in Church History. Same per-date, memoized,
+ *  retry-after-rejection contract as loadSaints. */
+const historyCache = new Map<string, Promise<HistoryDay | null>>();
+export function loadHistory(day: string): Promise<HistoryDay | null> {
+  let p = historyCache.get(day);
+  if (!p) {
+    p = fetch(`${import.meta.env.BASE_URL}data/history/${day}.json`)
+      .then((r) => (r.ok ? (r.json() as Promise<HistoryDay>) : null))
+      .catch(() => {
+        historyCache.delete(day);
+        return null;
+      });
+    historyCache.set(day, p);
+  }
+  return p;
 }
 
 /** Save a bundled translation for offline reading (spec §2.2 Data): fetch every

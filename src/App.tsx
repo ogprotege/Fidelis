@@ -13,6 +13,8 @@ import Library from "./pages/Library";
 import Translations from "./pages/Translations";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
+import Saint from "./pages/Saint";
+import History from "./pages/History";
 import WidgetVotd from "./pages/WidgetVotd";
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
@@ -209,6 +211,9 @@ export default function App() {
           <Route path="/translations" element={<Translations />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/about" element={<About />} />
+          <Route path="/saint/:day" element={<Saint />} />
+          <Route path="/saint/:day/:id" element={<Saint />} />
+          <Route path="/history/:day" element={<History />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </main>

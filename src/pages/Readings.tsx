@@ -12,7 +12,9 @@ import {
 import { COLOR_HEX, liturgicalDay } from "../lib/liturgical";
 import { TRANSLATIONS } from "../lib/translations";
 import { massTranslationFor } from "../lib/storage";
-import { importedTranslations } from "../lib/data";
+import { importedTranslations, loadSaints } from "../lib/data";
+import { dayKey } from "../lib/dateKey";
+import { SaintDay, saintForCelebration } from "../lib/saints";
 import { useSettings } from "../SettingsContext";
 import { useToday } from "../useToday";
 
@@ -49,7 +51,19 @@ export default function Readings() {
     importedTranslations().then(setImported).catch(() => {});
   }, []);
   const [readings, setReadings] = useState<DayReadings | null | "loading">("loading");
+  const [saintDay, setSaintDay] = useState<SaintDay | null>(null);
   const lit = liturgicalDay(date, region);
+  const dayOfDate = dayKey(date);
+  useEffect(() => {
+    let alive = true;
+    setSaintDay(null);
+    loadSaints(dayOfDate)
+      .then((s) => alive && setSaintDay(s))
+      .catch(() => alive && setSaintDay(null));
+    return () => {
+      alive = false;
+    };
+  }, [dayOfDate]);
   // v1.16.0 (spec §5): the Today chip shows only when the visible date is not
   // today; compare by calendar day, not instant.
   const isToday = toISO(date) === toISO(today);
@@ -180,12 +194,26 @@ export default function Readings() {
         <div className="lit-season">
           <strong>{lit.seasonLabel}</strong>
         </div>
-        {lit.celebrations.map((c) => (
-          <div className="lit-celebration" key={c.name}>
-            <span className="rank">{c.rank}</span>
-            {c.name}
-          </div>
-        ))}
+        {lit.celebrations.map((c) => {
+          const s = saintDay ? saintForCelebration(saintDay.saints, [c.name]) : null;
+          return s ? (
+            <Link
+              className="lit-celebration lit-celebration-link"
+              key={c.name}
+              to={`/saint/${dayOfDate}/${s.id}`}
+            >
+              <span className="rank">{c.rank}</span>
+              {c.name}
+              <span className="lit-celebration-go" aria-hidden="true">›</span>
+              <span className="sr-only"> — read the life of {s.name}</span>
+            </Link>
+          ) : (
+            <div className="lit-celebration" key={c.name}>
+              <span className="rank">{c.rank}</span>
+              {c.name}
+            </div>
+          );
+        })}
         <p className="muted small sans mb-0">
           {cycleLabel}
         </p>
