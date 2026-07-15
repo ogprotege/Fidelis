@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.16.0
+1.18.4
 ```
 
 The store version string always equals the uploaded build's
@@ -23,12 +23,13 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-The navigation takes its place at the top, where a book keeps it. A gold masthead folds away as you read, leaving one slim row of tabs — nothing covers the Scripture from below anymore. The Reader gains a folio line: book, chapter, translation, and an Aa text menu in a single slim row, with a picker that reaches any book and chapter in a tap. The Mass page's controls fit one line, with the native date picker behind the date. Same texts, same pledge — more room for the Word.
+The navigation takes its place at the top, where a book keeps it. A gold masthead folds away as you read, leaving one slim row of tabs — nothing covers the Scripture from below anymore. The Reader gains a folio line: book, chapter, translation, and an Aa text menu in a single slim row, with a picker that reaches any book and chapter in a tap. The Mass page's controls fit one line, with the native date picker behind the date. The Today page adds the day in Church history, and links the day's saint to a full Saint of the Day page when one is in the collection. Same texts, same pledge — more room for the Word.
 ```
 
 Also serves as the TestFlight "What to Test" notes: scroll any page (the
 masthead should fold away and the tab row stay pinned), open More, turn
-chapters from the folio line, step days on the Mass page, rotate to landscape.
+chapters from the folio line, step days on the Mass page, open the Today in
+Church History card and a Saint of the Day page, rotate to landscape.
 
 ## Promotional Text (≤ 170 characters)
 
@@ -204,4 +205,4 @@ Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
-- What's New (1.16.0): 478 / 4,000 ✓ (verified 2026-07-14)
+- What's New (1.18.4): 614 / 4,000 ✓ (re-counted 2026-07-15)

@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.18.2%20·%20the%20mended%20net-5B3A8E)
+![version](https://img.shields.io/badge/version-1.18.4%20·%20come%20and%20see-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -75,7 +75,8 @@ five spokes:
 - **Using the app** → this README · the in-app **About** page.
 - **Contributing or building** → [CONTRIBUTING](CONTRIBUTING.md) ·
   [guides](docs/guides/) ([iOS](docs/guides/IOS.md) · [Android](docs/guides/ANDROID.md) ·
-  [Releasing](docs/guides/RELEASING.md)) · [CLAUDE.md](CLAUDE.md).
+  [Releasing](docs/guides/RELEASING.md) · [App Store](docs/guides/APP_STORE.md) ·
+  [Device acceptance](docs/guides/DEVICE_ACCEPTANCE.md)) · [CLAUDE.md](CLAUDE.md).
 - **The history** → [CHANGELOG](CHANGELOG.md) ·
   [the release narrative](docs/history/RELEASES.md).
 - **The design rationale** → [specs &amp; plans](docs/superpowers/INDEX.md) ·
@@ -118,11 +119,13 @@ five spokes:
   - **Douay-Rheims, Challoner Revision** (1582–1610, rev. 1749–52)
   - **Catholic Public Domain Version** (2009)
   - **Clementine Latin Vulgate** (1592)
-- **RSV-2CE and NABRE support** — these are copyrighted (Ignatius Press / CCD), so their text
-  is *not* shipped; you can import a licensed copy you own on the Translations page, stored only
-  in your browser via IndexedDB. The importer accepts **USFM**, **OSIS**, or scrollmapper-style
-  **JSON**; `npm run build-nabre` converts a NAB/NABRE PDF you own into an importable file (the
-  output stays on your device and is gitignored — never bundled or committed).
+- **Import-only translations — RSV-2CE, NABRE, and the Biblia Platense (Straubinger, Spanish)** —
+  these are under copyright (Ignatius Press / CCD) or not clearly public-domain in the U.S., so
+  their text is *not* shipped; you can import a licensed copy you own on the Translations page,
+  stored only in your browser via IndexedDB. The importer accepts **USFM**, **OSIS**, or
+  scrollmapper-style **JSON** (with roman-numeral and SWORD book-name aliases); `npm run build-nabre`
+  converts a NAB/NABRE PDF you own into an importable file (the output stays on your device and is
+  gitignored — never bundled or committed).
 - **USCCB by default** — out of the box the calendar **Region** is *United States* (the USCCB
   calendar) and the Daily Readings default to the **NABRE**, the translation of the U.S.
   lectionary. The NABRE is copyrighted and never bundled, so until you import your licensed copy
@@ -394,7 +397,8 @@ build steps — lives in **[CONTRIBUTING.md](CONTRIBUTING.md)** and the
 - **Lectionary citation data** — public domain, via
   [jayarathina/Tamil-Catholic-Lectionary](https://github.com/jayarathina/Tamil-Catholic-Lectionary).
 - **EB Garamond** — bundled under the **SIL Open Font License**.
-- RSV-2CE and NABRE are **not** distributed; users import their own licensed copies locally.
+- RSV-2CE, NABRE, and the Biblia Platense (Straubinger, Spanish) are **not** distributed; users
+  import their own licensed copies locally.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 

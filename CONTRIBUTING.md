@@ -27,7 +27,7 @@ All three must be green. `npm test` exits 1 on any failure — no print-only exp
 The project has three standing rules that govern every change. They live in [`CLAUDE.md` — "Standing rules"](CLAUDE.md#standing-rules); read them there (single source of truth). The headlines are:
 
 - Never hand-edit any file under `public/data/` — they regenerate from scripts only.
-- The Today page never exceeds five cards.
+- The Today page never exceeds six cards (raised from five in v1.18.0).
 - The §13 refusal list in the design spec is binding.
 
 ## PR expectations
