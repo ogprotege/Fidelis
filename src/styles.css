@@ -110,16 +110,19 @@
   --bg-2: #ECE9E2;          /* hover, raised controls, insets */
   --border: #DCD8CF;        /* hairlines */
   --text: #26241F;          /* body */
-  --text-muted: #6E6A61;    /* metadata, citations */
+  --text-muted: #6B675E;    /* metadata, citations — ≥4.5:1 on every surface incl.
+                               the bg-2 insets (the copyright badge), v1.17.1 */
   --purple: #5B3A8E;        /* interactive on light */
   --purple-strong: #4A2F74; /* filled buttons */
   --gold: #A8862C;          /* sacred MARKS on light (✠, quote marks, the rule
                                beside a selected verse) — the exact luminous brand
                                hex, kept exact on purpose (spec §1.1). */
-  --gold-text: #8A6D1F;     /* gold as running TEXT — small-caps section labels,
-                               Father attributions, the motto. ~4.6:1 on bg-1/bg-2
-                               so gold reading text clears WCAG AA in Day mode while
-                               the mark gold above stays luminous. */
+  --gold-text: #7C621C;     /* gold as running TEXT — small-caps section labels,
+                               Father attributions, the motto. ≥4.5:1 on ALL THREE
+                               surfaces (worst: 4.78:1 on bg-2, v1.17.1 audit
+                               FID-A11Y-004) so gold reading text clears WCAG AA
+                               in Day mode while the mark gold above stays
+                               luminous. Harness §32 computes the ratios. */
   --ccc-mark: #6E58A6;      /* the quiet "cited in the Catechism" mark under a verse
                                number — a FIXED brand purple that never follows the
                                liturgical accent, so it can never turn gold and
@@ -149,7 +152,9 @@
   --border: #3A3A41;
   --text: #ECEAE4;          /* warm off-white */
   --text-muted: #A19D94;
-  --purple: #9B7BD4;        /* interactive on dark */
+  --purple: #A98EDC;        /* interactive on dark — lifted from #9B7BD4 so purple
+                               text clears 4.5:1 on the raised bg-2 surfaces too
+                               (hover rows, active pills), v1.17.1 FID-A11Y-004 */
   --purple-strong: #6B46A8;
   --gold: #D4B254;          /* sacred markers on dark */
   --gold-text: #D4B254;     /* night gold already clears AA as text — no split needed */
@@ -179,22 +184,27 @@
    theme. White borrows the gold token — "gold stands for white." Absent
    data-accent (the setting is off), --purple keeps its brand value above, so
    the app is brand purple year-round. */
-[data-accent="green"]  { --purple: #3E7C4F; }
+[data-accent="green"]  { --purple: #377046; } /* deepened from #3E7C4F (4.12:1 on
+                                                 bg-2) so Ordinary-Time links clear
+                                                 AA on every surface, v1.17.1 */
 [data-accent="violet"] { --purple: #5B3A8E; } /* = brand purple — Advent & Lent */
-[data-accent="white"]  { --purple: #8A6D1F; } /* gold stands for white — the AA-legible
+[data-accent="white"]  { --purple: #7C621C; } /* gold stands for white — the AA-legible
                                                  gold-text hue, since on a white feast
                                                  this carries real link text. */
 [data-accent="red"]    { --purple: #A32638; }
-[data-accent="rose"]   { --purple: #B14F73; } /* Gaudete & Laetare — deepened from
-                                                 #C76A8A so links clear AA in Day mode. */
+[data-accent="rose"]   { --purple: #A34767; } /* Gaudete & Laetare — deepened twice
+                                                 (#C76A8A → #B14F73 → here) so links
+                                                 clear AA on bg-2 too, v1.17.1. */
 [data-accent="black"]  { --purple: #4A4A50; }
 
+/* Night accents sit on the DARK surfaces, so failing ones lift rather than
+   deepen (audit FID-A11Y-004; the worst surface is the raised bg-2). */
 [data-theme="night"][data-accent="green"]  { --purple: #5CA86E; }
-[data-theme="night"][data-accent="violet"] { --purple: #9B7BD4; }
+[data-theme="night"][data-accent="violet"] { --purple: #A98EDC; } /* = night brand purple */
 [data-theme="night"][data-accent="white"]  { --purple: #D4B254; }
-[data-theme="night"][data-accent="red"]    { --purple: #D45A6A; }
+[data-theme="night"][data-accent="red"]    { --purple: #E07A89; } /* was #D45A6A, 3.56:1 on bg-2 */
 [data-theme="night"][data-accent="rose"]   { --purple: #D98BA6; }
-[data-theme="night"][data-accent="black"]  { --purple: #8E8E96; }
+[data-theme="night"][data-accent="black"]  { --purple: #97979F; } /* was #8E8E96, 4.21:1 on bg-2 */
 
 * { box-sizing: border-box; }
 
@@ -253,6 +263,12 @@ a, button, summary,
 
 a { color: var(--purple); text-decoration: none; }
 a:hover { text-decoration: underline; }
+/* A link INSIDE PROSE underlines by default (v1.17.1, audit FID-A11Y-004): on a
+   liturgical day whose accent runs close to the muted copy around it, the Mass
+   card's import link measured 1.07:1 against --text-muted — color alone cannot
+   mark a link (WCAG 1.4.1). Chrome links (nav rows, chips, cards, toolbars) are
+   controls, not prose; they live in divs and keep the quiet default above. */
+p a, li a, .notice a { text-decoration: underline; }
 
 button, select, input, textarea { font-family: inherit; color: inherit; }
 
@@ -472,6 +488,7 @@ option { background: var(--bg-1); color: var(--text); }
 .section-nav::-webkit-scrollbar { display: none; }
 .section-nav-link {
   flex-shrink: 0;
+  position: relative;
   background: var(--bg-1);
   border: var(--hairline) solid var(--border);
   border-radius: 999px;
@@ -483,6 +500,15 @@ option { background: var(--bg-1); color: var(--text); }
   text-decoration: none;
   touch-action: manipulation;
   transition: border-color 120ms ease, color 120ms ease;
+}
+/* v1.17.1 (audit FID-UX-002): the chip stays visually slim (~29px), but its tap
+   target grows past 44px. The slop stays inside the rail's own 0.55rem padding,
+   so the overflow-x rail never gains a vertical scrollbar; horizontal slop is 0
+   because the chips sit 0.45rem apart and must not overlap. */
+.section-nav-link::after {
+  content: "";
+  position: absolute;
+  inset: -0.5rem 0;
 }
 .section-nav-link:active { border-color: var(--purple); color: var(--purple); }
 .section-nav-link:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
@@ -564,10 +590,12 @@ h1.page-title {
 }
 
 .rosary-list { margin: 0.3rem 0 0; padding-left: 1.4rem; }
-.rosary-list li { margin: 0.3rem 0; line-height: 1.5; }
+/* Tight li margins: the 44px mystery rows below carry the spacing now (v1.17.1). */
+.rosary-list li { margin: 0.05rem 0; line-height: 1.5; }
 .rosary-list .mref { font-family: var(--sans); font-size: 0.78rem; color: var(--purple); margin-left: 0.4rem; }
 
-/* Filled CTA — purple acts. */
+/* Filled CTA — purple acts. It reads as a button, so it never underlines even
+   if a call site drops it inside prose (the p a rule above). */
 .continue-cta {
   display: inline-block;
   margin-top: 0.4rem;
@@ -578,6 +606,7 @@ h1.page-title {
   font-family: var(--sans);
   font-size: 0.9rem;
   font-weight: 600;
+  text-decoration: none;
 }
 .continue-cta:hover { text-decoration: none; filter: brightness(1.1); }
 
@@ -597,9 +626,12 @@ h1.page-title {
   color: var(--text-muted);
   margin: 1rem 0 0.4rem;
 }
-.book-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+/* The 0.8rem row gap is load-bearing (v1.17.1 FID-UX-002): it is exactly what
+   keeps the ±0.4rem tap slop of vertically adjacent book chips from overlapping. */
+.book-grid { display: flex; flex-wrap: wrap; gap: 0.8rem 0.4rem; }
 /* Navigation chips read as neutral until touched; purple appears on hover. */
 .book-grid a {
+  position: relative;
   background: var(--bg-1);
   border: var(--hairline) solid var(--border);
   padding: 0.4rem 0.75rem;
@@ -608,6 +640,14 @@ h1.page-title {
   color: var(--text);
 }
 @media (hover: hover) { .book-grid a:hover { border-color: var(--purple); text-decoration: none; } }
+/* v1.17.1 (FID-UX-002): the ~33px book chips — the grid's and the picker
+   sheet's — carry a 44px+ tap target without growing their visible box. */
+.book-grid a::after,
+.picker-book::after {
+  content: "";
+  position: absolute;
+  inset: -0.4rem 0;
+}
 .book-grid a .deutero-mark { color: var(--text-muted); margin-left: 0.25rem; }
 
 /* ---------- Reader ---------- */
@@ -695,8 +735,10 @@ h1.page-title {
   letter-spacing: 0.13em;
   color: var(--text-muted);
 }
-.picker-books { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+/* Row gap 0.8rem: room for the shared ±0.4rem tap slop (v1.17.1 FID-UX-002). */
+.picker-books { display: flex; flex-wrap: wrap; gap: 0.8rem 0.4rem; }
 .picker-book {
+  position: relative;
   background: var(--bg-1);
   border: var(--hairline) solid var(--border);
   border-radius: 0.5rem;
@@ -1119,8 +1161,11 @@ h1.page-title {
 }
 .search-bar button.primary { background: var(--purple-strong); color: var(--on-accent); border-color: var(--purple-strong); font-weight: 600; }
 .search-bar button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.search-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.2rem 0 0.9rem; font-family: var(--sans); }
+/* The 1.2rem row gap is load-bearing (v1.17.1 FID-UX-002): wrapped chip rows sit
+   exactly two ±0.6rem tap slops apart, so adjacent slops meet without overlap. */
+.search-chips { display: flex; gap: 1.2rem 0.4rem; flex-wrap: wrap; margin: 0.2rem 0 0.9rem; font-family: var(--sans); }
 .chip {
+  position: relative;
   background: var(--bg-1);
   border: var(--hairline) solid var(--border);
   border-radius: 999px;
@@ -1129,6 +1174,13 @@ h1.page-title {
   cursor: pointer;
   color: var(--text);
   transition: background 120ms ease, border-color 120ms ease;
+}
+/* v1.17.1 (FID-UX-002): the ~26px chip — Search's section filters, the Mass
+   Today chip — keeps its slim look but taps at 44px+. */
+.chip::after {
+  content: "";
+  position: absolute;
+  inset: -0.6rem 0;
 }
 @media (hover: hover) { .chip:hover { border-color: var(--purple); } }
 .chip:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
@@ -1161,6 +1213,7 @@ h1.page-title {
 .lib-item .when { font-family: var(--sans); font-size: 0.75rem; color: var(--text-muted); }
 .lib-item .actions { margin-top: 0.3rem; }
 .lib-item .actions button {
+  position: relative;
   border: none;
   background: none;
   color: var(--purple);
@@ -1169,6 +1222,14 @@ h1.page-title {
   font-family: var(--sans);
   padding: 0;
   margin-right: 0.8rem;
+}
+/* v1.17.1 (FID-UX-002): Remove/Delete are destructive 16px text buttons — the
+   slop lifts them to 44px+ tall; sideways it stays inside the 0.8rem margins
+   so Open's and Remove's targets never overlap. */
+.lib-item .actions button::after {
+  content: "";
+  position: absolute;
+  inset: -0.9rem -0.2rem;
 }
 .lib-note { background: var(--bg-2); border-radius: 0.5rem; padding: 0.5rem 0.7rem; margin-top: 0.4rem; }
 
@@ -1332,8 +1393,8 @@ body.widget-mode { background: transparent; }
 }
 .antiphon-verse { margin-bottom: 0.7rem; }
 .antiphon-verse:last-child { margin-bottom: 0; }
-/* The Latin prayer is read text; full-strength --text (italic still marks it
-   Latin) keeps it ≥4.5:1 on the bg-2 panel where --text-muted is 4.44:1. */
+/* The Latin prayer is read text, not metadata — full-strength --text (italic
+   still marks it Latin) keeps the prayer at body contrast on the bg-2 panel. */
 .antiphon-la { margin: 0; font-style: italic; color: var(--text); font-size: 0.92rem; line-height: 1.5; }
 .antiphon-en { margin: 0.15rem 0 0; font-size: 0.95rem; line-height: 1.5; }
 
@@ -1351,9 +1412,11 @@ body.widget-mode { background: transparent; }
 }
 .preview-ref { margin: 0; }
 
-/* Pills: purple acts, so the chosen one fills purple (spec §1.2). */
-.pill-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+/* Pills: purple acts, so the chosen one fills purple (spec §1.2). The 0.7rem row
+   gap gives the ±0.3rem tap slop below room to meet without overlap (v1.17.1). */
+.pill-row { display: flex; gap: 0.7rem 0.5rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
 .pill {
+  position: relative;
   border: var(--hairline) solid var(--border);
   background: var(--bg-1);
   border-radius: 0.6rem;
@@ -1363,6 +1426,12 @@ body.widget-mode { background: transparent; }
   display: inline-flex;
   align-items: baseline;
   gap: 0.4rem;
+}
+/* v1.17.1 (FID-UX-002): the ~36px pill taps at 44px+ without growing. */
+.pill::after {
+  content: "";
+  position: absolute;
+  inset: -0.3rem 0;
 }
 @media (hover: hover) { .pill:hover { border-color: var(--purple); } }
 /* Selected = a liturgical-colored outline (the day's --purple: green in Ordinary
@@ -1463,6 +1532,14 @@ body.widget-mode { background: transparent; }
   transform: translateY(-50%);
   box-shadow: var(--shadow-soft);
   transition: left 0.15s, background 0.15s;
+}
+/* v1.17.1 (FID-UX-002): the 43×25px switch taps at 44px+ — ::before carries the
+   slop because ::after above IS the knob. The row's own separation (border +
+   0.7rem padding) keeps neighbouring switches' slop apart. */
+.switch::before {
+  content: "";
+  position: absolute;
+  inset: -0.65rem -1px;
 }
 .switch[aria-checked="true"] { background: var(--purple-strong); border-color: var(--purple-strong); }
 .switch[aria-checked="true"]::after { left: calc(100% - 1.33rem); background: var(--on-accent); }
@@ -1622,7 +1699,10 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   :root { --header-h: calc(2.75rem + env(safe-area-inset-top)); }
 }
 
-/* Rosary mystery sheet — Today card 4 (v1.2 B1). Purple acts, gold honors. */
+/* Rosary mystery sheet — Today card 4 (v1.2 B1). Purple acts, gold honors.
+   v1.17.1 (FID-UX-002): the rows were 29px tap targets — real symmetric padding
+   grows each row past 44px (stacked rows can't borrow slop from each other
+   without ambiguity), and the li margin tightens so the card grows modestly. */
 .rosary-list .rosary-mystery {
   display: flex;
   align-items: baseline;
@@ -1631,7 +1711,7 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   text-align: left;
   background: none;
   border: none;
-  padding: 0.15rem 0;
+  padding: 0.65rem 0;
   margin: 0;
   cursor: pointer;
   color: var(--text);
@@ -1749,6 +1829,7 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
 .share-note { text-align: center; margin: 0.7rem 0 0; min-height: 1.1rem; }
 /* The share affordance on the Today cards — purple acts (§1.2). */
 .card-share {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -1762,6 +1843,14 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   color: var(--purple);
 }
 .card-share:hover { text-decoration: underline; }
+/* v1.17.1 (FID-UX-002): the 16px-tall Share line taps at 44px+ — asymmetric
+   slop that exactly fills the button's own 0.7rem top margin and the card's
+   1.1rem bottom padding, so it never covers the card text above it. */
+.card-share::after {
+  content: "";
+  position: absolute;
+  inset: -0.7rem 0 -1.1rem;
+}
 
 @media (min-width: 640px) {
   .sheet-backdrop { align-items: center; }
@@ -1795,6 +1884,7 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   border-bottom: var(--hairline) solid var(--border);
 }
 .cmt-tab {
+  position: relative;
   background: none;
   border: none;
   cursor: pointer;
@@ -1804,6 +1894,13 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   padding: 0.4rem 0.2rem;
   margin-bottom: -1px;
   border-bottom: 2px solid transparent;
+}
+/* v1.17.1 (FID-UX-002): the ~32px tabs tap at 44px+; the title above and the
+   credit below are prose, so the vertical slop collides with nothing. */
+.cmt-tab::after {
+  content: "";
+  position: absolute;
+  inset: -0.4rem 0;
 }
 @media (hover: hover) { .cmt-tab:hover { color: var(--purple); } }
 .cmt-tab.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 600; }

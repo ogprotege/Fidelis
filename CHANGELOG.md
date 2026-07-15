@@ -6,6 +6,63 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.17.1] — 2026-07-15 — touch and see
+
+*"See my hands and feet, that it is I myself; handle, and see." (Luke 24:39)*
+
+The visual-calibration half of the audit's sacred-page pass, deferred from v1.17.0 by design
+(audit FID-A11Y-004, FID-UX-002): everything the eye must read now clears WCAG AA on **every**
+surface it sits on, and everything the thumb must touch now measures at least 44px. CSS tokens
+and hit geometry only — no engine, data, or golden changes; no service-worker cache bump
+(network-first shell; no sw.js/precache/index.html change).
+
+### Fixed
+
+- **Day-theme accent text clears 4.5:1 on all three surfaces (audit FID-A11Y-004).** The old
+  values were calibrated against `--bg-1` only; the audit caught them failing on the page
+  background and the raised `--bg-2` insets. Through the existing token seams only — the
+  `--gold-text`/`--gold` split and the liturgical accent table — with the luminous `--gold`
+  marks and `--purple-strong` untouched: day `--gold-text` `#8A6D1F` → `#7C621C` (the motto,
+  section labels, Father attributions; worst pair now 4.78:1, was 4.04:1), day `--text-muted`
+  `#6E6A61` → `#6B675E` (was 4.44:1 on the bg-2 copyright badge), the Ordinary-Time green
+  accent `#3E7C4F` → `#377046` (link text most of the year; was 4.12:1 on bg-2), the rose
+  accent `#B14F73` → `#A34767`, and the white accent borrows the new gold-text hue. Night
+  lifts instead of deepening: the brand `--purple` `#9B7BD4` → `#A98EDC` (it carries link text
+  on bg-2 hover rows and active pills, where it sat at 4.03:1; the violet accent moves with
+  it), the red accent `#D45A6A` → `#E07A89` (was 3.56:1 on bg-2), and the black accent
+  `#8E8E96` → `#97979F`. Harness §32 now parses the tokens out of `styles.css` and computes
+  the WCAG ratios — 4.5:1 on bg-0/1/2, both themes, all six accents, the filled-button and
+  badge pairs — so any future drift below AA is a red `npm test`, not a Lighthouse surprise.
+- **Links inside prose are underlined by default (audit FID-A11Y-004).** The Mass page's
+  "import your licensed NABRE" link measured 1.07:1 against the muted sentence around it with
+  no other cue — color alone cannot mark a link (WCAG 1.4.1). `p a, li a, .notice a` now
+  underline; chrome links (nav rows, chips, cards, toolbars) live in divs and keep the quiet
+  default; the filled CTA declares its own `text-decoration: none` as insurance.
+- **The nine audited sub-44px control families now tap at ≥44px (audit FID-UX-002)** without
+  inflating their visible chrome: pseudo-element hit slop on the Search/Mass chips
+  (`±0.6rem`), SectionNav chips (`±0.5rem`, absorbed by the rail's own padding so the scroll
+  rail gains no vertical overflow), book chips in the grid and the Reader's picker sheet
+  (`±0.4rem`), Settings pills (`±0.3rem`), the Settings switch (`::before` carries the slop —
+  `::after` is the knob), the Today card Share line (asymmetric slop that fills its own margin
+  and the card's padding, never covering the text above), Library's destructive Remove/Delete
+  (`±0.9rem`, held inside the buttons' side margins so adjacent targets never overlap), and
+  the Commentary tabs (`±0.4rem`); the rosary mystery rows grow by real symmetric padding
+  (stacked rows cannot borrow slop without ambiguity) with the list margins tightened so the
+  card grows modestly. The wrap-gaps of chip rows widen exactly to the sum of two slops —
+  load-bearing spacing that keeps adjacent rows' targets from overlapping, guarded in §32.
+  Verified end-to-end in real Chrome at 390×844: 25 checks measuring computed colors, WCAG
+  ratios from rendered pixels, underlines, and effective hit boxes (element rect + pseudo
+  slop) across Today, Mass, Read, Search, Settings, Library, the Reader, and the commentary
+  sheet, in both themes — the audit's measured heights ran ~2px larger than live geometry, so
+  every slop was sized to what the browser actually measured, not the table.
+
+### Changed
+
+- The liturgical harness §1.3 hex pins moved with the tokens (they assert the exact accent
+  table transcribed onto `--purple`), and the night-brand-purple pin documents the lift.
+  Shells versioned: iOS `MARKETING_VERSION` and Android `versionName` 1.17.1,
+  `versionCode` 11701.
+
 ## [1.17.0] — 2026-07-15 — nothing hidden
 
 *"For there is not any thing secret that shall not be made manifest, nor hidden that shall not

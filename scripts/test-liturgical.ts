@@ -230,16 +230,19 @@ const purpleOf = (selector: string): string | null => {
   const decl = rule[1].match(/--purple:\s*(#[0-9A-Fa-f]{3,8})/);
   return decl ? decl[1].toUpperCase() : null;
 };
-// night / day pairs, exactly as the §1.3 table reads them.
+// night / day pairs, exactly as the §1.3 table reads them — recalibrated in
+// v1.17.1 (audit FID-A11Y-004) so every value clears 4.5:1 on ALL THREE
+// surfaces of its theme, the raised bg-2 included; the data harness §32
+// computes the actual ratios from these tokens.
 const ACCENT_HEX: Record<string, [string, string]> = {
-  green: ["#5CA86E", "#3E7C4F"],
-  violet: ["#9B7BD4", "#5B3A8E"], // = brand purple (Advent & Lent)
-  white: ["#D4B254", "#8A6D1F"], // gold stands for white — the AA-legible gold-text
+  green: ["#5CA86E", "#377046"], // day deepened from #3E7C4F (4.12:1 on bg-2)
+  violet: ["#A98EDC", "#5B3A8E"], // = brand purple (Advent & Lent)
+  white: ["#D4B254", "#7C621C"], // gold stands for white — the AA-legible gold-text
                                  // hue in Day, since on a white feast this carries
                                  // real link text (night gold already clears AA)
-  red: ["#D45A6A", "#A32638"],
-  rose: ["#D98BA6", "#B14F73"], // Gaudete & Laetare — deepened for AA in Day mode
-  black: ["#8E8E96", "#4A4A50"]
+  red: ["#E07A89", "#A32638"], // night lifted from #D45A6A (3.56:1 on bg-2)
+  rose: ["#D98BA6", "#A34767"], // Gaudete & Laetare — day deepened for AA on bg-2
+  black: ["#97979F", "#4A4A50"] // night lifted from #8E8E96 (4.21:1 on bg-2)
 };
 for (const [accent, [night, day]] of Object.entries(ACCENT_HEX)) {
   expect(
@@ -252,16 +255,18 @@ for (const [accent, [night, day]] of Object.entries(ACCENT_HEX)) {
   );
 }
 // gold-for-white: the white accent borrows the gold hue, but the AA-legible
-// gold-text value in Day (#8A6D1F, since here it carries link text) and the gold
+// gold-text value in Day (#7C621C, since here it carries link text) and the gold
 // value in Night (#D4B254, where gold already clears AA and gold-text == gold).
-expect("white accent borrows the gold-text day hex #8A6D1F", purpleOf('[data-accent="white"]') === "#8A6D1F");
+expect("white accent borrows the gold-text day hex #7C621C", purpleOf('[data-accent="white"]') === "#7C621C");
 expect(
   "white accent borrows the gold night hex #D4B254",
   purpleOf('[data-theme="night"][data-accent="white"]') === "#D4B254"
 );
-// setting OFF ⇒ no data-accent ⇒ the brand --purple shows year-round.
+// setting OFF ⇒ no data-accent ⇒ the brand --purple shows year-round. (The night
+// brand purple lifted #9B7BD4 → #A98EDC in v1.17.1 for AA on the bg-2 surfaces;
+// the night violet accent above moves with it, staying "= brand purple".)
 expect("base day --purple is brand purple #5B3A8E (off ⇒ brand)", purpleOf('[data-theme="day"]') === "#5B3A8E");
-expect("base night --purple is brand purple #9B7BD4 (off ⇒ brand)", purpleOf('[data-theme="night"]') === "#9B7BD4");
+expect("base night --purple is brand purple #A98EDC (off ⇒ brand)", purpleOf('[data-theme="night"]') === "#A98EDC");
 // The day-mode override has equal specificity to the base [data-theme="day"]
 // block, so it wins only because it comes later in the file. Guard the order:
 // a reorder would silently drop the day-mode accent (night wins by specificity).

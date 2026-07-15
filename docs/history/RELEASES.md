@@ -1159,6 +1159,78 @@ bar restyles an existing element; v1.16.0's bump was for a shell-architecture ch
 the v1.17.1 calibration pass (contrast through the token seams, priority touch targets), then
 the storage/import-resilience batch.
 
+## Touch and see (v1.17.1)
+
+*"See my hands and feet, that it is I myself; handle, and see." (Luke 24:39)*
+**The calibration half of the sacred-page pass: everything the eye must read clears AA on
+every surface, and everything the thumb must touch measures 44px.**
+
+The fourth release cut from the verified 2026-07-15 audit — the visual-calibration batch
+(FID-A11Y-004, FID-UX-002) that v1.17.0 deferred by owner decision so behavior and
+calibration would each get a reviewable diff. CSS tokens and hit geometry only: no engine,
+data, golden, or service-worker changes.
+
+**Contrast through the seams, not around them (FID-A11Y-004).** The v1.10.0 gold-contrast
+split had already drawn the load-bearing distinction — `--gold` is the luminous mark (the ✠,
+the quote marks, the rule beside a selected verse; exact brand hex, deliberately outside the
+text-contrast contract) and `--gold-text` is gold as running text — but the text side was
+calibrated against `--bg-1` only, and the audit caught it failing everywhere else: 4.38:1 on
+the page background under the footer motto, 4.04:1 on the raised `--bg-2` insets. The same
+blind spot ran through the liturgical accent table (the Ordinary-Time green that carries
+link text most of the year sat at 4.12:1 on bg-2, rose at 4.09:1) and, in night mode, through
+the brand purple itself (4.03:1 on the bg-2 hover rows and active pills), night red (3.56:1),
+and night black (4.21:1). The recalibration moved only tokens, and only as far as needed with
+real margin: day deepens (`--gold-text` #8A6D1F → #7C621C, `--text-muted` #6E6A61 → #6B675E,
+green #3E7C4F → #377046, rose #B14F73 → #A34767, white borrowing the new gold-text as
+always), night lifts (brand purple #9B7BD4 → #A98EDC with the violet accent riding along —
+the "= brand purple" convention holds — red #D45A6A → #E07A89, black #8E8E96 → #97979F).
+Every changed value clears 4.5:1 on all three surfaces of its theme with its worst pair at
+≥4.64:1; `--gold` marks, `--purple-strong`, and the two-accent grammar never moved. And
+because the audit's deeper lesson was "calibrated once, against one surface," the harness now
+owns the property itself: §32 parses the actual token values out of `styles.css` and runs the
+WCAG relative-luminance math over every text-on-surface pair — both themes, all three
+surfaces, all six accent overrides, the filled-button and badge pairs — so the next token
+that drifts below AA is a red `npm test` before it is a Lighthouse finding. The §1.3 hex pins
+in the liturgical harness moved with the table they assert.
+
+**A link must look like a link (FID-A11Y-004, the 1.4.1 half).** The Mass page's repeated
+"import your licensed NABRE" line put an accent-colored link inside muted prose at 1.07:1
+against its surroundings — indistinguishable except by color that some readers cannot
+distinguish. Links inside prose (`p a, li a, .notice a`) now underline by default; chrome
+links — nav rows, chips, book-grid tiles, toolbars, cards — live in divs and keep the quiet
+default, and the filled CTA declares its own `text-decoration: none` so it can never inherit
+an underline if a call site drops it into a paragraph.
+
+**Forty-four pixels, no new chrome (FID-UX-002).** The audit measured nine control families
+under 44px, several far under — the Today card's Share line and Library's destructive
+Remove/Delete at 18px. The fix follows the bar set by the verse-action swatches in v1.10.0:
+the visible control stays exactly as drawn, and an invisible pseudo-element carries the tap
+slop — `.chip::after` at ±0.6rem (Search's section filters and the Mass Today chip),
+SectionNav chips at ±0.5rem sized to stay inside the rail's own padding (so the overflow-x
+rail gains no vertical scrollbar), book chips in the grid and the Reader's picker at ±0.4rem,
+Settings pills at ±0.3rem, the Settings switch on `::before` because `::after` is the knob,
+the Share line asymmetric (its slop exactly fills its own top margin and the card's bottom
+padding, so it never covers the verse text above), Library's Remove/Delete at ±0.9rem held
+inside their side margins so adjacent destructive targets never overlap, and the Commentary
+tabs at ±0.4rem. Two placements are honest exceptions: the rosary mystery rows grow by real
+symmetric padding — stacked same-kind rows cannot borrow slop from each other without
+ambiguity — with the list margins tightened so the Today card grows modestly; and the chip
+rows' wrap-gaps widen to exactly the sum of two slops, load-bearing spacing (guarded in §32)
+that keeps adjacent rows' targets meeting edge-to-edge instead of overlapping.
+
+**The browser is the referee.** TDD end to end: §32 written first and watched fail on the
+exact eight token pairs the audit predicted plus every shape guard, then the fix, then green.
+Verified in real Chrome (Playwright against `vite preview`, 390×844, both themes): twenty-five
+checks measuring rendered computed colors token-by-token, WCAG ratios recomputed from actual
+pixels (the motto on the page background, the green link on a card, night purple on a bg-2
+probe, muted text on the bg-2 copyright badge), underline presence on the Mass import and
+USCCB links, and *effective* hit boxes — element rect plus pseudo slop — for every family.
+The browser earned its keep twice: the audit's measured heights ran ~2px larger than live
+geometry (its 28px chip renders at 26), so five slops sized to the table landed at 42–43.6px
+and were widened to what Chrome actually measures; and the first Mass-page run raced the
+async readings load, a test bug the second run fixed. Shells to 1.17.1/11701; no sw cache
+bump. Next: the storage/import-resilience batch.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
