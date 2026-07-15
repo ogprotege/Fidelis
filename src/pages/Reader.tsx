@@ -49,12 +49,22 @@ export default function Reader() {
   const [data, setData] = useState<BookData | null>(null);
   const [parallelData, setParallelData] = useState<BookData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // FID-FUNC-011: a parallel-pane load failure (usually an import-only second
+  // translation absent on this device) used to fall silently back to a single
+  // column with no word said — the reader couldn't tell the setting was active.
+  const [parallelError, setParallelError] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [focusedVerse, setFocusedVerse] = useState<number | null>(null);
   const [plan, setPlan] = useState(activePlan);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [marksVersion, setMarksVersion] = useState(0);
+  // FID-UX-003: a brief, polite confirmation that Copy actually reached the
+  // clipboard — or, in a locked-down/insecure context, that it did not. The
+  // write swallowed both outcomes silently before. role="status" speaks it once,
+  // and a timer clears it so it never lingers.
+  const [copyStatus, setCopyStatus] = useState<"copied" | "failed" | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // §4.2 commentary: the book's Haydock notes drive the gold dots (and feed the
   // sheet); commentaryFor is the verse whose commentary sheet is open.
   const [haydockBook, setHaydockBook] = useState<CommentaryBook | null>(null);
@@ -105,13 +115,19 @@ export default function Reader() {
   useEffect(() => {
     if (!parallel || parallel === translation) {
       setParallelData(null);
+      setParallelError(null);
       return;
     }
     let alive = true;
     setParallelData(null);
+    setParallelError(null);
     loadBook(parallel, bookSlug)
       .then((d) => alive && setParallelData(d))
-      .catch(() => alive && setParallelData(null));
+      .catch((e) => {
+        if (!alive) return;
+        setParallelData(null);
+        setParallelError(e instanceof Error ? e.message : String(e));
+      });
     return () => {
       alive = false;
     };
@@ -160,7 +176,13 @@ export default function Reader() {
     setCccFor(null);
     setPickerOpen(false);
     setTypeOpen(false);
+    setCopyStatus(null);
   }, [translation, bookSlug, chapter, book]);
+
+  // Clear the copy-status timer if the reader unmounts mid-flash.
+  useEffect(() => () => {
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+  }, []);
 
   // Persistence: remember lastRead and the chosen translation only once the
   // text has actually loaded — a failed load (an import-only translation not
@@ -318,6 +340,13 @@ export default function Reader() {
     setSelected(selected === v ? null : v);
     setNoteOpen(false);
     setCccFor(null);
+    setCopyStatus(null);
+  };
+
+  const flashCopyStatus = (s: "copied" | "failed") => {
+    setCopyStatus(s);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setCopyStatus(null), 2400);
   };
 
   const copySelected = async () => {
@@ -325,8 +354,10 @@ export default function Reader() {
     const text = `"${verses[selRef.verse - 1]}" — ${displayName} ${chapter}:${selRef.verse} (${trans?.abbrev})`;
     try {
       await navigator.clipboard.writeText(text);
+      flashCopyStatus("copied");
     } catch {
-      // clipboard unavailable
+      // clipboard unavailable (insecure context, denied permission, no API)
+      flashCopyStatus("failed");
     }
   };
 
@@ -489,6 +520,20 @@ export default function Reader() {
         </p>
       )}
 
+      {parallelError && parallel && parallel !== translation && (
+        <div className="notice" role="status">
+          The parallel {getTranslation(parallel)?.name ?? parallel} couldn’t be
+          loaded, so this chapter is shown in a single column.
+          {getTranslation(parallel) && !getTranslation(parallel)!.bundled && (
+            <>
+              {" "}
+              <Link to="/translations">Import it in Translations</Link> to read
+              them side by side.
+            </>
+          )}
+        </div>
+      )}
+
       {verses && !chapterEmpty && !parallelData && renderVerses(verses, true, translation)}
       {verses && !chapterEmpty && parallelData && (
         <div className="parallel-grid">
@@ -640,6 +685,13 @@ export default function Reader() {
               </button>
             </div>
           )}
+          <span className="va-status" role="status" aria-live="polite">
+            {copyStatus === "copied"
+              ? "Copied to the clipboard."
+              : copyStatus === "failed"
+                ? "Couldn’t copy here — select the verse text to copy it."
+                : ""}
+          </span>
         </div>
       )}
 

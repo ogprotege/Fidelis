@@ -40,14 +40,27 @@ struct CalendarDay: Decodable {
 }
 
 // ── Shared loading + the date key (matches Android + the web app) ─────────────
+// FID-PERF-004: this 400 kB+ file is decoded in the placeholder, snapshot, AND
+// timeline paths of BOTH the Mass and Quote providers. Memoize the decode
+// process-locally so one widget-reload cycle parses it once instead of thrice.
+// The lock guards against WidgetKit invoking provider callbacks off the main
+// thread; the extension process is ephemeral, so the cache is released when the
+// reload finishes — nothing is pinned across reloads.
+private let calendarCacheLock = NSLock()
+private var calendarCache: [String: CalendarDay]?
+
 private func loadCalendar() -> [String: CalendarDay] {
+    calendarCacheLock.lock()
+    defer { calendarCacheLock.unlock() }
+    if let cached = calendarCache { return cached }
     guard
         let url = Bundle.main.url(forResource: "calendar", withExtension: "json"),
         let data = try? Data(contentsOf: url),
         let map = try? JSONDecoder().decode([String: CalendarDay].self, from: data)
     else {
-        return [:]
+        return [:] // a transient miss is not memoized, so a later call retries
     }
+    calendarCache = map
     return map
 }
 
@@ -190,6 +203,9 @@ struct MassWidgetView: View {
         }
         .padding(2)
         .containerBackground(kParchment, for: .widget)
+        // FID-NATIVE-002: the Mass widget opens the Mass readings (spec §9), routed
+        // by src/App.tsx from the Capacitor appUrlOpen URL.
+        .widgetURL(URL(string: "fidelis://mass"))
     }
 }
 
@@ -268,6 +284,8 @@ struct QuoteWidgetView: View {
         }
         .padding(2)
         .containerBackground(kParchment, for: .widget)
+        // FID-NATIVE-002: the Quote card lives on Today; open it there.
+        .widgetURL(URL(string: "fidelis://today"))
     }
 }
 

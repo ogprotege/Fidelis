@@ -7,13 +7,11 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.widget.RemoteViews;
 
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Locale;
@@ -77,7 +75,10 @@ public class QuoteWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.quote_text, q1 + text + q2);
         views.setTextViewText(R.id.quote_author, author);
 
-        Intent open = new Intent(context, MainActivity.class)
+        // FID-NATIVE-002: the Quote card lives on Today; open it there via the
+        // fidelis://today deep link (Capacitor appUrlOpen → src/App.tsx routes it).
+        Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse("fidelis://today"),
+                context, MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(context, RC_OPEN, open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -93,13 +94,8 @@ public class QuoteWidget extends AppWidgetProvider {
     }
 
     private JSONObject loadDays(Context context) throws Exception {
-        try (InputStream in = context.getResources().openRawResource(R.raw.calendar);
-             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            byte[] buf = new byte[8192];
-            int n;
-            while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
-            return new JSONObject(out.toString(StandardCharsets.UTF_8.name()));
-        }
+        // FID-PERF-004: shared, process-local memoized decode (see CalendarData).
+        return CalendarData.load(context);
     }
 
     private void scheduleNextMidnight(Context context) {

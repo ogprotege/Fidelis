@@ -22,6 +22,20 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- FID-NATIVE-002: the custom fidelis:// scheme the home-screen widgets open
+	     (fidelis://mass, fidelis://today). Capacitor's appUrlOpen delivers the URL
+	     to the web layer (src/App.tsx), which routes it. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.fidelis.bible</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fidelis</string>
+			</array>
+		</dict>
+	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>

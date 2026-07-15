@@ -1475,6 +1475,73 @@ green (the memory §35, the six-card guard, the atomic-import §33, and the perf
 and the Today page shows six cards while the Translations page still imports atomically. Shells to
 1.18.2/11802; no engine, data, golden, or service-worker change. The net held.
 
+## Faithful in little (v1.18.3)
+
+*"He that is faithful in that which is least, is faithful also in that which is greater." (Luke 16:10)*
+**The audit's P3 polish sweep — nine small items, none load-bearing on its own, closed together.**
+
+The audit's third tier was the small stuff: a widget that could freeze on the day it mounted, a
+silent failure here, a missing confirmation there, an uneven gutter, a keyboard that opened
+uninvited, a file decoded three times over, widgets you couldn't tap, and a security posture worth
+naming precisely. None of it was urgent; all of it was the kind of thing that, left alone, quietly
+tells a careful reader the corners weren't finished. So they were finished.
+
+**The Reader and the widgets.** The embeddable Verse of the Day (`WidgetVotd`) read its verse once,
+at render — an `<iframe>` a site left open across midnight would show yesterday's word until the page
+reloaded. It now takes the day from `useToday()`, the same midnight-timer-plus-foreground-resume hook
+the Today page and the liturgical accent already lean on, so a long-lived embed rolls when the civil
+day turns (FID-FUNC-010). In the Reader, a parallel pane that failed to load — almost always an
+import-only second translation absent on the device — used to collapse silently to one column; it now
+raises a quiet notice, with a Translations link when the pane is an import-only text, so the reader
+knows the setting is still on and why it isn't showing (FID-FUNC-011). And the verse-action **Copy**,
+which had swallowed both success and clipboard failure without a word, now flashes one brief, polite
+`role="status"` line by the action bar — a confirmation, or a plain note that copying isn't available
+here — that clears after a moment (FID-UX-003).
+
+**Two viewport manners.** `.widget-grid`'s 300 px minimum card overhung the grid at 320 CSS px,
+leaving 16 px on the left and 4 on the right; clamping the minimum track to `min(300px, 100%)` lets a
+lone card shrink to the column so the gutters stay even, while any wider viewport keeps the 300 px
+floor (FID-UX-004). Search's `autoFocus` fired on every visit to the tab, which on a touch phone
+throws the on-screen keyboard up over the results the instant you arrive; it is now gated on a
+`(hover: hover) and (pointer: fine)` query, so a keyboard/desktop context still autofocuses and a
+touch user reaches the field on their own terms (FID-UX-005).
+
+**The widgets learn to open a door.** The home-screen widgets had no deep link — the design spec had
+always expected the Mass widget to open Mass. A new custom `fidelis://` URL scheme carries the intent:
+`fidelis://mass` → the Mass readings, `fidelis://today` → Today (where the Verse and Quote cards
+live). iOS widgets attach a `widgetURL`, and the scheme is registered in the App's `Info.plist`
+`CFBundleURLTypes`; Android widgets set the same URL as the launch intent's data, with a matching
+`MainActivity` intent-filter. The web layer routes it uniformly through Capacitor's `appUrlOpen` (a
+tap while running) and `getLaunchUrl` (a cold launch) in `src/App.tsx` — one handler, both platforms
+(FID-NATIVE-002).
+
+**Decoding once.** The ~400 kB `calendar.json` was parsed in the placeholder, snapshot, and timeline
+paths of both the Mass and Quote providers, on every reload. iOS now memoizes the decode
+process-locally, lock-guarded because WidgetKit may call a provider off the main thread — and the
+extension process is ephemeral, so nothing is pinned between reloads. Android factors the read into a
+shared `CalendarData` helper backed by a `SoftReference`, so `CalendarWidget` and `QuoteWidget` reuse
+one decode within a burst while the memory stays reclaimable under pressure and simply re-parses on
+demand (FID-PERF-004).
+
+**Naming the security posture.** The manifest seal is a build-time guarantee — the SHA-256 manifest is
+re-walked on every build and in CI — and the UI now says so: "Texts verified" became **"verified at
+build"** in Settings and About, so it can't be misread as a live checksum of the device's cache; the
+new `docs/SECURITY.md` records where runtime trust actually comes from (native code-signing, the
+immutable cache-first corpus) (FID-SEC-001). And the first step of a Content Security Policy ships —
+in **Report-Only** mode, deliberately non-breaking. `public/_headers` carries a
+`Content-Security-Policy-Report-Only` policy (plus `X-Content-Type-Options` and `Referrer-Policy`)
+that observes and logs violations but blocks nothing; the single inline pre-paint `<script>` is
+allowed by its SHA-256 hash rather than `'unsafe-inline'`, and harness §36 recomputes that hash from
+`index.html` so editing the script without updating the header goes red. Because the report-only form
+is ignored inside a `<meta>` tag, it must be a real header — honored by hosts that read `_headers`,
+inert and harmless everywhere else and in the code-signed shells. The enforcing-`<meta>` migration,
+and its traps (the Capacitor bridge, the embeddable widget's `frame-ancestors`, the load-bearing
+`style-src 'unsafe-inline'`), is written down in `docs/SECURITY.md` and deferred (FID-SEC-002).
+
+Harness §36 guards all nine — shape guards for the UI/native/host wiring the pure engines can't reach,
+plus the one real computation, the CSP hash drift gate. Shells to 1.18.3/11803; no engine, data,
+golden, or service-worker change.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

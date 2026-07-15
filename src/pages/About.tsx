@@ -184,11 +184,12 @@ export default function About() {
       <p className="small muted" id="integrity">
         All sources are fetched at commits pinned by hash — never a moving
         branch — and every bundled data file is sealed by a SHA-256 manifest
-        that the project's data harness verifies on every run.
+        that the project's data harness verifies on every build (this is a
+        build-time seal, not a live check of your device's cache).
         {integrity && (
           <>
             {" "}
-            Texts verified — manifest root <code>{integrity.rootHash.slice(0, 12)}</code>,{" "}
+            Verified at build — manifest root <code>{integrity.rootHash.slice(0, 12)}</code>,{" "}
             {integrity.fileCount} files;{" "}
             {Object.values(integrity.sources)
               .map((s) => `${s.repo}@${s.commit.slice(0, 7)}`)

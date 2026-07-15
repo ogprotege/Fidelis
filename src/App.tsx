@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useState, useSyncExternalStore } from "react";
-import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Header from "./components/Header";
 import ScrollManager from "./components/ScrollManager";
 import Home from "./pages/Home";
@@ -69,6 +69,7 @@ export default function App() {
   const settings = useSettings();
   const update = useUpdateSettings();
   const location = useLocation();
+  const navigate = useNavigate();
   const widgetMode = location.pathname.startsWith("/widget/");
   // Live "today" (midnight + foreground-resume aware) so the liturgical accent
   // below never wears yesterday's color in the resident native shell.
@@ -130,6 +131,36 @@ export default function App() {
       void handle.then((h) => h.remove());
     };
   }, []);
+
+  // Widget deep links (FID-NATIVE-002): the home-screen widgets open the app on a
+  // fidelis:// URL — fidelis://mass → the Mass readings, fidelis://today → Today.
+  // Both a cold launch (getLaunchUrl) and a tap while running (appUrlOpen) are
+  // handled; only our own scheme routes, so an ordinary launch is untouched.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const routeFor = (url: string): string | null => {
+      const m = /^fidelis:\/\/([a-z]+)/i.exec(url);
+      switch (m?.[1].toLowerCase()) {
+        case "mass":
+          return "/readings";
+        case "today":
+          return "/";
+        default:
+          return null;
+      }
+    };
+    const open = (url?: string | null) => {
+      const route = url ? routeFor(url) : null;
+      if (route) void navigate(route);
+    };
+    const handle = CapApp.addListener("appUrlOpen", (e) => open(e.url));
+    void CapApp.getLaunchUrl()
+      .then((r) => open(r?.url))
+      .catch(() => {});
+    return () => {
+      void handle.then((h) => h.remove());
+    };
+  }, [navigate]);
 
   // Move focus to the main content region on every route change (WCAG 2.4.3), so
   // keyboard and screen-reader users land in the new page — except on a ?v= deep
