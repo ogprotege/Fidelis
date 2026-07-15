@@ -1640,6 +1640,61 @@ No engine, data, golden, or service-worker change; no `dist`-shipped code change
 version badge — which had drifted to 1.18.2 because the v1.18.3 and v1.18.4 releases never bumped it
 — is corrected to 1.18.5. Native version strings 1.18.4→1.18.5 (`versionCode` 11804→11805).
 
+## Men of renown (v1.19.0)
+
+*"Let us now praise men of renown, and our fathers in their generation." (Ecclesiasticus 44:1)*
+
+The Saint of the Day, made visible. Back in v1.18.0, "the memory of the just" built the whole
+apparatus — a saints corpus, a history corpus, detail pages, memoized loaders, provenance-gated
+build scripts — but wired the Saint into the Today page only as a faint link on the Mass card's
+memorial name. It had two failings a user found at once: it was too quiet to notice, and it depended
+on the calendar engine already naming the day's saint. On St. Bonaventure's own memorial, July 15,
+neither held: the engine did not know the day, so there was no memorial name to link, and the Saint —
+though his life sat ready in the corpus — did not appear at all. This release fixes the engine gap,
+gives the Saint real presence, and broadens the corpus across the calendar.
+
+**The engine gap (the "no Saint at all" bug).** St. Bonaventure, Bishop and Doctor of the Church, is
+an obligatory memorial of the General Roman Calendar on July 15 — but he was simply absent from the
+sanctoral table in `liturgical.ts` (a "representative selection" that had skipped him). So the engine
+resolved July 15 as a plain green feria, the Mass card showed no celebration, the memorial-name link
+had nothing to attach to, and `saintForCelebration` never matched. One line restores him; July 15 is
+now a white memorial in both the Universal and USA calendars. The golden snapshots are re-blessed
+(the change is scoped to July 15 alone — its color and celebration; the ferial readings are untouched,
+correct for an unmarked memorial), and an explicit harness assertion pins it so he cannot vanish again.
+
+**The "Today in the Church" card.** The card that was "Today in Church History" is reworked into the
+one the Saint deserves. It now leads with the **Saint of the Day**: a gold monogram medallion (the
+sacred mark — gold honors, the two-accent rule), the name in the Scripture face, the title, rank, and
+dates, a one-line blurb, the patronage, and a purple "Read the life →" link to the full page that
+already carried the biography, canonization, and sources. Below a hairline follows the day's
+**Church-history** event, as before. Crucially, the Saint is now **decoupled from the sanctoral
+engine**: the card shows a life whenever the corpus has one for the day — even a feria — not only on
+days the engine celebrates. The Mass card's memorial-name link stays as a secondary affordance.
+
+To make room without breaking the standing six-card rule, the **Mass card is retitled "Today at
+Mass"** — its own home-screen-widget name, and a more precise label for a card of readings — which
+frees the "Today in the Church" banner for the Saint card and, as a bonus, resolves the confusing
+near-duplicate that had stood since v1.18.0 ("Today in the Church" for the Mass card beside "Today in
+Church History" for the other). The page still renders exactly six cards.
+
+**The corpus, broadened.** The saints corpus grows from 10 to **53** lives and the history corpus
+from 8 to **15** events, reaching into every month of the year. Every entry is drawn faithfully from
+public-domain reference works — the Catholic Encyclopedia of 1913, Butler's *Lives of the Saints*,
+the *Jesuit Relations*, St. Thérèse's own *Story of a Soul* — and carries `verified: false`, the
+sourced-draft flag of the §3.4 ledger, until a human checks it against the named edition. The
+provenance gate is honored strictly: truly modern saints for whom no public-domain source exists
+(Maximilian Kolbe, Padre Pio, John Paul II, Frances Cabrini) are **left out rather than falsely
+cited to a 1913 encyclopedia that could not have known them** — an honest gap is better than a false
+footnote, and the days they fall on simply await proper sourcing.
+
+**The widget, re-synced.** The native `calendar.json` — the pre-resolved feed the home-screen
+widgets read — is regenerated so July 15 now carries St. Bonaventure. Regenerating also surfaced that
+the artifact had gone **stale since v1.14.1**: the deterministic Quote-of-the-Day rotation (a seeded
+mulberry32 permutation, so the fill is reproducible) had drifted from what the live web app computes.
+Re-generating re-syncs the widgets to the engine; iOS and Android stay byte-identical.
+
+No service-worker change. Native versions 1.18.5→1.19.0 (`versionCode` 11900).
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

@@ -1647,6 +1647,48 @@ body.widget-mode { background: transparent; }
 .saint-sources summary { cursor: pointer; color: var(--text-muted); }
 .saint-sources ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
 
+/* The "Today in the Church" card — the Saint of the Day leads with a monogram
+   medallion; the day's Church-history event follows below a hairline. */
+.saint-lead { display: flex; gap: 0.9rem; align-items: flex-start; }
+.saint-medallion {
+  flex: 0 0 auto;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 2.5px solid var(--gold); /* gold honors — the sacred mark, theme-aware */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--scripture);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text);
+  background: var(--bg-2);
+}
+.saint-lead-body { min-width: 0; }
+/* A quiet structural label above each section — calm, not an accent. */
+.church-eyebrow {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.1rem;
+}
+.saint-lead-name {
+  font-family: var(--scripture);
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.saint-lead-meta { margin: 0.15rem 0 0.4rem; }
+.saint-lead-blurb { margin: 0 0 0.4rem; }
+.saint-lead-patron { margin: 0 0 0.5rem; }
+.church-divider {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 1.1rem 0;
+}
+.church-history { margin-top: 0.2rem; }
+
 /* An inline action inside prose (the Mass card's "Try again") — purple acts. */
 .link-btn {
   background: none;

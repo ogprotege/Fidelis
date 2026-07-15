@@ -31,12 +31,27 @@ import { verseOfTheDay, formatVotdRef } from "../lib/votd";
 import { useSettings } from "../SettingsContext";
 import { useToday } from "../useToday";
 
+/** The saint's initial for the medallion — leading honorifics and Marian/office
+ *  prefixes dropped so "St. Bonaventure" → "B", "Our Lady of Mount Carmel" → "M". */
+function monogram(name: string): string {
+  const stripped = name.replace(
+    /^(Sts?\.?|Ss\.?|Bl\.?|Bd\.?|Pope|The|Our Lady of the|Our Lady of)\s+/i,
+    ""
+  );
+  return (stripped.trim()[0] || name.trim()[0] || "S").toUpperCase();
+}
+
 /* The Today page holds at most six cards (CLAUDE.md standing rule 2 — raised from
    five in v1.18.0 for Today in Church History):
-   1 Today in the Church (liturgical day + Mass readings + Marian antiphon, merged
-   per spec §6; its memorial name links to the Saint of the Day) — the time-sensitive
-   card leads on a phone, right under the date · 2 Today in Church History ·
-   3 Verse of the Day · 4 Quote of the Day · 5 The Holy Rosary · 6 Continue Reading. */
+   1 "Today at Mass" (liturgical day + Mass readings + Marian antiphon, merged per
+   spec §6; its memorial name also links to the Saint of the Day) — the time-sensitive
+   card leads on a phone, right under the date · 2 "Today in the Church" (the Saint
+   of the Day leads with a monogram medallion, the day's Church-history event follows) ·
+   3 Verse of the Day · 4 Quote of the Day · 5 The Holy Rosary · 6 Continue Reading.
+   (The Mass card was titled "Today in the Church" through v1.18.x; it moved to the
+   widget-consistent "Today at Mass" in v1.19.0 so the saints/history card could take
+   the "Today in the Church" banner — resolving the old near-duplicate with the
+   history card's title.) */
 export default function Home() {
   // Live "today": rolls at local midnight and on foreground resume, so a phone
   // that keeps Fidelis resident overnight never shows yesterday's page.
@@ -65,8 +80,12 @@ export default function Home() {
   const [historyState, setHistoryState] = useState<"loading" | "ready" | "empty" | "failed">(
     "loading"
   );
-  // Today's saints, for linking the memorial name to its life when we have it.
+  // Today's saints — both the Mass card's memorial-name link and the "Today in
+  // the Church" card's Saint of the Day read this. saintLoaded distinguishes
+  // "still loading" from "no saint today" so the card's empty/divider logic is
+  // honest even when the two loads resolve at different times.
   const [saintDay, setSaintDay] = useState<SaintDay | null>(null);
+  const [saintLoaded, setSaintLoaded] = useState(false);
   const [openMystery, setOpenMystery] = useState<Mystery | null>(null);
   const [share, setShare] = useState<
     { text: string; citation: string; source?: string; filename: string } | null
@@ -130,9 +149,21 @@ export default function Home() {
         }
       })
       .catch(() => alive && setHistoryState("failed"));
+    setSaintDay(null);
+    setSaintLoaded(false);
     loadSaints(dayToday)
-      .then((s) => alive && setSaintDay(s))
-      .catch(() => alive && setSaintDay(null));
+      .then((s) => {
+        if (alive) {
+          setSaintDay(s);
+          setSaintLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (alive) {
+          setSaintDay(null);
+          setSaintLoaded(true);
+        }
+      });
     return () => {
       alive = false;
     };
@@ -191,7 +222,7 @@ export default function Home() {
       <div className="widget-grid">
         <div className="card">
           <h2>
-            Today in the Church
+            Today at Mass
             <span className="spacer" />
             <span
               className="lit-color-chip"
@@ -264,20 +295,68 @@ export default function Home() {
         </div>
 
         <div className="card">
-          <h2><span className="cross"><Icon name="cross" /></span> Today in Church History</h2>
-          {historyState === "loading" && <Skeleton lines={3} className="mass-skeleton" />}
+          <h2><span className="cross"><Icon name="cross" /></span> Today in the Church</h2>
+
+          {/* Saint of the Day — decoupled from the sanctoral engine: shown whenever
+              we have a life for the day, even on a feria. The celebrated saint (if
+              any) leads; otherwise the day's first seeded saint. */}
+          {saintDay && saintDay.saints.length > 0
+            ? (() => {
+                const s =
+                  saintForCelebration(saintDay.saints, lit.celebrations.map((c) => c.name)) ??
+                  saintDay.saints[0];
+                return (
+                  <div className="saint-lead">
+                    {/* The medallion honors the saint — its ring is gold (the
+                        sacred mark), not the day's liturgical color; card 1 already
+                        carries the color chip. */}
+                    <div className="saint-medallion" aria-hidden="true">
+                      {monogram(s.name)}
+                    </div>
+                    <div className="saint-lead-body">
+                      <div className="church-eyebrow sans small">Saint of the Day</div>
+                      <div className="saint-lead-name">{s.name}</div>
+                      <p className="muted small sans saint-lead-meta">
+                        {s.title} · {s.rank}
+                        {(s.bornYear || s.diedYear) && (
+                          <>
+                            {" "}
+                            · {s.bornYear || "?"}–{s.diedYear || "?"}
+                          </>
+                        )}
+                      </p>
+                      <p className="saint-lead-blurb">{s.shortBlurb}</p>
+                      {s.patronage && s.patronage.length > 0 && (
+                        <p className="muted small sans saint-lead-patron">
+                          Patron of {s.patronage.join(", ")}.
+                        </p>
+                      )}
+                      <Link className="continue-cta" to={`/saint/${dayToday}/${s.id}`}>
+                        Read the life →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })()
+            : null}
+
+          {/* Divider only when both sections are present. */}
+          {saintDay && saintDay.saints.length > 0 && historyState === "ready" && history && (
+            <hr className="church-divider" />
+          )}
+
+          {/* In Church History — the day's event. */}
+          {historyState === "loading" && !(saintDay && saintDay.saints.length > 0) && (
+            <Skeleton lines={3} className="mass-skeleton" />
+          )}
           {historyState === "failed" && (
             <p className="muted small sans" role="status">
               Church history couldn&rsquo;t be loaded — it will return with your connection.
             </p>
           )}
-          {historyState === "empty" && (
-            <p className="muted small sans" role="status">
-              No entry is recorded for today yet.
-            </p>
-          )}
           {historyState === "ready" && history && (
-            <>
+            <div className="church-history">
+              <div className="church-eyebrow sans small">In Church History</div>
               <div className="history-lead">
                 <span className="history-year">{history.events[0].year}</span>{" "}
                 <strong>{history.events[0].title}</strong>
@@ -288,7 +367,15 @@ export default function Home() {
                   ? `Read more · ${history.events.length} events →`
                   : "Read more →"}
               </Link>
-            </>
+            </div>
+          )}
+
+          {/* One calm line when neither a saint nor an event is recorded yet. */}
+          {saintLoaded && !(saintDay && saintDay.saints.length > 0) && historyState === "empty" && (
+            <p className="muted small sans" role="status">
+              The saints and the day&rsquo;s chronicle are being gathered from public-domain
+              sources, one day at a time.
+            </p>
           )}
         </div>
 
