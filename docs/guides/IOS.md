@@ -30,8 +30,10 @@ The WebView paints **edge-to-edge**: `index.html` sets `viewport-fit=cover` and
 single source of truth — there is no doubled native + CSS inset. The status-bar
 glyphs follow the theme via the `@capacitor/status-bar` plugin (driven from
 `App.tsx`): light in Night, dark in Day. When verifying on a notched simulator,
-confirm the header clears the status bar exactly once and the tab bar lifts above
-the home indicator.
+confirm the header clears the status bar exactly once and, on scroll, the brand
+row folds away while the slim tab row stays pinned below the status bar — the
+fixed backdrop strip keeps the notch painted during rubber-band overscroll
+(the collapsing masthead, v1.16.0; the bottom tab bar is retired).
 
 ### Run it in the Simulator (step by step)
 
@@ -186,22 +188,29 @@ per day for the next week (`.atEnd`), fully offline.
 
 **App Intent — "What's today's Gospel?" (Siri / Shortcuts):**
 
-Add an `AppIntent` (App Intents framework) to the **app** target that reads the
-same `calendar.json` (or the in-app data), finds today's `Gospel` reading, and
-returns its `cite` as the dialog; give it an `openAppWhenRun = false` variant
-for the citation and a deep-link variant that opens the Mass tab. Expose it via
-`AppShortcutsProvider` with the phrase "today's Gospel in Fidelis."
+`ios/App/App/TodaysGospelIntent.swift` (App Intents framework, in the **app**
+target) reads the same `calendar.json`, finds today's `Gospel` reading, and
+returns its `cite` as the dialog without opening the app
+(`openAppWhenRun = false`); an `AppShortcutsProvider` exposes it under the
+phrase "today's Gospel in Fidelis." AppIntents is iOS 16+, so it is gated
+behind `@available(iOS 16.0, *)` — on iOS 15 the shortcut simply isn't offered.
 
-**Dynamic Type:** map the four in-app size presets
-(`src/lib/typography.ts` → 17/19/22/25) onto the iOS content-size categories so
-the system setting and the in-app setting cooperate. In the Capacitor webview,
-honor `-apple-system-body` scaling by gating the app's `--scripture` size on
-`@media` / the `AppleLanguages`-driven category, or read
-`UIApplication.preferredContentSizeCategory` in the shell and pass it to the web
-layer as the initial preset. Keep the in-app pills as the override.
+**Dynamic Type:** the shell reads `UIApplication.preferredContentSizeCategory`
+(the bridge lives in `ios/App/App/AppDelegate.swift`) and passes it to the web
+layer (`src/lib/dynamicType.ts`), which maps the iOS content-size categories
+onto the four in-app size presets (`src/lib/typography.ts` → 17/19/22/25) and
+tracks live category changes. The in-app pills remain the override.
 
 All three remain offline and pin `Calendar(identifier: .gregorian)` so a
-non-Gregorian device calendar can never disagree with the web app or Android.
+non-Gregorian device calendar can never skew the date key the widgets, Siri,
+and Android all look up.
+
+**Region policy:** `calendar.json` is generated for the **USCCB (USA) calendar**
+— the app's default region — so the widgets, Siri, and the app agree out of the
+box. The generated data is fixed to that region: a user who switches the app to
+the **Universal** calendar in Settings will still see USCCB celebrations,
+readings, and quotes on the widgets and from Siri. Region-configurable widgets
+are deliberately deferred (see `scripts/build-calendar-widget.ts`).
 
 ## 6. macOS CI (builds the iOS App target)
 
@@ -211,8 +220,11 @@ after `npm ci && npm run build && npx cap sync ios`. It **selects the newest
 installed Xcode** first, because Capacitor 8.4.x's binary framework requires a
 Swift ≥ 6.2 toolchain (see above). It is the native counterpart to the Linux `CI`
 workflow and proves the Capacitor iOS shell still compiles after a web or native
-change. It triggers on demand (`workflow_dispatch`) and on push/PR that touch
-`ios/**`, `src/**`, `capacitor.config.ts`, or the lockfile.
+change. It builds the **Release** configuration — the one
+`scripts/ios-testflight.sh` archives. It triggers on demand (`workflow_dispatch`)
+and on push/PR that touch `ios/**`, `src/**`, `public/**`, `capacitor.config.ts`,
+the lockfile, or the native tooling scripts (project wiring, widget data
+builders, the TestFlight pipeline).
 
 The `FidelisWidgetExtension` target now lives in the committed project (added by
 `scripts/add-ios-widget-target.rb`, §2) and is embedded in the `App` target, so

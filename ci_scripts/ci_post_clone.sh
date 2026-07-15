@@ -13,13 +13,19 @@
 
 set -e
 
-# Node/npm are not on the Xcode Cloud image by default; Homebrew is.
-if ! command -v npm >/dev/null 2>&1; then
-  echo "ci_post_clone: installing Node via Homebrew…"
-  brew install node
-fi
-# Ensure the Homebrew-installed node/npm are on PATH for the rest of this shell.
+# Ensure Homebrew bin dirs are on PATH for the rest of this shell.
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+# Node/npm are not on the Xcode Cloud image by default; Homebrew is. Pin the
+# same Node major the GitHub workflows pin (22), so Xcode Cloud can never
+# silently drift onto a newer major than CI builds with — matching the
+# canonical hook at ios/App/ci_scripts/ci_post_clone.sh. node@22 is keg-only,
+# so its bin dir is prepended to PATH explicitly (last, so it wins).
+if ! command -v npm >/dev/null 2>&1; then
+  echo "ci_post_clone: installing Node 22 via Homebrew…"
+  brew install node@22
+  export PATH="$(brew --prefix node@22)/bin:$PATH"
+fi
 
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 

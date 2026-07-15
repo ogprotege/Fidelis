@@ -6,6 +6,62 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.16.1] — 2026-07-15 — a faithful witness
+
+*"A faithful witness will not lie: but a deceitful witness uttereth a lie." (Proverbs 14:5)*
+
+The documentation made to tell the truth about the product that ships, and the native
+workflows made to watch the scripts that shape them. This closes the release-safety findings
+of the 2026-07-15 full product audit that are closable off-device
+(`docs/review/Fidelis_Full_Product_Audit_2026-07-15.md` — FID-DOC-001, FID-REL-002,
+FID-REL-003, and the documentation half of FID-NATIVE-001). No app code, engine, data, or
+golden changes.
+
+### Fixed
+
+- **The README told the story of an older app (audit FID-DOC-001).** Four stale claims
+  corrected: the Mass and Quote home-screen widgets ship on **both** platforms — not
+  "Android (iOS spec'd to follow)"; the iOS WidgetKit trio shipped in v1.13.1/v1.13.2 — the
+  Widget Extension target is created idempotently by `scripts/add-ios-widget-target.rb`, not
+  "a one-time Xcode step (it can't be scripted)"; the "today's Gospel" App Intent and the
+  Dynamic Type bridge shipped in v1.13.3 rather than "remain specified"; and phone navigation
+  is the v1.16.0 collapsing masthead, not a bottom bar. The version badge travels with the
+  release again.
+- **The iOS guide verified a retired layout.** §1's notched-simulator check now describes the
+  masthead (the brand row folds away, the tab row pins below the status bar, the backdrop
+  strip covers rubber-band overscroll) instead of "the tab bar lifts above the home
+  indicator"; §5's App Intent and Dynamic Type paragraphs describe the shipped implementation
+  in the present tense (`TodaysGospelIntent.swift`, the `AppDelegate.swift` ↔
+  `src/lib/dynamicType.ts` bridge) instead of instructing the reader to build it.
+- **The "never disagrees" comments told a half-truth (audit FID-NATIVE-001, documentation
+  half).** `scripts/build-calendar-widget.ts` and `TodaysGospelIntent.swift` now state the
+  real policy: the widget/Siri data is generated for the USCCB (USA) calendar — the app's
+  default region — and is **fixed** to it, so switching the app to the Universal calendar does
+  not reach the native surfaces. The policy is now documented in the iOS guide (§5 "Region
+  policy"); region-configurable widgets are deliberately deferred.
+
+### Changed
+
+- **The native workflows now watch their own tooling (audit FID-REL-002).** The iOS
+  workflow's path filters gain the five native-shaping scripts
+  (`add-ios-widget-target.rb`, `configure-ios-app-target.rb`, `build-votd-widget.mjs`,
+  `build-calendar-widget.ts`, `ios-testflight.sh`); the Android workflow gains the two widget
+  builders. Project-wiring or widget-pipeline changes can no longer land without a native
+  build. The iOS simulator build switches Debug → **Release** — the configuration
+  `scripts/ios-testflight.sh` actually archives — so CI proves the shipping profile.
+- **The duplicate Xcode Cloud hook pinned to Node 22 (audit FID-REL-003).** The root
+  `ci_scripts/ci_post_clone.sh` fallback installs `node@22` exactly like the canonical
+  `ios/App/ci_scripts/` hook (it installed an unpinned `node`), and the release guide's §4
+  now gives the exact `git checkout -- ios/App/CapApp-SPM/Package.swift` revert that
+  `ios-testflight.sh` runs after its sync.
+
+### Release mechanics
+
+- iOS `MARKETING_VERSION` and Android `versionName` 1.16.0→1.16.1, `versionCode` 11600→11601
+  (shells version with the web app — the v1.15.1 lesson). No service-worker cache bump: no
+  shell asset changed. The stale App Store screenshots (audit FID-REL-001) still gate a store
+  submission and need a macOS session to regenerate.
+
 ## [1.16.0] — 2026-07-14 — upon the candlestick
 
 *"Neither do men light a candle, and put it under a bushel, but upon a candlestick, that it may

@@ -23,6 +23,9 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/android.yml"
+      # The widget data builders feed the committed res/raw JSON the widgets read.
+      - "scripts/build-votd-widget.mjs"
+      - "scripts/build-calendar-widget.ts"
   pull_request:
     paths:
       - "android/**"
@@ -32,6 +35,8 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/android.yml"
+      - "scripts/build-votd-widget.mjs"
+      - "scripts/build-calendar-widget.ts"
 
 concurrency:
   group: android-${{ github.ref }}

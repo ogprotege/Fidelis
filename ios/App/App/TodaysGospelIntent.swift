@@ -7,8 +7,10 @@
 //  (emitted by scripts/build-calendar-widget.ts from the web app's own
 //  resolveReadings()/liturgicalDay()), keyed by local ISO date on the Gregorian
 //  calendar in the device time zone — the exact key the widgets and the Android
-//  app look up — so Siri, the widgets, Android, and the web app can never
-//  disagree. No engine is ported. See docs/guides/IOS.md §5.
+//  app look up — so Siri, the widgets, and Android always agree with each other,
+//  and with the app at its default (USCCB) calendar region; the generated data
+//  is fixed to that region, so the app's Universal-calendar setting does not
+//  reach these surfaces. No engine is ported. See docs/guides/IOS.md §5.
 //
 //  AppIntents is iOS 16+, while the App target deploys to iOS 15, so everything
 //  here is gated behind @available(iOS 16.0, *). On iOS 15 the shortcut is simply
