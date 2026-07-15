@@ -7,24 +7,22 @@ import BookList from "./pages/BookList";
 import Reader from "./pages/Reader";
 import Readings from "./pages/Readings";
 import Search from "./pages/Search";
-import Library from "./pages/Library";
-import Translations from "./pages/Translations";
-import Settings from "./pages/Settings";
-import About from "./pages/About";
-import Saint from "./pages/Saint";
-import History from "./pages/History";
 import WidgetVotd from "./pages/WidgetVotd";
 
 /* v1.18.1 (audit FID-PERF-002): the worship-critical path — Today, the Reader,
    Search, Mass, the book list (and the widget embed) — stays eager; the
    secondary surfaces load as route-level chunks the first time they are
-   visited. Plain React.lazy, no chunking framework. */
+   visited. Plain React.lazy, no chunking framework. The v1.18.0 Saint /
+   Church History detail pages join the split — they are secondary surfaces
+   reached from the Today card, and their routes already sit under <Suspense>. */
 const Plans = lazy(() => import("./pages/Plans"));
 const PlanCreator = lazy(() => import("./pages/PlanCreator"));
 const Library = lazy(() => import("./pages/Library"));
 const Translations = lazy(() => import("./pages/Translations"));
 const Settings = lazy(() => import("./pages/Settings"));
 const About = lazy(() => import("./pages/About"));
+const Saint = lazy(() => import("./pages/Saint"));
+const History = lazy(() => import("./pages/History"));
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { App as CapApp } from "@capacitor/app";

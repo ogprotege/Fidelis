@@ -2864,10 +2864,13 @@ console.log("");
     ["gap: 1.2rem 0.4rem", "gap: 0.8rem 0.4rem", "gap: 0.7rem 0.5rem"].every((s) => css.includes(s)));
 }
 
-// ── 33. v1.18.0 "the memory of the just" — Saint of the Day + Today in Church
-// History. Real logic tests for the pure helpers (dayKey, saintForCelebration)
-// and the emitted corpora, plus source-shape guards for the six-card change,
-// the saint chip, the History card's four states, and the routes.
+// ── 35. v1.18.0 "the memory of the just" — Saint of the Day + Today in Church
+// History (§33/§34 below belong to the parallel "new wineskins"/"prove all
+// things" releases; this section runs first in file order but is numbered 35 so
+// their numbers and check labels stay intact). Real logic tests for the pure
+// helpers (dayKey, saintForCelebration) and the emitted corpora, plus
+// source-shape guards for the six-card change, the saint chip, the History
+// card's four states, and the routes.
 console.log("");
 {
   const { dayKey: sanctoralKey } = await import("../src/lib/dateKey");
@@ -2934,6 +2937,8 @@ console.log("");
     app.includes('path="/saint/:day"') &&
       app.includes('path="/saint/:day/:id"') &&
       app.includes('path="/history/:day"'));
+}
+
 // ── 33. v1.18.0 "new wineskins" — the atomic Bible import (audit FID-DATA-001,
 // FID-FUNC-009), honest local persistence (FID-STOR-001), and cache-truth
 // offline state (FID-FUNC-008). The staging/swap logic is a PURE module

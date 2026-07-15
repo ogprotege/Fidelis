@@ -6,6 +6,42 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.18.2] — 2026-07-15 — the mended net
+
+*"And when they had done this, they enclosed a very great multitude of fishes, and their net
+broke." (Luke 5:6) — mended, it held.*
+
+A repair release, no new behavior. Three v1.18 feature branches — "the memory of the just"
+(Saint of the Day + Church History), "both are preserved" (atomic import), and "prove all
+things" (route-splitting + the browser suite) — were built in parallel and merged in sequence;
+GitHub's 3-way merge duplicated their edits at three seams and left `main` red. This release
+reconciles the collisions; every feature from all three branches is intact.
+
+### Fixed
+
+- **`src/App.tsx` — duplicate route declarations.** The memory-of-the-just branch kept static
+  `import Library/Translations/Settings/About` while the prove-all-things branch replaced them
+  with `React.lazy` consts; the merge kept both (`TS2440`). Resolved by dropping the static
+  imports and **folding the new Saint and Church History detail pages into the same route-split**
+  (`const Saint = lazy(...)`, `const History = lazy(...)`) — they are secondary surfaces reached
+  from the Today card and their routes already sit under `<Suspense>`, so they now load as their
+  own chunks too.
+- **`src/lib/data.ts` — duplicate `CccTextDoc` import.** The atomic-import branch extended the
+  `import-formats` import to `{ CccTextDoc, ImportedBook }`; the merge left the older bare
+  `CccTextDoc` line beside it (`TS2300`). Removed the duplicate.
+- **`scripts/test-data.ts` — unbalanced brace + duplicate section number.** The memory §33 block
+  lost its closing `}` in the merge (EOF parse error) and collided with the atomic-import §33.
+  Brace restored; the memory section renumbered **§35** so the atomic-import (§33) and perf (§34)
+  numbers — referenced in their own check labels — stay intact.
+- **`e2e/today.spec.ts` — stale card count.** The committed suite predated the sixth Today card;
+  its "five cards" title and heading list are updated to six and now cover the Church History card.
+
+### Release mechanics
+
+- iOS `MARKETING_VERSION` and Android `versionName` 1.18.1→1.18.2, `versionCode` 11801→11802. No
+  engine, data, golden, or service-worker changes. Verified green: 624 harness checks, both e2e
+  suites (13 committed + 14 saints/history), build, lint, and docs.
+
 ## [1.18.1] — 2026-07-15 — prove all things
 
 *"But prove all things; hold fast that which is good." (1 Thessalonians 5:21)*

@@ -1,6 +1,5 @@
 import { getTranslation } from "./translations";
 import { expandCatenaSpans, isCatenaSpanDoc } from "./commentary";
-import type { CccTextDoc } from "./import-formats";
 import type { SaintDay } from "./saints";
 import type { HistoryDay } from "./history";
 import type { CccTextDoc, ImportedBook } from "./import-formats";
