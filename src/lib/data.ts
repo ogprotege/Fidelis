@@ -421,19 +421,26 @@ export function loadTrent(): Promise<TrentFile | null> {
   return trentPromise;
 }
 
-/** The memory of the just — Saint of the Day. One file per calendar date; a 404
- *  (no entry yet in the growing corpus) resolves to null and stays cached, a
- *  transport failure drops the key so a later day recovers (the loadCommentary
- *  per-key retry-after-rejection). */
+/** The memory of the just — Saint of the Day. One file per calendar date. A 404
+ *  (no entry in the corpus) resolves to null and stays cached — genuine, calm
+ *  absence. Anything else — offline blip, HTTP error, bad JSON — REJECTS and
+ *  drops the key (the loadCommentary retry-after-rejection), so callers can
+ *  show an honest failure state instead of a false "no saint today" (v1.21.0,
+ *  audit sweep: with all 366 dates covered, a swallowed transport failure made
+ *  Home's "being gathered" line a false statement). */
 const saintsCache = new Map<string, Promise<SaintDay | null>>();
 export function loadSaints(day: string): Promise<SaintDay | null> {
   let p = saintsCache.get(day);
   if (!p) {
     p = fetch(`${import.meta.env.BASE_URL}data/saints/${day}.json`)
-      .then((r) => (r.ok ? (r.json() as Promise<SaintDay>) : null))
-      .catch(() => {
+      .then((r) => {
+        if (r.status === 404) return null;
+        if (!r.ok) throw new Error(`saints ${day}: HTTP ${r.status}`);
+        return r.json() as Promise<SaintDay>;
+      })
+      .catch((err) => {
         saintsCache.delete(day);
-        return null;
+        throw err;
       });
     saintsCache.set(day, p);
   }
@@ -441,16 +448,20 @@ export function loadSaints(day: string): Promise<SaintDay | null> {
 }
 
 /** The memory of the just — Today in Church History. Same per-date, memoized,
- *  retry-after-rejection contract as loadSaints. */
+ *  404-is-absence / failure-rejects contract as loadSaints. */
 const historyCache = new Map<string, Promise<HistoryDay | null>>();
 export function loadHistory(day: string): Promise<HistoryDay | null> {
   let p = historyCache.get(day);
   if (!p) {
     p = fetch(`${import.meta.env.BASE_URL}data/history/${day}.json`)
-      .then((r) => (r.ok ? (r.json() as Promise<HistoryDay>) : null))
-      .catch(() => {
+      .then((r) => {
+        if (r.status === 404) return null;
+        if (!r.ok) throw new Error(`history ${day}: HTTP ${r.status}`);
+        return r.json() as Promise<HistoryDay>;
+      })
+      .catch((err) => {
         historyCache.delete(day);
-        return null;
+        throw err;
       });
     historyCache.set(day, p);
   }
