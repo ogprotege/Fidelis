@@ -1773,6 +1773,84 @@ red.
 No engine, data, golden, or service-worker change. Native versions 1.20.0→1.20.1 (`versionCode`
 12001); a native build carries it to TestFlight.
 
+## That nothing be lost (v1.21.0)
+
+*"Gather up the fragments that remain, lest they be lost." (John 6:12)*
+
+The audit-fix release. A comprehensive external audit of v1.20.1 (2026-07-16) was verified
+claim-by-claim — every finding confirmed against the code, two of them recalibrated (the storage
+defect was *worse* than written, the privacy finding *stronger*) — and then closed in full,
+together with the verification sweep's own finds.
+
+**The storage shadow (audit FID-STOR-002).** v1.18.0's storage banner warned that a refused
+`localStorage` write could lose data, and its own comment claimed the value "lives only in memory
+now" — but no memory held it. Worse, `SettingsContext.update` is `setSettings(saveSettings(patch))`
+and `saveSettings` merges over a **fresh persisted read**, so after one refused write the next
+unrelated settings change visibly snapped the earlier one back (Night theme → change text size →
+theme reverts, on screen, no app close needed). And the banner's own recovery — "Export your
+library" — read persisted storage, so it could never contain the very changes it warned about.
+The fix implements the comment instead of deleting it: a module-private **session shadow**
+(`Map` keyed like localStorage) holds every refused value; `read()` prefers it, so the UI,
+`saveSettings`' merge base, `exportMarginalia`, and the bookmark/highlight/note getters all keep
+working on the newest data; a later successful write re-persists every stranded key and drains the
+shadow. `importMarginalia` returns `persisted: false` when the browser refused its writes and both
+import surfaces append the session-only warning; the banner now promises exactly what the code
+does ("kept for this session only… Export your library to keep them safe"). The read path is
+hardened the same day: `readList` degrades any corrupt/foreign non-array store to `[]` (one bad
+`plans` key used to blank the entire Today page via `activePlan()` at render), and `getLastRead`
+shape-guards its blob. Harness §37 drives all of it red-first through the §33 monkeypatch idiom,
+and a committed browser spec (`e2e/storage.spec.ts`) proves the banner, the surviving bookmark,
+the both-settings continuity, and the export recovery in real Chrome.
+
+**Honest loader failures (sweep).** `loadSaints`/`loadHistory` swallowed every failure into a
+resolved `null`, so Home's "Church history couldn't be loaded" state was dead code and an offline
+blip rendered the calm "being gathered" line — a false statement since v1.20.0 gave every date a
+saint. The loaders now treat only a **404 as absence** (cached null); any transport/HTTP failure
+rejects and drops the cache key for retry. Home gains a `saintFailed` track with combined/separate
+connection notices, and the Saint/History detail pages gain a `"failed"` state ("couldn't be
+loaded — it will return with your connection") distinct from "not yet in the collection." A
+route-abort browser test pins the notice and the absence of the calm line.
+
+**One authoritative record per event (audit FID-CONTENT-001 + sweep).** The v1.20.0 twelve-pass
+research merge keyed on id, so six same-day-same-year duplicate pairs slipped through: Nicaea,
+Gregory VII's death, Jerusalem 1099, Francis' death, Lepanto, and *Ineffabilis Deus* each appeared
+twice on their History pages (and inflated the Today card's "Read more · N events" count). Each
+pair is merged — curated id kept, the fuller sourced prose adopted, sources united — and
+`build-history.mjs` now hard-fails any same-day-same-year pair not named in an explicit
+`DISTINCT_SAME_DAY_YEAR` allowlist (rejection proven against an injected duplicate). Four
+feast-keyed events move to the dates the events happened, since the Today card presents them as
+on-this-day facts: Chrysostom and Cyprian to 14 September (both died that day; their entries'
+own bodies said so), the Mercedarians' founding to the traditional 10 August 1218, the Edict of
+Milan to 13 June 313 (Licinius' Nicomedia rescript). The corpus settles at 177 events across 147
+dates. Ranks are reconciled: St. Francis of Assisi was "Feast" in the saints corpus while the
+engine (correctly, per the GRC) called Oct 4 a **Memorial** — a same-screen contradiction every
+year; David of Wales (not on the GRC) takes the corpus's honest "Commemoration"; and the engine's
+St. Patrick gains `opt: true` (memoria ad libitum in the GRC) — behaviorally invisible since 17
+March always falls in Lent, and the golden snapshots are byte-identical to prove it. Harness §38
+pins all of it.
+
+**Privacy wording that matches the platform (audit FID-PRIV-001, Option B: disclose).** With
+`android:allowBackup="true"` and no iOS exclusion, the OS may carry Fidelis's data into the
+user's own encrypted iCloud/Google backup — which made "Deleting the app deletes all of it" and
+"never transmitted anywhere" false as absolutes, on the very document the App Store privacy link
+points at. Backups stay **enabled** (the user-protective choice: Settings itself urges export so
+a lost device doesn't take the marginalia; excluding backups would guarantee that loss), and the
+words now match the configuration: PRIVACY.md gains a **Device backups** section (your backup,
+encrypted by Apple/Google, invisible to Fidelis, restorable; how to opt out before deleting),
+the deletion claim speaks only for the device, "never transmitted" is qualified **by Fidelis**
+(which remains absolutely true — no server, no analytics, no requests), and the same absolutes
+are softened in SECURITY.md, the README, the App Store copy, and the About/Settings/Library/
+Translations pages. A §38 drift-guard couples `allowBackup="true"` to the PRIVACY.md disclosure,
+so flipping either alone turns `npm test` red. Maintainer follow-ups recorded: the live App Store
+listing's import line, and a physical backup/restore acceptance pass on both platforms.
+
+App Store screenshots were regenerated against this build via the committed
+`scripts/capture-appstore.mjs` (FID-REL-001 — the Jul 15 set predated the Saint of the Day card;
+the stale mixed-generation iPad files were removed), and the new Today frame verified visually:
+"Today at Mass" banner, Saint of the Day medallion. No engine-behavior, golden, or service-worker
+change. The harness grows §37/§38; the browser suite grows 13 → 16 tests. Shells 1.21.0
+(`versionCode` 12100).
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
