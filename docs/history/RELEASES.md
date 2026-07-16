@@ -1738,6 +1738,41 @@ No engine, golden, or service-worker change — this is pure corpus data plus th
 of the provenance gate. Native versions 1.19.0→1.20.0 (`versionCode` 12000). The native build and
 TestFlight submission that carry this to devices are the maintainer's next step.
 
+## Them that are fettered (v1.20.1)
+
+*"…The Lord looseth them that are fettered." (Psalm 145:7)*
+
+A bug-fix release for a report that came in from the TestFlight build: on the phone, tapping "Read at
+Mass" went nowhere. Investigation on the device found it was far larger than one button — **every nav
+tab and every "→" button dimmed on tap but didn't navigate**, app-wide, and **only fully quitting and
+reopening the app fixed it**. That last fact was the key: a state that survives navigation but resets
+on relaunch is a stranded global lock, not a routing bug.
+
+**The cause.** Every modal sheet pins the page behind it with `body { position: fixed }` — the
+iOS-safe scroll-lock, because WKWebView ignores `overflow: hidden` for touch dragging. The lock is
+reference-counted (`src/lib/scrollLock.ts`) so that stacking and un-stacking sheets in any order pins
+the body exactly once and releases it exactly once; its own comment calls the failure it guards
+against "the iOS page-won't-scroll bug." But the reference count assumes every `lockScroll` is paired
+with an `unlockScroll`, and that pairing lives in a React effect's cleanup. An iOS WKWebView can tear
+a sheet's subtree down **without running that cleanup** — when a native share sheet, a Photos
+permission dialog, or a background/foreground transition interrupts the teardown mid-flight. The lock
+is then stranded: the body stays `position: fixed`, so React Router still changes the route on a tap
+(the button dims, the URL updates) but the newly-rendered page is pinned out of the viewport — it
+reads as "nothing happened." A relaunch zeroes the count and the styles, which is why quitting fixed it.
+
+**The fix.** A self-healing release valve. `resetScrollLock()` force-releases a stranded lock and
+restores the body; `src/App.tsx` calls it on **every route change and on foreground-resume**, but
+only when the body is pinned **and no sheet is actually in the DOM** — a `.sheet-backdrop` check, so
+the heal can never disturb a legitimately-open sheet (every `Sheet` renders that class, and only
+`Sheet` locks the scroll). So the moment the user taps any tab in the stuck state, the route change
+fires the heal, the lock releases, and the destination page appears — the app un-freezes on the next
+tap, no restart required; a background→foreground clears it too. A real logic test drives the
+leak-and-heal directly, and source-shape guards pin the wiring, so a silent revert turns `npm test`
+red.
+
+No engine, data, golden, or service-worker change. Native versions 1.20.0→1.20.1 (`versionCode`
+12001); a native build carries it to TestFlight.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

@@ -6,6 +6,33 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.20.1] — 2026-07-15 — them that are fettered
+
+*"…The Lord looseth them that are fettered." (Psalm 145:7)*
+
+A bug-fix release. On the native iOS shell, the whole app could freeze — every nav tab and every
+"→" button would dim on tap but go nowhere, and only fully quitting and reopening the app restored
+it. The report was "Read at Mass goes nowhere," but the cause was app-wide.
+
+### Fixed
+
+- **The frozen-navigation bug (a stranded scroll-lock).** Modal sheets pin the page behind them with
+  `body { position: fixed }` (an iOS-safe scroll-lock, reference-counted so stacked sheets lock once
+  and unlock once). If a sheet is torn down without its React cleanup running — which an iOS WKWebView
+  can do when a native share/permission dialog or a background/foreground interrupts the teardown —
+  the lock is left stranded: the body stays pinned, so navigation still changes the route but the
+  new page is clipped out of view, and it reads as "nothing happens." A restart cleared it because
+  the lock count reset. Now a **self-heal** (`resetScrollLock`) runs on every route change and on
+  foreground-resume: if the body is pinned but **no sheet is actually mounted** (a `.sheet-backdrop`
+  DOM check, so it can never disturb a legitimately-open sheet), it releases the lock — so the user's
+  next tab tap both navigates *and* unfreezes the app, with no restart needed.
+
+### Scope
+
+No engine, data, golden, or service-worker change. The fix is in `src/lib/scrollLock.ts` and
+`src/App.tsx`; a real logic test plus source-shape guards pin it. Native versions 1.20.0→1.20.1
+(`versionCode` 12001). This needs a native build to reach TestFlight.
+
 ## [1.20.0] — 2026-07-15 — a great multitude
 
 *"After this, I saw a great multitude, which no man could number, of all nations and tribes and peoples and tongues, standing before the throne…" (Apocalypse 7:9)*

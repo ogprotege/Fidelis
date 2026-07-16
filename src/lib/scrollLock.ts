@@ -55,6 +55,37 @@ export function lockScroll(): void {
   body.style.width = "100%";
 }
 
+/** Force-release ALL locks and restore the body — a safety net for the rare case
+ *  where a lock is stranded (an iOS WKWebView can tear a sheet down without running
+ *  its cleanup when a native share/permission dialog or a background/foreground
+ *  interrupts it, leaving `position: fixed` pinned and the page seemingly frozen —
+ *  navigation still changes the route, but the pinned body clips the new page out
+ *  of view). Idempotent; a no-op when nothing is locked. The App calls it on route
+ *  change and foreground-resume whenever the body is pinned but no sheet is
+ *  actually mounted, so a stranded lock self-heals instead of needing an app
+ *  restart. */
+export function resetScrollLock(): void {
+  if (typeof document === "undefined") return;
+  if (lockCount === 0 && saved === null) return;
+  lockCount = 0;
+  const s = saved;
+  saved = null;
+  const body = document.body;
+  if (s) {
+    body.style.overflow = s.overflow;
+    body.style.position = s.position;
+    body.style.top = s.top;
+    body.style.width = s.width;
+    window.scrollTo(0, s.scrollY);
+  } else {
+    // No snapshot to restore (shouldn't happen) — clear the pin so the page scrolls.
+    body.style.overflow = "";
+    body.style.position = "";
+    body.style.top = "";
+    body.style.width = "";
+  }
+}
+
 /** Release one lock. Only the last release restores the body and the scroll
  *  position captured before the first lock. */
 export function unlockScroll(): void {

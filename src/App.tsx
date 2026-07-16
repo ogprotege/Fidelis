@@ -27,6 +27,7 @@ import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { App as CapApp } from "@capacitor/app";
 import { closeTopOverlay } from "./lib/overlays";
+import { isScrollLocked, resetScrollLock } from "./lib/scrollLock";
 import { useSettings, useUpdateSettings } from "./SettingsContext";
 import { useToday } from "./useToday";
 import { accentFor, liturgicalDay } from "./lib/liturgical";
@@ -161,6 +162,21 @@ export default function App() {
       void handle.then((h) => h.remove());
     };
   }, [navigate]);
+
+  // Self-heal a stranded body scroll-lock (lib/scrollLock resetScrollLock): if the
+  // body is still pinned (position: fixed) but NO sheet is actually mounted, an
+  // interrupted teardown left the lock behind — the classic "the whole app won't
+  // navigate until I restart it" symptom, since the pinned body clips every new
+  // page out of view. Release it whenever we land on a route or return to the
+  // foreground, so it recovers on the user's next tap without an app restart.
+  useEffect(() => {
+    const heal = () => {
+      if (isScrollLocked() && !document.querySelector(".sheet-backdrop")) resetScrollLock();
+    };
+    heal(); // runs on every route change (this effect keys on location.key)
+    document.addEventListener("visibilitychange", heal);
+    return () => document.removeEventListener("visibilitychange", heal);
+  }, [location.key]);
 
   // Move focus to the main content region on every route change (WCAG 2.4.3), so
   // keyboard and screen-reader users land in the new page — except on a ?v= deep
