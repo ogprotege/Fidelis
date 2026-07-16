@@ -46,7 +46,7 @@ Every bundled translation is reproduced verbatim from its public-domain source. 
 
 THE BIBLE
 • The Douay-Rheims (Challoner), the Catholic Public Domain Version, and the Clementine Vulgate in Latin — all 73 books, bundled, fully offline
-• Own a licensed copy of the NABRE, RSV-2CE, or the Biblia Platense (Spanish)? Import it and read it in Fidelis — your copy never leaves your device
+• Own a licensed copy of the NABRE, RSV-2CE, or the Biblia Platense (Spanish)? Import it and read it in Fidelis — your copy stays private; Fidelis never uploads it
 • Typeset like a book: four Scripture faces, adjustable size, day and night themes
 
 THE LITURGY

@@ -2,8 +2,11 @@
 
 *For: maintainers. The integrity model, and the Content-Security-Policy plan.* · [← Docs index](INDEX.md)
 
-Fidelis is a static, offline-first app: no accounts, no server, no user data
-leaves the device. It renders scripture and user text through React (which
+Fidelis is a static, offline-first app: no accounts, no server, and Fidelis
+itself sends no user data anywhere. (The operating system may include app
+data in the user's own encrypted device backup — disclosed in
+[PRIVACY.md](../PRIVACY.md) since v1.21.0, audit FID-PRIV-001.) It renders
+scripture and user text through React (which
 escapes by default) and bundles the one HTML commentary path build-escaped. This
 note records two things the 2026-07-15 audit asked to make explicit.
 

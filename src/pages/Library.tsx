@@ -116,7 +116,7 @@ export default function Library() {
         </p>
       )}
       <p className="muted small sans">
-        Your library lives only in this browser — export it now and then so a
+        Your library stays in this app's storage — export it now and then so a
         lost device does not take your marginalia with it.
       </p>
 

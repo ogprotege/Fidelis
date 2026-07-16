@@ -595,7 +595,8 @@ export default function Settings() {
         <div className="setting-label">Import the modern Catechism (a copy you own)</div>
         <p className="catechesis muted small">
           The Catechism of the Catholic Church is under copyright and is never bundled. If you
-          own a digital copy, import it here — it is stored only on this device, and a cited
+          own a digital copy, import it here — it is kept in the app on this device, never
+          uploaded, and a cited
           verse will then show its paragraph text inline instead of a link out. Accepts a{" "}
           <code>fidelis-ccc-1</code> JSON (from the local converter) or a St. Charles Borromeo
           Catechism export (the <code>ccc.json</code> from scborromeo.org) directly.
@@ -687,7 +688,7 @@ export default function Settings() {
 
         <div className="setting-label">My notes and highlights</div>
         <p className="catechesis muted small">
-          Your bookmarks, highlights, and notes live only in this browser — export them now and
+          Your bookmarks, highlights, and notes stay in this app's storage — export them now and
           then so a lost device does not take your marginalia with it.
         </p>
         <div className="pill-row">

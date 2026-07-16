@@ -3571,6 +3571,44 @@ console.log("");
   const engineSrc = readFileSync(join(ROOT, "src/lib/liturgical.ts"), "utf8");
   check("§38 engine: St. Patrick is an optional memorial (GRC memoria ad libitum)",
     /St\. Patrick, Bishop", rank: "Memorial", color: "white", opt: true/.test(engineSrc));
+
+  // ── Privacy honesty under OS backup (audit FID-PRIV-001, Option B: disclose).
+  // The configuration allows OS backups (android:allowBackup, no iOS exclusion),
+  // so the promise must match the configuration: PRIVACY.md — the App-Store-
+  // linked policy — discloses device backups, the absolute claims are gone, and
+  // "sends nothing" stays pointed at Fidelis (true) instead of the device.
+  const androidManifest = readFileSync(
+    join(ROOT, "android/app/src/main/AndroidManifest.xml"), "utf8");
+  const privacyDoc = readFileSync(join(ROOT, "PRIVACY.md"), "utf8");
+  if (/android:allowBackup="true"/.test(androidManifest)) {
+    check("§38 privacy: with Android backup enabled, PRIVACY.md discloses device backups",
+      privacyDoc.includes("## Device backups"));
+    check("§38 privacy: the absolute deletion claim is gone (backups can outlive the app)",
+      !privacyDoc.includes("Deleting the app deletes all of it."));
+    check("§38 privacy: 'never transmitted' is qualified — by Fidelis, not by the device",
+      !privacyDoc.includes("never transmitted anywhere.") &&
+        privacyDoc.includes("never transmitted anywhere by Fidelis"));
+  }
+  const aboutSrc38 = readFileSync(join(ROOT, "src/pages/About.tsx"), "utf8");
+  const settingsSrc38 = readFileSync(join(ROOT, "src/pages/Settings.tsx"), "utf8");
+  const translationsSrc38 = readFileSync(join(ROOT, "src/pages/Translations.tsx"), "utf8");
+  const readme38 = readFileSync(join(ROOT, "README.md"), "utf8");
+  const appStore38 = readFileSync(join(ROOT, "docs/guides/APP_STORE.md"), "utf8");
+  const librarySrc38 = readFileSync(join(ROOT, "src/pages/Library.tsx"), "utf8");
+  check("§38 privacy: no surface claims data can never leave the device (backups may carry it)",
+    !aboutSrc38.includes("live only in your browser") &&
+      !settingsSrc38.includes("live only in this browser") &&
+      !settingsSrc38.includes("stored only on this device") &&
+      !librarySrc38.includes("lives only in this browser") &&
+      !translationsSrc38.includes("never leaves your device") &&
+      !translationsSrc38.includes("Stored only on this device") &&
+      !readme38.includes("never leaves the device") &&
+      !readme38.includes("stored only in your browser") &&
+      !appStore38.includes("never leaves your device"));
+  check("§38 privacy: docs/SECURITY.md points the no-data claim at Fidelis, not the device",
+    !readFileSync(join(ROOT, "docs/SECURITY.md"), "utf8")
+      .replace(/\s+/g, " ")
+      .includes("no user data leaves the device"));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
