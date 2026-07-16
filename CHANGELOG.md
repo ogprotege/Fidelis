@@ -6,6 +6,68 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.21.0] — 2026-07-16 — that nothing be lost
+
+*"Gather up the fragments that remain, lest they be lost." (John 6:12)*
+
+The audit-fix release: the 2026-07-16 external audit of v1.20.1, verified claim-by-claim, then
+closed in full. Its two P1s (the discarded-write storage path, the privacy wording that OS backups
+can falsify), its history-duplication P2, and the verification sweep's own finds (a saint-rank
+contradiction, feast-keyed dates, an unreachable failure state, two read-path crash classes) all
+land together.
+
+### Fixed
+
+- **The storage shadow (audit FID-STOR-002).** When the browser refuses a `localStorage` write
+  (quota, private mode), the value is no longer discarded: it lives in a **session shadow** that
+  reads prefer — so the UI stays consistent, a later settings change can no longer silently revert
+  an earlier one (the `SettingsContext` rebase bug: theme → Night, then any other change snapped it
+  back), **Export genuinely contains the refused marginalia**, and the next successful write
+  re-persists every stranded key. `importMarginalia` now reports `persisted: false` honestly and
+  both import surfaces say so; the banner copy states the real contract ("kept for this session
+  only"). Harness §37 (red-first) + a committed browser spec (`e2e/storage.spec.ts`).
+- **Read-path shape guards.** A corrupt or foreign-typed stored value (a non-array `plans` key, a
+  shapeless `lastRead`) used to crash the Today page mid-render via `activePlan()`; list stores and
+  `lastRead` now degrade to empty instead.
+- **Honest saint/history failure states (sweep).** `loadSaints`/`loadHistory` treat only a 404 as
+  absence; a transport failure now **rejects**, so Home's connection notice (previously dead code)
+  renders instead of the false "being gathered" line, and the Saint/History pages say "couldn't be
+  loaded" instead of claiming the entry isn't in the collection.
+- **Six duplicate history events merged (audit FID-CONTENT-001).** Nicaea, Gregory VII's death,
+  the capture of Jerusalem, Francis' death, Lepanto, and *Ineffabilis Deus* each existed twice
+  under different ids (a v1.20.0 merge artifact); each is now one authoritative record carrying the
+  fuller sourced prose and the union of sources. `build-history.mjs` hard-fails any
+  same-day-same-year pair not explicitly allowlisted.
+- **Events keyed to the date they happened.** Chrysostom (†14 Sept 407) and Cyprian (†14 Sept 258)
+  move off their feast days to Sept 14; the Mercedarians' founding to its traditional 10 Aug 1218;
+  the Edict of Milan to 13 June 313 (Licinius' Nicomedia rescript) — the Today card presents these
+  as on-this-day facts, so the dates must be the events', not the feasts'.
+- **Ranks agree with the calendar.** St. Francis of Assisi's corpus rank corrected Feast →
+  **Memorial** (it contradicted the engine on the same screen every Oct 4); St. David of Wales →
+  Commemoration (not on the GRC); the engine's St. Patrick gains `opt: true` (memoria ad libitum) —
+  golden snapshots byte-identical.
+
+### Changed
+
+- **Privacy wording now matches what the operating systems can do (audit FID-PRIV-001).** Backups
+  stay enabled — the user-protective choice — and every promise now says so: `PRIVACY.md` (the App
+  Store-linked policy) gains a **Device backups** section and drops "Deleting the app deletes all
+  of it."; "never transmitted" is qualified *by Fidelis* (which stays absolutely true); SECURITY,
+  README, the App Store copy, and the About/Settings/Library/Translations lines lose their
+  never-leaves-the-device absolutes. A harness drift-guard couples `android:allowBackup="true"` to
+  the disclosure, so flipping either alone turns `npm test` red.
+
+### Scope
+
+No engine-behavior, golden, or service-worker change (the Patrick `opt` flag is invisible in
+practice — 17 March always falls in Lent). History corpus 183 → 177 events (147 dates); saints
+corpus 366 unchanged; data regenerated via `scripts/` and the manifest resealed. App Store
+screenshots regenerated against this build (FID-REL-001 — the Jul 15 set predated the Saint of the
+Day card). Harness grows §37/§38 (32 checks); the browser suite grows 13 → 16 tests. Shells
+1.21.0 / `versionCode` 12100. Maintainer follow-ups (not in this release): update the live App
+Store listing's import line to match `APP_STORE.md`, and run a device backup/restore acceptance
+pass on both platforms.
+
 ## [1.20.1] — 2026-07-15 — them that are fettered
 
 *"…The Lord looseth them that are fettered." (Psalm 145:7)*

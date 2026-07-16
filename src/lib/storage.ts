@@ -93,7 +93,17 @@ export interface Settings {
 
 const PREFIX = "fidelis:";
 
+/** The session shadow (v1.21.0, audit FID-STOR-002): every value the browser
+ *  refused to persist, keyed like localStorage. Reads prefer it, so the UI,
+ *  saveSettings' merge base, and Export all keep working on the newest data —
+ *  a later settings change can never silently revert an earlier one, and the
+ *  banner's "Export your library" genuinely recovers the refused entries. The
+ *  next successful write re-persists every stranded key. Dies with the session
+ *  — which is exactly what the storage banner tells the user. */
+const shadow = new Map<string, unknown>();
+
 function read<T>(key: string, fallback: T): T {
+  if (shadow.has(key)) return shadow.get(key) as T;
   try {
     const raw = localStorage.getItem(PREFIX + key);
     return raw ? (JSON.parse(raw) as T) : fallback;
@@ -102,16 +112,38 @@ function read<T>(key: string, fallback: T): T {
   }
 }
 
+/** List-shaped read: a corrupt or foreign-typed stored value (anything that
+ *  parses to a non-array) degrades to empty instead of crashing a consumer
+ *  mid-render — one bad `plans` key used to blank the whole Today page via
+ *  activePlan(). */
+function readList<T>(key: string): T[] {
+  const v = read<unknown>(key, []);
+  return Array.isArray(v) ? (v as T[]) : [];
+}
+
 /** True: persisted. False: the browser refused the write (quota, private-mode
- *  policy) — the data lives only in memory now, and the ONE deduplicated
- *  session warning below is raised so the UI can offer Export as the recovery
- *  (v1.18.0, audit FID-STOR-001). Never throws — a failed save must not take
- *  the reading session down with it. */
+ *  policy) — the value is kept in the session shadow above (reads prefer it,
+ *  Export includes it) and the ONE deduplicated session warning below is
+ *  raised so the UI can say so and offer Export as the recovery (v1.18.0
+ *  FID-STOR-001; the shadow closed audit FID-STOR-002). A later successful
+ *  write re-persists whatever is stranded. Never throws — a failed save must
+ *  not take the reading session down with it. */
 function write(key: string, value: unknown): boolean {
   try {
     localStorage.setItem(PREFIX + key, JSON.stringify(value));
+    shadow.delete(key);
+    // Storage is accepting writes again — re-persist the other stranded keys.
+    for (const [k, v] of shadow) {
+      try {
+        localStorage.setItem(PREFIX + k, JSON.stringify(v));
+        shadow.delete(k);
+      } catch {
+        break; // still refusing; the shadow keeps them
+      }
+    }
     return true;
   } catch {
+    shadow.set(key, value);
     reportWriteFailure();
     return false;
   }
@@ -231,7 +263,7 @@ export function massTranslationFor(s: Settings): string {
  *  this record merely distinguishes a broken download ("Repair") from
  *  incidental caching, and is the fallback where Cache Storage can't be asked. */
 export function getOfflineTranslations(): string[] {
-  return read<string[]>("offline", []);
+  return readList<string>("offline");
 }
 
 export function markOfflineTranslation(id: string): void {
@@ -241,7 +273,15 @@ export function markOfflineTranslation(id: string): void {
 }
 
 export function getLastRead(): LastRead | null {
-  return read<LastRead | null>("lastRead", null);
+  const v = read<LastRead | null>("lastRead", null);
+  // Shape guard: Home renders `getBook(lastRead.book)!` — a corrupt value must
+  // degrade to "nothing to continue", never a crash.
+  return v &&
+    typeof v.translation === "string" &&
+    typeof v.book === "string" &&
+    Number.isInteger(v.chapter)
+    ? v
+    : null;
 }
 
 export function saveLastRead(pos: LastRead): void {
@@ -259,7 +299,7 @@ export function saveReading(state: ReadingState): void {
 }
 
 export function getPlans(): ReadingPlan[] {
-  return read<ReadingPlan[]>("plans", []);
+  return readList<ReadingPlan>("plans");
 }
 
 function planId(): string {
@@ -297,7 +337,7 @@ export function activePlan(): ReadingPlan | null {
 }
 
 export function getBookmarks(): Bookmark[] {
-  return read<Bookmark[]>("bookmarks", []);
+  return readList<Bookmark>("bookmarks");
 }
 
 export function toggleBookmark(bm: Omit<Bookmark, "createdAt">): boolean {
@@ -314,7 +354,7 @@ export function toggleBookmark(bm: Omit<Bookmark, "createdAt">): boolean {
 }
 
 export function getHighlights(): Highlight[] {
-  return read<Highlight[]>("highlights", []);
+  return readList<Highlight>("highlights");
 }
 
 export function setHighlight(ref: VerseRef, color: HighlightColor | null): void {
@@ -324,7 +364,7 @@ export function setHighlight(ref: VerseRef, color: HighlightColor | null): void 
 }
 
 export function getNotes(): Note[] {
-  return read<Note[]>("notes", []);
+  return readList<Note>("notes");
 }
 
 export function setNote(ref: VerseRef, text: string): void {
@@ -368,13 +408,16 @@ const isRef = (x: unknown): x is VerseRef =>
  * Merge a Fidelis library export into local storage. On a same-verse
  * conflict the NEWER entry wins (by its own timestamp), so restoring an old
  * backup can never silently destroy a fresher local note. Returns how many
- * valid entries the file contributed. Throws on files that are not a
- * Fidelis export at all.
+ * valid entries the file contributed, and `persisted` — false when the
+ * browser refused any of the writes (the merged data then lives only in the
+ * session shadow, and the caller must say so instead of claiming a durable
+ * import). Throws on files that are not a Fidelis export at all.
  */
 export function importMarginalia(raw: string): {
   bookmarks: number;
   highlights: number;
   notes: number;
+  persisted: boolean;
 } {
   let d: Partial<MarginaliaExport>;
   try {
@@ -416,8 +459,13 @@ export function importMarginalia(raw: string): {
     .filter(isRef)
     .filter((n) => typeof (n as Note).text === "string" && (n as Note).text.trim().length > 0)
     .map((n) => ({ ...(n as Note), updatedAt: Number((n as Note).updatedAt) || Date.now() }));
-  write("bookmarks", merge(getBookmarks(), bookmarks, (b) => b.createdAt));
-  write("highlights", merge(getHighlights(), highlights, (h) => h.createdAt));
-  write("notes", merge(getNotes(), notes, (n) => n.updatedAt));
-  return { bookmarks: bookmarks.length, highlights: highlights.length, notes: notes.length };
+  const wroteBookmarks = write("bookmarks", merge(getBookmarks(), bookmarks, (b) => b.createdAt));
+  const wroteHighlights = write("highlights", merge(getHighlights(), highlights, (h) => h.createdAt));
+  const wroteNotes = write("notes", merge(getNotes(), notes, (n) => n.updatedAt));
+  return {
+    bookmarks: bookmarks.length,
+    highlights: highlights.length,
+    notes: notes.length,
+    persisted: wroteBookmarks && wroteHighlights && wroteNotes
+  };
 }

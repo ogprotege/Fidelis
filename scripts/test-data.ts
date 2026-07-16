@@ -3405,5 +3405,215 @@ console.log("");
     existsSync(join(ROOT, "docs/SECURITY.md")));
 }
 
+// ── 37. v1.21.0 "that nothing be lost" — the storage shadow (audit FID-STOR-002).
+// A refused localStorage write must not lose the value: it lives on in a session
+// shadow that reads prefer (so the UI stays consistent), saveSettings merges
+// over (so a later change can't revert an earlier one), Export includes (so the
+// banner's recovery is real), and the next successful write re-persists. Plus
+// the read-path shape guards (a corrupt key degrades to empty, never crashes a
+// render) and the import result honestly reporting a failed persist.
+console.log("");
+{
+  const storage = await import("../src/lib/storage");
+  // §33 above may have left its throwing stub installed (Node has no real
+  // localStorage to restore to) — install our own Map-backed stub with a
+  // failure toggle, and put back whatever we found when done.
+  const prevLocalStorage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  const store = new Map<string, string>();
+  let failing = true;
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
+      setItem: (k: string, v: string) => {
+        if (failing) throw new DOMException("full", "QuotaExceededError");
+        store.set(k, v);
+      },
+      removeItem: (k: string) => void store.delete(k)
+    }
+  });
+  try {
+    const bm = { translation: "drc", book: "john", chapter: 3, verse: 16 };
+    check("§37 shadow: a refused bookmark still reports added", storage.toggleBookmark(bm) === true);
+    check("§37 shadow: the refused bookmark survives the session (reads prefer the shadow)",
+      storage.getBookmarks().some((b) => storage.refKey(b) === storage.refKey(bm)));
+    const first = storage.saveSettings({ theme: "night" });
+    const second = storage.saveSettings({ fontSize: 22 });
+    check("§37 shadow: consecutive refused settings writes preserve BOTH changes",
+      first.theme === "night" && second.theme === "night" && second.fontSize === 22);
+    storage.setNote({ book: "john", chapter: 3, verse: 16 }, "kept");
+    storage.setHighlight({ book: "john", chapter: 3, verse: 16 }, "gold");
+    check("§37 shadow: a refused highlight survives the session too",
+      storage.getHighlights().some((h) => h.verse === 16 && h.color === "gold"));
+    const exported = storage.exportMarginalia();
+    check("§37 shadow: Export contains the refused marginalia (the recovery is real)",
+      exported.bookmarks.some((b) => b.book === "john" && b.verse === 16) &&
+        exported.notes.some((n) => n.text === "kept") &&
+        exported.highlights.some((h) => h.color === "gold"));
+    const file = JSON.stringify({
+      app: "fidelis",
+      version: 1,
+      exportedAt: "x",
+      bookmarks: [{ translation: "drc", book: "mark", chapter: 1, verse: 1, createdAt: 5 }],
+      highlights: [],
+      notes: []
+    });
+    const imported = storage.importMarginalia(file);
+    check("§37 shadow: import reports its counts AND that nothing persisted",
+      imported.bookmarks === 1 && imported.persisted === false);
+    // The quota clears: the next successful write re-persists every stranded key.
+    failing = false;
+    storage.saveSettings({});
+    check("§37 shadow: a successful write flushes every stranded key to storage",
+      !!store.get("fidelis:bookmarks") &&
+        JSON.parse(store.get("fidelis:settings") ?? "{}").theme === "night" &&
+        JSON.parse(store.get("fidelis:settings") ?? "{}").fontSize === 22);
+    store.set("fidelis:bookmarks", "[]");
+    check("§37 shadow: drained after the flush — reads follow real storage again",
+      storage.getBookmarks().length === 0);
+    // Read-path shape guards: a corrupt or foreign-typed value parses cleanly
+    // and then must degrade to empty — one bad `plans` key blanked Today.
+    store.set("fidelis:plans", "{}");
+    let planCrash = false;
+    let active: unknown = "unset";
+    try {
+      active = storage.activePlan();
+    } catch {
+      planCrash = true;
+    }
+    check("§37 read guard: a corrupt plans key degrades to [] and cannot crash activePlan()",
+      !planCrash && active === null && storage.getPlans().length === 0);
+    store.set("fidelis:bookmarks", "5");
+    check("§37 read guard: a non-array bookmarks key degrades to []",
+      Array.isArray(storage.getBookmarks()) && storage.getBookmarks().length === 0);
+    store.set("fidelis:lastRead", JSON.stringify({ nonsense: true }));
+    check("§37 read guard: a shapeless lastRead degrades to null (Home cannot crash)",
+      storage.getLastRead() === null);
+  } finally {
+    if (prevLocalStorage) Object.defineProperty(globalThis, "localStorage", prevLocalStorage);
+  }
+
+  // The banner speaks the SHADOW contract: changes are kept for the session
+  // (not "may be lost" while the app is open) and Export is the real recovery.
+  const appSrcShadow = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+  check("§37 banner: the copy names session retention (kept for this session)",
+    appSrcShadow.includes("kept for this session"));
+
+  // ── Honest loader failure (audit sweep): loadSaints/loadHistory must
+  // distinguish a 404 ("no entry" — cached null, the calm state) from a
+  // transport/HTTP failure (REJECT, so Home's failed state and the detail
+  // pages' connection notices are reachable, instead of the false "being
+  // gathered" line on an offline blip). Shape guards, §25 manner — data.ts
+  // can't be imported under tsx (import.meta.env).
+  const dataSrcShadow = readFileSync(join(ROOT, "src/lib/data.ts"), "utf8");
+  check("§37 loaders: loadSaints treats only a 404 as absence and rethrows failures",
+    /export function loadSaints[\s\S]*?status === 404[\s\S]*?throw err;[\s\S]*?export function loadHistory/.test(dataSrcShadow));
+  check("§37 loaders: loadHistory treats only a 404 as absence and rethrows failures",
+    /export function loadHistory[\s\S]*?status === 404[\s\S]*?throw err;/.test(dataSrcShadow));
+  const homeSrcShadow = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
+  check("§37 loaders: Home tracks the saint failure and silences the calm line on it",
+    homeSrcShadow.includes("saintFailed") && homeSrcShadow.includes("!saintFailed"));
+  const saintPageSrc = readFileSync(join(ROOT, "src/pages/Saint.tsx"), "utf8");
+  const historyPageSrc = readFileSync(join(ROOT, "src/pages/History.tsx"), "utf8");
+  check("§37 loaders: the Saint page has a failed state distinct from not-in-collection",
+    saintPageSrc.includes('"failed"') && saintPageSrc.includes("return with your connection"));
+  check("§37 loaders: the History page has a failed state distinct from no-entry",
+    historyPageSrc.includes('"failed"') && historyPageSrc.includes("return with your connection"));
+}
+
+// ── 38. v1.21.0 "that nothing be lost" — corpus integrity (audit FID-CONTENT-001
+// + the verification sweep): one authoritative record per event (the v1.20.0
+// merge slipped six same-day-same-year duplicates past the id gate), events
+// keyed to the date they HAPPENED (not their feast), saint ranks that agree
+// with the General Roman Calendar and the engine, and the builder gate that
+// keeps all of it true.
+console.log("");
+{
+  const historyCorpus = JSON.parse(
+    readFileSync(join(ROOT, "scripts/history.corpus.json"), "utf8")
+  ) as { events: { id: string; day: string; year: number; title: string }[] };
+  const byDayYear = new Map<string, string[]>();
+  for (const e of historyCorpus.events) {
+    const k = `${e.day}|${e.year}`;
+    byDayYear.set(k, [...(byDayYear.get(k) ?? []), e.id]);
+  }
+  const collisions = [...byDayYear.entries()].filter(([, ids]) => ids.length > 1);
+  check("§38 history: no two events share a day AND a year (the six duplicate pairs are merged)",
+    collisions.length === 0,
+    collisions.map(([k, ids]) => `${k}: ${ids.join(" / ")}`).join("; "));
+  const removedDupIds = [
+    "first-council-of-nicaea",
+    "death-of-gregory-vii",
+    "capture-of-jerusalem-first-crusade",
+    "death-of-st-francis",
+    "battle-of-lepanto",
+    "definition-immaculate-conception-1854"
+  ];
+  check("§38 history: the six duplicate record ids are gone (curated ids kept)",
+    removedDupIds.every((id) => !historyCorpus.events.some((e) => e.id === id)) &&
+      ["council-of-nicaea-opens", "gregory-vii-dies-canossa", "jerusalem-taken-first-crusade",
+        "assisi-francis-dies", "lepanto", "definition-immaculate-conception"]
+        .every((id) => historyCorpus.events.some((e) => e.id === id)));
+  const dayOf = (id: string) => historyCorpus.events.find((e) => e.id === id)?.day;
+  check("§38 history: events are keyed to the date they happened, not their feast",
+    dayOf("death-of-john-chrysostom-407") === "09-14" &&
+      dayOf("martyrdom-of-cyprian-258") === "09-14" &&
+      dayOf("founding-of-the-mercedarians-1218") === "08-10" &&
+      dayOf("edict-of-milan") === "06-13");
+  const historyBuilder = readFileSync(join(ROOT, "scripts/build-history.mjs"), "utf8");
+  check("§38 history: the builder gates same-day-same-year duplicate candidates",
+    historyBuilder.includes("same-day-same-year") && historyBuilder.includes("DISTINCT_SAME_DAY_YEAR"));
+
+  const saintsCorpus = JSON.parse(
+    readFileSync(join(ROOT, "scripts/saints.corpus.json"), "utf8")
+  ) as { saints: { id: string; rank: string }[] };
+  const rankOf = (id: string) => saintsCorpus.saints.find((s) => s.id === id)?.rank;
+  check("§38 saints: St. Francis of Assisi is a Memorial (GRC), matching the engine",
+    rankOf("francis-of-assisi") === "Memorial");
+  check("§38 saints: St. David of Wales carries the corpus's non-GRC rank (Commemoration)",
+    rankOf("david-of-wales") === "Commemoration");
+  const engineSrc = readFileSync(join(ROOT, "src/lib/liturgical.ts"), "utf8");
+  check("§38 engine: St. Patrick is an optional memorial (GRC memoria ad libitum)",
+    /St\. Patrick, Bishop", rank: "Memorial", color: "white", opt: true/.test(engineSrc));
+
+  // ── Privacy honesty under OS backup (audit FID-PRIV-001, Option B: disclose).
+  // The configuration allows OS backups (android:allowBackup, no iOS exclusion),
+  // so the promise must match the configuration: PRIVACY.md — the App-Store-
+  // linked policy — discloses device backups, the absolute claims are gone, and
+  // "sends nothing" stays pointed at Fidelis (true) instead of the device.
+  const androidManifest = readFileSync(
+    join(ROOT, "android/app/src/main/AndroidManifest.xml"), "utf8");
+  const privacyDoc = readFileSync(join(ROOT, "PRIVACY.md"), "utf8");
+  if (/android:allowBackup="true"/.test(androidManifest)) {
+    check("§38 privacy: with Android backup enabled, PRIVACY.md discloses device backups",
+      privacyDoc.includes("## Device backups"));
+    check("§38 privacy: the absolute deletion claim is gone (backups can outlive the app)",
+      !privacyDoc.includes("Deleting the app deletes all of it."));
+    check("§38 privacy: 'never transmitted' is qualified — by Fidelis, not by the device",
+      !privacyDoc.includes("never transmitted anywhere.") &&
+        privacyDoc.includes("never transmitted anywhere by Fidelis"));
+  }
+  const aboutSrc38 = readFileSync(join(ROOT, "src/pages/About.tsx"), "utf8");
+  const settingsSrc38 = readFileSync(join(ROOT, "src/pages/Settings.tsx"), "utf8");
+  const translationsSrc38 = readFileSync(join(ROOT, "src/pages/Translations.tsx"), "utf8");
+  const readme38 = readFileSync(join(ROOT, "README.md"), "utf8");
+  const appStore38 = readFileSync(join(ROOT, "docs/guides/APP_STORE.md"), "utf8");
+  const librarySrc38 = readFileSync(join(ROOT, "src/pages/Library.tsx"), "utf8");
+  check("§38 privacy: no surface claims data can never leave the device (backups may carry it)",
+    !aboutSrc38.includes("live only in your browser") &&
+      !settingsSrc38.includes("live only in this browser") &&
+      !settingsSrc38.includes("stored only on this device") &&
+      !librarySrc38.includes("lives only in this browser") &&
+      !translationsSrc38.includes("never leaves your device") &&
+      !translationsSrc38.includes("Stored only on this device") &&
+      !readme38.includes("never leaves the device") &&
+      !readme38.includes("stored only in your browser") &&
+      !appStore38.includes("never leaves your device"));
+  check("§38 privacy: docs/SECURITY.md points the no-data claim at Fidelis, not the device",
+    !readFileSync(join(ROOT, "docs/SECURITY.md"), "utf8")
+      .replace(/\s+/g, " ")
+      .includes("no user data leaves the device"));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

@@ -16,7 +16,7 @@ function humanDate(day: string): string {
 
 export default function Saint() {
   const { day = "", id } = useParams();
-  const [data, setData] = useState<SaintDay | null | "loading">("loading");
+  const [data, setData] = useState<SaintDay | null | "loading" | "failed">("loading");
   const [share, setShare] = useState<
     { text: string; citation: string; source?: string; filename: string } | null
   >(null);
@@ -28,9 +28,11 @@ export default function Saint() {
       setData(null);
       return;
     }
+    // A resolved null is genuine absence (404 — not in the collection); a
+    // rejection is a transport failure and must say so, not claim absence.
     loadSaints(day)
       .then((d) => alive && setData(d))
-      .catch(() => alive && setData(null));
+      .catch(() => alive && setData("failed"));
     return () => {
       alive = false;
     };
@@ -50,6 +52,23 @@ export default function Saint() {
         <p className="loading" role="status">
           Finding the saint of the day…
         </p>
+      </div>
+    );
+  }
+
+  if (data === "failed") {
+    return (
+      <div className="page-narrow" style={{ margin: "0 auto" }}>
+        <h1 className="page-title">Saint of the Day</h1>
+        <p className="subtitle">{humanDate(day)}</p>
+        <div className="notice" role="status">
+          The life couldn&rsquo;t be loaded — it will return with your connection.
+          <div className="browse-links">
+            <Link className="continue-cta" to="/">
+              Back to Today →
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

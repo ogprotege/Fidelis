@@ -104,9 +104,10 @@ export default function About() {
       <h2 className="testament-title" id="privacy">Privacy &amp; Offline</h2>
       <p>
         There is no account, no tracking, and no server: your bookmarks,
-        highlights, and notes live only in your browser. Once a book has been
-        opened it is cached for offline reading, and the app may be installed to
-        your home screen as a PWA.
+        highlights, and notes stay in the app's storage on this device —
+        Fidelis transmits nothing. (Your own device backup may include them,
+        as with any app.) Once a book has been opened it is cached for offline
+        reading, and the app may be installed to your home screen as a PWA.
       </p>
 
       <h2 className="testament-title" id="sources">Sources</h2>

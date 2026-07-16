@@ -182,7 +182,10 @@ const FIXED: { m: number; d: number; name: string; rank: Rank; color?: Liturgica
   { m: 2, d: 11, name: "Our Lady of Lourdes", rank: "Memorial", color: "white", opt: true },
   { m: 2, d: 14, name: "Sts. Cyril and Methodius", rank: "Memorial", color: "white" },
   { m: 2, d: 22, name: "The Chair of St. Peter, Apostle", rank: "Feast", color: "white" },
-  { m: 3, d: 17, name: "St. Patrick, Bishop", rank: "Memorial", color: "white" },
+  // Patrick is memoria ad libitum in the GRC (a solemnity only in Ireland);
+  // invisible in practice — 17 March always falls in Lent — but the record
+  // should not disagree with the calendar (v1.21.0 audit sweep).
+  { m: 3, d: 17, name: "St. Patrick, Bishop", rank: "Memorial", color: "white", opt: true },
   { m: 3, d: 19, name: "St. Joseph, Spouse of the Blessed Virgin Mary", rank: "Solemnity", color: "white" },
   { m: 3, d: 25, name: "The Annunciation of the Lord", rank: "Solemnity", color: "white" },
   { m: 4, d: 25, name: "St. Mark, Evangelist", rank: "Feast", color: "red" },

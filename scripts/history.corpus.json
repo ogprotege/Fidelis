@@ -270,7 +270,7 @@
     {
       "verified": false,
       "id": "edict-of-milan",
-      "day": "02-01",
+      "day": "06-13",
       "year": 313,
       "title": "The Edict of Milan grants toleration to Christians",
       "shortBlurb": "The emperors Constantine and Licinius agreed to grant Christians freedom of worship, ending the age of persecution in the Roman Empire…",
@@ -1259,25 +1259,6 @@
       "title": "The First Council of Nicaea opens",
       "shortBlurb": "The first ecumenical council of the Church gathered at Nicaea under the Emperor Constantine to answer the Arian denial of Christ’s divinity, and gave the Church its Creed…",
       "body": [
-        "In 325 some three hundred bishops assembled at Nicaea in Asia Minor for the first ecumenical council, convened to settle the crisis raised by Arius, who taught that the Son was a creature and not truly God. Against him the council professed the Son “consubstantial (homoousios) with the Father.”",
-        "From this council comes the heart of the Nicene Creed still professed at Mass, together with a common rule for computing the date of Easter. It stands as the pattern of the Church’s conciliar teaching."
-      ],
-      "sources": [
-        {
-          "text": "Catholic Encyclopedia (1913), “The First Council of Nicaea”",
-          "license": "public-domain",
-          "url": "https://www.newadvent.org/cathen/"
-        }
-      ],
-      "verified": false
-    },
-    {
-      "id": "first-council-of-nicaea",
-      "day": "05-20",
-      "year": 325,
-      "title": "The First Council of Nicaea",
-      "shortBlurb": "The first ecumenical council condemned Arianism and gave the Church the Nicene Creed…",
-      "body": [
         "In the year 325 the Emperor Constantine summoned the bishops of the Christian world to Nicaea in Asia Minor for the first ecumenical council; by tradition the sessions opened on the twentieth of May. Some three hundred bishops, many of them survivors of the recent persecutions, took part.",
         "The council met chiefly to answer the teaching of the priest Arius, who denied that the Son was fully God. Against him it professed the Son to be “consubstantial” (homoousios) with the Father, and it drew up the creed that, expanded, is still recited at Mass. It also fixed a common method for calculating the date of Easter and settled other matters of discipline."
       ],
@@ -1352,11 +1333,11 @@
       "id": "gregory-vii-dies-canossa",
       "day": "05-25",
       "year": 1085,
-      "title": "Death of Pope St. Gregory VII",
+      "title": "The death of Pope St. Gregory VII in exile",
       "shortBlurb": "The reforming pope of the Investiture Controversy, who brought the emperor to penance at Canossa, died in exile at Salerno…",
       "body": [
-        "Gregory VII (Hildebrand) was the great reforming pope who fought simony and the lay investiture of bishops, and who in 1077 brought the Emperor Henry IV to do penance in the snow at Canossa. Driven at last from Rome, he died in exile at Salerno in 1085 with the words, “I have loved justice and hated iniquity; therefore I die in exile.”",
-        "His reform reshaped the medieval Church's independence from secular power."
+        "On 25 May 1085 Pope St. Gregory VII, the monk Hildebrand, died at Salerno, an exile from his own city. He had been the leading spirit of the reform that bears his name, striving to free the Church from lay control, to end the buying and selling of offices, and to enforce clerical discipline.",
+        "His long struggle with the Emperor Henry IV over the right to invest bishops brought the emperor to penance in the snow at Canossa, but ended with Gregory driven from Rome by imperial arms. His last words are remembered: “I have loved justice and hated iniquity, therefore I die in exile.” He was canonized in 1606."
       ],
       "sources": [
         {
@@ -1369,25 +1350,6 @@
           "license": "public-domain"
         }
       ]
-    },
-    {
-      "id": "death-of-gregory-vii",
-      "day": "05-25",
-      "year": 1085,
-      "title": "The death of Pope St. Gregory VII in exile",
-      "shortBlurb": "The great reforming pope of the Investiture Controversy died at Salerno, driven from Rome by the emperor…",
-      "body": [
-        "On 25 May 1085 Pope St. Gregory VII, the monk Hildebrand, died at Salerno, an exile from his own city. He had been the leading spirit of the reform that bears his name, striving to free the Church from lay control, to end the buying and selling of offices, and to enforce clerical discipline.",
-        "His long struggle with the Emperor Henry IV over the right to invest bishops brought the emperor to penance in the snow at Canossa, but ended with Gregory driven from Rome by imperial arms. His last words are remembered: “I have loved justice and hated iniquity, therefore I die in exile.” He was canonized in 1606."
-      ],
-      "sources": [
-        {
-          "text": "Catholic Encyclopedia (1913), “Pope St. Gregory VII”",
-          "license": "public-domain",
-          "url": "https://www.newadvent.org/cathen/"
-        }
-      ],
-      "verified": false
     },
     {
       "verified": false,
@@ -1901,25 +1863,6 @@
       "year": 1099,
       "title": "The First Crusade captures Jerusalem",
       "shortBlurb": "After a long march and siege, the armies of the First Crusade breached the walls and took the Holy City, ending the expedition summoned four years earlier at Clermont…",
-      "body": [
-        "On 15 July 1099 the soldiers of the First Crusade, after a siege of some weeks, stormed the walls and captured Jerusalem, the goal of the expedition preached by Pope Urban II at Clermont in 1095. A Latin kingdom of Jerusalem was set up in the aftermath.",
-        "The capture was marked by great slaughter of the city’s inhabitants, a violence later generations remembered with sorrow. The crusader hold on Jerusalem lasted until Saladin retook it in 1187."
-      ],
-      "sources": [
-        {
-          "text": "Catholic Encyclopedia (1913), “Crusades”",
-          "license": "public-domain",
-          "url": "https://www.newadvent.org/cathen/"
-        }
-      ],
-      "verified": false
-    },
-    {
-      "id": "capture-of-jerusalem-first-crusade",
-      "day": "07-15",
-      "year": 1099,
-      "title": "The First Crusade takes Jerusalem",
-      "shortBlurb": "After a long siege the armies of the First Crusade captured the Holy City…",
       "body": [
         "On the fifteenth of July 1099, after a siege of some weeks amid great hardship and thirst, the knights of the First Crusade broke into Jerusalem and took the city, the goal of their long march from Europe. The capture fulfilled the aim proclaimed by Pope Urban II at Clermont four years before.",
         "The victory was followed by a terrible slaughter of the city's inhabitants, a stain long remembered. A Latin Kingdom of Jerusalem was established, with Godfrey of Bouillon as its first ruler, opening nearly two centuries of Crusader presence in the Holy Land."
@@ -2505,7 +2448,7 @@
     },
     {
       "id": "death-of-john-chrysostom-407",
-      "day": "09-13",
+      "day": "09-14",
       "year": 407,
       "title": "The death of St. John Chrysostom in exile",
       "shortBlurb": "The great preacher and archbishop of Constantinople died on the road of a second banishment, blessing God to the end…",
@@ -2543,7 +2486,7 @@
     },
     {
       "id": "martyrdom-of-cyprian-258",
-      "day": "09-16",
+      "day": "09-14",
       "year": 258,
       "title": "The martyrdom of St. Cyprian of Carthage",
       "shortBlurb": "The bishop and great writer of the African Church was beheaded before his people in the persecution of Valerian…",
@@ -2619,7 +2562,7 @@
     },
     {
       "id": "founding-of-the-mercedarians-1218",
-      "day": "09-24",
+      "day": "08-10",
       "year": 1218,
       "title": "The founding of the Order of Our Lady of Ransom",
       "shortBlurb": "St. Peter Nolasco founded an order vowed to ransom Christian captives from the Moors, honoured under the title of Our Lady of Ransom…",
@@ -2682,8 +2625,8 @@
       "title": "The death of St. Francis of Assisi",
       "shortBlurb": "The Poverello died at the Portiuncula near Assisi; his passing is kept by the Franciscans as the Transitus…",
       "body": [
-        "On the evening of 3 October 1226 St. Francis of Assisi died at the little church of the Portiuncula, having asked to be laid on the bare ground and having added a final stanza to his Canticle of the Creatures welcoming “Sister Death.” His passing is commemorated by the Franciscan family as the Transitus, the eve of his feast.",
-        "Two years later he was canonized by Pope Gregory IX."
+        "On the evening of 3 October 1226 Francis of Assisi died at the little chapel of the Portiuncula outside the walls of his city, having asked to be laid naked upon the bare ground so as to meet death in the poverty he had loved all his life. He was about forty-five years old, worn out by austerity, illness, and the wounds of the stigmata he had borne since Mount La Verna.",
+        "In his last days he added to his Canticle of the Creatures a verse in praise of “Sister Bodily Death,” and asked that the Passion account of St. John be read to him. His feast is kept the following day, 4 October. Less than two years after his death he was canonized by Pope Gregory IX, and the great basilica at Assisi rose over his tomb."
       ],
       "sources": [
         {
@@ -2698,25 +2641,6 @@
       ]
     },
     {
-      "id": "death-of-st-francis",
-      "day": "10-03",
-      "year": 1226,
-      "title": "The death of St. Francis of Assisi",
-      "shortBlurb": "The Poverello of Assisi died in poverty at the Portiuncula, welcoming “Sister Death”…",
-      "body": [
-        "On the evening of 3 October 1226 Francis of Assisi died at the little chapel of the Portiuncula outside the walls of his city, having asked to be laid naked upon the bare ground so as to meet death in the poverty he had loved all his life. He was about forty-five years old, worn out by austerity, illness, and the wounds of the stigmata he had borne since Mount La Verna.",
-        "In his last days he added to his Canticle of the Creatures a verse in praise of “Sister Bodily Death,” and asked that the Passion account of St. John be read to him. His feast is kept the following day, 4 October. Less than two years after his death he was canonized by Pope Gregory IX, and the great basilica at Assisi rose over his tomb."
-      ],
-      "sources": [
-        {
-          "text": "Catholic Encyclopedia (1913), “St. Francis of Assisi”",
-          "license": "public-domain",
-          "url": "https://www.newadvent.org/cathen/"
-        }
-      ],
-      "verified": false
-    },
-    {
       "verified": false,
       "id": "lepanto",
       "day": "10-07",
@@ -2724,8 +2648,8 @@
       "title": "The victory of Lepanto",
       "shortBlurb": "A Christian fleet of the Holy League turned back the Ottoman navy in the Gulf of Corinth; the day gave rise to the feast of the Rosary…",
       "body": [
-        "On 7 October 1571 the fleet of the Holy League, gathered by Pope St. Pius V, met and defeated the Ottoman navy in the Gulf of Lepanto, checking Turkish power in the Mediterranean. The pope attributed the victory to the intercession of Our Lady, invoked through the Rosary by the faithful of Rome.",
-        "In thanksgiving he established the commemoration kept today as the feast of Our Lady of the Rosary."
+        "On 7 October 1571 the fleet of the Holy League, assembled by Pope St. Pius V from Spain, Venice, the Papal States, and other Catholic powers under the command of Don John of Austria, met the Ottoman navy in the Gulf of Lepanto off the coast of Greece. In one of the largest naval battles of the age, fought with hundreds of galleys and tens of thousands of men, the Christian fleet won a decisive victory and broke the momentum of Turkish expansion in the Mediterranean.",
+        "Pope Pius V had called on the faithful of Europe to pray the Rosary for the outcome, and he attributed the deliverance to the intercession of the Blessed Virgin Mary. In thanksgiving he instituted an annual commemoration, later established as the feast of Our Lady of the Rosary, kept on the anniversary of the battle."
       ],
       "sources": [
         {
@@ -2739,25 +2663,6 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ]
-    },
-    {
-      "id": "battle-of-lepanto",
-      "day": "10-07",
-      "year": 1571,
-      "title": "The victory of Lepanto",
-      "shortBlurb": "A Christian fleet of the Holy League turned back the Ottoman navy in the Gulf of Corinth…",
-      "body": [
-        "On 7 October 1571 the fleet of the Holy League, assembled by Pope St. Pius V from Spain, Venice, the Papal States, and other Catholic powers under the command of Don John of Austria, met the Ottoman navy in the Gulf of Lepanto off the coast of Greece. In one of the largest naval battles of the age, fought with hundreds of galleys and tens of thousands of men, the Christian fleet won a decisive victory and broke the momentum of Turkish expansion in the Mediterranean.",
-        "Pope Pius V had called on the faithful of Europe to pray the Rosary for the outcome, and he attributed the deliverance to the intercession of the Blessed Virgin Mary. In thanksgiving he instituted an annual commemoration, later established as the feast of Our Lady of the Rosary, kept on the anniversary of the battle."
-      ],
-      "sources": [
-        {
-          "text": "Catholic Encyclopedia (1913), “Feast of the Holy Rosary”",
-          "license": "public-domain",
-          "url": "https://www.newadvent.org/cathen/"
-        }
-      ],
-      "verified": false
     },
     {
       "id": "second-vatican-council-opens",
@@ -3297,25 +3202,6 @@
       "year": 1854,
       "title": "Pius IX defines the Immaculate Conception",
       "shortBlurb": "In the bull Ineffabilis Deus, Pope Pius IX solemnly defined that the Blessed Virgin Mary was preserved free from original sin from the first moment of her conception…",
-      "body": [
-        "On 8 December 1854, in the Apostolic Constitution Ineffabilis Deus, Pope Pius IX defined as a dogma of faith that the Blessed Virgin Mary, in the first instant of her conception, was by a singular grace of God and in view of the merits of Christ preserved free from all stain of original sin.",
-        "Four years later the apparitions at Lourdes, in which the Lady named herself “the Immaculate Conception,” were widely received as a confirmation of the definition."
-      ],
-      "sources": [
-        {
-          "text": "Catholic Encyclopedia (1913), “Immaculate Conception”",
-          "license": "public-domain",
-          "url": "https://www.newadvent.org/cathen/"
-        }
-      ],
-      "verified": false
-    },
-    {
-      "id": "definition-immaculate-conception-1854",
-      "day": "12-08",
-      "year": 1854,
-      "title": "Pius IX defines the Immaculate Conception",
-      "shortBlurb": "By the bull Ineffabilis Deus, Pope Pius IX solemnly defined that the Virgin Mary was preserved from all stain of original sin from the first moment of her conception…",
       "body": [
         "On 8 December 1854, before a great assembly of bishops in St. Peter's Basilica, Pope Pius IX promulgated the Apostolic Constitution Ineffabilis Deus and defined that the Blessed Virgin Mary, in the first instant of her conception, was preserved immune from all stain of original sin by a singular grace of God and in view of the merits of Jesus Christ.",
         "Four years later, at Lourdes, the apparition who named herself the Immaculate Conception was widely received as heaven's own confirmation of the definition."

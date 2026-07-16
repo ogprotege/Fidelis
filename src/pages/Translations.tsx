@@ -73,7 +73,7 @@ export default function Translations() {
       const count = await stageAndSwapImport(id, books, (done, total) =>
         setProgress({ done, total })
       );
-      setMessage(`Imported ${count} books into ${id.toUpperCase()}. Stored only on this device.`);
+      setMessage(`Imported ${count} books into ${id.toUpperCase()}. Kept on this device — never uploaded.`);
       await refresh();
     } catch (e) {
       setMessage(`Import failed: ${describeStorageError(e)}`);
@@ -152,7 +152,7 @@ export default function Translations() {
                     Accepts <strong>USFM</strong> (.usfm), <strong>OSIS</strong> (.xml), or
                     scrollmapper-style <strong>JSON</strong>
                     (<code>{"{ books: [{ name, chapters: [{ verses: [{ text }] }] }] }"}</code>).
-                    The file never leaves your device — it is stored in your browser only.
+                    Fidelis never uploads the file — it is stored in the app on this device.
                   </p>
                 </>
               )}

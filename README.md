@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.20.1%20·%20them%20that%20are%20fettered-5B3A8E)
+![version](https://img.shields.io/badge/version-1.21.0%20·%20that%20nothing%20be%20lost-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -122,7 +122,7 @@ five spokes:
 - **Import-only translations — RSV-2CE, NABRE, and the Biblia Platense (Straubinger, Spanish)** —
   these are under copyright (Ignatius Press / CCD) or not clearly public-domain in the U.S., so
   their text is *not* shipped; you can import a licensed copy you own on the Translations page,
-  stored only in your browser via IndexedDB. The importer accepts **USFM**, **OSIS**, or
+  stored in your browser via IndexedDB (never uploaded). The importer accepts **USFM**, **OSIS**, or
   scrollmapper-style **JSON** (with roman-numeral and SWORD book-name aliases); `npm run build-nabre`
   converts a NAB/NABRE PDF you own into an importable file (the output stays on your device and is
   gitignored — never bundled or committed).
@@ -308,7 +308,7 @@ piety, never gamification.
 
 A short, binding list — the product is defined as much by what it will not do:
 
-- **No accounts, no cloud sync, no server.** Your reading is yours; it never leaves the device.
+- **No accounts, no cloud sync, no server.** Your reading is yours; Fidelis never sends it anywhere. (Your own device backup may carry app data, like any app's — see [PRIVACY.md](PRIVACY.md).)
 - **No AI** — no summaries, paraphrase, or chatbot over Scripture. The text speaks for itself.
 - **No social layer**, no comments, no sharing-for-engagement.
 - **No streaks, badges, or progress theater.** The reading indulgence is the only acknowledgment

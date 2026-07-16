@@ -1,6 +1,7 @@
 # Fidelis Privacy Policy
 
-**Effective date:** July 13, 2026
+**Effective date:** July 13, 2026 · **Updated:** July 16, 2026 (device-backup
+disclosure)
 
 Fidelis is a Catholic Bible app built on a pledge: no accounts, no ads, no
 tracking, ever. This policy is short because there is almost nothing to
@@ -15,7 +16,7 @@ notes, or your device.
 
 ## What stays on your device
 
-Everything the app knows lives only on your device:
+Everything the app knows is stored on your device:
 
 - **Settings** (theme, text size, translation choice, calendar region) —
   stored locally.
@@ -23,9 +24,22 @@ Everything the app knows lives only on your device:
   control.
 - **Imported translations** (e.g., a licensed NABRE, RSV-2CE, or Biblia
   Platense you own) and an **imported Catechism** — stored locally on your
-  device and never transmitted anywhere.
+  device and never transmitted anywhere by Fidelis.
 
-Deleting the app deletes all of it.
+## Device backups
+
+Like any app's data, Fidelis's data can be included in **your own device
+backup** — iCloud or computer backups on iOS, Google backup on Android —
+according to your device's backup settings. Those backups belong to you and
+are encrypted by Apple or Google; Fidelis never sees them, and nothing about
+this involves any Fidelis server (there is none). If you restore a backup,
+your settings, marginalia, and imported texts return with it.
+
+Deleting the app deletes everything Fidelis stores on the device itself.
+Copies inside your own device backups remain yours, governed by your
+device's backup settings, until those backups are replaced or deleted. If
+you prefer that no copy exist anywhere, exclude the app from your device
+backup (or disable backup) before deleting it.
 
 ## Permissions
 

@@ -40,4 +40,18 @@ test.describe("Mass failure state", () => {
     await expect(page.locator(".mass-list li").first()).toBeVisible({ timeout: 15_000 });
     await expect(notice).not.toBeVisible();
   });
+
+  test("a failed saints/history load shows the connection notice, never the calm empty line", async ({
+    page
+  }) => {
+    // Transport failure (offline blip), not a 404: the card must say so —
+    // every date has a saint, so "being gathered" would be false.
+    await page.route("**/data/saints/**", (route) => route.abort());
+    await page.route("**/data/history/**", (route) => route.abort());
+    await page.goto("/#/");
+    await expect(
+      page.getByText("Today in the Church couldn’t be loaded — it will return with your connection.")
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/being gathered/)).not.toBeVisible();
+  });
 });

@@ -83,9 +83,13 @@ export default function Home() {
   // Today's saints — both the Mass card's memorial-name link and the "Today in
   // the Church" card's Saint of the Day read this. saintLoaded distinguishes
   // "still loading" from "no saint today" so the card's empty/divider logic is
-  // honest even when the two loads resolve at different times.
+  // honest even when the two loads resolve at different times; saintFailed
+  // distinguishes a transport failure from genuine absence (every date has a
+  // saint since v1.20.0, so a swallowed failure would make the calm
+  // "being gathered" line below a false statement).
   const [saintDay, setSaintDay] = useState<SaintDay | null>(null);
   const [saintLoaded, setSaintLoaded] = useState(false);
+  const [saintFailed, setSaintFailed] = useState(false);
   const [openMystery, setOpenMystery] = useState<Mystery | null>(null);
   const [share, setShare] = useState<
     { text: string; citation: string; source?: string; filename: string } | null
@@ -151,6 +155,7 @@ export default function Home() {
       .catch(() => alive && setHistoryState("failed"));
     setSaintDay(null);
     setSaintLoaded(false);
+    setSaintFailed(false);
     loadSaints(dayToday)
       .then((s) => {
         if (alive) {
@@ -162,6 +167,7 @@ export default function Home() {
         if (alive) {
           setSaintDay(null);
           setSaintLoaded(true);
+          setSaintFailed(true);
         }
       });
     return () => {
@@ -349,7 +355,17 @@ export default function Home() {
           {historyState === "loading" && !(saintDay && saintDay.saints.length > 0) && (
             <Skeleton lines={3} className="mass-skeleton" />
           )}
-          {historyState === "failed" && (
+          {saintFailed && historyState === "failed" && (
+            <p className="muted small sans" role="status">
+              Today in the Church couldn&rsquo;t be loaded — it will return with your connection.
+            </p>
+          )}
+          {saintFailed && historyState !== "failed" && (
+            <p className="muted small sans" role="status">
+              The Saint of the Day couldn&rsquo;t be loaded — it will return with your connection.
+            </p>
+          )}
+          {!saintFailed && historyState === "failed" && (
             <p className="muted small sans" role="status">
               Church history couldn&rsquo;t be loaded — it will return with your connection.
             </p>
@@ -370,8 +386,12 @@ export default function Home() {
             </div>
           )}
 
-          {/* One calm line when neither a saint nor an event is recorded yet. */}
-          {saintLoaded && !(saintDay && saintDay.saints.length > 0) && historyState === "empty" && (
+          {/* One calm line when neither a saint nor an event is recorded yet —
+              never on a failure (that is the connection notice above). */}
+          {saintLoaded &&
+            !saintFailed &&
+            !(saintDay && saintDay.saints.length > 0) &&
+            historyState === "empty" && (
             <p className="muted small sans" role="status">
               The saints and the day&rsquo;s chronicle are being gathered from public-domain
               sources, one day at a time.
