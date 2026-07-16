@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.18.4
+1.21.0
 ```
 
 The store version string always equals the uploaded build's
@@ -23,13 +23,14 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-The navigation takes its place at the top, where a book keeps it. A gold masthead folds away as you read, leaving one slim row of tabs — nothing covers the Scripture from below anymore. The Reader gains a folio line: book, chapter, translation, and an Aa text menu in a single slim row, with a picker that reaches any book and chapter in a tap. The Mass page's controls fit one line, with the native date picker behind the date. The Today page adds the day in Church history, and links the day's saint to a full Saint of the Day page when one is in the collection. Same texts, same pledge — more room for the Word.
+Nothing you write is lost anymore, even when a device refuses to save. Bookmarks, notes, highlights, and settings made while storage is full or restricted now survive the whole session, show up in your exported library, and are saved the moment the device allows it — and the app says plainly what is happening. A Saint of the Day for all 366 dates leads the Today in the Church card, and the day's history is told once: duplicated events became single entries, each dated to the day it actually happened, with every rank agreeing with the liturgical calendar. The privacy policy now spells out how your own device backup (iCloud or Google) may carry the app's data — Fidelis itself still sends nothing, anywhere, ever. Honest notices when the connection drops, and a wider test net under all of it. Same texts, same pledge.
 ```
 
-Also serves as the TestFlight "What to Test" notes: scroll any page (the
-masthead should fold away and the tab row stay pinned), open More, turn
-chapters from the folio line, step days on the Mass page, open the Today in
-Church History card and a Saint of the Day page, rotate to landscape.
+(ASC shows What's New only for updates after the first released version; if
+1.21.0 ships as the first release the field stays unused there. The same text
+serves as the TestFlight "What to Test" notes: bookmark and write a note, flip
+the theme twice, export the library; open the Saint of the Day and the day's
+history; check May 20 / Oct 7 / Dec 8 in History show one entry each.)
 
 ## Promotional Text (≤ 170 characters)
 
@@ -55,7 +56,7 @@ THE LITURGY
 • Let the app's accent follow the liturgical year — green in Ordinary Time, violet in Advent and Lent, red on the feasts of martyrs
 
 EVERY DAY
-• A Today page that never clutters: the day's celebration, the day in Church history, a Verse of the Day, the Mass readings, and a verified quote from the saints — never more than six cards
+• A Today page that never clutters: the day's celebration and Mass readings, the Saint of the Day with a full life to read, the day in Church history, a Verse of the Day, and a verified quote from the saints — never more than six cards
 • Home-screen widgets for the Verse of the Day, today's Mass, and the daily quote — in light and dark
 • "What's today's Gospel?" — ask Siri
 
@@ -201,8 +202,8 @@ localStorage before the pre-paint script, so the night frame has no Day-flash.
 Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 
 - Promotional text: 163 / 170 ✓
-- Description: 2,355 / 4,000 ✓ (re-counted 2026-07-15 after the six-card edit)
+- Description: 2,416 / 4,000 ✓ (re-counted 2026-07-16 after the Saint-of-the-Day + import-line edits)
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
-- What's New (1.18.4): 614 / 4,000 ✓ (re-counted 2026-07-15)
+- What's New (1.21.0): 824 / 4,000 ✓ (re-counted 2026-07-16)
