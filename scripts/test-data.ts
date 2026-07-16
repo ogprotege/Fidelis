@@ -3442,10 +3442,14 @@ console.log("");
     check("§37 shadow: consecutive refused settings writes preserve BOTH changes",
       first.theme === "night" && second.theme === "night" && second.fontSize === 22);
     storage.setNote({ book: "john", chapter: 3, verse: 16 }, "kept");
+    storage.setHighlight({ book: "john", chapter: 3, verse: 16 }, "gold");
+    check("§37 shadow: a refused highlight survives the session too",
+      storage.getHighlights().some((h) => h.verse === 16 && h.color === "gold"));
     const exported = storage.exportMarginalia();
     check("§37 shadow: Export contains the refused marginalia (the recovery is real)",
       exported.bookmarks.some((b) => b.book === "john" && b.verse === 16) &&
-        exported.notes.some((n) => n.text === "kept"));
+        exported.notes.some((n) => n.text === "kept") &&
+        exported.highlights.some((h) => h.color === "gold"));
     const file = JSON.stringify({
       app: "fidelis",
       version: 1,
