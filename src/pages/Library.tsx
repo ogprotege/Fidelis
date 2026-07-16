@@ -43,7 +43,10 @@ export default function Library() {
       const counts = importMarginalia(await file.text());
       setVersion((x) => x + 1);
       setTransfer(
-        `Imported ${counts.bookmarks} bookmark(s), ${counts.highlights} highlight(s), ${counts.notes} note(s) — merged with what was here; where both had an entry for the same verse, the newer one was kept.`
+        `Imported ${counts.bookmarks} bookmark(s), ${counts.highlights} highlight(s), ${counts.notes} note(s) — merged with what was here; where both had an entry for the same verse, the newer one was kept.` +
+          (counts.persisted
+            ? ""
+            : " But this device is not saving changes — the import is kept for this session only.")
       );
     } catch (e) {
       setTransfer(e instanceof Error ? e.message : "Could not read that file.");

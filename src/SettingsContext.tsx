@@ -29,8 +29,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(getSettings);
 
   const update = useCallback((patch: Partial<Settings>) => {
-    // saveSettings merges over the freshest stored value and returns the whole
-    // settings object, which becomes our new state — one write, one re-render.
+    // saveSettings merges over the freshest stored value (shadow-aware since
+    // v1.21.0, so a refused earlier write can't be reverted by this one) and
+    // returns the whole settings object — one write, one re-render.
     setSettings(saveSettings(patch));
   }, []);
 

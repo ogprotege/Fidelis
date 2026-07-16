@@ -3405,5 +3405,96 @@ console.log("");
     existsSync(join(ROOT, "docs/SECURITY.md")));
 }
 
+// ── 37. v1.21.0 "that nothing be lost" — the storage shadow (audit FID-STOR-002).
+// A refused localStorage write must not lose the value: it lives on in a session
+// shadow that reads prefer (so the UI stays consistent), saveSettings merges
+// over (so a later change can't revert an earlier one), Export includes (so the
+// banner's recovery is real), and the next successful write re-persists. Plus
+// the read-path shape guards (a corrupt key degrades to empty, never crashes a
+// render) and the import result honestly reporting a failed persist.
+console.log("");
+{
+  const storage = await import("../src/lib/storage");
+  // §33 above may have left its throwing stub installed (Node has no real
+  // localStorage to restore to) — install our own Map-backed stub with a
+  // failure toggle, and put back whatever we found when done.
+  const prevLocalStorage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  const store = new Map<string, string>();
+  let failing = true;
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
+      setItem: (k: string, v: string) => {
+        if (failing) throw new DOMException("full", "QuotaExceededError");
+        store.set(k, v);
+      },
+      removeItem: (k: string) => void store.delete(k)
+    }
+  });
+  try {
+    const bm = { translation: "drc", book: "john", chapter: 3, verse: 16 };
+    check("§37 shadow: a refused bookmark still reports added", storage.toggleBookmark(bm) === true);
+    check("§37 shadow: the refused bookmark survives the session (reads prefer the shadow)",
+      storage.getBookmarks().some((b) => storage.refKey(b) === storage.refKey(bm)));
+    const first = storage.saveSettings({ theme: "night" });
+    const second = storage.saveSettings({ fontSize: 22 });
+    check("§37 shadow: consecutive refused settings writes preserve BOTH changes",
+      first.theme === "night" && second.theme === "night" && second.fontSize === 22);
+    storage.setNote({ book: "john", chapter: 3, verse: 16 }, "kept");
+    const exported = storage.exportMarginalia();
+    check("§37 shadow: Export contains the refused marginalia (the recovery is real)",
+      exported.bookmarks.some((b) => b.book === "john" && b.verse === 16) &&
+        exported.notes.some((n) => n.text === "kept"));
+    const file = JSON.stringify({
+      app: "fidelis",
+      version: 1,
+      exportedAt: "x",
+      bookmarks: [{ translation: "drc", book: "mark", chapter: 1, verse: 1, createdAt: 5 }],
+      highlights: [],
+      notes: []
+    });
+    const imported = storage.importMarginalia(file);
+    check("§37 shadow: import reports its counts AND that nothing persisted",
+      imported.bookmarks === 1 && imported.persisted === false);
+    // The quota clears: the next successful write re-persists every stranded key.
+    failing = false;
+    storage.saveSettings({});
+    check("§37 shadow: a successful write flushes every stranded key to storage",
+      !!store.get("fidelis:bookmarks") &&
+        JSON.parse(store.get("fidelis:settings") ?? "{}").theme === "night" &&
+        JSON.parse(store.get("fidelis:settings") ?? "{}").fontSize === 22);
+    store.set("fidelis:bookmarks", "[]");
+    check("§37 shadow: drained after the flush — reads follow real storage again",
+      storage.getBookmarks().length === 0);
+    // Read-path shape guards: a corrupt or foreign-typed value parses cleanly
+    // and then must degrade to empty — one bad `plans` key blanked Today.
+    store.set("fidelis:plans", "{}");
+    let planCrash = false;
+    let active: unknown = "unset";
+    try {
+      active = storage.activePlan();
+    } catch {
+      planCrash = true;
+    }
+    check("§37 read guard: a corrupt plans key degrades to [] and cannot crash activePlan()",
+      !planCrash && active === null && storage.getPlans().length === 0);
+    store.set("fidelis:bookmarks", "5");
+    check("§37 read guard: a non-array bookmarks key degrades to []",
+      Array.isArray(storage.getBookmarks()) && storage.getBookmarks().length === 0);
+    store.set("fidelis:lastRead", JSON.stringify({ nonsense: true }));
+    check("§37 read guard: a shapeless lastRead degrades to null (Home cannot crash)",
+      storage.getLastRead() === null);
+  } finally {
+    if (prevLocalStorage) Object.defineProperty(globalThis, "localStorage", prevLocalStorage);
+  }
+
+  // The banner speaks the SHADOW contract: changes are kept for the session
+  // (not "may be lost" while the app is open) and Export is the real recovery.
+  const appSrcShadow = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+  check("§37 banner: the copy names session retention (kept for this session)",
+    appSrcShadow.includes("kept for this session"));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

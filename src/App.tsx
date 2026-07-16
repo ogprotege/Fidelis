@@ -42,15 +42,17 @@ import {
 /** The ONE quiet storage warning (v1.18.0, audit FID-STOR-001): the first
  *  localStorage write the browser refuses raises it — deduplicated for the
  *  session, never shown for successful writes — and Export is the recovery.
- *  role="status": spoken politely, never interrupts the reading. */
+ *  Since v1.21.0 (FID-STOR-002) refused values are kept in the session shadow,
+ *  so the copy promises exactly that: kept for this session, lost when the app
+ *  closes, and Export captures them. role="status": spoken politely. */
 function StorageWarning() {
   const warned = useSyncExternalStore(subscribeStorageWarning, isStorageWarned);
   if (!warned) return null;
   return (
     <div className="notice storage-banner" role="status">
-      This device is not saving changes — its browser storage is full or restricted, so new
-      notes, highlights, and settings may be lost when the app closes.{" "}
-      <Link to="/settings#data">Export your library</Link> to keep it safe.{" "}
+      This device is not saving changes — its browser storage is full or restricted. New notes,
+      highlights, and settings are kept for this session only and will be lost when the app
+      closes. <Link to="/settings#data">Export your library</Link> to keep them safe.{" "}
       <button type="button" className="link-btn" onClick={dismissStorageWarning}>
         Dismiss
       </button>
