@@ -54,6 +54,36 @@ for (const e of events) {
   byDay.get(e.day).push(e);
 }
 
+// Same-event duplicate gate (audit FID-CONTENT-001): two records sharing a day
+// AND a year are almost always the same event twice under different ids — the
+// v1.20.0 research merge slipped six such pairs past the id gate above. A
+// genuinely distinct same-day-same-year pair must be named here to pass, so a
+// reviewer decides, never the merge.
+const DISTINCT_SAME_DAY_YEAR = new Set([
+  // "MM-DD|year|id-a|id-b" with the two ids sorted alphabetically.
+]);
+const byDayYear = new Map();
+for (const e of events) {
+  const k = `${e.day}|${e.year}`;
+  if (!byDayYear.has(k)) byDayYear.set(k, []);
+  byDayYear.get(k).push(e);
+}
+for (const [k, list] of byDayYear) {
+  if (list.length < 2) continue;
+  for (let i = 0; i < list.length; i++) {
+    for (let j = i + 1; j < list.length; j++) {
+      const pair = `${k}|${[list[i].id, list[j].id].sort().join("|")}`;
+      if (!DISTINCT_SAME_DAY_YEAR.has(pair)) {
+        throw new Error(
+          `same-day-same-year duplicate candidates on ${k}: "${list[i].id}" (${list[i].title}) ` +
+            `vs "${list[j].id}" (${list[j].title}) — merge them, or allowlist "${pair}" in ` +
+            `DISTINCT_SAME_DAY_YEAR if they are genuinely distinct events`
+        );
+      }
+    }
+  }
+}
+
 const dir = join(ROOT, "public", "data", "history");
 await rm(dir, { recursive: true, force: true }); // drop stale dates removed from the corpus
 await mkdir(dir, { recursive: true });

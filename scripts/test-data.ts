@@ -3517,5 +3517,61 @@ console.log("");
     historyPageSrc.includes('"failed"') && historyPageSrc.includes("return with your connection"));
 }
 
+// ── 38. v1.21.0 "that nothing be lost" — corpus integrity (audit FID-CONTENT-001
+// + the verification sweep): one authoritative record per event (the v1.20.0
+// merge slipped six same-day-same-year duplicates past the id gate), events
+// keyed to the date they HAPPENED (not their feast), saint ranks that agree
+// with the General Roman Calendar and the engine, and the builder gate that
+// keeps all of it true.
+console.log("");
+{
+  const historyCorpus = JSON.parse(
+    readFileSync(join(ROOT, "scripts/history.corpus.json"), "utf8")
+  ) as { events: { id: string; day: string; year: number; title: string }[] };
+  const byDayYear = new Map<string, string[]>();
+  for (const e of historyCorpus.events) {
+    const k = `${e.day}|${e.year}`;
+    byDayYear.set(k, [...(byDayYear.get(k) ?? []), e.id]);
+  }
+  const collisions = [...byDayYear.entries()].filter(([, ids]) => ids.length > 1);
+  check("§38 history: no two events share a day AND a year (the six duplicate pairs are merged)",
+    collisions.length === 0,
+    collisions.map(([k, ids]) => `${k}: ${ids.join(" / ")}`).join("; "));
+  const removedDupIds = [
+    "first-council-of-nicaea",
+    "death-of-gregory-vii",
+    "capture-of-jerusalem-first-crusade",
+    "death-of-st-francis",
+    "battle-of-lepanto",
+    "definition-immaculate-conception-1854"
+  ];
+  check("§38 history: the six duplicate record ids are gone (curated ids kept)",
+    removedDupIds.every((id) => !historyCorpus.events.some((e) => e.id === id)) &&
+      ["council-of-nicaea-opens", "gregory-vii-dies-canossa", "jerusalem-taken-first-crusade",
+        "assisi-francis-dies", "lepanto", "definition-immaculate-conception"]
+        .every((id) => historyCorpus.events.some((e) => e.id === id)));
+  const dayOf = (id: string) => historyCorpus.events.find((e) => e.id === id)?.day;
+  check("§38 history: events are keyed to the date they happened, not their feast",
+    dayOf("death-of-john-chrysostom-407") === "09-14" &&
+      dayOf("martyrdom-of-cyprian-258") === "09-14" &&
+      dayOf("founding-of-the-mercedarians-1218") === "08-10" &&
+      dayOf("edict-of-milan") === "06-13");
+  const historyBuilder = readFileSync(join(ROOT, "scripts/build-history.mjs"), "utf8");
+  check("§38 history: the builder gates same-day-same-year duplicate candidates",
+    historyBuilder.includes("same-day-same-year") && historyBuilder.includes("DISTINCT_SAME_DAY_YEAR"));
+
+  const saintsCorpus = JSON.parse(
+    readFileSync(join(ROOT, "scripts/saints.corpus.json"), "utf8")
+  ) as { saints: { id: string; rank: string }[] };
+  const rankOf = (id: string) => saintsCorpus.saints.find((s) => s.id === id)?.rank;
+  check("§38 saints: St. Francis of Assisi is a Memorial (GRC), matching the engine",
+    rankOf("francis-of-assisi") === "Memorial");
+  check("§38 saints: St. David of Wales carries the corpus's non-GRC rank (Commemoration)",
+    rankOf("david-of-wales") === "Commemoration");
+  const engineSrc = readFileSync(join(ROOT, "src/lib/liturgical.ts"), "utf8");
+  check("§38 engine: St. Patrick is an optional memorial (GRC memoria ad libitum)",
+    /St\. Patrick, Bishop", rank: "Memorial", color: "white", opt: true/.test(engineSrc));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;
