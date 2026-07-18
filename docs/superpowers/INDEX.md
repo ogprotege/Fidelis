@@ -19,6 +19,7 @@ These documents are the working design artifacts: feature specs written before i
 - [Quote-of-the-Day intake design (2026-06-27)](specs/2026-06-27-quotes-intake-design.md) — §3 handoff contract: the `quotes.corpus.json` entry schema, the public-domain red list, the selection model, and the build/widget-resync steps for owner-authored quotes. ✓ shipped v1.14.0
 - [Modern CCC import local-build runbook (2026-06-27)](specs/2026-06-27-ccc-text-LOCAL-BUILD-RUNBOOK.md) — owner-run converter (EPUB/PDF → `fidelis-ccc-1` JSON) for the §6 personal Catechism import; output gitignored, imported on-device only, never committed. ✓ shipped v1.14.0
 - [Collapsing Masthead navigation design (2026-07-13)](specs/2026-07-13-collapsing-masthead-nav-design.md) — top navigation on phones: brand row scrolls off, slim tab row pins (CSS-only, no motion); Reader folio line; one-row Mass controls; bottom tab bar retired. 📝 spec · v1.16.0
+- [UI polish pass design (2026-07-18)](specs/2026-07-18-ui-polish-design.md) — the six audit UX findings: the NABRE fallback notice once per Mass page, developer artifacts off worship surfaces, a reading-plans explainer, dependent switches nested, Latin `lang` fixes, the select width override. ✓ shipped v1.22.1
 
 ## Implementation plans
 
@@ -34,6 +35,7 @@ These documents are the working design artifacts: feature specs written before i
 - [CCC P2: personal CCC import (2026-06-27)](plans/2026-06-27-ccc-p2-personal-import.md) — import your own CCC copy (paragraph JSON + Mac converter) to supersede Trent. ✓ shipped v1.14.0
 - [Quote-of-the-Day intake/build (2026-06-27)](plans/2026-06-27-quotes-intake-build.md) — validate the owner-authored corpus, build, and resync the widgets. ✓ shipped v1.14.0
 - [Collapsing Masthead navigation plan (2026-07-14)](plans/2026-07-14-collapsing-masthead-nav.md) — step-by-step implementation plan for the top-navigation pass: the masthead dissolve, the Reader folio line, one-row Mass controls, and the harness source-shape guards. ✓ shipped v1.16.0
+- [UI polish pass plan (2026-07-18)](plans/2026-07-18-ui-polish.md) — step-by-step implementation plan for the v1.22.1 polish batch: the red-first §39 harness guards, the six fixes (ReadingText's `showFallbackNotice`, footnote/hash cleanup, plans explainer, switch nesting, `lang="la"`, select width), and the release prep. ✓ shipped v1.22.1
 
 ---
 [← Docs index](../INDEX.md) · Related: [code review](../review/Fidelis_Code_Review_V1_2026-06-11.md) · [feature design spec](../review/Fidelis_Feature_Design_Spec_V1_2026-06-11.md)

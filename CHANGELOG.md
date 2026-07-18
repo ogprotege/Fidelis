@@ -6,6 +6,34 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.22.1] — 2026-07-18 — decently and in order
+
+*"Let all things be done decently, and according to order." (1 Corinthians 14:40)*
+
+The UI polish batch: the audit's six UX findings closed inside the design system.
+
+### Fixed
+
+- **The NABRE fallback notice shows once per Mass page** (was: once per reading —
+  three identical copyright notices on a normal day), re-worded to one breath with
+  the import path intact.
+- **Worship surfaces drop their developer artifacts**: the raw lectionary code is
+  gone from the Mass footnote (provenance text and the USCCB link stay), and the
+  manifest hash prefix is gone from Settings ("Texts verified at build" stays).
+- **The Mass toolbar select keeps its full label at ≥640px** — no more
+  "NABRE (import…" truncation on desktop.
+- **Two Latin fragments speak Latin to screen readers** (`lang="la"` on the footer
+  motto and the rosary's Latin name).
+
+### Added
+
+- **The Read tab explains reading plans in one line** — the feature's only entry
+  point now says what a plan is.
+- **Dependent commentary switches nest visually** under their parent (Haydock,
+  Church Fathers, Doctors-only) — pure presentation, no behavior change.
+
+Harness §39 pins all ten checks; no engine/golden/sw change.
+
 ## [1.22.0] — 2026-07-18 — knowledge shall be manifold
 
 *"Many shall pass over, and knowledge shall be manifold." (Daniel 12:4)*
