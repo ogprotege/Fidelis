@@ -1228,7 +1228,7 @@ console.log("");
   check("Settings: Data reuses the P2-6 export/import",
     set.includes("exportMarginalia") && set.includes("importMarginalia"));
   check("Settings: the manifest integrity line links to About",
-    set.includes("rootHash") && /to="\/about"/.test(set));
+    set.includes("Texts verified at build") && /to="\/about"/.test(set));
 
   // Readings is left clean — the region select is gone (spec §2.2).
   const readings = readFileSync(join(ROOT, "src/pages/Readings.tsx"), "utf8");
