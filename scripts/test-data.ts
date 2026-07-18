@@ -1228,7 +1228,7 @@ console.log("");
   check("Settings: Data reuses the P2-6 export/import",
     set.includes("exportMarginalia") && set.includes("importMarginalia"));
   check("Settings: the manifest integrity line links to About",
-    set.includes("rootHash") && /to="\/about"/.test(set));
+    set.includes("Texts verified at build") && /to="\/about"/.test(set));
 
   // Readings is left clean — the region select is gone (spec §2.2).
   const readings = readFileSync(join(ROOT, "src/pages/Readings.tsx"), "utf8");
@@ -3781,6 +3781,47 @@ console.log("");
     !readFileSync(join(ROOT, "docs/SECURITY.md"), "utf8")
       .replace(/\s+/g, " ")
       .includes("no user data leaves the device"));
+}
+
+// ── 39. v1.22.1 — the UI polish batch (audit UX findings): worship surfaces drop
+// their developer artifacts, the NABRE fallback notice shows once per page, plans
+// get an explainer, dependent Settings switches nest visually, and two Latin
+// fragments speak as Latin.
+console.log("");
+{
+  const rtSrc = readFileSync(join(ROOT, "src/components/ReadingText.tsx"), "utf8");
+  const rdSrc = readFileSync(join(ROOT, "src/pages/Readings.tsx"), "utf8");
+  const stSrc = readFileSync(join(ROOT, "src/pages/Settings.tsx"), "utf8");
+  const blSrc = readFileSync(join(ROOT, "src/pages/BookList.tsx"), "utf8");
+  const appSrc39 = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
+  const homeSrc39 = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
+  const cssSrc39 = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+
+  check("§39 ReadingText gates the fallback notice behind showFallbackNotice",
+    rtSrc.includes("showFallbackNotice") &&
+      /fellBackFrom\s*&&\s*showFallbackNotice\s*&&/.test(rtSrc));
+  check("§39 the fallback notice renders once per page (first reading of the primary ladder)",
+    rdSrc.includes("showFallbackNotice={si === 0 && i === 0}"));
+  check("§39 the Mass footnote drops the raw lectionary code, keeps the USCCB link",
+    !rdSrc.includes("Lectionary day:") && !rdSrc.includes("readings.code") &&
+      rdSrc.includes("bible.usccb.org"));
+  check("§39 Settings drops the manifest hash, keeps verified-at-build and the About link",
+    !stSrc.includes("rootHash") && stSrc.includes("Texts verified at build") &&
+      stSrc.includes("/about"));
+  check("§39 the Read tab explains reading plans in one line",
+    blSrc.includes('to="/plans"') && blSrc.includes("at your pace"));
+  check("§39 the three dependent commentary switches nest visually",
+    (stSrc.match(/setting-row nested/g) ?? []).length === 3);
+  check("§39 the nested rule uses tokens only (no raw hex)",
+    /\.setting-row\.nested\s*\{[^}]*var\(--/.test(cssSrc39) &&
+      !/\.setting-row\.nested\s*\{[^}]*#[0-9a-fA-F]{3,8}/.test(cssSrc39));
+  check("§39 the footer motto and the rosary Latin name speak Latin",
+    appSrc39.includes('className="motto" lang="la"') &&
+      /lang="la"[^>]*>\(\{rosary\.latin\}\)/.test(homeSrc39));
+  check("§39 the Mass toolbar select keeps its full label at ≥640px",
+    cssSrc39.includes(".readings-toolbar select { max-width: none; }"));
+  check("§39 the select override lives inside a ≥640px media block",
+    /@media \(min-width: 640px\)\s*\{\s*\.readings-toolbar select/.test(cssSrc39));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

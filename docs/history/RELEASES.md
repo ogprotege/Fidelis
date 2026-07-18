@@ -1929,6 +1929,22 @@ for both memory corpora — editing `scripts/*.corpus.json` without re-running
 No engine, golden, or service-worker change; the widgets need no regeneration (the
 memory corpora feed neither). Shells 1.22.0 (`versionCode` 12200).
 
+## Decently and in order (v1.22.1)
+
+*"Let all things be done decently, and according to order." (1 Corinthians 14:40)*
+
+The UI polish batch — the six UX findings from the full review, closed inside the
+design system, each pinned by the new harness §39. The NABRE fallback notice moves
+from once-per-reading (three identical notices on a normal day) to once per page,
+re-worded to one breath. Worship surfaces lose their developer artifacts: the raw
+lectionary code leaves the Mass footnote, the manifest hash prefix leaves Settings
+(the "verified at build" claim stays in both places). The Mass toolbar select keeps
+its full label at ≥640px; the footer motto and the rosary's Latin name gain
+`lang="la"` so screen readers voice them as Latin; the Read tab's bare "Reading
+plans →" link gains a one-line explainer; and the Commentary switch chain (Haydock,
+Church Fathers, Doctors-only) nests visually under its parent — presentation only,
+no behavior change. Shells 1.22.1 (`versionCode` 12201); no engine/golden/sw change.
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
