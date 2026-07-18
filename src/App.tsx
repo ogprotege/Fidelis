@@ -27,7 +27,7 @@ import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { App as CapApp } from "@capacitor/app";
 import { closeTopOverlay } from "./lib/overlays";
-import { isScrollLocked, resetScrollLock } from "./lib/scrollLock";
+import { healStrandedScrollLock } from "./lib/scrollLock";
 import { useSettings, useUpdateSettings } from "./SettingsContext";
 import { useToday } from "./useToday";
 import { accentFor, liturgicalDay } from "./lib/liturgical";
@@ -165,20 +165,46 @@ export default function App() {
     };
   }, [navigate]);
 
-  // Self-heal a stranded body scroll-lock (lib/scrollLock resetScrollLock): if the
-  // body is still pinned (position: fixed) but NO sheet is actually mounted, an
-  // interrupted teardown left the lock behind — the classic "the whole app won't
-  // navigate until I restart it" symptom, since the pinned body clips every new
-  // page out of view. Release it whenever we land on a route or return to the
-  // foreground, so it recovers on the user's next tap without an app restart.
+  // Self-heal a stranded body scroll-lock (lib/scrollLock healStrandedScrollLock):
+  // if the body is still pinned (position: fixed) but NO sheet is actually
+  // mounted, an interrupted teardown left the lock behind — the classic "the
+  // whole app won't navigate until I restart it" symptom, since the pinned body
+  // clips every new page out of view. The heal is layered so no strand can
+  // persist: it fires on route change, on the next touch anywhere (even a
+  // same-tab tap that changes no route), and on foreground resume; and it
+  // predicates on the body's actual state, so a pin the counter lost track of
+  // heals too. The .sheet-backdrop guard means a legitimately-open sheet is
+  // never unlocked.
+  useEffect(() => {
+    // On a route change, ScrollManager has already positioned the new page —
+    // unpin WITHOUT restoring the departed page's stale scroll offset.
+    healStrandedScrollLock({ restoreScroll: false });
+  }, [location.key]);
+
   useEffect(() => {
     const heal = () => {
-      if (isScrollLocked() && !document.querySelector(".sheet-backdrop")) resetScrollLock();
+      healStrandedScrollLock();
     };
-    heal(); // runs on every route change (this effect keys on location.key)
     document.addEventListener("visibilitychange", heal);
-    return () => document.removeEventListener("visibilitychange", heal);
-  }, [location.key]);
+    // The very next touch unpins, even when no route change is coming.
+    window.addEventListener("pointerdown", heal, true);
+    if (!Capacitor.isNativePlatform()) {
+      return () => {
+        document.removeEventListener("visibilitychange", heal);
+        window.removeEventListener("pointerdown", heal, true);
+      };
+    }
+    // Native resume: visibilitychange is not guaranteed on every WKWebView
+    // resume path, so the plugin's appStateChange is the reliable signal.
+    const handle = CapApp.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) heal();
+    });
+    return () => {
+      document.removeEventListener("visibilitychange", heal);
+      window.removeEventListener("pointerdown", heal, true);
+      void handle.then((h) => h.remove());
+    };
+  }, []);
 
   // Move focus to the main content region on every route change (WCAG 2.4.3), so
   // keyboard and screen-reader users land in the new page — except on a ?v= deep
