@@ -257,6 +257,7 @@ export default function Readings() {
                 row={row}
                 translation={translation}
                 label={label}
+                showFallbackNotice={si === 0 && i === 0}
               />
             ))}
           </section>
@@ -272,6 +273,7 @@ export default function Readings() {
                   row={row}
                   translation={translation}
                   label={label}
+                  showFallbackNotice={false}
                 />
               ))}
             </section>

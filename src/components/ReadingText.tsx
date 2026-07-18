@@ -12,13 +12,17 @@ interface Props {
   label?: string;
   /** Anchor id, so the Readings SectionNav can jump to this reading. */
   id?: string;
+  /** Whether the import-only fallback notice renders here. The Mass page sets it
+   *  on the first reading only, so the notice appears once per page instead of
+   *  under every reading (v1.22.1). Default true: other call sites are unchanged. */
+  showFallbackNotice?: boolean;
 }
 
 /** Renders one lectionary reading: citation, verbatim text, link into the reader.
  *  If the chosen translation is import-only (e.g. the NABRE) and the user has not
  *  imported it, the reading falls back to the bundled Douay-Rheims so it stays
  *  readable, with a pointer to import the licensed text. */
-export default function ReadingText({ row, translation, label, id }: Props) {
+export default function ReadingText({ row, translation, label, id, showFallbackNotice = true }: Props) {
   const [verses, setVerses] = useState<{ ch: number; v: number; text: string }[] | null>(null);
   const [error, setError] = useState(false);
   // The translation actually rendered (may differ from `translation` after a
@@ -134,12 +138,12 @@ export default function ReadingText({ row, translation, label, id }: Props) {
           />
         </>
       )}
-      {fellBackFrom && (
+      {fellBackFrom && showFallbackNotice && (
         <p className="muted small sans">
-          The U.S. lectionary uses the {fellBackFrom}, which is under copyright and not
-          bundled. Showing the Douay-Rheims here —{" "}
-          <Link to="/translations">import your licensed {fellBackFrom}</Link> to read the
-          lectionary text in the app.
+          The U.S. lectionary uses the {fellBackFrom}, which is under copyright —
+          showing the Douay-Rheims.{" "}
+          <Link to="/translations">Import your licensed {fellBackFrom}</Link> to read
+          it here.
         </p>
       )}
       {verses && (
