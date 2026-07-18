@@ -1943,7 +1943,10 @@ its full label at ≥640px; the footer motto and the rosary's Latin name gain
 `lang="la"` so screen readers voice them as Latin; the Read tab's bare "Reading
 plans →" link gains a one-line explainer; and the Commentary switch chain (Haydock,
 Church Fathers, Doctors-only) nests visually under its parent — presentation only,
-no behavior change. Shells 1.22.1 (`versionCode` 12201); no engine/golden/sw change.
+no behavior change. The TestFlight/App Store metadata also follows 1.22.1 again
+(version, cumulative copy, test notes, screenshot status, character count), with
+an eleventh §39 check preventing it from drifting behind `package.json`. Shells
+1.22.1 (`versionCode` 12201); no engine/golden/sw change.
 
 ## Review items — all fixed in v1.1.0 (details below are the record)
 

@@ -24,6 +24,10 @@ The UI polish batch: the audit's six UX findings closed inside the design system
   "NABRE (import…" truncation on desktop.
 - **Two Latin fragments speak Latin to screen readers** (`lang="la"` on the footer
   motto and the rosary's Latin name).
+- **TestFlight/App Store metadata follows the shipping version again**: the
+  paste-ready version, cumulative release copy, test notes, screenshot status,
+  and verified character count now describe 1.22.1. A harness guard prevents
+  this document from falling behind `package.json` again.
 
 ### Added
 
@@ -32,7 +36,7 @@ The UI polish batch: the audit's six UX findings closed inside the design system
 - **Dependent commentary switches nest visually** under their parent (Haydock,
   Church Fathers, Doctors-only) — pure presentation, no behavior change.
 
-Harness §39 pins all ten checks; no engine/golden/sw change.
+Harness §39 pins all eleven checks; no engine/golden/sw change.
 
 ## [1.22.0] — 2026-07-18 — knowledge shall be manifold
 
