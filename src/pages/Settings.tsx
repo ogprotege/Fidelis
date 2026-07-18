@@ -484,7 +484,7 @@ export default function Settings() {
             onClick={() => update({ commentaryEnabled: !settings.commentaryEnabled })}
           />
         </div>
-        <div className="setting-row">
+        <div className="setting-row nested">
           <div>
             <div className="setting-label">Haydock</div>
             <p className="catechesis muted small">
@@ -502,7 +502,7 @@ export default function Settings() {
             onClick={() => update({ commentaryHaydock: !settings.commentaryHaydock })}
           />
         </div>
-        <div className="setting-row">
+        <div className="setting-row nested">
           <div>
             <div className="setting-label">Church Fathers</div>
             <p className="catechesis muted small">
@@ -520,7 +520,7 @@ export default function Settings() {
             onClick={() => update({ commentaryCatena: !settings.commentaryCatena })}
           />
         </div>
-        <div className="setting-row">
+        <div className="setting-row nested">
           <div>
             <div className="setting-label">Doctors of the Church only</div>
             <p className="catechesis muted small">

@@ -1545,6 +1545,10 @@ body.widget-mode { background: transparent; }
   margin-top: 0.5rem;
 }
 .setting-row + .setting-row { border-top: var(--hairline) solid var(--border); padding-top: 0.7rem; }
+/* Dependent settings nest under their parent switch (v1.22.1): the hairline
+   guide and the dropped top rule make a switch chain read as one block. */
+.setting-row.nested { margin-inline-start: 1rem; padding-inline-start: 0.75rem; border-inline-start: var(--hairline) solid var(--border); }
+.setting-row + .setting-row.nested { border-top: none; padding-top: 0.35rem; }
 .setting-label { font-family: var(--sans); font-weight: 600; font-size: 0.92rem; }
 .catechesis { margin: 0.15rem 0 0; max-width: 34rem; }
 
