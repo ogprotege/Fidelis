@@ -39,6 +39,7 @@ export interface SaintDay {
 
 const STOP = new Set([
   "st",
+  "sts",
   "saint",
   "pope",
   "the",
@@ -51,6 +52,7 @@ const STOP = new Set([
   "blessed",
   "virgin",
   "martyr",
+  "martyrs",
   "bishop",
   "doctor",
   "abbot",
@@ -59,7 +61,7 @@ const STOP = new Set([
 
 /** Distinctive lowercase tokens of a saint/celebration name (drops honorifics
  *  and offices), mirroring quotes.celebratesAuthor. */
-function nameTokens(name: string): string[] {
+export function nameTokens(name: string): string[] {
   return name
     .toLowerCase()
     .replace(/[().,]/g, " ")

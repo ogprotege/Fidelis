@@ -6,6 +6,56 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.22.0] — 2026-07-18 — knowledge shall be manifold
+
+*"Many shall pass over, and knowledge shall be manifold." (Daniel 12:4)*
+
+The enrichment release: every Saint of the Day and Church History entry rewritten from
+a thin two-paragraph draft into a full, fact-dense life — plus the stranded-scroll-lock
+hardening for the "tabs blip but nothing happens" freeze, and the Today card's
+saint/history de-duplication.
+
+### Changed
+
+- **All 543 memory entries enriched** (366 saints + 177 history events): 2 paragraphs /
+  ~100 words → 3–4 paragraphs / 150–200 words, with at least five concrete facts per
+  entry — specific years, places, named works and people, causes of death, and the
+  *reason* behind each patronage. The 68 biographies that named no year now carry their
+  chronology in prose. Drafted in 46 research-verified batches against the Catholic
+  Encyclopedia 1913, Butler's *Lives*, the Roman Martyrology, and vatican.va; contested
+  details are hedged or omitted, and dozens of small old-prose errors were corrected on
+  the way (Bonaventure's birthplace, the Scillitan martyrs' attested answer, Lepanto's
+  gulf, John Nepomucene's legend, Soter and Caius' martyrdom, among them). Every entry
+  remains `verified: false` — a sourced draft awaiting the human proof-read (§3.4).
+- **The 18 same-day saint/history pairs now complement, never restate.** Where the
+  Saint of the Day and a history event share a subject (Lourdes, Lepanto, Compiègne,
+  Augustine, Becket…), the event was rewritten from a different angle — context,
+  circumstances, aftermath — so the card and the day page teach something in each slot.
+- **The Today card's history lead skips the saint's own subject.** `leadHistoryEvent()`
+  (pure, harness-tested) picks the first event *not* about the Saint of the Day when
+  the day has another to offer; the /history page still lists them all.
+
+### Fixed
+
+- **The navigation freeze (stranded body scroll-lock), hardened.** A sheet torn down
+  without its cleanup (an iOS WKWebView interruption) leaves `position: fixed` on the
+  body — taps still register, routes still change, but the pinned body clips every new
+  page out of view ("the app blips and does nothing until force-quit"). v1.20.1 healed
+  this on route change; v1.22.0 closes the remaining escape hatches: the heal now
+  predicates on the **body's actual pin**, not just the lock counter (a count-0 strand
+  heals too), fires on **every pointerdown** (the next touch anywhere unpins, even a
+  same-tab tap), listens for the native **`appStateChange`** resume signal alongside
+  `visibilitychange`, and no longer yanks the new page back to the departed page's
+  scroll offset. Harness §25 (b3)–(b6), red-first.
+
+### Added
+
+- **Five corpus-integrity gates** (harness §35): exactly one saint per day, no two
+  saints normalizing to the same person name, no two history events normalizing to the
+  same title, the shortBlurb trailing-ellipsis convention, and corpus↔emitted byte
+  sync for both memory corpora (editing a corpus without `npm run saints|history`
+  now goes red, as quotes already did).
+
 ## [1.21.0] — 2026-07-16 — that nothing be lost
 
 *"Gather up the fragments that remain, lest they be lost." (John 6:12)*

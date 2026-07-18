@@ -55,18 +55,32 @@ export function lockScroll(): void {
   body.style.width = "100%";
 }
 
+/** Whether the body is actually pinned right now. The counter is the normal
+ *  truth, but an interrupted teardown can strand the inline `position: fixed`
+ *  with the count already back at 0 — so the heal predicates on the body, not
+ *  the count. Only this module ever writes that inline style. */
+export function isBodyPinned(): boolean {
+  return typeof document !== "undefined" && document.body.style.position === "fixed";
+}
+
 /** Force-release ALL locks and restore the body — a safety net for the rare case
  *  where a lock is stranded (an iOS WKWebView can tear a sheet down without running
  *  its cleanup when a native share/permission dialog or a background/foreground
  *  interrupts it, leaving `position: fixed` pinned and the page seemingly frozen —
  *  navigation still changes the route, but the pinned body clips the new page out
- *  of view). Idempotent; a no-op when nothing is locked. The App calls it on route
- *  change and foreground-resume whenever the body is pinned but no sheet is
- *  actually mounted, so a stranded lock self-heals instead of needing an app
- *  restart. */
-export function resetScrollLock(): void {
+ *  of view). Idempotent; a no-op when the body is not pinned. It predicates on the
+ *  body's actual state, not just the counter, so a pin the count lost track of
+ *  (interrupted teardown) clears too. Pass { restoreScroll: false } when the caller
+ *  has already positioned the page (a route change — ScrollManager owns the new
+ *  page's offset); the default restores the pre-lock offset (sheet close, or a
+ *  heal with no navigation, where the user's place should be kept). The App calls
+ *  it via healStrandedScrollLock on route change, every pointerdown, and
+ *  foreground-resume, so a stranded lock self-heals on the user's next touch
+ *  instead of needing an app restart. */
+export function resetScrollLock(opts: { restoreScroll?: boolean } = {}): void {
   if (typeof document === "undefined") return;
-  if (lockCount === 0 && saved === null) return;
+  const restoreScroll = opts.restoreScroll ?? true;
+  if (lockCount === 0 && saved === null && !isBodyPinned()) return;
   lockCount = 0;
   const s = saved;
   saved = null;
@@ -76,14 +90,28 @@ export function resetScrollLock(): void {
     body.style.position = s.position;
     body.style.top = s.top;
     body.style.width = s.width;
-    window.scrollTo(0, s.scrollY);
+    if (restoreScroll) window.scrollTo(0, s.scrollY);
   } else {
-    // No snapshot to restore (shouldn't happen) — clear the pin so the page scrolls.
+    // No snapshot to restore (an interrupted teardown, or a pin the counter
+    // never saw) — clear the pin so the page scrolls; leave the scroll alone.
     body.style.overflow = "";
     body.style.position = "";
     body.style.top = "";
     body.style.width = "";
   }
+}
+
+/** Heal a STRANDED lock: the body is pinned (per the count OR the body itself)
+ *  but no sheet is mounted — the `.sheet-backdrop` DOM check is the guard, so
+ *  a legitimately-open sheet is never unlocked. Safe to call on every user
+ *  interaction: a no-op unless the lock is stranded. Returns true when it
+ *  healed. Options forward to resetScrollLock. */
+export function healStrandedScrollLock(opts?: { restoreScroll?: boolean }): boolean {
+  if (typeof document === "undefined") return false;
+  if (document.querySelector(".sheet-backdrop")) return false;
+  if (!isScrollLocked() && !isBodyPinned()) return false;
+  resetScrollLock(opts);
+  return true;
 }
 
 /** Release one lock. Only the last release restores the body and the scroll

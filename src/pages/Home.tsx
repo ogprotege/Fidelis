@@ -11,7 +11,7 @@ import { getBook, bookDisplayName } from "../lib/canon";
 import { loadBook, loadSaints, loadHistory } from "../lib/data";
 import { dayKey } from "../lib/dateKey";
 import { SaintDay, saintForCelebration } from "../lib/saints";
-import { HistoryDay } from "../lib/history";
+import { HistoryDay, leadHistoryEvent } from "../lib/history";
 import { passageText } from "../lib/passage";
 import { getTranslation } from "../lib/translations";
 import {
@@ -221,6 +221,15 @@ export default function Home() {
     setShare({ text: q.text, citation: q.author, source: work, filename: "fidelis-quote" });
   }
 
+  // The Church card's saint lead — also the subject the history lead must NOT
+  // restate (leadHistoryEvent skips an event about the same saint when the day
+  // has another to offer).
+  const cardSaint =
+    saintDay && saintDay.saints.length > 0
+      ? (saintForCelebration(saintDay.saints, lit.celebrations.map((c) => c.name)) ??
+        saintDay.saints[0])
+      : null;
+
   return (
     <>
       <h1 className="page-title">Today</h1>
@@ -305,12 +314,10 @@ export default function Home() {
 
           {/* Saint of the Day — decoupled from the sanctoral engine: shown whenever
               we have a life for the day, even on a feria. The celebrated saint (if
-              any) leads; otherwise the day's first seeded saint. */}
-          {saintDay && saintDay.saints.length > 0
+              any) leads; otherwise the day's first seeded saint (cardSaint above). */}
+          {cardSaint
             ? (() => {
-                const s =
-                  saintForCelebration(saintDay.saints, lit.celebrations.map((c) => c.name)) ??
-                  saintDay.saints[0];
+                const s = cardSaint;
                 return (
                   <div className="saint-lead">
                     {/* The medallion honors the saint — its ring is gold (the
@@ -370,21 +377,31 @@ export default function Home() {
               Church history couldn&rsquo;t be loaded — it will return with your connection.
             </p>
           )}
-          {historyState === "ready" && history && (
-            <div className="church-history">
-              <div className="church-eyebrow sans small">In Church History</div>
-              <div className="history-lead">
-                <span className="history-year">{history.events[0].year}</span>{" "}
-                <strong>{history.events[0].title}</strong>
-              </div>
-              <p className="history-blurb">{history.events[0].shortBlurb}</p>
-              <Link className="continue-cta" to={`/history/${dayToday}`}>
-                {history.events.length > 1
-                  ? `Read more · ${history.events.length} events →`
-                  : "Read more →"}
-              </Link>
-            </div>
-          )}
+          {/* In Church History — the day's event. leadHistoryEvent keeps the
+              lead off the Saint of the Day's own subject when the day has
+              another event to offer, so the card never reads the same name
+              twice (the /history page still lists them all). */}
+          {historyState === "ready" &&
+            history &&
+            (() => {
+              const lead = leadHistoryEvent(history.events, cardSaint?.name);
+              if (!lead) return null;
+              return (
+                <div className="church-history">
+                  <div className="church-eyebrow sans small">In Church History</div>
+                  <div className="history-lead">
+                    <span className="history-year">{lead.year}</span>{" "}
+                    <strong>{lead.title}</strong>
+                  </div>
+                  <p className="history-blurb">{lead.shortBlurb}</p>
+                  <Link className="continue-cta" to={`/history/${dayToday}`}>
+                    {history.events.length > 1
+                      ? `Read more · ${history.events.length} events →`
+                      : "Read more →"}
+                  </Link>
+                </div>
+              );
+            })()}
 
           {/* One calm line when neither a saint nor an event is recorded yet —
               never on a failure (that is the connection notice above). */}

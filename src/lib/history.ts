@@ -13,6 +13,8 @@ export interface HistorySource {
   url?: string;
 }
 
+import { nameTokens } from "./saints";
+
 export interface HistoryEvent {
   id: string;
   day: string; // "MM-DD"
@@ -27,4 +29,27 @@ export interface HistoryEvent {
 export interface HistoryDay {
   day: string;
   events: HistoryEvent[];
+}
+
+/** The card's lead event (the same-subject de-dup): the first event NOT about
+ *  the day's own saint, so the "In Church History" line never restates the
+ *  Saint of the Day lead above it — an event whose title shares a distinctive
+ *  name-token with the saint is the same subject. Falls back to the first
+ *  (oldest) event when every event is about the saint: the pairing is then
+ *  deliberate, and the event's own prose must add what the saint's entry does
+ *  not. Pure; the list order (oldest-first) is the build's. */
+export function leadHistoryEvent(
+  events: HistoryEvent[],
+  saintName: string | null | undefined
+): HistoryEvent | null {
+  if (events.length === 0) return null;
+  if (!saintName) return events[0];
+  const tokens = nameTokens(saintName);
+  if (tokens.length === 0) return events[0];
+  return (
+    events.find((e) => {
+      const title = new Set(nameTokens(e.title));
+      return !tokens.some((t) => title.has(t));
+    }) ?? events[0]
+  );
 }
