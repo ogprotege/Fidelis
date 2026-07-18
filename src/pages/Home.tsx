@@ -471,7 +471,7 @@ export default function Home() {
           <h2>The Holy Rosary</h2>
           <div>
             Today's mysteries: <strong>The {rosary.name} Mysteries</strong>{" "}
-            <span className="muted small">({rosary.latin})</span>
+            <span className="muted small" lang="la">({rosary.latin})</span>
           </div>
           <ol className="rosary-list">
             {rosary.mysteries.map((m) => (

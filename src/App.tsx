@@ -306,7 +306,7 @@ export default function App() {
         </Suspense>
       </main>
       <footer className="footer">
-        <div className="motto">Verbum Domini manet in æternum.</div>
+        <div className="motto" lang="la">Verbum Domini manet in æternum.</div>
         <div>The Word of the Lord endures for ever. — 1 Peter 1:25</div>
       </footer>
     </div>

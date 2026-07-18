@@ -1379,6 +1379,10 @@ body.widget-mode { background: transparent; }
   .date-long { display: none; }
   .date-short { display: inline; }
 }
+/* Room to spare — the full translation name shows, no truncation (v1.22.1). */
+@media (min-width: 640px) {
+  .readings-toolbar select { max-width: none; }
+}
 .reading-group { margin: 1.4rem 0; }
 .reading { margin-bottom: 1.1rem; }
 .reading-label {
