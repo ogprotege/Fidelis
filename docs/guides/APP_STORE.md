@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.21.0
+1.22.0
 ```
 
 The store version string always equals the uploaded build's
@@ -23,14 +23,15 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-Nothing you write is lost anymore, even when a device refuses to save. Bookmarks, notes, highlights, and settings made while storage is full or restricted now survive the whole session, show up in your exported library, and are saved the moment the device allows it — and the app says plainly what is happening. A Saint of the Day for all 366 dates leads the Today in the Church card, and the day's history is told once: duplicated events became single entries, each dated to the day it actually happened, with every rank agreeing with the liturgical calendar. The privacy policy now spells out how your own device backup (iCloud or Google) may carry the app's data — Fidelis itself still sends nothing, anywhere, ever. Honest notices when the connection drops, and a wider test net under all of it. Same texts, same pledge.
+Every saint and every moment, told in full. All 366 Saints of the Day and all 177 Church History entries are rewritten — three to four paragraphs each, rich with the dates, places, people, and particulars that make a life worth reading, all drawn from the Church's own sources and honestly marked as sourced drafts pending proof-reading. Where a day pairs a saint with the event of his or her life, the two now tell different parts of the story instead of repeating each other. And an elusive freeze is gone for good: if the app ever seemed to open from a home-screen widget and then ignore every tap until it was forced to quit and restarted, that can no longer happen — the very next touch always brings it back. Same texts, same pledge.
 ```
 
 (ASC shows What's New only for updates after the first released version; if
-1.21.0 ships as the first release the field stays unused there. The same text
-serves as the TestFlight "What to Test" notes: bookmark and write a note, flip
-the theme twice, export the library; open the Saint of the Day and the day's
-history; check May 20 / Oct 7 / Dec 8 in History show one entry each.)
+1.22.0 ships as the first release the field stays unused there. The same text
+serves as the TestFlight "What to Test" notes: read a few saints and history
+pages, including a paired day — Oct 7 (Our Lady of the Rosary + Lepanto) or
+Jul 17 (Martyrs of Compiègne) — and check the card leads differ; open and close
+sheets, share a verse, then move between tabs: navigation should never stick.)
 
 ## Promotional Text (≤ 170 characters)
 
@@ -165,11 +166,13 @@ sizes are required: iPhone 6.9″ **1284 × 2778** (`appstore/screenshots/`) and
 iPad 12.9″ **2048 × 2732** (`appstore/screenshots-ipad/`). Up to 10; the first 3
 appear on the install sheet. Shot list (day theme unless noted):
 
-Regenerated **2026-07-15 for v1.18.4** (FID-REL-001), replacing the 2026-07-13
-set that predated the Collapsing Masthead and still showed the retired bottom
-bar. Every frame now carries the masthead (iPhone) or the one-row desktop nav
-(iPad); none shows a bottom bar; the night frame uses current tokens. Sizes
-verified exact via `sips`.
+Regenerated **2026-07-16 for v1.21.0** (the 2026-07-15 set predated the Saint
+of the Day card; the mixed-generation iPad files were removed), replacing the
+2026-07-13 set that showed the retired bottom bar. Every frame carries the
+masthead (iPhone) or the one-row desktop nav (iPad); none shows a bottom bar;
+the night frame uses current tokens. Sizes verified exact via `sips`. The
+v1.22.0 release changes prose, not layout (longer saint/history entries, the
+card de-dup), so the set carries over — regenerate on the next visual change.
 
 1. **01-today** — the six-card front page: liturgical day, the day in Church history, Verse of the Day
 2. **02-reader-john1** — John 1 in EB Garamond, gold Haydock dots + purple CCC marks
@@ -206,4 +209,4 @@ Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
-- What's New (1.21.0): 824 / 4,000 ✓ (re-counted 2026-07-16)
+- What's New (1.22.0): 739 / 4,000 ✓ (counted 2026-07-18)

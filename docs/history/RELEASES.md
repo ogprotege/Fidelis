@@ -1851,6 +1851,84 @@ the stale mixed-generation iPad files were removed), and the new Today frame ver
 change. The harness grows §37/§38; the browser suite grows 13 → 16 tests. Shells 1.21.0
 (`versionCode` 12100).
 
+## Knowledge shall be manifold (v1.22.0)
+
+*"Many shall pass over, and knowledge shall be manifold." (Daniel 12:4)*
+
+The enrichment release. Three strands land together: the stranded-scroll-lock navigation
+freeze hardened past v1.20.1's self-heal, the Today card's saint/history duplication
+closed at both the content and the code level, and the full memory corpus — every Saint
+of the Day and every Church History entry — rewritten from thin two-paragraph drafts
+into complete, fact-dense lives.
+
+**The navigation freeze, closed for good.** A TestFlight-class report that v1.20.1
+largely answered returned with a sharper edge: tapping a home-screen widget (or,
+randomly, ordinary in-app use) opened the app, but every tab "blipped and did nothing"
+until a force-quit. The mechanism is the one v1.20.1 named — a sheet torn down without
+its effect cleanup strands `position: fixed` on the body, so routes still change but
+the pinned body clips each new page out of view — but the original heal had escape
+hatches. It fired only on route change and `visibilitychange`, it predicated on the
+lock *counter* (so a pin the count lost track of — a teardown interrupted between
+unlock and style restore — could never heal), and on a healed PUSH it restored the
+*departed* page's scroll offset over ScrollManager's fresh placement. The hardening
+(`src/lib/scrollLock.ts`, `src/App.tsx`): `healStrandedScrollLock()` predicates on the
+**body's actual inline pin** as well as the count; the heal fires on **every
+pointerdown** (the user's next touch anywhere unpins, even a same-tab tap that changes
+no route), on `visibilitychange`, and on the native **`appStateChange`** signal that
+WKWebView resume paths guarantee; and the route-change trigger passes
+`{ restoreScroll: false }`, so a healed navigation lands where ScrollManager put it.
+The `.sheet-backdrop` DOM guard still means a legitimately open sheet is never
+unlocked. Harness §25 (b3)–(b6) drives it red-first — count-0 strands, the no-restore
+option, the open-sheet guard — and the whole suite plus the 16-test browser net stays
+green.
+
+**The Today card never says the same name twice.** The v1.21.0 duplicate purge left
+one visible class standing: on 18 dates the Saint of the Day and a "Today in Church
+History" event share a subject (Lourdes and the first apparition, Our Lady of the
+Rosary and Lepanto, the Martyrs of Compiègne and their execution, Augustine and his
+death in the Vandal siege…). Two fixes, one in code and one in prose. In code,
+`leadHistoryEvent()` (pure, in `src/lib/history.ts`, sharing `nameTokens` with
+`saints.ts`) leads the card's history slot with the first event **not** about the
+day's saint when the day has another to offer, falling back to the oldest event when
+the pairing is the whole story — the /history page still lists everything. In prose,
+all 18 paired events were rewritten from a **complementary angle** — the saint entry
+keeps the complete life while the history event takes context, circumstances, and
+aftermath — so a reader of both learns something from each. §35 gains the logic tests
+and the wiring guard.
+
+**Five hundred forty-three entries, deepened.** The v1.20.0 corpus solved coverage (a
+saint for all 366 dates, 177 events) but at draft depth: a uniform ~100 words in two
+paragraphs, 68 biographies naming no year at all, and the thinnest entries
+disproportionately on the biggest feasts (the Ninety-five Theses at 63 words, Trent at
+66, Dominic at 67). All 543 entries are now **3–4 paragraphs and 150–200 words** —
+saints median 99 → 183, history median 109 → 179, nothing under 130 — with at least
+five concrete facts each: years, places, named works and people, causes of death, and
+the *reason* behind each patronage. The work ran as 46 research-verified drafting
+batches against the Catholic Encyclopedia 1913, Butler's *Lives*, the Roman
+Martyrology, and vatican.va, merged through a validating one-shot pipeline (shape,
+length, paragraph discipline, the shortBlurb ellipsis convention); contested details
+are hedged or omitted, and dozens of small old-prose errors were corrected along the
+way — Bonaventure's birthplace (Bagnoregio is not in Tuscany), the Scillitan martyrs'
+attested answer, Lepanto's gulf (Patras, not Corinth), the "Be not afraid" of John
+Paul II (the inaugural homily, not the election-night appearance), John Nepomucene's
+confessional legend (now labelled what it is), popes Soter and Caius' martyrdoms
+(unsupported, now told truly). A handful of metadata fields the drafters could not
+touch surface as maintainer follow-ups (e.g. Hunna of Alsace's impossible "1877 by
+Leo XIII" canonization line — Leo X, 1520). Every entry remains `verified: false`: a
+sourced draft awaiting the human proof-read, the §3.4 ledger posture unchanged.
+
+**The corpus under five new gates.** The duplicate audit that framed this release also
+measured what the harness could not catch; §35 now turns each into a red `npm test`:
+exactly one saint per day (the card renders `saints[0]`, so a silent second would
+shadow), no two saints normalizing to the same person name, no two history events
+normalizing to the same title (the reworded-reentry class), the shortBlurb
+trailing-ellipsis convention (share text depends on it), and corpus↔emitted byte sync
+for both memory corpora — editing `scripts/*.corpus.json` without re-running
+`npm run saints|history` now fails the suite, as quotes already did.
+
+No engine, golden, or service-worker change; the widgets need no regeneration (the
+memory corpora feed neither). Shells 1.22.0 (`versionCode` 12200).
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
