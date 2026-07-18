@@ -2525,15 +2525,95 @@ console.log("");
     (globalThis as { document?: unknown }).document = savedDoc;
     (globalThis as { window?: unknown }).window = savedWin;
   }
-  // (b3) App wires the self-heal: on every route change / foreground resume it
-  // releases a pinned body when NO sheet is actually mounted (the .sheet-backdrop
-  // DOM check keeps it from ever unlocking a legitimately-open sheet).
+  // (b3) App wires the self-heal (wired in v1.20.1; widened below): on every
+  // route change it releases a pinned body when NO sheet is actually mounted
+  // (the .sheet-backdrop DOM check keeps it from ever unlocking a legitimately
+  // open sheet). The route-change heal skips scroll restoration — ScrollManager
+  // already positioned the new page, so restoring the departed page's stale
+  // offset would yank it.
   const appSrc2 = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
   check("App self-heals a stranded scroll lock on route change (v1.20.1)",
-    /import\s*\{[^}]*\bresetScrollLock\b[^}]*\}\s*from\s*"\.\/lib\/scrollLock"/.test(appSrc2) &&
-      appSrc2.includes("isScrollLocked()") &&
-      appSrc2.includes('.sheet-backdrop') &&
-      appSrc2.includes("resetScrollLock()"));
+    /import\s*\{[^}]*\bhealStrandedScrollLock\b[^}]*\}\s*from\s*"\.\/lib\/scrollLock"/.test(appSrc2) &&
+      appSrc2.includes("healStrandedScrollLock({ restoreScroll: false })"));
+  // …and the heal fires on MORE than route changes: every pointerdown (the next
+  // touch anywhere unpins, even a same-tab tap that changes no route) and the
+  // native foreground-resume signal (appStateChange — WKWebView's
+  // visibilitychange is not guaranteed across every resume path).
+  check("App heals on every pointerdown and on native foreground resume",
+    appSrc2.includes('"pointerdown"') && appSrc2.includes('"appStateChange"'));
+
+  // (b4) resetScrollLock must clear a pin even when the COUNTER says nothing is
+  // locked: an interrupted teardown can strand `position: fixed` with the count
+  // already back at 0 (or a foreign inline pin the module never counted), a
+  // state the count-only early-return could never heal — the field report's
+  // "only a force-quit fixes it". The body itself is the ground truth.
+  {
+    const savedDoc = (globalThis as { document?: unknown }).document;
+    const savedWin = (globalThis as { window?: unknown }).window;
+    const body = { style: { overflow: "hidden", position: "fixed", top: "-123px", width: "100%" } as Record<string, string> };
+    (globalThis as { document?: unknown }).document = { body };
+    (globalThis as { window?: unknown }).window = { scrollY: 0, scrollTo: () => {} };
+    const sl = await import("../src/lib/scrollLock");
+    sl.resetScrollLock();
+    check("resetScrollLock clears a count-0 stranded pin (body is ground truth)",
+      body.style.position === "" && body.style.top === "" && !sl.isScrollLocked());
+    (globalThis as { document?: unknown }).document = savedDoc;
+    (globalThis as { window?: unknown }).window = savedWin;
+  }
+
+  // (b5) the route-change heal must NOT restore the departed page's stale
+  // scroll offset (ScrollManager already placed the new page); the default
+  // sheet-close path still restores it.
+  {
+    const savedDoc = (globalThis as { document?: unknown }).document;
+    const savedWin = (globalThis as { window?: unknown }).window;
+    const body = { style: {} as Record<string, string> };
+    let scrollCalls = 0;
+    (globalThis as { document?: unknown }).document = { body };
+    (globalThis as { window?: unknown }).window = { scrollY: 7, scrollTo: () => { scrollCalls += 1; } };
+    const sl = await import("../src/lib/scrollLock");
+    sl.lockScroll();
+    sl.resetScrollLock({ restoreScroll: false });
+    check("resetScrollLock({ restoreScroll: false }) unpins without touching scroll",
+      !sl.isScrollLocked() && !body.style.position && scrollCalls === 0);
+    sl.lockScroll();
+    sl.resetScrollLock();
+    check("resetScrollLock() restores scroll by default (the sheet-close path)",
+      scrollCalls === 1);
+    (globalThis as { document?: unknown }).document = savedDoc;
+    (globalThis as { window?: unknown }).window = savedWin;
+  }
+
+  // (b6) healStrandedScrollLock is the one predicate every heal trigger shares:
+  // it unpins a stranded body, NEVER unlocks a legitimately-open sheet, and
+  // heals the count-0 pin as well.
+  {
+    const savedDoc = (globalThis as { document?: unknown }).document;
+    const savedWin = (globalThis as { window?: unknown }).window;
+    const body = { style: {} as Record<string, string> };
+    let backdrop: unknown = null;
+    (globalThis as { document?: unknown }).document = {
+      body,
+      querySelector: (sel: string) => (sel === ".sheet-backdrop" ? backdrop : null)
+    };
+    (globalThis as { window?: unknown }).window = { scrollY: 3, scrollTo: () => {} };
+    const sl = await import("../src/lib/scrollLock");
+    const heal = sl.healStrandedScrollLock as (() => boolean) | undefined;
+    sl.lockScroll();
+    check("heal releases a stranded lock when no sheet is mounted",
+      typeof heal === "function" && heal() === true && !sl.isScrollLocked() && !body.style.position);
+    sl.lockScroll();
+    backdrop = {};
+    check("heal NEVER unlocks a legitimately-open sheet",
+      typeof heal === "function" && heal() === false && sl.isScrollLocked() && body.style.position === "fixed");
+    backdrop = null;
+    sl.resetScrollLock();
+    body.style.position = "fixed"; // a pin the counter never saw
+    check("heal clears a count-0 stranded pin",
+      typeof heal === "function" && heal() === true && body.style.position === "");
+    (globalThis as { document?: unknown }).document = savedDoc;
+    (globalThis as { window?: unknown }).window = savedWin;
+  }
 
   // (c) the sticky Reader toolbar sits UNDER the notch-safe header —
   // ".reader-toolbar { … top: var(--header-h); … }" — a raw `top: 0` would
@@ -2986,6 +3066,74 @@ console.log("");
   check("memory: saint and event ids are unique across the corpus",
     new Set(saintIds).size === saintIds.length && new Set(eventIds).size === eventIds.length);
 
+  // v1.21.1 corpus-integrity gates — the duplicate audit's ungated classes, now
+  // gated: (a) exactly ONE saint per day (the card renders saints[0], so a
+  // silent second entry would shadow); (b) no two saints normalize to the same
+  // person name (the accidental-double class — intentional double feasts like
+  // St. Joseph 03-19/05-01 carry distinct names and pass); (c) no two history
+  // events normalize to the same title (a reworded re-entry on another date
+  // would slip past the day+year gate); (d) corpus↔emitted sync — editing a
+  // corpus without re-running the build goes red here, as quotes already does.
+  const saintsCorpus: { id: string; day: string; name: string }[] = JSON.parse(
+    readFileSync(join(ROOT, "scripts/saints.corpus.json"), "utf8")).saints;
+  const eventsCorpus: { id: string; day: string; title: string }[] = JSON.parse(
+    readFileSync(join(ROOT, "scripts/history.corpus.json"), "utf8")).events;
+  const normPerson = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9 ]/g, "")
+      .replace(/\b(st|saint|sts|blessed|bl|our|lady|of|the|and|ven)\b/g, "")
+      .replace(/\s+/g, " ").trim();
+  const dayCounts = new Map<string, number>();
+  for (const s of saintsCorpus) dayCounts.set(s.day, (dayCounts.get(s.day) ?? 0) + 1);
+  check("memory: exactly one saint per day (saints[0] is the rendered one)",
+    dayCounts.size === 366 && [...dayCounts.values()].every((n) => n === 1));
+  const personNames = saintsCorpus.map((s) => normPerson(s.name));
+  check("memory: no two saints normalize to the same person name",
+    new Set(personNames).size === personNames.length);
+  const eventTitles = eventsCorpus.map((e) => normPerson(e.title));
+  check("memory: no two history events normalize to the same title",
+    new Set(eventTitles).size === eventTitles.length);
+  check("memory: every shortBlurb keeps the trailing-ellipsis convention (share text depends on it)",
+    [...allSaints, ...allEvents].every(
+      (x: { shortBlurb?: string }) => typeof x.shortBlurb === "string" && x.shortBlurb.trimEnd().endsWith("…")
+    ));
+  {
+    const byDay = <T extends { day: string }>(list: T[]) => {
+      const m = new Map<string, T[]>();
+      for (const x of list) m.set(x.day, [...(m.get(x.day) ?? []), x]);
+      return m;
+    };
+    // Per-id deep compare, order-free (the build sorts a day's events by year).
+    const sameEntries = (emitted: { id: string }[], corpus: { id: string }[]) => {
+      if (emitted.length !== corpus.length) return false;
+      const byId = new Map(corpus.map((x) => [x.id, JSON.stringify(x)]));
+      return emitted.every((x) => byId.get(x.id) === JSON.stringify(x));
+    };
+    let badDays = 0;
+    const checkSync = (kind: "saints" | "history", corpusByDay: Map<string, { id: string }[]>, key: "saints" | "events") => {
+      for (const [day, list] of corpusByDay) {
+        let emitted;
+        try {
+          emitted = JSON.parse(readFileSync(join(ROOT, `public/data/${kind}/${day}.json`), "utf8"));
+        } catch {
+          badDays++;
+          continue;
+        }
+        if (!sameEntries(emitted[key], list)) badDays++;
+      }
+    };
+    const saintsByDay = byDay(saintsCorpus);
+    const eventsByDay = byDay(eventsCorpus);
+    checkSync("saints", saintsByDay, "saints");
+    checkSync("history", eventsByDay, "events");
+    const staleFiles =
+      saintFiles.filter((f) => !saintsByDay.has(f.replace(".json", ""))).length +
+      histFiles.filter((f) => !eventsByDay.has(f.replace(".json", ""))).length;
+    check("memory: emitted saints/history are the corpora (run npm run saints/history after editing)",
+      badDays === 0 && staleFiles === 0,
+      `${badDays} mismatched days, ${staleFiles} stale files`);
+  }
+
   // Source-shape guards for the UI wiring. v1.19.0 reworked the history card into
   // the Saint-led "Today in the Church" card (Mass card → "Today at Mass").
   const home = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
@@ -3005,6 +3153,26 @@ console.log("");
   check("memory: the memorial name in the Mass card still links to the Saint of the Day",
     home.includes("saintForCelebration(saintDay.saints, [c.name])") &&
       home.includes("`/saint/${dayToday}/${s.id}`"));
+
+  // v1.21.1 same-subject de-dup: the card's history lead must never restate the
+  // Saint of the Day shown directly above it. Real logic tests on the pure
+  // helper, then the shape guard that the card uses it.
+  const { leadHistoryEvent } = await import("../src/lib/history");
+  const mkEv = (id: string, title: string, year: number) =>
+    ({ id, day: "07-17", year, title, shortBlurb: "", body: [], sources: [], verified: false });
+  const compiegne = mkEv("a", "The Carmelites of Compiègne go to the guillotine", 1794);
+  const scillitan = mkEv("b", "The Scillitan Martyrs", 180);
+  check("memory: leadHistoryEvent leads with the other subject when the day's saint owns an event",
+    leadHistoryEvent([compiegne, scillitan], "The Martyrs of Compiègne")?.id === "b");
+  check("memory: leadHistoryEvent falls back to the day's event when every event is the saint's subject",
+    leadHistoryEvent([compiegne], "The Martyrs of Compiègne")?.id === "a");
+  check("memory: leadHistoryEvent keeps list order (oldest-first) when no saint is named",
+    leadHistoryEvent([scillitan, compiegne], null)?.id === "b" &&
+      leadHistoryEvent([scillitan, compiegne], undefined)?.id === "b");
+  check("memory: leadHistoryEvent returns null for an empty day",
+    leadHistoryEvent([], "Anyone") === null);
+  check("memory: the card's history lead is de-duplicated against the saint (leadHistoryEvent)",
+    home.includes("leadHistoryEvent(history.events, cardSaint?.name)"));
   check("memory: loadSaints and loadHistory are memoized, retry-after-rejection loaders",
     dataLib.includes("export function loadSaints(") && dataLib.includes("export function loadHistory("));
   check("memory: the /saint and /history detail routes are declared",
