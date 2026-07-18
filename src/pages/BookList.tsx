@@ -49,7 +49,10 @@ export default function BookList() {
         </span>
       </p>
       <p className="plans-link">
-        <Link to="/plans">Reading plans →</Link>
+        <Link to="/plans">Reading plans →</Link>{" "}
+        <span className="muted small sans">
+          — the whole canon, the New Testament, or the Gospels, at your pace
+        </span>
       </p>
       <SectionNav sections={SECTIONS} />
       {section("The Old Testament", OT_GROUPS, "ot")}
