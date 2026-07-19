@@ -19,11 +19,6 @@ name: TestFlight release
 
 on:
   workflow_dispatch:
-  # TEMPORARY while this workflow rides its introduction PR: workflow_dispatch
-  # only registers once the file reaches the default branch, so the first run
-  # is push-triggered from the release branch. Remove this block after merge.
-  push:
-    branches: [claude/testflight-release-deploy-in34x8]
 
 # One upload at a time — a second dispatch queues rather than racing the first
 # (each TestFlight build number must be unique, and two concurrent runs of the
