@@ -95,6 +95,14 @@ needs no registered devices), and uploads via the App Store Connect API key — 
 the full rationale. Add the build to a TestFlight group in App Store Connect
 (internal testing needs no Apple review).
 
+**No Mac at hand?** The same pipeline runs in CI: trigger the **TestFlight
+release** workflow (GitHub → Actions → *TestFlight release* → *Run workflow*, on
+the release commit). It runs `scripts/ios-testflight.sh` verbatim on a macOS
+runner and needs four repository Actions secrets set once — `TEAM_ID`,
+`ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY_P8` (the *contents* of the `.p8`
+key file) — the same values the local env file holds; see
+[iOS guide §7](IOS.md#7-shipping-to-testflight).
+
 ## 8. Run device acceptance (before the store submission)
 
 From the TestFlight build, work the hardware-only items in
