@@ -421,48 +421,71 @@ export function loadTrent(): Promise<TrentFile | null> {
   return trentPromise;
 }
 
-/** The memory of the just — Saint of the Day. One file per calendar date. A 404
- *  (no entry in the corpus) resolves to null and stays cached — genuine, calm
- *  absence. Anything else — offline blip, HTTP error, bad JSON — REJECTS and
- *  drops the key (the loadCommentary retry-after-rejection), so callers can
- *  show an honest failure state instead of a false "no saint today" (v1.21.0,
- *  audit sweep: with all 366 dates covered, a swallowed transport failure made
- *  Home's "being gathered" line a false statement). */
+/** Fetch an OPTIONAL per-date JSON file (Saint of the Day / Church-history day),
+ *  distinguishing calm absence from a genuine failure. A date the growing corpus
+ *  does not yet cover is absence (resolve null), NOT a failure — and a host
+ *  reports that absence in one of two shapes: a real 404 (the dev server), or —
+ *  on any SPA-fallback host (the static PWA host, `vite preview`, and the
+ *  Capacitor native shell) — a 200 that serves the app's `index.html` in place
+ *  of the missing file. Both mean "no entry for this day". Only a genuine
+ *  transport error (offline, 5xx) REJECTS, so Home's honest failure notice and
+ *  the detail pages' connection notices stay reachable without a false
+ *  "couldn't be loaded" every time a covered saint sits beside an uncovered
+ *  history day (the July-19 report). */
+async function fetchDayJson<T>(url: string, label: string): Promise<T | null> {
+  const r = await fetch(url);
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`${label}: HTTP ${r.status}`);
+  const body = await r.text();
+  try {
+    return JSON.parse(body) as T;
+  } catch (err) {
+    // A 200 whose body is the HTML app shell is the SPA fallback for a missing
+    // file — calm absence, not a corrupt payload. A truly malformed JSON file
+    // that is NOT the shell still rejects.
+    if (/^\s*</.test(body)) return null;
+    throw err;
+  }
+}
+
+/** The memory of the just — Saint of the Day. One file per calendar date. A
+ *  missing date (404 OR the SPA-fallback shell) resolves to null and stays
+ *  cached — genuine, calm absence. Anything else — offline blip, HTTP error,
+ *  corrupt (non-shell) JSON — REJECTS and drops the key (the loadCommentary
+ *  retry-after-rejection), so callers can show an honest failure state instead
+ *  of a false "no saint today" (v1.21.0, audit sweep: with all 366 dates
+ *  covered, a swallowed transport failure made Home's "being gathered" line a
+ *  false statement). */
 const saintsCache = new Map<string, Promise<SaintDay | null>>();
 export function loadSaints(day: string): Promise<SaintDay | null> {
   let p = saintsCache.get(day);
   if (!p) {
-    p = fetch(`${import.meta.env.BASE_URL}data/saints/${day}.json`)
-      .then((r) => {
-        if (r.status === 404) return null;
-        if (!r.ok) throw new Error(`saints ${day}: HTTP ${r.status}`);
-        return r.json() as Promise<SaintDay>;
-      })
-      .catch((err) => {
-        saintsCache.delete(day);
-        throw err;
-      });
+    p = fetchDayJson<SaintDay>(
+      `${import.meta.env.BASE_URL}data/saints/${day}.json`,
+      `saints ${day}`
+    ).catch((err) => {
+      saintsCache.delete(day);
+      throw err;
+    });
     saintsCache.set(day, p);
   }
   return p;
 }
 
 /** The memory of the just — Today in Church History. Same per-date, memoized,
- *  404-is-absence / failure-rejects contract as loadSaints. */
+ *  absence-is-null (404 or SPA-fallback shell) / failure-rejects contract as
+ *  loadSaints. */
 const historyCache = new Map<string, Promise<HistoryDay | null>>();
 export function loadHistory(day: string): Promise<HistoryDay | null> {
   let p = historyCache.get(day);
   if (!p) {
-    p = fetch(`${import.meta.env.BASE_URL}data/history/${day}.json`)
-      .then((r) => {
-        if (r.status === 404) return null;
-        if (!r.ok) throw new Error(`history ${day}: HTTP ${r.status}`);
-        return r.json() as Promise<HistoryDay>;
-      })
-      .catch((err) => {
-        historyCache.delete(day);
-        throw err;
-      });
+    p = fetchDayJson<HistoryDay>(
+      `${import.meta.env.BASE_URL}data/history/${day}.json`,
+      `history ${day}`
+    ).catch((err) => {
+      historyCache.delete(day);
+      throw err;
+    });
     historyCache.set(day, p);
   }
   return p;

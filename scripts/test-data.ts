@@ -3668,16 +3668,24 @@ console.log("");
     appSrcShadow.includes("kept for this session"));
 
   // ── Honest loader failure (audit sweep): loadSaints/loadHistory must
-  // distinguish a 404 ("no entry" — cached null, the calm state) from a
-  // transport/HTTP failure (REJECT, so Home's failed state and the detail
-  // pages' connection notices are reachable, instead of the false "being
-  // gathered" line on an offline blip). Shape guards, §25 manner — data.ts
-  // can't be imported under tsx (import.meta.env).
+  // distinguish genuine absence ("no entry" — cached null, the calm state)
+  // from a transport/HTTP failure (REJECT, so Home's failed state and the
+  // detail pages' connection notices are reachable, instead of the false
+  // "being gathered" line on an offline blip). Absence has two host shapes —
+  // a real 404 AND, on any SPA-fallback host (the static PWA host, the
+  // Capacitor native shell), a 200 that serves the HTML app shell for a file
+  // that isn't there; treating only 404 as absence made a covered saint beside
+  // an uncovered history day (July 19) read a false "couldn't be loaded".
+  // Shape guards, §25 manner — data.ts can't be imported under tsx
+  // (import.meta.env).
   const dataSrcShadow = readFileSync(join(ROOT, "src/lib/data.ts"), "utf8");
-  check("§37 loaders: loadSaints treats only a 404 as absence and rethrows failures",
-    /export function loadSaints[\s\S]*?status === 404[\s\S]*?throw err;[\s\S]*?export function loadHistory/.test(dataSrcShadow));
-  check("§37 loaders: loadHistory treats only a 404 as absence and rethrows failures",
-    /export function loadHistory[\s\S]*?status === 404[\s\S]*?throw err;/.test(dataSrcShadow));
+  check("§37 loaders: fetchDayJson treats a 404 as absence and rethrows HTTP failures",
+    /async function fetchDayJson[\s\S]*?status === 404[\s\S]*?return null;[\s\S]*?if \(!r\.ok\) throw new Error/.test(dataSrcShadow));
+  check("§37 loaders: fetchDayJson treats the SPA-fallback HTML shell as absence, not a failure",
+    /async function fetchDayJson[\s\S]*?JSON\.parse[\s\S]*?\/\^\\s\*<\/\.test\(body\)[\s\S]*?return null;/.test(dataSrcShadow));
+  check("§37 loaders: loadSaints and loadHistory route through fetchDayJson and rethrow after dropping the key",
+    /export function loadSaints[\s\S]*?fetchDayJson<SaintDay>[\s\S]*?saintsCache\.delete\(day\);[\s\S]*?throw err;/.test(dataSrcShadow) &&
+    /export function loadHistory[\s\S]*?fetchDayJson<HistoryDay>[\s\S]*?historyCache\.delete\(day\);[\s\S]*?throw err;/.test(dataSrcShadow));
   const homeSrcShadow = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
   check("§37 loaders: Home tracks the saint failure and silences the calm line on it",
     homeSrcShadow.includes("saintFailed") && homeSrcShadow.includes("!saintFailed"));

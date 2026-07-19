@@ -54,4 +54,31 @@ test.describe("Mass failure state", () => {
     ).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText(/being gathered/)).not.toBeVisible();
   });
+
+  test("an uncovered history day (SPA-fallback shell, not a 404) is calm absence, not a failure", async ({
+    page
+  }) => {
+    // The July-19 report: on a SPA-fallback host (the static PWA host and the
+    // Capacitor native shell) a missing per-date file is served as the HTML
+    // app shell with HTTP 200 — never a real 404. The saint loads (every date
+    // has one), so the card must show it and stay silent about history, never
+    // the false "Church history couldn't be loaded" connection notice.
+    await page.route("**/data/history/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<!doctype html><html><head></head><body>app shell</body></html>"
+      })
+    );
+    await page.goto("/#/");
+    // The Saint of the Day lead resolves (proves the card rendered).
+    await expect(page.getByText("Saint of the Day")).toBeVisible({ timeout: 15_000 });
+    // …and none of the three failure notices show for the missing history day.
+    await expect(
+      page.getByText("Church history couldn’t be loaded — it will return with your connection.")
+    ).not.toBeVisible();
+    await expect(
+      page.getByText("Today in the Church couldn’t be loaded — it will return with your connection.")
+    ).not.toBeVisible();
+  });
 });
