@@ -1,0 +1,111 @@
+name: TestFlight release
+
+# Ship the signed iOS app to TestFlight from CI — the same archive → sign →
+# upload pipeline as scripts/ios-testflight.sh, which this workflow runs
+# VERBATIM on a macOS runner, so there is exactly one pipeline to maintain
+# and a maintainer without a Mac at hand can still cut a release.
+#
+# Manual trigger only: shipping to TestFlight stays a deliberate release step
+# (Releasing guide §7), never a side effect of a push.
+#
+# One-time setup — four repository Actions secrets (Settings → Secrets and
+# variables → Actions), the same values scripts/ios-release.local.env holds
+# locally (see the iOS guide §7 for where each comes from):
+#   TEAM_ID        10-char Apple Developer Team ID
+#   ASC_KEY_ID     App Store Connect API Key ID
+#   ASC_ISSUER_ID  App Store Connect Issuer ID (a UUID)
+#   ASC_KEY_P8     full CONTENTS of the AuthKey_<KEYID>.p8 file
+#                  (paste the whole file, BEGIN/END lines included)
+
+on:
+  workflow_dispatch:
+  # TEMPORARY while this workflow rides its introduction PR: workflow_dispatch
+  # only registers once the file reaches the default branch, so the first run
+  # is push-triggered from the release branch. Remove this block after merge.
+  push:
+    branches: [claude/testflight-release-deploy-in34x8]
+
+# One upload at a time — a second dispatch queues rather than racing the first
+# (each TestFlight build number must be unique, and two concurrent runs of the
+# same commit would both compute the same `git rev-list --count`).
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: the build number is `git rev-list --count HEAD`
+          # (one per commit; both Info.plists read $(CURRENT_PROJECT_VERSION)).
+          fetch-depth: 0
+
+      # Fail fast, before any build minutes are spent, if the release secrets
+      # are not configured. Secrets are invisible to forks and cannot be listed
+      # from a workflow, so probe them the only way possible: as env values.
+      - name: Check release secrets
+        env:
+          TEAM_ID: ${{ secrets.TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          missing=""
+          for v in TEAM_ID ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+            [ -n "$(eval echo "\$$v")" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "ERROR: missing repository secret(s):$missing"
+            echo "Set them under Settings → Secrets and variables → Actions."
+            echo "They mirror scripts/ios-release.local.env — see docs/guides/IOS.md §7."
+            exit 1
+          fi
+          echo "All four release secrets are present."
+
+      # Capacitor 8.4.x ships its iOS framework as a binary xcframework built
+      # with Apple Swift 6.2; an older toolchain cannot read its .swiftinterface.
+      # Same selection step as ios.yml: newest installed Xcode wins.
+      - name: Select newest Xcode
+        run: |
+          latest="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)"
+          if [ -n "$latest" ]; then sudo xcode-select -s "$latest/Contents/Developer"; fi
+          xcodebuild -version
+          swift --version
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      # node_modules first — the release script runs `npm run build` and
+      # `npx cap sync` itself but assumes dependencies are already installed.
+      - run: npm ci
+
+      - name: Write the App Store Connect API key
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+
+      - name: Archive, sign, and upload (scripts/ios-testflight.sh)
+        env:
+          TEAM_ID: ${{ secrets.TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: ${{ runner.temp }}/asc/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+        run: bash scripts/ios-testflight.sh
+
+      # Best-effort: surface Apple's ingestion state in the run log (the build
+      # typically reads PROCESSING for the first 5–10 minutes; check later with
+      # `node scripts/asc-build-status.mjs` locally, or in App Store Connect).
+      - name: Report processing state
+        continue-on-error: true
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: ${{ runner.temp }}/asc/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+        run: node scripts/asc-build-status.mjs

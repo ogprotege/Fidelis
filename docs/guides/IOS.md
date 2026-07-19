@@ -266,6 +266,16 @@ account has **no registered devices**, and Xcode's *automatic* signing demands a
    created — and App Store profiles need **zero** devices.
 4. **Upload** the signed `.ipa` via `xcrun altool --upload-app`.
 
+**From CI, no Mac needed.** The `.github/workflows/testflight.yml` workflow runs
+this same script on a macOS GitHub runner — trigger it manually from the Actions
+tab (**TestFlight release** → *Run workflow*, choosing the release branch/commit).
+One-time setup: create four repository **Actions secrets** (GitHub → Settings →
+Secrets and variables → Actions) mirroring the local env file — `TEAM_ID`,
+`ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY_P8`, where `ASC_KEY_P8` is the full
+*contents* of the `AuthKey_<KEYID>.p8` file (open it in a text editor and paste
+everything, `BEGIN`/`END` lines included). The workflow fails fast with a named
+list if any secret is missing, and prints Apple's ingestion state after upload.
+
 **Check processing** without refreshing the browser:
 
 ```bash
