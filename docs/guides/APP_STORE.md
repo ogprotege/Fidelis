@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.22.1
+1.22.2
 ```
 
 The store version string always equals the uploaded build's
@@ -23,20 +23,16 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-Every saint and every moment, told in full. All 366 Saints of the Day and all 177 Church History entries are rewritten — three to four paragraphs each, rich with the dates, places, people, and particulars that make a life worth reading, all drawn from the Church's own sources and honestly marked as sourced drafts pending proof-reading. Where a day pairs a saint with the event of his or her life, the two now tell different parts of the story instead of repeating each other. The app is quieter and clearer too: the Mass page gives one concise licensed-NABRE notice instead of repeating it under every reading; internal lectionary codes and manifest hashes leave the devotional screens; full translation names fit on larger displays; reading plans explain their purpose; commentary choices group under their parent; and Latin phrases speak correctly through VoiceOver. An elusive navigation freeze is also closed: the next touch restores movement if a sheet is ever interrupted. Same texts, same pledge.
+A quiet fix for the Today page. On days that have a Saint of the Day but no Church-history event recorded yet — like July 19, St. Macrina the Younger — the "Today in the Church" card wrongly reported that Church history "couldn't be loaded," as though the app had lost its connection, when in truth the day simply had no event in the growing chronicle. Now such a day rests quietly beside its saint, and the connection notice appears only when the app genuinely cannot reach its data. Same texts, same pledge.
 ```
 
-(ASC shows What's New only for updates after the first released version; if
-1.22.1 ships as the first release the field stays unused there. The same text
-serves as the TestFlight "What to Test" notes: read a few saints and history
-pages, including a paired day — Oct 7 (Our Lady of the Rosary + Lepanto) or
-Jul 17 (Martyrs of Compiègne) — and check the card leads differ. On the Mass
-tab, leave NABRE unimported and confirm its notice appears once, the full
-translation label remains readable on iPad, and no internal lectionary code
-appears. Check the reading-plan explainer and nested commentary controls.
-With VoiceOver, hear the rosary's Latin name and the footer motto. Finally,
-open and close sheets, share a verse, then move between tabs: navigation
-should never stick.)
+(ASC shows What's New only for updates after the first released version. The
+same text serves as the TestFlight "What to Test" notes: open the Today tab on
+a day whose saint has no paired history event — July 19 (St. Macrina the
+Younger) is the reported case — and confirm the "Today in the Church" card
+shows the saint without any "Church history couldn't be loaded" notice. Then
+turn on Airplane Mode and reopen Today: the connection notice should now appear
+honestly, because the data really is unreachable.)
 
 ## Promotional Text (≤ 170 characters)
 
@@ -213,4 +209,4 @@ Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
-- What's New (1.22.1): 1,005 / 4,000 ✓ (counted 2026-07-18)
+- What's New (1.22.2): 509 / 4,000 ✓ (counted 2026-07-19)

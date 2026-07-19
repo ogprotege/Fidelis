@@ -6,6 +6,33 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.22.2] — 2026-07-19 — a book of remembrance
+
+*"A book of remembrance was written before him for them that fear the Lord." (Malachi 3:16)*
+
+A bug-fix release for a reported data error on the Today page.
+
+### Fixed
+
+- **A day with a saint but no Church-history event no longer reports a false
+  failure.** On any day the growing chronicle does not yet cover — the report
+  was July 19, St. Macrina the Younger — the "Today in the Church" card showed
+  the Saint of the Day but claimed "Church history couldn't be loaded — it will
+  return with your connection," as though the app were offline. The cause was in
+  the per-date loaders (`loadSaints`/`loadHistory`): they treated only an HTTP
+  404 as calm absence, but on every host Fidelis actually ships to (the static
+  PWA host, `vite preview`, and the Capacitor iOS/Android shells) a missing file
+  is served by the SPA fallback as the app's `index.html` with HTTP **200**, not
+  a 404 — so the loader tried to parse HTML as JSON, rejected, and rendered the
+  connection notice. A shared `fetchDayJson` helper now treats both a 404 **and**
+  the 200-with-HTML-shell as absence (resolve `null`, the calm state), while a
+  genuine transport failure (offline, 5xx, corrupt non-shell JSON) still rejects
+  so the honest "couldn't be loaded" notice remains reachable.
+
+Harness §37 updated (three checks, red-first against the old shape); a new e2e
+test reproduces the SPA-fallback shell and asserts the card stays calm. No
+engine/data/golden/sw change. Shells 1.22.2/12202.
+
 ## [1.22.1] — 2026-07-18 — decently and in order
 
 *"Let all things be done decently, and according to order." (1 Corinthians 14:40)*
