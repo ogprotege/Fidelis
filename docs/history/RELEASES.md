@@ -1991,6 +1991,66 @@ history request with the 200-HTML shell and asserts the card shows its saint
 with no failure notice. No engine/data/golden/service-worker change. Shells
 1.22.2 (`versionCode` 12202).
 
+## The verity of those things (v1.22.3)
+
+*"That thou mayest know the verity of those things in which thou hast been instructed." (Luke 1:4)*
+
+A data-integrity release, and the closing of the chronicle's draft state. The
+"Today in the Church" feature shipped with every entry marked `verified:
+false` — a sourced draft, the proof-read deferred (spec §3.4). This release
+performs that proof-read in full: twelve per-month verification passes over
+all 177 Church-history events, each event's day, year, people, places,
+documents, and quoted words checked against its named edition — the Catholic
+Encyclopedia (1913), the Vatican's own documents — and against corroborating
+modern scholarship.
+
+**The result.** 155 entries stood exactly as written; 22 were corrected, and
+exactly one was a material error: the casualty figures of the Porta Pia breach
+(20 September 1870) were swapped — the dead were some fifty Italian soldiers
+and nineteen of the pope's men, many of them Zouaves, not the reverse. The
+rest were the quiet slips a chronicle accruing over months collects: Clement
+VII was elected at Fondi and reached Avignon only the following year; St.
+Gregory VII's cult was confirmed by Gregory XIII in 1584 and his canonization
+pronounced by Benedict XIII in 1728 — not by Paul V in 1606; the Second
+Vatican Council sat over four autumns (1962–1965), not three; Benedict IX was
+deposed in absence at the synod's Roman continuation, not at Sutri itself;
+Mehmed II entered Constantinople on the day of the fall and cut short the
+sack he had licensed for three days — a siege of fifty-three days, not
+fifty-five; the Fátima apparitions did not all fall on the 13th (August came
+on the 19th, at Valinhos, the children detained by the civil authority); St.
+Cuthbert died on Inner Farne and was buried at Lindisfarne, not the reverse;
+St. Leo the Great's remains were moved within St. Peter's and rest beneath his
+altar, not in the long-vanished vestibule; Alp Arslan outlived Manzikert by
+little more than a year, not barely one; St. Scholastica's soul was seen on
+the day of her death, three days after the last meeting; St. Thomas More
+refused the oath at Lambeth on 13 April 1534 (the modern date; the older
+biographies, the Catholic Encyclopedia among them, give the 14th); Rutilio
+Grande was murdered less than three weeks into Romero's tenure, not three
+weeks; Valerian's ban on the cemeteries belonged to his first edict (257),
+the second (258) adding the summary execution of clergy, and Felicissimus and
+Agapitus were *buried* at Praetextatus, their place of execution unrecorded;
+the Index of Forbidden Books ran to some twenty editions in all, the last in
+1948, so nineteen "followed" the first; Galileo's sentence was commuted first
+to the Tuscan embassy at the Villa Medici, then to Siena, then to Arcetri;
+and the fall of Granada left Navarre standing apart until 1512.
+
+**Hedges and citations.** Two contested details are now hedged rather than
+asserted: Theodosius's baptism at Thessalonica (the baptism-first chronology
+of Sozomen and the 1913 Catholic Encyclopedia is disputed by recent
+scholarship) and Peter Nolasco's origin (the Barcelona-merchant tradition,
+against the encyclopedia's Languedoc knight). Four citations were repaired to
+the Catholic Encyclopedia articles that actually exist — "Alaric" →
+"Visigoths"; "Council of Clermont" → "Crusades"; "Saint Bartholomew's Day" →
+"Saint Bartholomew's Day Massacre"; "The Order of Our Lady of Mercy" →
+"Mercedarians".
+
+**The ledger.** Every event's `verified` flag now reads true, recorded in the
+corpus note alongside the pass date. The corpus was rebuilt (`npm run
+history`) and the manifest re-sealed; the harness's corpus↔emitted byte-sync
+gate keeps the two in lockstep, so the sealed files are exactly what was
+proof-read. No engine/golden/service-worker change. Shells 1.22.3
+(`versionCode` 12203).
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.22.2
+1.22.3
 ```
 
 The store version string always equals the uploaded build's
@@ -23,16 +23,18 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-A quiet fix for the Today page. On days that have a Saint of the Day but no Church-history event recorded yet — like July 19, St. Macrina the Younger — the "Today in the Church" card wrongly reported that Church history "couldn't be loaded," as though the app had lost its connection, when in truth the day simply had no event in the growing chronicle. Now such a day rests quietly beside its saint, and the connection notice appears only when the app genuinely cannot reach its data. Same texts, same pledge.
+A proof-read of the whole Church-history chronicle. Every one of the 177 entries — each date, year, name, and quotation — has been checked against its sources: the Catholic Encyclopedia, the Vatican's own documents, and sound modern scholarship. 155 entries stood exactly as written; 22 were corrected, from quiet slips to one swapped fact — the dead of the Porta Pia breach were some fifty Italian soldiers and nineteen papal Zouaves, not the reverse. The "Today in the Church" card now rests on a chronicle verified entry by entry. Same texts, same pledge.
 ```
 
 (ASC shows What's New only for updates after the first released version. The
-same text serves as the TestFlight "What to Test" notes: open the Today tab on
-a day whose saint has no paired history event — July 19 (St. Macrina the
-Younger) is the reported case — and confirm the "Today in the Church" card
-shows the saint without any "Church history couldn't be loaded" notice. Then
-turn on Airplane Mode and reopen Today: the connection notice should now appear
-honestly, because the data really is unreachable.)
+same text serves as the TestFlight "What to Test" notes: in the History
+section, read a few of the corrected entries — September 20 (the capture of
+Rome: some fifty Italians and nineteen papal soldiers fell at the Porta Pia),
+December 8 (the close of Vatican II: four sessions over four autumns), and
+March 21 (St. Benedict: the dove seen on the day of Scholastica's death) —
+and confirm the prose reads cleanly. On the Today tab, the "Today in the
+Church" card should show the day's saint with its history event resting
+quietly beneath, where the chronicle covers the date.)
 
 ## Promotional Text (≤ 170 characters)
 
@@ -209,4 +211,4 @@ Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
-- What's New (1.22.2): 509 / 4,000 ✓ (counted 2026-07-19)
+- What's New (1.22.3): 558 / 4,000 ✓ (counted 2026-07-19)

@@ -1,5 +1,5 @@
 {
-  "note": "Hand-edited source corpus for the Today in Church History layer (feature: the memory of the just). Build with `npm run history` — never hand-edit public/data/history. Every entry cites at least one public-domain source; text is drawn from those works, NOT AI-paraphrased. `verified` is false until checked against the named edition (the §3.4 ledger convention). Multiple events may share a `day` (different years); the build groups and sorts them by year.",
+  "note": "Hand-edited source corpus for the Today in Church History layer (feature: the memory of the just). Build with `npm run history` — never hand-edit public/data/history. Every entry cites at least one public-domain source; text is drawn from those works, NOT AI-paraphrased. `verified` is false until checked against the named edition (the §3.4 ledger convention). All 177 entries were proof-read against their named editions and corroborating scholarship on 2026-07-19 (twelve per-month passes; 22 entries corrected); every `verified` flag is now true. Multiple events may share a `day` (different years); the build groups and sorts them by year.",
   "events": [
     {
       "id": "first-world-day-of-peace",
@@ -19,7 +19,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "fall-of-granada",
@@ -30,7 +30,7 @@
       "body": [
         "On 2 January 1492 the city of Granada, the last Muslim kingdom on Iberian soil, surrendered to Ferdinand of Aragon and Isabella of Castile. Its Nasrid ruler, Muhammad XII, called Boabdil by the Christian chroniclers, handed over the keys of the Alhambra, and the Catholic Monarchs took possession of the city.",
         "The surrender closed the Reconquista, the long recovery of Spain for Christendom that had stretched across nearly eight centuries since the Muslim conquest of 711. By the capitulations signed the previous November, the conquered were promised their property, their laws, and the free exercise of their religion.",
-        "The fall of Granada left Spain a single Catholic realm and freed the energies of its monarchs for the wider world; in the same year they dispatched Christopher Columbus across the Atlantic. The promised toleration did not long endure: within a decade the Muslims of Castile and Granada faced the choice of baptism or exile."
+        "The fall of Granada left the crowns of Castile and Aragon free of Muslim rule — only small Navarre still stood apart, until Ferdinand annexed it in 1512 — and freed the energies of its monarchs for the wider world; in the same year they dispatched Christopher Columbus across the Atlantic. The promised toleration did not long endure: within a decade the Muslims of Castile and Granada faced the choice of baptism or exile."
       ],
       "sources": [
         {
@@ -39,7 +39,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "excommunication-of-luther",
@@ -59,7 +59,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-edward-the-confessor",
@@ -79,7 +79,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "birth-of-joan-of-arc",
@@ -99,7 +99,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-innocent-iii",
@@ -119,7 +119,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-adrian-vi",
@@ -139,7 +139,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "council-of-troyes-templar-rule",
@@ -159,7 +159,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "return-of-papacy-to-rome",
@@ -179,7 +179,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "day-of-prayer-unborn",
@@ -199,7 +199,7 @@
           "url": "https://www.usccb.org/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "synod-of-worms-1076",
@@ -219,7 +219,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "road-to-canossa",
@@ -239,7 +239,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "confirmation-of-council-of-trent",
@@ -259,7 +259,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-charlemagne",
@@ -279,10 +279,10 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
-      "verified": false,
+      "verified": true,
       "id": "edict-of-milan",
       "day": "06-13",
       "year": 313,
@@ -323,7 +323,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-rabanus-maurus",
@@ -343,7 +343,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pius-ix",
@@ -368,7 +368,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "first-apparition-lourdes",
@@ -388,7 +388,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "lateran-treaty",
@@ -408,7 +408,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-st-valentine",
@@ -428,7 +428,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-leo-xiii",
@@ -448,7 +448,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "first-jubilee-1300",
@@ -468,7 +468,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "great-persecution-diocletian",
@@ -492,7 +492,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "francis-hears-the-call",
@@ -516,7 +516,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "regnans-in-excelsis",
@@ -536,7 +536,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "edict-of-thessalonica",
@@ -545,7 +545,7 @@
       "title": "The Edict of Thessalonica",
       "shortBlurb": "The emperors declared the Nicene faith the religion of the Roman world, naming as its standard the creed held at Rome and Alexandria…",
       "body": [
-        "On 27 February 380 Theodosius I, newly baptized at Thessalonica by its bishop Ascholius, issued from that city the decree Cunctos populos in his own name and those of his colleagues Gratian and Valentinian II. It commanded all the peoples under their rule to hold the faith 'which the divine Apostle Peter delivered to the Romans', now professed by Pope Damasus and by Peter, bishop of Alexandria.",
+        "On 27 February 380 Theodosius I — who, gravely ill at Thessalonica about this time, received baptism from its bishop Ascholius — issued from that city the decree Cunctos populos in his own name and those of his colleagues Gratian and Valentinian II. It commanded all the peoples under their rule to hold the faith 'which the divine Apostle Peter delivered to the Romans', now professed by Pope Damasus and by Peter, bishop of Alexandria.",
         "That faith the edict defined as belief in the single Godhead of Father, Son, and Holy Spirit, in equal majesty and holy Trinity. Those who kept it were to be called Catholic Christians; the rest, adjudged 'demented and insane', were branded with the name of heretics, to suffer first the judgment of God and then the punishment of the imperial power.",
         "The decree, preserved in the Theodosian Code, made the Nicene faith the religion of the Roman state after long decades of Arian ascendancy in the East. The next year Theodosius gathered the bishops in the First Council of Constantinople, which reaffirmed and enlarged the creed of Nicaea and sealed the triumph of the orthodox faith in the empire."
       ],
@@ -556,7 +556,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "birth-of-michelangelo",
@@ -576,7 +576,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-thomas-aquinas",
@@ -597,7 +597,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-gregory-the-great",
@@ -618,7 +618,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "canonizations-of-1622",
@@ -638,7 +638,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-pope-francis",
@@ -658,7 +658,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "first-lateran-council",
@@ -678,7 +678,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-benedict-of-nursia",
@@ -690,7 +690,7 @@
         "Born about 480 at Nursia, of a noble family and the twin brother of Scholastica, Benedict fled the corruption of the Roman schools, living three years as a hermit in a cave above Subiaco, secretly served by the monk Romanus.",
         "Disciples gathered, and after ruling twelve small monasteries he went up, about 529, to Monte Cassino, overthrew a shrine of Apollo, and founded his abbey. There he wrote his Rule, 'a school of the Lord's service', whose life of prayer, reading, and labor under an abbot won the whole West.",
         "All we surely know of his end comes from the second book of Gregory the Great's Dialogues. Six days before it he ordered his grave opened; then, as fever took him, he was carried into the oratory, received the Body and Blood of Christ, and died standing, upheld between his disciples, his hands lifted to heaven.",
-        "It was 21 March, in a year tradition reckons as 547; he was laid beside Scholastica, whose soul he had seen ascend as a dove three days after her death. Father of Western monasticism, he was proclaimed a patron of Europe by Paul VI in 1964, and his feast is kept on 11 July."
+        "It was 21 March, in a year tradition reckons as 547; he was laid beside Scholastica, whose soul he had seen ascend as a dove on the day of her death, three days after their last meeting. Father of Western monasticism, he was proclaimed a patron of Europe by Paul VI in 1964, and his feast is kept on 11 July."
       ],
       "sources": [
         {
@@ -699,7 +699,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "founding-of-citeaux",
@@ -719,7 +719,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-oscar-romero",
@@ -728,7 +728,7 @@
       "title": "The martyrdom of Archbishop Óscar Romero",
       "shortBlurb": "The archbishop of San Salvador was shot dead at the altar the day after pleading with soldiers to stop killing their people…",
       "body": [
-        "Born on 15 August 1917 at Ciudad Barrios and ordained in Rome in 1942, Óscar Romero was named archbishop of San Salvador on 23 February 1977, a safe and bookish choice, it was thought. The murder, three weeks later, of his friend the Jesuit Rutilio Grande changed him: his Sunday homilies, broadcast nationwide, began to name the dead, the tortured, and the disappeared of El Salvador's gathering war.",
+        "Born on 15 August 1917 at Ciudad Barrios and ordained in Rome in 1942, Óscar Romero was named archbishop of San Salvador on 23 February 1977, a safe and bookish choice, it was thought. The murder, less than three weeks later, of his friend the Jesuit Rutilio Grande changed him: his Sunday homilies, broadcast nationwide, began to name the dead, the tortured, and the disappeared of El Salvador's gathering war.",
         "On 23 March 1980, in his last broadcast homily, he appealed to the soldiers: 'I beg you, I beseech you, I order you, in the name of God: stop the repression.' The next evening, 24 March, a single gunman shot him through the heart as he celebrated Mass in the chapel of the hospital of La Divina Providencia, where he lived.",
         "At his funeral in the cathedral, gunfire into the mourning crowd left some thirty dead. A United Nations truth commission later blamed the death-squad leader Roberto D'Aubuisson for ordering his murder. Beatified in 2015, Romero was canonized by Pope Francis on 14 October 2018 — a bishop martyred at the altar for the faith he preached."
       ],
@@ -739,7 +739,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "birth-of-catherine-of-siena",
@@ -759,7 +759,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "consecration-of-florence-cathedral",
@@ -779,7 +779,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-gregory-xi",
@@ -790,7 +790,7 @@
       "body": [
         "Pope Gregory XI died at Rome on 27 March 1378, aged about forty-nine, little more than a year after bringing the papacy home from Avignon. Born Pierre Roger de Beaufort about 1329, a nephew of Clement VI made a cardinal at eighteen, he had been elected pope at Avignon on 30 December 1370, the seventh and last of the Avignon popes.",
         "Pressed by the letters of Catherine of Siena and by the entreaties of the Romans, he left Avignon on 13 September 1376 and, sailing from Marseille and up the Tiber from Ostia, made his solemn entry into Rome on 17 January 1377, ending nearly seventy years of exile from the apostolic see.",
-        "His death forced the conclave that, under pressure from a Roman mob, elected Urban VI within weeks; before the year was out the French cardinals had repudiated that choice and set up a rival, Clement VII, at Avignon. The return Gregory had achieved thus opened the door to the Great Western Schism."
+        "His death forced the conclave that, under pressure from a Roman mob, elected Urban VI within weeks; before the year was out the French cardinals had repudiated that choice and elected a rival, Clement VII, at Fondi, who established himself at Avignon the following year. The return Gregory had achieved thus opened the door to the Great Western Schism."
       ],
       "sources": [
         {
@@ -799,7 +799,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "birth-of-teresa-of-avila",
@@ -819,7 +819,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "bernard-preaches-second-crusade",
@@ -839,7 +839,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-john-paul-ii",
@@ -859,7 +859,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "western-schism-begins",
@@ -879,7 +879,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "trent-scripture-and-tradition",
@@ -899,7 +899,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "pacem-in-terris",
@@ -919,7 +919,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "sack-of-constantinople-1204",
@@ -939,7 +939,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "edict-of-nantes",
@@ -959,7 +959,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "st-peters-cornerstone",
@@ -979,7 +979,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "luther-at-worms",
@@ -999,7 +999,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-benedict-xvi",
@@ -1019,7 +1019,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-gregory-vii",
@@ -1039,7 +1039,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "dei-filius-vatican-i",
@@ -1059,7 +1059,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "canonization-of-two-popes",
@@ -1079,7 +1079,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "joan-of-arc-orleans",
@@ -1099,7 +1099,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "joseph-worker-instituted",
@@ -1119,7 +1119,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "finding-of-the-holy-cross",
@@ -1139,7 +1139,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "london-carthusian-martyrs",
@@ -1164,7 +1164,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "sack-of-rome-1527",
@@ -1184,7 +1184,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "second-council-of-lyons",
@@ -1204,7 +1204,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "apparition-st-michael-gargano",
@@ -1224,7 +1224,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "assassination-attempt-john-paul-ii",
@@ -1244,7 +1244,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "rerum-novarum",
@@ -1264,7 +1264,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "canonization-joan-of-arc",
@@ -1284,7 +1284,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "birth-of-karol-wojtyla",
@@ -1304,7 +1304,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "council-of-nicaea-opens",
@@ -1324,7 +1324,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "ignatius-wounded-pamplona",
@@ -1344,7 +1344,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-constantine",
@@ -1364,7 +1364,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "execution-of-savonarola",
@@ -1384,10 +1384,10 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
-      "verified": false,
+      "verified": true,
       "id": "gregory-vii-dies-canossa",
       "day": "05-25",
       "year": 1085,
@@ -1396,7 +1396,7 @@
       "body": [
         "On 25 May 1085 Pope Gregory VII died at Salerno, an exile from Rome. Born Hildebrand at Sovana in Tuscany about 1015, he had been for a generation the moving spirit of reform before his own election to the papacy in 1073, laboring against simony, clerical incontinence, and the lay investiture of bishops.",
         "His struggle with King Henry IV of Germany over investiture reached its height when Henry, excommunicated and deposed, came as a penitent to Canossa in January 1077 and was absolved. War soon returned: Henry's army took Rome in 1084, the antipope Clement III crowned him emperor, and Gregory was rescued only by the Normans of Robert Guiscard, whose sack of the city turned the Romans against him.",
-        "Withdrawing south with his Norman allies, he died at Salerno the following year. His last words are recorded: 'I have loved justice and hated iniquity, therefore I die in exile.' He was canonized in 1606 by Pope Paul V, and his feast is kept on the day of his death."
+        "Withdrawing south with his Norman allies, he died at Salerno the following year. His last words are recorded: 'I have loved justice and hated iniquity, therefore I die in exile.' His cult was confirmed by Gregory XIII in 1584 and he was canonized by Benedict XIII in 1728; his feast is kept on the day of his death."
       ],
       "sources": [
         {
@@ -1411,7 +1411,7 @@
       ]
     },
     {
-      "verified": false,
+      "verified": true,
       "id": "fall-of-constantinople",
       "day": "05-29",
       "year": 1453,
@@ -1420,7 +1420,7 @@
       "body": [
         "Constantinople, founded by Constantine in 330, had stood for more than eleven hundred years as the capital of the Christian East. By 1453 the empire had shrunk to the city and its surroundings, defended by the most formidable walls in Europe but garrisoned by only six or seven thousand trained men.",
         "Sultan Mehmed II built the fortress of Rumeli Hisari on the Bosporus, had the Hungarian founder Urban cast great cannon, and on 6 April 1453 opened the siege with sixty to eighty thousand men. When the great chain across the Golden Horn kept out his fleet, he hauled ships overland on greased timbers into the harbor.",
-        "Before dawn on 29 May, after a fifty-five-day siege, the last assault breached the land walls; the Genoese commander Giustiniani fell wounded, and the emperor Constantine XI perished in the fighting. After three days of sack Mehmed rode to Hagia Sophia, the cathedral of Justinian, and made it a mosque.",
+        "Before dawn on 29 May, after a siege of fifty-three days, the last assault breached the land walls; the Genoese commander Giustiniani fell wounded, and the emperor Constantine XI perished in the fighting. On the day of the fall Mehmed rode to Hagia Sophia, the cathedral of Justinian, and made it a mosque, after a sack he had licensed for three days but cut short.",
         "The Byzantine Empire was at an end after eleven centuries. Mehmed made the city his capital and styled himself Caesar of Rome; Greek scholars and manuscripts moved westward to feed the Renaissance, while Ottoman power pressed upon Christian Europe for generations."
       ],
       "sources": [
@@ -1453,7 +1453,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-clement-v",
@@ -1473,7 +1473,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "vatican-city-state-established",
@@ -1493,7 +1493,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "sack-of-lindisfarne",
@@ -1502,8 +1502,8 @@
       "title": "The sack of Lindisfarne",
       "shortBlurb": "Norse raiders fell upon the holy island of Lindisfarne, an outrage that shook Christendom and opened the Viking Age…",
       "body": [
-        "On 8 June 793 heathen seafarers from across the North Sea fell upon the monastery of Lindisfarne, off the Northumbrian coast. The Anglo-Saxon Chronicle records that they plundered the church of St. Cuthbert, slew some of the brethren, and carried others away — the first great Viking blow upon England.",
-        "The island had been a holy place for a century and a half: founded in 635 by the Irish monk Aidan, sent from Iona at the plea of King Oswald, it had been sanctified by its bishop Cuthbert, who died there in 687, and its scriptorium had produced the Lindisfarne Gospels, a glory of Insular art.",
+        "On 8 June 793 heathen seafarers from across the North Sea fell upon the monastery of Lindisfarne, off the Northumbrian coast. The Anglo-Saxon Chronicle records that they plundered the church of St. Cuthbert and slew some of the brethren; others were carried away captive, as Symeon of Durham relates — the first great Viking blow upon England.",
+        "The island had been a holy place for a century and a half: founded in 635 by the Irish monk Aidan, sent from Iona at the plea of King Oswald, it had been sanctified by its bishop Cuthbert, who died on neighboring Inner Farne in 687 and was buried in its church, and its scriptorium had produced the Lindisfarne Gospels, a glory of Insular art.",
         "News of the sacrilege stunned the Christian world. Alcuin of York, then at the court of Charlemagne, wrote to the brethren that never before had such a terror appeared in Britain as was now suffered from a pagan race. The raid on Lindisfarne is commonly reckoned the opening of the Viking Age in western Europe."
       ],
       "sources": [
@@ -1513,7 +1513,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-columba-of-iona",
@@ -1537,7 +1537,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "abolition-of-the-index",
@@ -1546,7 +1546,7 @@
       "title": "The abolition of the Index of Forbidden Books",
       "shortBlurb": "After four centuries, the Church's catalogue of prohibited books ceased to carry the force of law…",
       "body": [
-        "The Index Librorum Prohibitorum, the Church's official list of books forbidden to Catholic readers, had stood since 1559, when Paul IV issued the first Roman Index. Twenty editions followed, the last appearing in 1948, and over four centuries the catalogue condemned at one time or another the works of authors from Erasmus to Sartre.",
+        "The Index Librorum Prohibitorum, the Church's official list of books forbidden to Catholic readers, had stood since 1559, when Paul IV issued the first Roman Index. Some twenty editions in all appeared, the last in 1948, and over four centuries the catalogue condemned at one time or another the works of authors from Erasmus to Sartre.",
         "In the reforming climate after the Second Vatican Council, the motu proprio Integrae Servandae of December 1965 recast the Holy Office as the Congregation for the Doctrine of the Faith. Asked whether the Index still bound, the congregation on 14 June 1966 issued a notification declaring that it kept its moral force but ceased to have the force of ecclesiastical law, its censures being abolished.",
         "The notification, printed in L'Osservatore Romano the next day, left the judgment of books to well-formed consciences and to the vigilance of pastors. Thus quietly ended, after more than four hundred years, one of the most famous institutions of the Counter-Reformation Church."
       ],
@@ -1557,7 +1557,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "exsurge-domine",
@@ -1577,7 +1577,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-pius-ix",
@@ -1597,10 +1597,10 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
-      "verified": false,
+      "verified": true,
       "id": "first-council-of-nicaea-creed",
       "day": "06-19",
       "year": 325,
@@ -1641,7 +1641,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "council-of-ephesus",
@@ -1661,7 +1661,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-john-fisher",
@@ -1681,7 +1681,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "galileo-abjuration",
@@ -1691,7 +1691,7 @@
       "shortBlurb": "Galileo Galilei was made to renounce the Copernican doctrine before the Roman Inquisition…",
       "body": [
         "Galileo Galilei, born at Pisa in 1564, had been admonished in 1616 not to hold or teach the Copernican doctrine of the earth's motion. When his Dialogue Concerning the Two Chief World Systems appeared in 1632, he was summoned to Rome and tried by the Roman Inquisition.",
-        "On 22 June 1633, in the convent of Santa Maria sopra Minerva, the aging philosopher knelt and abjured the doctrine as contrary to Scripture. Judged 'vehemently suspected of heresy,' he was sentenced to formal imprisonment, at once commuted — first to the house of the Archbishop of Siena, then to his own villa at Arcetri near Florence, where he died in 1642.",
+        "On 22 June 1633, in the convent of Santa Maria sopra Minerva, the aging philosopher knelt and abjured the doctrine as contrary to Scripture. Judged 'vehemently suspected of heresy,' he was sentenced to formal imprisonment, at once commuted — first briefly to the Tuscan embassy at the Villa Medici, then to the house of the Archbishop of Siena, and at last to his own villa at Arcetri near Florence, where he died in 1642.",
         "The sentence made Galileo's name a byword for the supposed warfare of faith and science. On 31 October 1992 John Paul II, closing the work of a commission he had appointed, acknowledged the errors of his judges and called the affair a tragic misunderstanding."
       ],
       "sources": [
@@ -1701,7 +1701,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "council-of-pisa",
@@ -1721,7 +1721,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-peter-and-paul",
@@ -1741,7 +1741,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "convocation-first-vatican-council",
@@ -1761,7 +1761,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-oliver-plunkett",
@@ -1781,7 +1781,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-hattin",
@@ -1801,7 +1801,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "burning-of-jan-hus",
@@ -1821,7 +1821,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "execution-of-thomas-more",
@@ -1831,7 +1831,7 @@
       "shortBlurb": "England's former Lord Chancellor died on the scaffold rather than deny the authority of the Church…",
       "body": [
         "Born in London in 1478, Thomas More rose from the bar to the House of Commons, made his name across Europe with Utopia in 1516, and in October 1529 succeeded Cardinal Wolsey as Lord Chancellor, the first layman to hold that office. Unable to approve the king's divorce or his claim over the Church, he resigned in May 1532.",
-        "When the Act of Succession required an oath repudiating the pope's authority, More refused it at Lambeth on 14 April 1534 and was committed to the Tower. After fifteen months he was tried for treason at Westminster Hall on 1 July 1535 and convicted chiefly on the word of Richard Rich, whom he openly branded a perjurer.",
+        "When the Act of Succession required an oath repudiating the pope's authority, More refused it at Lambeth on 13 April 1534 and was committed to the Tower. After fifteen months he was tried for treason at Westminster Hall on 1 July 1535 and convicted chiefly on the word of Richard Rich, whom he openly branded a perjurer.",
         "Sentenced to be hanged at Tyburn, he was spared that shame by the king and beheaded on Tower Hill on 6 July 1535, declaring that he died \"the King's good servant, but God's first.\" Beatified by Leo XIII in 1886 and canonized with John Fisher by Pius XI in 1935, he was proclaimed patron of statesmen and politicians by John Paul II in 2000."
       ],
       "sources": [
@@ -1841,7 +1841,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrs-of-gorkum",
@@ -1861,7 +1861,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "fatima-july-apparition",
@@ -1872,7 +1872,7 @@
       "body": [
         "On 13 July 1917 the Blessed Virgin appeared for the third time to the shepherd children Lucia dos Santos and her cousins Francisco and Jacinta Marto at the Cova da Iria near Fatima, Portugal. In Lucia's account the children were shown a momentary vision of hell, a sea of fire in which demons and the souls of sinners suffer.",
         "\"You have seen hell where the souls of poor sinners go,\" Our Lady told them. \"To save them, God wishes to establish in the world devotion to my Immaculate Heart.\" She foretold a worse war under Pius XI if men did not cease offending God, and promised to return and ask the consecration of Russia to her Immaculate Heart and the Communion of reparation on the first Saturdays.",
-        "These words, with a further vision, form the secret of Fatima in three parts, which Lucia committed to writing only in 1941 and 1944; the third part was published by the Holy See in 2000. The apparitions continued on the thirteenth of each month until October, when the promised sign was witnessed by a vast crowd."
+        "These words, with a further vision, form the secret of Fatima in three parts, which Lucia committed to writing only in 1941 and 1944; the third part was published by the Holy See in 2000. The apparitions continued each month until October — the August one delayed to the nineteenth at Valinhos, the children having been detained by the civil authority — when the promised sign was witnessed by a vast crowd."
       ],
       "sources": [
         {
@@ -1881,7 +1881,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "camillus-de-lellis-dies",
@@ -1901,7 +1901,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "storming-of-the-bastille",
@@ -1921,7 +1921,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "oxford-movement-national-apostasy",
@@ -1941,7 +1941,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "jerusalem-taken-first-crusade",
@@ -1961,7 +1961,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-bonaventure-at-lyons",
@@ -1981,7 +1981,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "east-west-schism-1054",
@@ -2001,7 +2001,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-las-navas-de-tolosa",
@@ -2021,7 +2021,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "scillitan-martyrs",
@@ -2041,7 +2041,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrs-of-compiegne-executed",
@@ -2061,7 +2061,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "first-vatican-council-infallibility",
@@ -2081,7 +2081,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "suppression-of-the-jesuits",
@@ -2101,7 +2101,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-bridget-of-sweden",
@@ -2121,7 +2121,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-thomas-a-kempis",
@@ -2141,7 +2141,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "fall-of-robespierre",
@@ -2161,7 +2161,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-olaf-at-stiklestad",
@@ -2181,7 +2181,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "first-defenestration-of-prague",
@@ -2201,7 +2201,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-ignatius-of-loyola",
@@ -2221,7 +2221,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "portiuncula-indulgence",
@@ -2241,7 +2241,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-sixtus-ii",
@@ -2250,8 +2250,8 @@
       "title": "The martyrdom of Pope St. Sixtus II",
       "shortBlurb": "A pope was cut down with his deacons at the altar in the Roman catacombs under the persecution of Valerian…",
       "body": [
-        "Early in August 258 the Emperor Valerian sharpened his persecution with a second edict: bishops, priests, and deacons were to be put to death at once, and Christians forbidden to gather in the cemeteries. The blow fell first on Rome, where Sixtus II had sat as pope for a year, having succeeded Stephen I in August 257.",
-        "On 6 August, as Sixtus sat teaching the brethren in a catacomb on the Appian Way, soldiers seized him and beheaded him. Four of his seven deacons died with him, as Cyprian of Carthage wrote in a letter; two more, Felicissimus and Agapitus, were cut down the same day in the cemetery of Praetextatus. The pope's body was laid in the papal crypt of the cemetery of Callixtus.",
+        "Early in August 258 the Emperor Valerian sharpened the persecution with a second edict: a year after forbidding Christians to gather in the cemeteries, he now ordered bishops, priests, and deacons put to death at once. The blow fell first on Rome, where Sixtus II had sat as pope for a year, having succeeded Stephen I in August 257.",
+        "On 6 August, as Sixtus sat teaching the brethren in a catacomb on the Appian Way, soldiers seized him and beheaded him. Four of his seven deacons died with him, as Cyprian of Carthage wrote in a letter; two more, Felicissimus and Agapitus, suffered the same day and were laid in the cemetery of Praetextatus. The pope's body was laid in the papal crypt of the cemetery of Callixtus.",
         "Four days later, on 10 August, his archdeacon Lawrence followed him to death; that same autumn Cyprian himself was martyred at Carthage. Rome kept the memory green: Sixtus was named in the canon of the Roman Mass among the first martyrs after the apostles, Pope Damasus adorned his tomb with verses, and his feast on 6 August appears already in the fourth-century calendar."
       ],
       "sources": [
@@ -2261,7 +2261,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-paul-vi",
@@ -2281,7 +2281,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-lechfeld",
@@ -2301,7 +2301,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "founding-of-the-jesuits",
@@ -2321,7 +2321,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "sack-of-rome-410",
@@ -2336,12 +2336,12 @@
       ],
       "sources": [
         {
-          "text": "Catholic Encyclopedia (1913), “Alaric”",
+          "text": "Catholic Encyclopedia (1913), “Visigoths”",
           "license": "public-domain",
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "st-bartholomews-day-massacre",
@@ -2356,12 +2356,12 @@
       ],
       "sources": [
         {
-          "text": "Catholic Encyclopedia (1913), “Saint Bartholomew's Day”",
+          "text": "Catholic Encyclopedia (1913), “Saint Bartholomew's Day Massacre”",
           "license": "public-domain",
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-louis-ix-tunis",
@@ -2381,7 +2381,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-manzikert",
@@ -2391,7 +2391,7 @@
       "shortBlurb": "The Byzantine defeat that opened Asia Minor to the Turks and set the stage for the Crusades…",
       "body": [
         "On 26 August 1071, near the town of Manzikert in Armenia, north of Lake Van, the army of the Byzantine emperor Romanus IV Diogenes met the Seljuk Turks under Sultan Alp Arslan, the 'Heroic Lion.' When the Turkish horse-archers wore down the imperial host and the reserve under Andronicus Doukas abandoned the field, the emperor's division was surrounded, and Romanus, wounded, was taken prisoner.",
-        "Alp Arslan treated his captive with honour and released him within days for a ransom, tribute, and a marriage alliance; but Constantinople had already acclaimed his stepson Michael VII, and Romanus, seized by his enemies, was blinded so savagely that he died of the ordeal in 1072. Alp Arslan himself outlived the battle by barely a year, stabbed by a condemned prisoner in November 1072.",
+        "Alp Arslan treated his captive with honour and released him within days for a ransom, tribute, and a marriage alliance; but Constantinople had already acclaimed his stepson Michael VII, and Romanus, seized by his enemies, was blinded so savagely that he died of the ordeal in 1072. Alp Arslan himself outlived the battle by little more than a year, stabbed by a condemned prisoner in November 1072.",
         "The battle cost fewer lives than legend says, but its consequences were immense: with no army left to hold the frontier, Turkish tribes spread across Asia Minor, the ancient heartland of Eastern Christianity, taking Nicaea itself within a few years. The emperors' desperate appeals for Western aid helped move Pope Urban II, a generation later, to preach the First Crusade at Clermont in 1095."
       ],
       "sources": [
@@ -2401,7 +2401,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-sixtus-v",
@@ -2421,7 +2421,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-augustine-siege-of-hippo",
@@ -2441,7 +2441,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-mohacs",
@@ -2461,7 +2461,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "september-massacres-1792",
@@ -2481,7 +2481,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "gregory-consecrated-pope-590",
@@ -2501,7 +2501,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "fall-of-western-rome-476",
@@ -2521,7 +2521,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "siege-of-malta-lifted-1565",
@@ -2541,7 +2541,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-vienna-1683",
@@ -2561,7 +2561,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-john-chrysostom-407",
@@ -2581,7 +2581,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "dedication-holy-sepulchre-335",
@@ -2601,7 +2601,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-cyprian-258",
@@ -2621,7 +2621,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "stigmata-of-francis-1224",
@@ -2641,7 +2641,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "our-lady-of-la-salette-1846",
@@ -2661,7 +2661,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "capture-of-rome-1870",
@@ -2671,7 +2671,7 @@
       "shortBlurb": "Italian troops breached the walls at the Porta Pia, ending eleven centuries of papal temporal rule over Rome…",
       "body": [
         "In July 1870 the Franco-Prussian War stripped Rome of its shield: Napoleon III recalled the French garrison, and his own empire collapsed at Sedan on 2 September. Declaring war on 10 September, the Kingdom of Italy sent General Raffaele Cadorna with some sixty thousand men against a papal army of perhaps thirteen thousand under General Hermann Kanzler.",
-        "Cadorna's guns opened at dawn on 20 September, and within hours his Bersaglieri breached the Aurelian Walls beside the Porta Pia. Pius IX, unwilling to spend lives in a hopeless cause, ordered only such resistance as honour required and then the white flag; some fifty of the pope's soldiers, many of them Zouaves, and nineteen Italians had fallen. A plebiscite on 2 October pronounced Rome Italian.",
+        "Cadorna's guns opened at dawn on 20 September, and within hours his Bersaglieri breached the Aurelian Walls beside the Porta Pia. Pius IX, unwilling to spend lives in a hopeless cause, ordered only such resistance as honour required and then the white flag; some fifty of the Italians and nineteen of the pope's soldiers, many of them Zouaves, had fallen. A plebiscite on 2 October pronounced Rome Italian.",
         "Thus ended the Papal States, the temporal sovereignty the popes had wielded for more than eleven centuries. Rome became the capital of Italy, and the First Vatican Council, which had defined papal infallibility that July, was suspended. Pius IX shut himself in the Vatican as its 'prisoner,' refusing the Law of Guarantees, and the Roman Question stood open until the Lateran Treaty of 11 February 1929."
       ],
       "sources": [
@@ -2681,7 +2681,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "founding-of-the-mercedarians-1218",
@@ -2690,18 +2690,18 @@
       "title": "The founding of the Order of Our Lady of Ransom",
       "shortBlurb": "St. Peter Nolasco founded an order vowed to ransom Christian captives from the Moors, honoured under the title of Our Lady of Ransom…",
       "body": [
-        "Thousands of Christians then languished in Moorish captivity in Spain and North Africa. Peter Nolasco, a merchant of Barcelona born about 1189, spent his patrimony ransoming them; and on the night of 1 August 1218, the order's tradition holds, the Blessed Virgin appeared to him — and to his confessor Raymond of Peñafort and King James I of Aragon — bidding him found an order for the work.",
+        "Thousands of Christians then languished in Moorish captivity in Spain and North Africa. Peter Nolasco, born about 1189 — by tradition a merchant settled at Barcelona — spent his patrimony ransoming them; and on the night of 1 August 1218, the order's tradition holds, the Blessed Virgin appeared to him — and to his confessor Raymond of Peñafort and King James I of Aragon — bidding him found an order for the work.",
         "On 10 August 1218, the feast of St. Lawrence, the foundation was made in the cathedral of Barcelona: Bishop Berenguer de Palou gave the white habit, and the king granted the new brethren the arms of Aragon for their scapular. They took the name of the Order of the Blessed Virgin Mary of Mercy — the Mercedarians — under the patronage of Our Lady of Ransom.",
         "Beyond the common vows each brother bound himself by a fourth: to remain, if need be, a hostage in the Moors' hands for a captive in danger of losing the faith. Gregory IX confirmed the order in 1235 under the Rule of St. Augustine. Nolasco, who died at Barcelona, was canonized in 1628, and the feast of Our Lady of Ransom on 24 September grew from the order's devotion."
       ],
       "sources": [
         {
-          "text": "Catholic Encyclopedia (1913), \"The Order of Our Lady of Mercy\"",
+          "text": "Catholic Encyclopedia (1913), \"Mercedarians\"",
           "license": "public-domain",
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "approval-of-the-society-of-jesus-1540",
@@ -2721,7 +2721,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "jerome-and-the-vulgate",
@@ -2741,10 +2741,10 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
-      "verified": false,
+      "verified": true,
       "id": "assisi-francis-dies",
       "day": "10-03",
       "year": 1226,
@@ -2768,7 +2768,7 @@
       ]
     },
     {
-      "verified": false,
+      "verified": true,
       "id": "lepanto",
       "day": "10-07",
       "year": 1571,
@@ -2810,7 +2810,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "columbus-reaches-the-americas",
@@ -2830,7 +2830,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "miracle-of-the-sun-fatima",
@@ -2850,7 +2850,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "gregorian-calendar-reform",
@@ -2870,7 +2870,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-john-paul-ii",
@@ -2890,7 +2890,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-milvian-bridge",
@@ -2910,7 +2910,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-john-xxiii",
@@ -2930,7 +2930,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "ninety-five-theses",
@@ -2951,7 +2951,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "sistine-ceiling-unveiled",
@@ -2971,7 +2971,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "lisbon-earthquake",
@@ -2991,7 +2991,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "assumption-defined",
@@ -3011,7 +3011,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "all-souls-instituted",
@@ -3031,7 +3031,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "act-of-supremacy",
@@ -3051,7 +3051,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "gunpowder-plot",
@@ -3071,7 +3071,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-leo-the-great",
@@ -3082,7 +3082,7 @@
       "body": [
         "Leo, a Tuscan by birth, was a deacon of the Roman Church, trusted enough to be sent by the Emperor Valentinian III to Gaul to reconcile the general Aetius with the magistrate Albinus, when he was chosen pope on the death of Sixtus III. Consecrated on 29 September 440, he governed the Church for twenty-one years as Roman power collapsed in the West.",
         "His dogmatic letter to Flavian of Constantinople, the Tome of Leo, was acclaimed at the Council of Chalcedon in 451 as the confession of Peter's faith, teaching one Christ in two natures. In 452 he met Attila at the Mincio near Mantua and won his withdrawal from Italy; in 455 his intercession with the Vandal Genseric spared the lives of the citizens in the sack of Rome.",
-        "Ninety-six of his sermons and 143 letters survive, marked by clarity and elevation. He died at Rome on 10 November 461 and was buried in the vestibule of St. Peter's, where his remains still rest. Benedict XIV in 1754 declared him a Doctor of the Church, and with Gregory the Great he stands foremost among the popes of Christian antiquity."
+        "Ninety-six of his sermons and 143 letters survive, marked by clarity and elevation. He died at Rome on 10 November 461 and was buried in the vestibule of St. Peter's; his remains were later moved within the basilica, where they now rest beneath the altar dedicated to him. Benedict XIV in 1754 declared him a Doctor of the Church, and with Gregory the Great he stands foremost among the popes of Christian antiquity."
       ],
       "sources": [
         {
@@ -3091,7 +3091,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "fourth-lateran-council",
@@ -3111,7 +3111,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "jesuit-martyrs-el-salvador",
@@ -3121,7 +3121,7 @@
       "shortBlurb": "Six Jesuit priests and two women were murdered in San Salvador during the country's civil war…",
       "body": [
         "In the early hours of 16 November 1989, soldiers of the Atlacatl Battalion entered the campus of the Central American University in San Salvador and murdered the six Jesuits of its community: the rector Ignacio Ellacuría, Ignacio Martín-Baró, Segundo Montes, Amando López, Juan Ramón Moreno and Joaquín López y López. With them died their housekeeper Elba Ramos and her teenaged daughter Celina, who had taken shelter in the house.",
-        "The murders came on the fifth day of a great guerrilla offensive, in the tenth year of the country's civil war. The Jesuits, and Ellacuría above all, had laboured for a negotiated peace and borne witness against the misery of the poor; for this they were marked as enemies, and the order to kill them was given at the head of the army.",
+        "The murders came five days after the start of a great guerrilla offensive, in the tenth year of the country's civil war. The Jesuits, and Ellacuría above all, had laboured for a negotiated peace and borne witness against the misery of the poor; for this they were marked as enemies, and the order to kill them was given at the head of the army.",
         "The crime roused the world; a United Nations truth commission in 1993 laid the responsibility on the high command, and in 2020 a Spanish court sentenced the former colonel Inocente Orlando Montano to 133 years in prison for five of the murders, five of the priests having been Spanish citizens. The eight victims are honoured among the martyrs of the Church of the poor."
       ],
       "sources": [
@@ -3131,7 +3131,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "unam-sanctam",
@@ -3151,7 +3151,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "new-st-peters-consecrated",
@@ -3171,7 +3171,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "lumen-gentium-promulgated",
@@ -3191,7 +3191,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "execution-of-miguel-pro",
@@ -3211,7 +3211,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "urban-ii-preaches-first-crusade",
@@ -3226,12 +3226,12 @@
       ],
       "sources": [
         {
-          "text": "Catholic Encyclopedia (1913), “Council of Clermont”",
+          "text": "Catholic Encyclopedia (1913), “Crusades”",
           "license": "public-domain",
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "miraculous-medal-apparition",
@@ -3251,7 +3251,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "england-reconciled-to-rome",
@@ -3271,7 +3271,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "napoleon-crowned-pius-vii",
@@ -3291,7 +3291,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "council-of-trent-closes",
@@ -3311,7 +3311,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "aquinas-lays-down-his-pen",
@@ -3331,7 +3331,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "anathemas-of-1054-lifted",
@@ -3351,7 +3351,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "definition-immaculate-conception",
@@ -3371,7 +3371,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "close-second-vatican-council",
@@ -3381,7 +3381,7 @@
       "shortBlurb": "In St. Peter's Square, Pope Paul VI solemnly brought to an end the twenty-first ecumenical council, the largest in the Church's history…",
       "body": [
         "On 8 December 1965, the feast of the Immaculate Conception, Pope Paul VI solemnly declared closed the Second Vatican Ecumenical Council, before a vast multitude assembled in St. Peter's Square. It was the twenty-first ecumenical council in the Church's history and by far the largest.",
-        "Opened by Pope John XXIII on 11 October 1962, the council met in four sessions over three autumns; two thousand eight hundred bishops came from every part of the world. It produced sixteen documents: four constitutions, nine decrees, and three declarations — among them Lumen Gentium on the Church, Dei Verbum on divine revelation, Sacrosanctum Concilium on the liturgy, and Gaudium et Spes on the Church in the modern world.",
+        "Opened by Pope John XXIII on 11 October 1962, the council met in four sessions over four autumns; two thousand eight hundred bishops came from every part of the world. It produced sixteen documents: four constitutions, nine decrees, and three declarations — among them Lumen Gentium on the Church, Dei Verbum on divine revelation, Sacrosanctum Concilium on the liturgy, and Gaudium et Spes on the Church in the modern world.",
         "On the final morning the council's messages to rulers, thinkers and scientists, artists, workers, the poor and suffering, and the young were read aloud; then the fathers were sent home to carry the renewal into every diocese. No single event did more to shape Catholic life in the twentieth century."
       ],
       "sources": [
@@ -3391,7 +3391,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "luther-burns-papal-bull",
@@ -3411,7 +3411,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "quas-primas-christ-the-king",
@@ -3431,7 +3431,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "abdication-of-celestine-v",
@@ -3451,10 +3451,10 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
-      "verified": false,
+      "verified": true,
       "id": "council-of-trent-opens",
       "day": "12-13",
       "year": 1545,
@@ -3485,7 +3485,7 @@
       "shortBlurb": "A synod called by the German king Henry III swept away three rival claimants to the papacy and opened the era of reform…",
       "body": [
         "On 20 December 1046, at Sutri, a town on the Cassian Way some thirty miles north of Rome, a synod convened under King Henry III of Germany confronted a scandal such as the Church had seldom seen: three men at once claiming the papacy — Benedict IX, Sylvester III, and Gregory VI.",
-        "Sylvester, who had been raised to the see when Benedict was driven out, was deposed and ordered into a monastery. Gregory, a devout man who had bought the office from Benedict in the hope of ending his misgovernment, confessed the simony of his purchase, pronounced himself unworthy, and stripped off the papal robes. Benedict, who had refused to appear, was declared deposed in his absence.",
+        "Sylvester, who had been raised to the see when Benedict was driven out, was deposed and ordered into a monastery. Gregory, a devout man who had bought the office from Benedict in the hope of ending his misgovernment, confessed the simony of his purchase, pronounced himself unworthy, and stripped off the papal robes. Benedict, who had refused to appear, was declared deposed in his absence when the synod reassembled at Rome days later.",
         "At Rome, days later, Henry presented Suidger, bishop of Bamberg, who was elected as Clement II and on Christmas Day crowned the king as emperor. Gregory VI was sent into exile in Germany, attended by his chaplain Hildebrand, the future Gregory VII. Sutri broke the hold of the Roman noble factions on the papacy and opened the age of reform."
       ],
       "sources": [
@@ -3495,7 +3495,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "first-recorded-christmas-rome",
@@ -3515,7 +3515,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "coronation-of-charlemagne",
@@ -3535,7 +3535,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "crib-at-greccio",
@@ -3555,7 +3555,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "dedication-of-hagia-sophia",
@@ -3576,7 +3576,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-thomas-becket",
@@ -3596,7 +3596,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     }
   ]
 }

@@ -6,6 +6,45 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.22.3] — 2026-07-19 — the verity of those things
+
+*"That thou mayest know the verity of those things in which thou hast been instructed." (Luke 1:4)*
+
+A data-integrity release: the whole Church-history chronicle proof-read against its sources.
+
+### Fixed
+
+- **All 177 Church-history events are now verified, entry by entry.** A
+  twelve-pass fact-check (one pass per month) put every event's day, year,
+  people, places, documents, and quoted words against its named edition — the
+  Catholic Encyclopedia (1913), the Vatican's own documents — and corroborating
+  scholarship. 155 entries stood exactly as written; 22 were corrected. One
+  was a swapped fact: the dead of the Porta Pia breach (20 September 1870)
+  were some fifty Italian soldiers and nineteen of the pope's men, many of
+  them Zouaves — not the reverse. The rest were quieter slips: Clement VII was
+  elected at Fondi, not at Avignon; St. Gregory VII was canonized by Benedict
+  XIII in 1728 (his cult confirmed in 1584), not by Paul V in 1606; the Second
+  Vatican Council sat over four autumns, not three; Benedict IX was deposed at
+  the synod's Roman continuation, not at Sutri itself; Mehmed II entered
+  Constantinople on the day of the fall and cut short the sack he had licensed
+  (a siege of fifty-three days, not fifty-five); the Fátima apparitions did
+  not all fall on the 13th (August came on the 19th, at Valinhos); St.
+  Cuthbert died on Inner Farne, not on Lindisfarne; St. Leo the Great's
+  remains rest beneath his altar in St. Peter's, not in the long-vanished
+  vestibule; Alp Arslan outlived Manzikert by little more than a year; St.
+  Scholastica's soul was seen on the day of her death, three days after the
+  last meeting; St. Thomas More refused the oath at Lambeth on 13 April 1534
+  (the modern date; the older biographies give the 14th). Two contested
+  details are now hedged rather than asserted (Theodosius's baptism at
+  Thessalonica; Peter Nolasco's merchant origin), and four citations were
+  repaired to the Catholic Encyclopedia articles that actually exist
+  ("Visigoths", "Crusades", "Saint Bartholomew's Day Massacre",
+  "Mercedarians"). Every event's `verified` flag now reads true — the
+  chronicle's draft state is closed.
+
+Corpus rebuilt (`npm run history`) and the manifest re-sealed; no
+engine/golden/sw change. Shells 1.22.3/12203.
+
 ## [1.22.2] — 2026-07-19 — a book of remembrance
 
 *"A book of remembrance was written before him for them that fear the Lord." (Malachi 3:16)*
