@@ -1948,6 +1948,49 @@ no behavior change. The TestFlight/App Store metadata also follows 1.22.1 again
 an eleventh §39 check preventing it from drifting behind `package.json`. Shells
 1.22.1 (`versionCode` 12201); no engine/golden/sw change.
 
+## A book of remembrance (v1.22.2)
+
+*"A book of remembrance was written before him for them that fear the Lord." (Malachi 3:16)*
+
+A bug-fix release for a reported "data error" on the Today page: on July 19
+(St. Macrina the Younger), the "Today in the Church" card showed the Saint of
+the Day correctly but declared underneath that "Church history couldn't be
+loaded — it will return with your connection," as though the app were offline —
+when in truth the day simply had no Church-history event in the growing
+chronicle (147 of 366 days are covered).
+
+**The mechanism.** The per-date loaders `loadSaints`/`loadHistory`
+(`src/lib/data.ts`) were written to a "**only a 404 is absence**" contract in
+v1.21.0 — a genuine transport failure should reject (so Home's honest notice
+renders) and a 404 should resolve `null` (the calm "no entry" state, which for
+a covered saint beside an uncovered history day renders nothing at all). But
+that contract assumed the missing file returns a real HTTP 404. On **every host
+Fidelis actually ships to** — the static PWA host, `vite preview`, and the
+Capacitor iOS/Android shells — a request for a file that isn't there is answered
+by the **SPA fallback**: the app's own `index.html`, with HTTP **200** and
+`Content-Type: text/html`. The loader's `!r.ok` guard passed (200 is ok), then
+`r.json()` tried to parse `<!doctype html>…` as JSON, threw, and the promise
+rejected — landing on the "failed" branch. So an uncovered history day looked
+exactly like an offline blip. (The saint on July 19 loaded fine only because a
+saint file genuinely exists for that date; a day missing *both* would have shown
+the failure for the saint too.)
+
+**The fix.** A shared `fetchDayJson<T>(url, label)` helper now backs both
+loaders. It resolves `null` for a real 404 **and** for a 200 whose body is the
+HTML app shell (detected by attempting `JSON.parse` and, on failure, checking
+the body begins with `<`) — both are the same fact, "no entry for this day on
+this host." A genuine transport error (offline `fetch` rejection, a 5xx, or a
+truly corrupt non-shell JSON) still rejects, so the honest "couldn't be loaded"
+notice on Home and on the Saint/History detail pages stays reachable. The
+memoize-and-drop-the-key-on-rejection behavior (the retry-after-rejection
+convention) is unchanged.
+
+Harness §37 rewritten for the new shape (three checks, red-first against the old
+`status === 404`-only loaders); a new `e2e/today.spec.ts` test fulfills a
+history request with the 200-HTML shell and asserts the card shows its saint
+with no failure notice. No engine/data/golden/service-worker change. Shells
+1.22.2 (`versionCode` 12202).
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)
