@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { getTranslation } from "./translations";
 import { expandCatenaSpans, isCatenaSpanDoc } from "./commentary";
 import type { SaintDay } from "./saints";
@@ -424,16 +425,30 @@ export function loadTrent(): Promise<TrentFile | null> {
 /** Fetch an OPTIONAL per-date JSON file (Saint of the Day / Church-history day),
  *  distinguishing calm absence from a genuine failure. A date the growing corpus
  *  does not yet cover is absence (resolve null), NOT a failure — and a host
- *  reports that absence in one of two shapes: a real 404 (the dev server), or —
- *  on any SPA-fallback host (the static PWA host, `vite preview`, and the
- *  Capacitor native shell) — a 200 that serves the app's `index.html` in place
- *  of the missing file. Both mean "no entry for this day". Only a genuine
- *  transport error (offline, 5xx) REJECTS, so Home's honest failure notice and
- *  the detail pages' connection notices stay reachable without a false
- *  "couldn't be loaded" every time a covered saint sits beside an uncovered
- *  history day (the July-19 report). */
+ *  reports that absence in one of THREE shapes: a real 404 (a static host
+ *  without rewrites); a 200 that serves the app's `index.html` in place of the
+ *  missing file (any SPA-fallback host — the dev server, `vite preview`, the
+ *  static PWA host); or, on the Capacitor native shells, a fetch REJECTION.
+ *  The bundled corpus is served straight from disk and the native asset
+ *  handler answers a missing file by failing the URL scheme task
+ *  (WebViewAssetHandler.swift → didFailWithError) — no HTTP status at all.
+ *  On-device there is no transport to lose, so a rejection for a bundled path
+ *  can only mean the file isn't in the bundle. Only a genuine transport error
+ *  (offline, 5xx) REJECTS, so Home's honest failure notice and the detail
+ *  pages' connection notices stay reachable without a false "couldn't be
+ *  loaded" every time a covered saint sits beside an uncovered history day
+ *  (the July-19 report). */
 async function fetchDayJson<T>(url: string, label: string): Promise<T | null> {
-  const r = await fetch(url);
+  let r: Response;
+  try {
+    r = await fetch(url);
+  } catch (err) {
+    // The native absence shape (see above): a missing bundled file rejects the
+    // fetch on iOS/Android. On the web a rejection is a genuine transport
+    // failure and must still reject.
+    if (Capacitor.isNativePlatform()) return null;
+    throw err;
+  }
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`${label}: HTTP ${r.status}`);
   const body = await r.text();

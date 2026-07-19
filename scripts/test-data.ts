@@ -3671,21 +3671,31 @@ console.log("");
   // distinguish genuine absence ("no entry" — cached null, the calm state)
   // from a transport/HTTP failure (REJECT, so Home's failed state and the
   // detail pages' connection notices are reachable, instead of the false
-  // "being gathered" line on an offline blip). Absence has two host shapes —
-  // a real 404 AND, on any SPA-fallback host (the static PWA host, the
-  // Capacitor native shell), a 200 that serves the HTML app shell for a file
-  // that isn't there; treating only 404 as absence made a covered saint beside
-  // an uncovered history day (July 19) read a false "couldn't be loaded".
-  // Shape guards, §25 manner — data.ts can't be imported under tsx
-  // (import.meta.env).
+  // "being gathered" line on an offline blip). Absence has THREE host shapes:
+  // a real 404 (a static host without rewrites); a 200 that serves the HTML
+  // app shell for a file that isn't there (any SPA-fallback host — the dev
+  // server, `vite preview`, the static PWA host); and, on the Capacitor
+  // native shells, a fetch REJECTION — the bundled corpus is served from
+  // disk and the asset handler fails the URL scheme task for a file that
+  // isn't there (no HTTP status at all). Treating only 404 as absence made
+  // a covered saint beside an uncovered history day (July 19) read a false
+  // "couldn't be loaded"; on iOS the false notice survived v1.22.2 until
+  // the rejection shape joined the contract (v1.22.4). Shape guards, §25
+  // manner — data.ts can't be imported under tsx (import.meta.env).
   const dataSrcShadow = readFileSync(join(ROOT, "src/lib/data.ts"), "utf8");
   check("§37 loaders: fetchDayJson treats a 404 as absence and rethrows HTTP failures",
     /async function fetchDayJson[\s\S]*?status === 404[\s\S]*?return null;[\s\S]*?if \(!r\.ok\) throw new Error/.test(dataSrcShadow));
   check("§37 loaders: fetchDayJson treats the SPA-fallback HTML shell as absence, not a failure",
     /async function fetchDayJson[\s\S]*?JSON\.parse[\s\S]*?\/\^\\s\*<\/\.test\(body\)[\s\S]*?return null;/.test(dataSrcShadow));
+  check("§37 loaders: fetchDayJson treats a fetch rejection as absence on the native shells ONLY (the bundle is the truth there)",
+    /async function fetchDayJson[\s\S]*?catch \(err\)[\s\S]*?Capacitor\.isNativePlatform\(\)[\s\S]*?return null;[\s\S]*?throw err;/.test(dataSrcShadow) &&
+    dataSrcShadow.includes('import { Capacitor } from "@capacitor/core";'));
   check("§37 loaders: loadSaints and loadHistory route through fetchDayJson and rethrow after dropping the key",
     /export function loadSaints[\s\S]*?fetchDayJson<SaintDay>[\s\S]*?saintsCache\.delete\(day\);[\s\S]*?throw err;/.test(dataSrcShadow) &&
     /export function loadHistory[\s\S]*?fetchDayJson<HistoryDay>[\s\S]*?historyCache\.delete\(day\);[\s\S]*?throw err;/.test(dataSrcShadow));
+  const settingsSrcShadow = readFileSync(join(ROOT, "src/pages/Settings.tsx"), "utf8");
+  check("§37 loaders: Settings never offers the offline download on native (the whole corpus ships inside the app)",
+    settingsSrcShadow.includes("Capacitor.isNativePlatform()") && settingsSrcShadow.includes("On this device"));
   const homeSrcShadow = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
   check("§37 loaders: Home tracks the saint failure and silences the calm line on it",
     homeSrcShadow.includes("saintFailed") && homeSrcShadow.includes("!saintFailed"));

@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.22.3
+1.22.4
 ```
 
 The store version string always equals the uploaded build's
@@ -23,18 +23,17 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-A proof-read of the whole Church-history chronicle. Every one of the 177 entries — each date, year, name, and quotation — has been checked against its sources: the Catholic Encyclopedia, the Vatican's own documents, and sound modern scholarship. 155 entries stood exactly as written; 22 were corrected, from quiet slips to one swapped fact — the dead of the Porta Pia breach were some fifty Italian soldiers and nineteen papal Zouaves, not the reverse. The "Today in the Church" card now rests on a chronicle verified entry by entry. Same texts, same pledge.
+A fix for the iPhone and iPad app itself. A day with a Saint of the Day but no Church-history event yet — like July 19, St. Macrina the Younger — still claimed that Church history "couldn't be loaded," because the app mistook a not-yet-written day for a lost connection. Now such a day rests quietly beside its saint, exactly as it does on the web. And Settings no longer offers a "Download for offline" that could never finish: on iPhone and iPad the whole library ships inside the app, so every text reads with no connection from the very first launch. Same texts, same pledge.
 ```
 
 (ASC shows What's New only for updates after the first released version. The
-same text serves as the TestFlight "What to Test" notes: in the History
-section, read a few of the corrected entries — September 20 (the capture of
-Rome: some fifty Italians and nineteen papal soldiers fell at the Porta Pia),
-December 8 (the close of Vatican II: four sessions over four autumns), and
-March 21 (St. Benedict: the dove seen on the day of Scholastica's death) —
-and confirm the prose reads cleanly. On the Today tab, the "Today in the
-Church" card should show the day's saint with its history event resting
-quietly beneath, where the chronicle covers the date.)
+same text serves as the TestFlight "What to Test" notes: on July 19 (St.
+Macrina the Younger) — or any day whose saint has no paired history event —
+open the Today tab and confirm the "Today in the Church" card shows the saint
+with no "couldn't be loaded" line beneath. Then open Settings → Data: instead
+of Download buttons, each bundled text and the commentary should read "On
+this device." Airplane Mode should change nothing — the whole corpus is in
+the app.)
 
 ## Promotional Text (≤ 170 characters)
 
@@ -211,4 +210,4 @@ Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
-- What's New (1.22.3): 558 / 4,000 ✓ (counted 2026-07-19)
+- What's New (1.22.4): 579 / 4,000 ✓ (counted 2026-07-19)

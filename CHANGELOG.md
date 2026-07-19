@@ -6,6 +6,38 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.22.4] — 2026-07-19 — the word is very nigh
+
+*"But the word is very nigh unto thee, in thy mouth and in thy heart, that thou mayest do it." (Deuteronomy 30:14)*
+
+A device-fix release: two corrections for the native shells, where the whole corpus already lives on disk.
+
+### Fixed
+
+- **The calm absence now reaches iOS and Android.** v1.22.2 taught the
+  per-date loaders that a missing day file arrives as a 404 or as the
+  SPA-fallback shell — but on the native shells neither happens: the bundled
+  corpus is served straight from disk, and the native asset handler answers a
+  missing file by failing the request outright, which surfaces as a fetch
+  rejection with no HTTP status at all. The loaders read that as a connection
+  failure, so on device an uncovered history day (July 19, St. Macrina the
+  Younger) still claimed "Church history couldn't be loaded — it will return
+  with your connection." `fetchDayJson` now also treats a fetch rejection on
+  the native shells as absence — on-device there is no transport to lose, so
+  a rejected bundled request can only mean the file isn't in the bundle. On
+  the web a rejection still means a genuine transport failure, and the honest
+  notice remains.
+- **Settings no longer offers "Download for offline" on iOS/Android.** The
+  save-for-offline action exists for the web, where texts arrive over the
+  network and persist in the service worker's cache. The native shells ship
+  the whole corpus inside the app and have no service worker, so the download
+  could never register — it flashed progress and snapped back to "Download."
+  The section now states plainly that every bundled text and the Fathers'
+  commentary already read with no connection.
+
+Harness §37 extended (the native rejection shape and the Settings gate, both
+red-first). No engine/data/golden/sw change. Shells 1.22.4/12204.
+
 ## [1.22.3] — 2026-07-19 — the verity of those things
 
 *"That thou mayest know the verity of those things in which thou hast been instructed." (Luke 1:4)*

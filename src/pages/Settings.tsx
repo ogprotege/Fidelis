@@ -80,6 +80,13 @@ export default function Settings() {
   const [progress, setProgress] = useState<Record<string, { done: number; total: number }>>({});
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
+  // The native shells bundle the whole corpus inside the app binary: every
+  // bundled text already reads with no connection from first launch, and
+  // there is no service worker to persist a download into. The save-for-
+  // offline action exists for the web only — offering it on device was a
+  // false affordance that flashed progress and snapped back to "Download".
+  const native = Capacitor.isNativePlatform();
+
   // FID-FUNC-008 (v1.18.0): "Saved" is CACHE truth. The probe checks Cache
   // Storage for every file the manifest lists under each bundle — the browser
   // can evict the data cache while the localStorage record still says yes.
@@ -621,8 +628,9 @@ export default function Settings() {
 
         <div className="setting-label">Download for offline</div>
         <p className="catechesis muted small">
-          Save a bundled translation's full text — or the Fathers' commentary — to this device
-          so it reads with no connection.
+          {native
+            ? "Every bundled text and the Fathers' commentary ship inside this app — the whole corpus already reads with no connection."
+            : "Save a bundled translation's full text — or the Fathers' commentary — to this device so it reads with no connection."}
         </p>
         {TRANSLATIONS.filter((t) => t.bundled).map((t) => {
           const bytes = manifest?.bundles?.[t.id]?.bytes;
@@ -638,6 +646,8 @@ export default function Settings() {
                 <span className="muted small sans">
                   {prog.total ? `Saving… ${prog.done}/${prog.total}` : "Saving…"}
                 </span>
+              ) : native ? (
+                <span className="muted small">On this device</span>
               ) : (
                 <button className="pill" onClick={() => download(t.id)}>
                   {st.state === "saved" ? (
@@ -668,6 +678,8 @@ export default function Settings() {
                 <span className="muted small sans">
                   {prog.total ? `Saving… ${prog.done}/${prog.total}` : "Saving…"}
                 </span>
+              ) : native ? (
+                <span className="muted small">On this device</span>
               ) : (
                 <button className="pill" onClick={() => download("commentary")}>
                   {st.state === "saved" ? (

@@ -2051,6 +2051,51 @@ gate keeps the two in lockstep, so the sealed files are exactly what was
 proof-read. No engine/golden/service-worker change. Shells 1.22.3
 (`versionCode` 12203).
 
+## The word is very nigh (v1.22.4)
+
+*"But the word is very nigh unto thee, in thy mouth and in thy heart, that thou mayest do it." (Deuteronomy 30:14)*
+
+A device-fix release: two corrections for the native shells, where the whole
+corpus already lives on disk. Both were the same mistake one layer down — a
+web-shaped mental model of how a file "goes missing" and of how offline
+works, applied to a shell that serves the bundle from disk and has no service
+worker at all.
+
+**The absence shape v1.22.2 missed.** That release taught the per-date
+loaders (`loadSaints`/`loadHistory`) two of the three shapes in which a host
+reports "this day has no entry": a real 404, and the SPA-fallback's 200 with
+the HTML app shell. It even claimed the Capacitor shells used the second
+shape. They do not. On iOS, `CapacitorRouter` maps any request whose path has
+an extension (`.json` included) straight into the app bundle, and
+`WebViewAssetHandler` answers a file that isn't there by **failing the URL
+scheme task** (`didFailWithError`) — which surfaces in the WebView as a
+`fetch()` *rejection*, with no HTTP status to inspect. So on device an
+uncovered history day (July 19, St. Macrina the Younger) still took the
+rejection branch and still read "Church history couldn't be loaded — it will
+return with your connection," exactly as before. The fix completes the
+contract: `fetchDayJson` resolves `null` for a rejection **on the native
+shells only** — on-device there is no transport to lose, so a rejected
+bundled request can only mean the file isn't in the bundle — while a web
+rejection still means a genuine transport failure and keeps the honest
+notice. The §37 comment and shape guards now enumerate all three shapes.
+
+**The download that could never register.** Settings' "Download for offline"
+rows save a bundled translation (or the Fathers' commentary) into the service
+worker's data cache for the *web*, where texts arrive over the network. The
+native shells have no service worker — registration on the `capacitor://`
+scheme fails quietly by design — and need none: `npx cap sync` bundles the
+entire `dist/` into the binary. So on device the download flashed through its
+progress, marked the intent, and then the cache-truth probe (FID-FUNC-008)
+found zero files and snapped the row back to "Download." The rows are now
+web-only: on iOS/Android the section says plainly that every bundled text and
+the Fathers' commentary already read with no connection, and each row reads
+"On this device."
+
+Harness §37 gained two red-first checks (the native-rejection absence shape,
+the Settings native gate); e2e re-verified green against the built web app,
+where both behaviors are unchanged. No engine/data/golden/service-worker
+change. Shells 1.22.4 (`versionCode` 12204).
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

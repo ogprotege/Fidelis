@@ -28,8 +28,10 @@ export default function Saint() {
       setData(null);
       return;
     }
-    // A resolved null is genuine absence (404 — not in the collection); a
-    // rejection is a transport failure and must say so, not claim absence.
+    // A resolved null is genuine absence (404, the SPA-fallback shell, or — on
+    // the native shells — a fetch rejection: not in the collection); a
+    // rejection on the web is a transport failure and must say so, not claim
+    // absence.
     loadSaints(day)
       .then((d) => alive && setData(d))
       .catch(() => alive && setData("failed"));
