@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.22.0
+1.22.1
 ```
 
 The store version string always equals the uploaded build's
@@ -23,15 +23,20 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-Every saint and every moment, told in full. All 366 Saints of the Day and all 177 Church History entries are rewritten — three to four paragraphs each, rich with the dates, places, people, and particulars that make a life worth reading, all drawn from the Church's own sources and honestly marked as sourced drafts pending proof-reading. Where a day pairs a saint with the event of his or her life, the two now tell different parts of the story instead of repeating each other. And an elusive freeze is gone for good: if the app ever seemed to open from a home-screen widget and then ignore every tap until it was forced to quit and restarted, that can no longer happen — the very next touch always brings it back. Same texts, same pledge.
+Every saint and every moment, told in full. All 366 Saints of the Day and all 177 Church History entries are rewritten — three to four paragraphs each, rich with the dates, places, people, and particulars that make a life worth reading, all drawn from the Church's own sources and honestly marked as sourced drafts pending proof-reading. Where a day pairs a saint with the event of his or her life, the two now tell different parts of the story instead of repeating each other. The app is quieter and clearer too: the Mass page gives one concise licensed-NABRE notice instead of repeating it under every reading; internal lectionary codes and manifest hashes leave the devotional screens; full translation names fit on larger displays; reading plans explain their purpose; commentary choices group under their parent; and Latin phrases speak correctly through VoiceOver. An elusive navigation freeze is also closed: the next touch restores movement if a sheet is ever interrupted. Same texts, same pledge.
 ```
 
 (ASC shows What's New only for updates after the first released version; if
-1.22.0 ships as the first release the field stays unused there. The same text
+1.22.1 ships as the first release the field stays unused there. The same text
 serves as the TestFlight "What to Test" notes: read a few saints and history
 pages, including a paired day — Oct 7 (Our Lady of the Rosary + Lepanto) or
-Jul 17 (Martyrs of Compiègne) — and check the card leads differ; open and close
-sheets, share a verse, then move between tabs: navigation should never stick.)
+Jul 17 (Martyrs of Compiègne) — and check the card leads differ. On the Mass
+tab, leave NABRE unimported and confirm its notice appears once, the full
+translation label remains readable on iPad, and no internal lectionary code
+appears. Check the reading-plan explainer and nested commentary controls.
+With VoiceOver, hear the rosary's Latin name and the footer motto. Finally,
+open and close sheets, share a verse, then move between tabs: navigation
+should never stick.)
 
 ## Promotional Text (≤ 170 characters)
 
@@ -166,13 +171,12 @@ sizes are required: iPhone 6.9″ **1284 × 2778** (`appstore/screenshots/`) and
 iPad 12.9″ **2048 × 2732** (`appstore/screenshots-ipad/`). Up to 10; the first 3
 appear on the install sheet. Shot list (day theme unless noted):
 
-Regenerated **2026-07-16 for v1.21.0** (the 2026-07-15 set predated the Saint
-of the Day card; the mixed-generation iPad files were removed), replacing the
-2026-07-13 set that showed the retired bottom bar. Every frame carries the
-masthead (iPhone) or the one-row desktop nav (iPad); none shows a bottom bar;
-the night frame uses current tokens. Sizes verified exact via `sips`. The
-v1.22.0 release changes prose, not layout (longer saint/history entries, the
-card de-dup), so the set carries over — regenerate on the next visual change.
+Regenerated **2026-07-18 for v1.22.1** after the visible Mass-page, Read-tab,
+and Settings changes. Every replacement frame carries the masthead (iPhone) or
+the one-row desktop nav (iPad), shows no bottom bar, and uses current tokens in
+the night frame. Both required sizes and RGB color space were verified exactly
+via `sips`; the changed Mass, reading-plan, and Settings surfaces were inspected
+from the generated set.
 
 1. **01-today** — the six-card front page: liturgical day, the day in Church history, Verse of the Day
 2. **02-reader-john1** — John 1 in EB Garamond, gold Haydock dots + purple CCC marks
@@ -209,4 +213,4 @@ Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
-- What's New (1.22.0): 739 / 4,000 ✓ (counted 2026-07-18)
+- What's New (1.22.1): 1,005 / 4,000 ✓ (counted 2026-07-18)

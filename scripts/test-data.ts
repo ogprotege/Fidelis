@@ -3796,6 +3796,10 @@ console.log("");
   const appSrc39 = readFileSync(join(ROOT, "src/App.tsx"), "utf8");
   const homeSrc39 = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
   const cssSrc39 = readFileSync(join(ROOT, "src/styles.css"), "utf8");
+  const appStoreSrc39 = readFileSync(join(ROOT, "docs/guides/APP_STORE.md"), "utf8");
+  const packageVersion39 = (JSON.parse(
+    readFileSync(join(ROOT, "package.json"), "utf8")
+  ) as { version: string }).version;
 
   check("§39 ReadingText gates the fallback notice behind showFallbackNotice",
     rtSrc.includes("showFallbackNotice") &&
@@ -3822,6 +3826,9 @@ console.log("");
     cssSrc39.includes(".readings-toolbar select { max-width: none; }"));
   check("§39 the select override lives inside a ≥640px media block",
     /@media \(min-width: 640px\)\s*\{\s*\.readings-toolbar select/.test(cssSrc39));
+  check("§39 App Store and TestFlight metadata follow the package version",
+    appStoreSrc39.includes(`## Version\n\n\`\`\`\n${packageVersion39}\n\`\`\``) &&
+      appStoreSrc39.includes(`What's New (${packageVersion39})`));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
