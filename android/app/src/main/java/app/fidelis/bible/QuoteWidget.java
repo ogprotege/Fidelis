@@ -75,9 +75,9 @@ public class QuoteWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.quote_text, q1 + text + q2);
         views.setTextViewText(R.id.quote_author, author);
 
-        // FID-NATIVE-002: the Quote card lives on Today; open it there via the
-        // fidelis://today deep link (Capacitor appUrlOpen → src/App.tsx routes it).
-        Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse("fidelis://today"),
+        // FID-NATIVE-002: the Quote card lives on Today; open it there, scrolled
+        // to the card, via fidelis://quote (Capacitor appUrlOpen → src/App.tsx routes it).
+        Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse("fidelis://quote"),
                 context, MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(context, RC_OPEN, open,

@@ -93,10 +93,10 @@ public class VotdWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.votd_text, q1 + text + q2);
         views.setTextViewText(R.id.votd_reference, reference);
 
-        // FID-NATIVE-002: tapping the widget opens Today, where the verse card
-        // lives — now via the explicit fidelis://today deep link so all three
+        // FID-NATIVE-002: tapping the widget opens Today scrolled to the verse
+        // card, via the explicit fidelis://verse deep link so all three
         // widgets share one mechanism (Capacitor appUrlOpen → src/App.tsx routes it).
-        Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse("fidelis://today"),
+        Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse("fidelis://verse"),
                 context, MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(context, 0, open,

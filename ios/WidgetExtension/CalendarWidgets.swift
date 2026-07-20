@@ -284,8 +284,9 @@ struct QuoteWidgetView: View {
         }
         .padding(2)
         .containerBackground(kParchment, for: .widget)
-        // FID-NATIVE-002: the Quote card lives on Today; open it there.
-        .widgetURL(URL(string: "fidelis://today"))
+        // FID-NATIVE-002: the Quote card lives on Today; open it there, scrolled
+        // to the card.
+        .widgetURL(URL(string: "fidelis://quote"))
     }
 }
 

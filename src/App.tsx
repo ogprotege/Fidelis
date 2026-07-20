@@ -136,9 +136,11 @@ export default function App() {
   }, []);
 
   // Widget deep links (FID-NATIVE-002): the home-screen widgets open the app on a
-  // fidelis:// URL — fidelis://mass → the Mass readings, fidelis://today → Today.
-  // Both a cold launch (getLaunchUrl) and a tap while running (appUrlOpen) are
-  // handled; only our own scheme routes, so an ordinary launch is untouched.
+  // fidelis:// URL — fidelis://mass → the Mass readings; fidelis://verse / quote
+  // → Today scrolled to the verse / quote card; fidelis://today → Today (the
+  // first widgets' link, kept for installs that still carry it). Both a cold
+  // launch (getLaunchUrl) and a tap while running (appUrlOpen) are handled;
+  // only our own scheme routes, so an ordinary launch is untouched.
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const routeFor = (url: string): string | null => {
@@ -146,6 +148,10 @@ export default function App() {
       switch (m?.[1].toLowerCase()) {
         case "mass":
           return "/readings";
+        case "verse":
+          return "/#votd";
+        case "quote":
+          return "/#qotd";
         case "today":
           return "/";
         default:
@@ -154,7 +160,12 @@ export default function App() {
     };
     const open = (url?: string | null) => {
       const route = url ? routeFor(url) : null;
-      if (route) void navigate(route);
+      if (!route) return;
+      // Widget entry is exactly the resume-into-navigation moment a stranded
+      // scroll lock would surface as a frozen app; heal before the new page
+      // lands (a no-op when nothing is stranded).
+      healStrandedScrollLock({ restoreScroll: false });
+      void navigate(route);
     };
     const handle = CapApp.addListener("appUrlOpen", (e) => open(e.url));
     void CapApp.getLaunchUrl()

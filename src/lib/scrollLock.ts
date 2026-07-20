@@ -16,6 +16,8 @@
  * releases, so no combination of opening/closing sheets can strand it.
  */
 
+import { overlayCount } from "./overlays";
+
 interface SavedBodyStyle {
   overflow: string;
   position: string;
@@ -102,14 +104,24 @@ export function resetScrollLock(opts: { restoreScroll?: boolean } = {}): void {
 }
 
 /** Heal a STRANDED lock: the body is pinned (per the count OR the body itself)
- *  but no sheet is mounted — the `.sheet-backdrop` DOM check is the guard, so
- *  a legitimately-open sheet is never unlocked. Safe to call on every user
+ *  but no sheet is mounted. A legitimately-open sheet always registers an
+ *  overlay, so the `.sheet-backdrop` DOM check alone is not the whole guard:
+ *  a backdrop left behind by an interrupted teardown — a zombie, with NO
+ *  overlay registered — would defeat this heal forever, and the pinned body
+ *  then clips every new page out of view: the "buttons do nothing until
+ *  force-quit" symptom (navigation still happens underneath; it just can't be
+ *  seen). A live sheet (overlay registered) is never unlocked; a zombie
+ *  backdrop is removed and the lock healed. Safe to call on every user
  *  interaction: a no-op unless the lock is stranded. Returns true when it
  *  healed. Options forward to resetScrollLock. */
 export function healStrandedScrollLock(opts?: { restoreScroll?: boolean }): boolean {
   if (typeof document === "undefined") return false;
-  if (document.querySelector(".sheet-backdrop")) return false;
   if (!isScrollLocked() && !isBodyPinned()) return false;
+  const backdrop = document.querySelector(".sheet-backdrop");
+  if (backdrop) {
+    if (overlayCount() > 0) return false; // a live sheet owns it — never unlock
+    backdrop.remove(); // a zombie from an interrupted teardown, not a sheet
+  }
   resetScrollLock(opts);
   return true;
 }

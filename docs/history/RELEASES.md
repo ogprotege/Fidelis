@@ -2096,6 +2096,43 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
+## I am the door (v1.22.5)
+
+*"I am the door. By me, if any man enter in, he shall be saved." (John 10:9)*
+
+A fix release for the home-screen widgets' entry into the app — both where
+the door leads and what happens the moment you walk through it.
+
+**The door now leads to the right room.** Until now every widget tap landed
+on Today: the Verse of the Day and Quote of the Day widgets shared the plain
+`fidelis://today` link, which reads as "the main menu" rather than the part
+you tapped. The widgets now carry their own links — `fidelis://verse` and
+`fidelis://quote` on both platforms — and `src/App.tsx` routes them to Today
+*scrolled to their own card* (`/#votd`, `/#qotd`; the cards gained matching
+anchors, and `.card` already carried the header-clearing scroll margin). The
+Mass widget still opens the day's readings, and `fidelis://today` still opens
+Today for widgets already installed on devices.
+
+**The freeze at the threshold is healed.** The second report: after entering
+from a widget, every button "acted like it would do something" but nothing
+changed until the app was force-quit — the classic stranded-scroll-lock
+symptom (navigation still happens underneath; the pinned body clips the new
+page out of view). The heals layered in v1.22.0 (route change, every
+pointerdown, foreground resume) all share one guard: never unlock while a
+`.sheet-backdrop` is in the DOM. That guard had a hole — a sheet torn down by
+an interrupted background/foreground can leave its backdrop element behind
+with **no overlay registered**, a zombie that made every later heal refuse
+forever. The heal now asks the overlay stack, not just the DOM: a backdrop
+with an empty stack is a zombie — removed, then the lock is released — while
+a live sheet (which always registers) is still never unlocked. And the widget
+entry itself heals before navigating, the exact resume-into-navigation moment
+the freeze surfaced. Harness: the scroll-lock battery gains the zombie case
+red-first (a live sheet with a registered overlay is still never touched);
+§36 pins the three widget links, the card anchors, and the entry-heal; a new
+e2e test drives both anchors and asserts the cards scroll into view. No
+engine/data/golden/service-worker change. Shells 1.22.5 (`versionCode`
+12205).
+
 ## Review items — all fixed in v1.1.0 (details below are the record)
 
 ### P0 — worship-facing accuracy (all fixed)

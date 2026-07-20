@@ -6,6 +6,32 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.22.5] — 2026-07-19 — I am the door
+
+*"I am the door. By me, if any man enter in, he shall be saved." (John 10:9)*
+
+A fix release for the home-screen widgets' entry into the app.
+
+### Fixed
+
+- **Widget taps now land on their own part of the app.** The Verse of the Day
+  widget opens Today scrolled to the verse card, and the Quote widget to the
+  quote card (new `fidelis://verse` and `fidelis://quote` deep links;
+  `fidelis://today` still opens Today for widgets already installed). The
+  Mass widget still opens the day's readings.
+- **The post-widget-entry freeze is healed at the door.** A sheet torn down
+  by an interrupted background/foreground could leave its backdrop element
+  behind with no live overlay — a zombie that defeated the stranded
+  scroll-lock heal on every later touch: the app kept navigating underneath,
+  but the pinned body showed a frozen page until force-quit. The heal now
+  recognizes a backdrop with no registered overlay as a zombie, removes it,
+  and unpins — and a widget entry heals before the new page lands.
+
+Harness: the scroll-lock battery gains the zombie case (red-first); §36 pins
+the three widget links, the card anchors, and the entry-heal; a new e2e test
+drives `/#votd` and `/#qotd` and asserts the cards scroll into view. No
+engine/data/golden/sw change. Shells 1.22.5/12205.
+
 ## [1.22.4] — 2026-07-19 — the word is very nigh
 
 *"But the word is very nigh unto thee, in thy mouth and in thy heart, that thou mayest do it." (Deuteronomy 30:14)*

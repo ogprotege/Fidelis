@@ -2598,19 +2598,32 @@ console.log("");
     };
     (globalThis as { window?: unknown }).window = { scrollY: 3, scrollTo: () => {} };
     const sl = await import("../src/lib/scrollLock");
+    const ov = await import("../src/lib/overlays");
     const heal = sl.healStrandedScrollLock as (() => boolean) | undefined;
     sl.lockScroll();
     check("heal releases a stranded lock when no sheet is mounted",
       typeof heal === "function" && heal() === true && !sl.isScrollLocked() && !body.style.position);
     sl.lockScroll();
     backdrop = {};
+    const liveOverlay = ov.pushOverlay(() => {}); // a legitimately-open sheet registers one
     check("heal NEVER unlocks a legitimately-open sheet",
       typeof heal === "function" && heal() === false && sl.isScrollLocked() && body.style.position === "fixed");
+    ov.removeOverlay(liveOverlay);
     backdrop = null;
     sl.resetScrollLock();
     body.style.position = "fixed"; // a pin the counter never saw
     check("heal clears a count-0 stranded pin",
       typeof heal === "function" && heal() === true && body.style.position === "");
+    // The post-widget-entry freeze class: a backdrop left behind with NO
+    // overlay registered (an interrupted teardown) defeated the old guard
+    // forever — pinned body + zombie backdrop = navigations clipped out of
+    // view until force-quit. The heal must remove the zombie and unpin.
+    sl.lockScroll();
+    let zombieRemoved = false;
+    backdrop = { remove: () => { zombieRemoved = true; } };
+    check("heal removes a zombie backdrop (no overlay registered) and unpins",
+      typeof heal === "function" && heal() === true && zombieRemoved &&
+        !sl.isScrollLocked() && body.style.position === "");
     (globalThis as { document?: unknown }).document = savedDoc;
     (globalThis as { window?: unknown }).window = savedWin;
   }
@@ -3471,6 +3484,7 @@ console.log("");
   const search = read("src/pages/Search.tsx");
   const css = read("src/styles.css");
   const app = read("src/App.tsx");
+  const home = read("src/pages/Home.tsx");
   const settings = read("src/pages/Settings.tsx");
   const about = read("src/pages/About.tsx");
   const html = read("index.html");
@@ -3508,8 +3522,16 @@ console.log("");
   // cold launch (getLaunchUrl) and a tap while running (appUrlOpen).
   check("§36 NATIVE-002 (web): App handles appUrlOpen AND the cold-launch URL",
     app.includes('addListener("appUrlOpen"') && app.includes("getLaunchUrl"));
-  check("§36 NATIVE-002 (web): fidelis://mass → Mass readings, today → Today",
-    app.includes("fidelis:") && app.includes('return "/readings"') && app.includes('return "/"'));
+  check("§36 NATIVE-002 (web): fidelis://mass → Mass readings; verse/quote → their Today cards; today → Today",
+    app.includes("fidelis:") &&
+      app.includes('return "/readings"') &&
+      app.includes('return "/#votd"') &&
+      app.includes('return "/#qotd"') &&
+      app.includes('return "/"'));
+  check("§36 NATIVE-002 (web): the verse/quote cards carry the deep-link anchors, and widget entry heals a stranded lock first",
+    home.includes('id="votd"') &&
+      home.includes('id="qotd"') &&
+      /const open = \(url[\s\S]*?healStrandedScrollLock\(\{ restoreScroll: false \}\)[\s\S]*?navigate\(route\)/.test(app));
 
   // ── Native shells (source-shape guards; the iOS/Android CI builds prove them) ──
   const calSwift = read("ios/WidgetExtension/CalendarWidgets.swift");
@@ -3517,6 +3539,7 @@ console.log("");
   const infoPlist = read("ios/App/App/Info.plist");
   const calData = read("android/app/src/main/java/app/fidelis/bible/CalendarData.java");
   const calJava = read("android/app/src/main/java/app/fidelis/bible/CalendarWidget.java");
+  const votdJava = read("android/app/src/main/java/app/fidelis/bible/VotdWidget.java");
   const quoteJava = read("android/app/src/main/java/app/fidelis/bible/QuoteWidget.java");
   const manifest = read("android/app/src/main/AndroidManifest.xml");
 
@@ -3530,17 +3553,20 @@ console.log("");
 
   // FID-NATIVE-002 (iOS): every widget carries a widgetURL; the scheme is registered.
   check("§36 NATIVE-002 (iOS): the three widgets carry widgetURL(fidelis://…)",
-    votdSwift.includes('widgetURL(URL(string: "fidelis://today"))') &&
+    votdSwift.includes('widgetURL(URL(string: "fidelis://verse"))') &&
       calSwift.includes('widgetURL(URL(string: "fidelis://mass"))') &&
-      calSwift.includes('widgetURL(URL(string: "fidelis://today"))'));
+      calSwift.includes('widgetURL(URL(string: "fidelis://quote"))'));
   check("§36 NATIVE-002 (iOS): Info.plist registers the fidelis URL scheme",
     infoPlist.includes("CFBundleURLTypes") && infoPlist.includes("<string>fidelis</string>"));
 
-  // FID-NATIVE-002 (Android): the scheme is filtered; the Mass widget carries mass.
+  // FID-NATIVE-002 (Android): the scheme is filtered; each widget opens its own part.
   check("§36 NATIVE-002 (Android): MainActivity filters the fidelis scheme",
     manifest.includes('android:scheme="fidelis"'));
   check("§36 NATIVE-002 (Android): the Mass widget opens fidelis://mass",
     calJava.includes('Uri.parse("fidelis://mass")'));
+  check("§36 NATIVE-002 (Android): the Verse and Quote widgets open their own cards",
+    votdJava.includes('Uri.parse("fidelis://verse")') &&
+      quoteJava.includes('Uri.parse("fidelis://quote")'));
 
   // ── Security (FID-SEC-001 wording, FID-SEC-002 Report-Only CSP) ───────────────
   check("§36 SEC-001: Settings names the build-time seal", settings.includes("verified at build"));

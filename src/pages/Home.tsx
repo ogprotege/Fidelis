@@ -416,7 +416,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="card">
+        <div className="card" id="votd">
           <h2><span className="cross"><Icon name="cross" /></span> Verse of the Day</h2>
           <VerseQuote
             translation={translation}
@@ -439,7 +439,7 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="card">
+        <div className="card" id="qotd">
           <h2>Quote of the Day</h2>
           {!quote && !quoteFailed && <Skeleton lines={4} className="qotd-skeleton" />}
           {!quote && quoteFailed && (

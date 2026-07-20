@@ -134,9 +134,9 @@ struct FidelisWidgetView: View {
         }
         .padding(2)
         .containerBackground(parchment, for: .widget)
-        // FID-NATIVE-002: tapping the Verse of the Day widget opens Today, where
-        // the verse card lives. Handled by src/App.tsx via Capacitor appUrlOpen.
-        .widgetURL(URL(string: "fidelis://today"))
+        // FID-NATIVE-002: tapping the Verse of the Day widget opens Today scrolled
+        // to the verse card. Routed by src/App.tsx via Capacitor appUrlOpen.
+        .widgetURL(URL(string: "fidelis://verse"))
     }
 }
 

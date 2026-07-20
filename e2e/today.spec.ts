@@ -58,11 +58,12 @@ test.describe("Mass failure state", () => {
   test("an uncovered history day (SPA-fallback shell, not a 404) is calm absence, not a failure", async ({
     page
   }) => {
-    // The July-19 report: on a SPA-fallback host (the static PWA host and the
-    // Capacitor native shell) a missing per-date file is served as the HTML
+    // The July-19 report: on a SPA-fallback host (the static PWA host, `vite
+    // preview`, the dev server) a missing per-date file is served as the HTML
     // app shell with HTTP 200 — never a real 404. The saint loads (every date
     // has one), so the card must show it and stay silent about history, never
-    // the false "Church history couldn't be loaded" connection notice.
+    // the false "Church history couldn't be loaded" connection notice. (The
+    // native shells' rejection shape is covered by the §37 shape guard.)
     await page.route("**/data/history/**", (route) =>
       route.fulfill({
         status: 200,
@@ -81,4 +82,16 @@ test.describe("Mass failure state", () => {
       page.getByText("Today in the Church couldn’t be loaded — it will return with your connection.")
     ).not.toBeVisible();
   });
+});
+
+test("the widget deep-link anchors land on Today scrolled to the right card", async ({
+  page
+}) => {
+  // fidelis://verse → /#votd and fidelis://quote → /#qotd (src/App.tsx); under
+  // HashRouter those locations serialize as /#/#votd and /#/#qotd.
+  await page.goto("/#/#votd");
+  await expect(page.locator("#votd")).toBeInViewport({ timeout: 15_000 });
+  await expect(page.locator("#votd .votd-text")).toContainText(/\w/);
+  await page.goto("/#/#qotd");
+  await expect(page.locator("#qotd")).toBeInViewport({ timeout: 15_000 });
 });
