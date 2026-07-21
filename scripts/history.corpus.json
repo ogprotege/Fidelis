@@ -1,5 +1,5 @@
 {
-  "note": "Hand-edited source corpus for the Today in Church History layer (feature: the memory of the just). Build with `npm run history` — never hand-edit public/data/history. Every entry cites at least one public-domain source; text is drawn from those works, NOT AI-paraphrased. `verified` is false until checked against the named edition (the §3.4 ledger convention). The original 177 entries were proof-read on 2026-07-19; the full-year expansion entries (v1.23.0) start verified:false pending the per-month fact-check pass. Multiple events may share a `day` (different years); the build groups and sorts them by year.",
+  "note": "Hand-edited source corpus for the Today in Church History layer (feature: the memory of the just). Build with `npm run history` — never hand-edit public/data/history. Every entry cites at least one public-domain source; text is drawn from those works, NOT AI-paraphrased. `verified` is false until checked against the named edition (the §3.4 ledger convention). All 177 original entries were proof-read on 2026-07-19; the full-year expansion (229 new events) was proof-read on 2026-07-21 (four quarterly passes; 21 entries corrected or hedged); every `verified` flag is now true. Multiple events may share a `day` (different years); the build groups and sorts them by year.",
   "events": [
     {
       "id": "first-world-day-of-peace",
@@ -3605,7 +3605,7 @@
       "title": "Paul VI's pilgrimage to the Holy Land",
       "shortBlurb": "Pope Paul VI landed at Amman and entered Jerusalem, the first pope to leave Italy in more than a century and a half and the first to come to the Holy Land since St. Peter…",
       "body": [
-        "On 4 January 1964 Pope Paul VI landed at Amman, where King Hussein of Jordan received him, and travelled on to Jerusalem, entering the Old City by the Damascus Gate. His three-day pilgrimage, announced barely a month before, was the first journey of a pope outside Italy since Pius VII had been carried to France in 1809, and the first ever made by air.",
+        "On 4 January 1964 Pope Paul VI landed at Amman, where King Hussein of Jordan received him, and travelled on to Jerusalem, entering the Old City by the Damascus Gate. His three-day pilgrimage, announced barely a month before, was the first journey of a pope outside Italy since Pius VII had been carried off a prisoner of Napoleon in 1809, and the first ever made by air.",
         "He had come, he said, as a pilgrim to the places where Christ had lived. He prayed at Gethsemane and along the Via Dolorosa, celebrated Mass in the Church of the Holy Sepulchre, and passed into Bethlehem; on 5 January he embraced Athenagoras, the Ecumenical Patriarch of Constantinople, on the Mount of Olives — the first meeting of a pope and a patriarch of Constantinople since the Council of Florence in 1438.",
         "The journey, made while the Second Vatican Council was still in session, opened the age of the travelling papacy: nine international journeys would follow in his pontificate, from Bombay to the United Nations. The embrace with Athenagoras bore fruit two years later, when Rome and Constantinople together lifted the anathemas of 1054."
       ],
@@ -3616,7 +3616,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-pius-v",
@@ -3636,7 +3636,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-pope-fabian",
@@ -3660,26 +3660,31 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-paulinus-of-aquileia",
       "day": "01-11",
-      "year": 804,
+      "year": 802,
       "title": "The death of St. Paulinus of Aquileia",
       "shortBlurb": "Charlemagne's grammarian-patriarch, hammer of the Adoptionists and apostle to the Avars, died at Aquileia…",
       "body": [
         "Born about 726 on a farm near Friuli, Paulinus tilled his father's fields yet made himself so eminent a scholar that Charlemagne styled him in a rescript Master of Grammar and Very Venerable, bestowed an estate upon him, and raised him, against his will, to the patriarchate of Aquileia.",
         "He stood at the emperor's side in the councils of the age — Aachen in 789, Ratisbon in 792, Frankfurt in 794 — and held his own synod at Friuli, where he vindicated the procession of the Holy Spirit from the Father and the Son. When Felix of Urgel taught that Christ as man was God's Son only by adoption, Paulinus refuted him in three books, and his Libellus Sacrosyllabus, approved at Frankfurt, was sent into Spain as an antidote to the spreading error.",
-        "His zeal reached beyond controversy: he preached the gospel to the pagan Carantani of Carinthia and Styria and to the Avars, and Alcuin counted him among his dearest friends. He died on 11 January, in 804 as his biographer Madrisius reckons, though some moderns give 802; Aquileia now keeps his feast on 28 January."
+        "His zeal reached beyond controversy: he preached the gospel to the pagan Carantani of Carinthia and Styria and to the Avars, and Alcuin counted him among his dearest friends. He died on 11 January, in 802 as the Catholic Encyclopedia and most modern scholars reckon, though his eighteenth-century biographer Madrisius gives 804; Aquileia now keeps his feast on 28 January."
       ],
       "sources": [
+        {
+          "text": "Catholic Encyclopedia (1913), “St. Paulinus II”",
+          "license": "public-domain",
+          "url": "https://www.newadvent.org/cathen/"
+        },
         {
           "text": "Butler, Lives of the Saints (1866 ed.), 28 January",
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-benedict-biscop",
@@ -3703,7 +3708,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-sava-of-serbia",
@@ -3723,7 +3728,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-maurus-of-glanfeuil",
@@ -3747,7 +3752,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "franciscan-protomartyrs-morocco",
@@ -3766,7 +3771,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "first-church-unity-octave",
@@ -3786,16 +3791,16 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-blathmac-iona",
       "day": "01-19",
       "year": 825,
       "title": "The martyrdom of St. Blathmac at Iona",
-      "shortBlurb": "An abbot of Iona who would not betray the shrine of St. Columba to the Danish pirates was cut down at the morning Mass…",
+      "shortBlurb": "The prior of Iona who would not betray the shrine of St. Columba to the Danish pirates was cut down at the morning Mass…",
       "body": [
-        "Blathmac, the son of an Irish king, was abbot of the monastery of Iona, the island St. Columba had made the lamp of the northern churches. The Northmen had burned Iona in 802 and slain sixty-eight of its monks in 806; the shrine of Columba had been solemnly restored in 818.",
+        "Blathmac, of Irish royal stock, gave up his patrimony for the cloister and, after governing a monastery in Ireland, came to Iona — the island St. Columba had made the lamp of the northern churches — seeking martyrdom; there he served as prior, keeping the community in the absence of its abbot Diarmait. The Northmen had burned Iona in 802 and slain sixty-eight of its monks in 806; the shrine of Columba had been solemnly restored in 818.",
         "When the Danes came again, they found Blathmac celebrating the morning Mass. They demanded the shrine of St. Columba, with its gold and silver, and he, refusing to betray the treasures of the church, was struck down upon the altar steps. The Annals of Ulster record his martyrdom under 825; older writers placed it about 793, and the Catholic Encyclopedia about 835. The Irish calendars keep his memory on 19 January.",
         "His life was written in Latin hexameters by Walafrid Strabo, abbot of Reichenau, and so the story of his witness has been handed down. The relics of Columba were at last carried to Ireland in 849 for safety, and Iona's day as the mother house of the Gaelic church drew towards its close."
       ],
@@ -3810,7 +3815,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-pope-fabian",
@@ -3834,7 +3839,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-fructuosus-tarragona",
@@ -3858,7 +3863,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "founding-of-georgetown-college",
@@ -3878,7 +3883,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "translation-of-chrysostom-relics",
@@ -3902,7 +3907,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-gelasius-ii-cluny",
@@ -3922,7 +3927,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-aldegundis-of-maubeuge",
@@ -3931,7 +3936,7 @@
       "title": "The death of St. Aldegundis of Maubeuge",
       "shortBlurb": "The Merovingian princess who founded the double monastery of Maubeuge and bore slander and cancer without complaint died on 30 January…",
       "body": [
-        "Aldegundis was born about 630 in Hainault, the daughter of Walbert, of the Merovingian royal blood, and of Bertilia, and sister of St. Waldetrudis of Mons. Consecrating herself to God in her youth, she resisted every suit of marriage, and in 638 took the religious veil and founded at Maubeuge, on the Sambre, a great double house of virgins which she governed as its first abbess.",
+        "Aldegundis was born about 639 in Hainault, daughter of Walbert and Bertilia, of the kindred of the Merovingian kings, and sister of St. Waldetrudis of Mons. Consecrating herself to God in her youth, she resisted every suit of marriage and received the veil from St. Amandus, bishop of Maastricht; then, about 661, she founded on the banks of the Sambre the abbey of Maubeuge, a house of nuns which she governed as its first abbess.",
         "Her life was a hidden one of prayer, tried by violent slanders and, at the end, by a lingering cancer of the breast, whose tortures — the caustics and incisions of the surgeons — she bore, Butler says, not only with patience but with joy.",
         "She died on 30 January, in 684 as most modern accounts reckon, though Butler, following the Bollandists, gives 660. Her relics were enshrined at Maubeuge; her name stands on this day in the martyrologies of Rabanus Maurus, Usuard, and Notker, and in the Roman Martyrology; and she is invoked as a patroness of those who suffer from cancer."
       ],
@@ -3941,7 +3946,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-maedoc-of-ferns",
@@ -3960,7 +3965,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-henry-morse",
@@ -3969,7 +3974,7 @@
       "title": "The martyrdom of St. Henry Morse",
       "shortBlurb": "Hanged at Tyburn after three banishments and four imprisonments, the plague-year priest of London gave his life for the Catholic mission to England…",
       "body": [
-        "On 1 February 1645, by the new reckoning — England still called the year 1644 — Henry Morse, a priest of the Society of Jesus, was hanged, drawn, and quartered at Tyburn under the statute that made his priesthood treason. Born at Brome in Suffolk in 1595 and bred to the law, he had been received into the Church as a young man, trained at Douai and at the English College at Rome, and ordained in 1625.",
+        "On 1 February 1645, by the new reckoning — England still called the year 1644 — Henry Morse, a priest of the Society of Jesus, was hanged, drawn, and quartered at Tyburn under the statute that made his priesthood treason. Born at Brome in Suffolk in 1595 and bred to the law, he had been received into the Church as a young man, trained at Douai and at the English College at Rome, and ordained in 1623.",
         "He labored first in the north of England, and made his Jesuit novitiate behind prison walls. In London during the plague years of 1636 and 1637 he ministered to the sick beside St. John Southworth, himself falling ill yet returning to his stricken flock. Thrice banished and four times imprisoned, he was seized at last in Cumberland amid the Civil War and brought to the capital for trial.",
         "At the gallows he forgave his enemies and professed that he died for the faith alone. In 1970 Pope Paul VI canonized him among the Forty Martyrs of England and Wales."
       ],
@@ -3980,7 +3985,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-ansgar",
@@ -4004,7 +4009,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "twenty-six-martyrs-of-japan",
@@ -4029,7 +4034,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-pius-xi",
@@ -4049,7 +4054,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "athanasius-flees-into-the-desert",
@@ -4073,7 +4078,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "execution-of-mary-queen-of-scots",
@@ -4093,7 +4098,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "john-vianney-sent-to-ars",
@@ -4113,7 +4118,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pius-xi",
@@ -4133,7 +4138,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "birth-of-vatican-radio",
@@ -4153,7 +4158,7 @@
           "url": "https://www.comunicazione.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "galileo-arrives-in-rome-1633",
@@ -4173,7 +4178,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "pie-postulatio-voluntatis",
@@ -4198,7 +4203,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-st-juliana",
@@ -4218,7 +4223,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "burning-of-giordano-bruno",
@@ -4238,7 +4243,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-fra-angelico",
@@ -4258,7 +4263,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-martin-luther",
@@ -4278,7 +4283,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "treaty-of-tolentino",
@@ -4287,7 +4292,7 @@
       "title": "The Treaty of Tolentino",
       "shortBlurb": "Bonaparte spared Rome, and the Pope paid with Avignon, the Legations, and thirty million francs…",
       "body": [
-        "On 19 February 1797, at Tolentino in the Marches, Pope Pius VI signed a treaty of peace with General Bonaparte. The Pope had broken the armistice of Foligno, and the French army, fresh from Rivoli and the fall of Mantua, had swept the papal troops aside and stood within reach of Rome.",
+        "On 19 February 1797, at Tolentino in the Marches, Pope Pius VI signed a treaty of peace with General Bonaparte. The Pope had broken the armistice of Bologna, and the French army, fresh from Rivoli and the fall of Mantua, had swept the papal troops aside and stood within reach of Rome.",
         "The price of peace was heavy: the Pope renounced Avignon and the Venaissin, annexed by France in 1791, ceded the Legations of Bologna, Ferrara, and the Romagna, and promised thirty million francs for the Directory — besides the pictures, statues, and manuscripts already exacted by the armistice of Bologna.",
         "It bought the papacy a year's respite. When a French general was killed in a Roman riot, the Directory answered with occupation: in February 1798 a Roman Republic was proclaimed in the city, and Pius VI, an old man, was carried into exile, dying at Valence on 29 August 1799."
       ],
@@ -4303,7 +4308,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pope-julius-ii",
@@ -4323,7 +4328,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-benevento",
@@ -4343,7 +4348,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "resignation-of-benedict-xvi-takes-effect",
@@ -4368,7 +4373,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pope-st-hilarius",
@@ -4392,7 +4397,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "massacre-of-vassy",
@@ -4412,7 +4417,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-pius-xii",
@@ -4432,7 +4437,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-eugene-iv",
@@ -4452,7 +4457,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "birth-of-henry-the-navigator",
@@ -4472,7 +4477,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "third-lateran-council",
@@ -4492,7 +4497,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-celestine-ii",
@@ -4512,7 +4517,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-leo-x",
@@ -4532,7 +4537,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-john-ogilvie",
@@ -4552,7 +4557,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "triumph-of-orthodoxy",
@@ -4572,7 +4577,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "mit-brennender-sorge",
@@ -4592,7 +4597,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-pius-vii",
@@ -4612,7 +4617,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "columbus-returns-to-palos",
@@ -4632,7 +4637,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "magellan-sights-philippines",
@@ -4652,7 +4657,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-gabriel-lalemant",
@@ -4672,7 +4677,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "coronation-of-frederick-iii",
@@ -4692,18 +4697,18 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-ebbo-of-reims",
       "day": "03-20",
       "year": 851,
       "title": "The death of Ebbo of Reims",
-      "shortBlurb": "The archbishop of Reims who presided over the public penance of Louis the Pious, and was twice deposed in the Carolingian civil wars, died in retirement…",
+      "shortBlurb": "The archbishop of Reims who presided over the public penance of Louis the Pious, and was twice deposed in the Carolingian civil wars, ended his days as bishop of Hildesheim…",
       "body": [
         "Born a serf on the royal fisc and raised at the palace school, Ebbo became librarian to Louis the Pious and, in 816, archbishop of Reims. In 822 at Attigny he presided over the emperor's public penance for the blinding and death of his nephew Bernard of Italy — a spectacle of imperial humility the age never forgot.",
         "He preached the Gospel among the Danes in the years that prepared St. Ansgar's mission; but in the wars of Louis's sons he chose Lothair's side, and at Soissons in 833 he led the bishops who deposed the emperor and imposed a second public penance. Louis's restoration brought Ebbo's fall: imprisoned, he was deposed at Thionville in 835 and shut up at Fulda.",
-        "Restored to Reims by Lothair in 840, he was driven out for good after Fontenoy and died in retirement on 20 March 851. The school of manuscript painting he fostered at Reims left him a memorial in the radiant Ebbo Gospels, which still bears his name."
+        "Restored to Reims by Lothair in 840, he was driven out for good after Fontenoy; Louis the German at length made him bishop of Hildesheim, and there he died on 20 March 851. The school of manuscript painting he fostered at Reims left him a memorial in the radiant Ebbo Gospels, which still bears his name."
       ],
       "sources": [
         {
@@ -4712,7 +4717,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "suppression-of-the-templars",
@@ -4723,7 +4728,7 @@
       "body": [
         "The blow had fallen in a single dawn: on Friday, 13 October 1307, every Templar in France was seized at King Philip's command, and confessions of blasphemy and heresy were wrung from many by torture. Clement V, after years of inquiry, summoned the Council of Vienne in October 1311 to judge the Order.",
         "The fathers leaned toward hearing the Templars' defense, but the king descended on Vienne in person. On the Wednesday of Holy Week, 22 March 1312, in a secret consistory, Clement suppressed the Order — not by definitive sentence upon its guilt, but 'by way of provision', as the bull Vox in excelso declares, published in the council's second session on 3 April.",
-        "By Ad providam of 2 May the Templars' goods passed chiefly to the Hospitallers; the last Grand Master, Jacques de Molay, held a prisoner, was burned at Paris on 19 March 1314. The Chinon parchment, found in the Vatican archives, records that the pope had absolved the Order's leaders — the suppression stood as policy, not as judgment."
+        "By Ad providam of 2 May the Templars' goods passed chiefly to the Hospitallers; the last Grand Master, Jacques de Molay, held a prisoner, was burned at Paris on 18 March 1314. The Chinon parchment, found in the Vatican archives, records that the pope had absolved the Order's leaders — the suppression stood as policy, not as judgment."
       ],
       "sources": [
         {
@@ -4732,7 +4737,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-julius-iii",
@@ -4752,7 +4757,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "coronation-of-conrad-ii",
@@ -4772,7 +4777,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "populorum-progressio",
@@ -4792,7 +4797,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-stephen-ix",
@@ -4812,7 +4817,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "sicilian-vespers",
@@ -4832,7 +4837,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-eleanor-of-aquitaine",
@@ -4852,7 +4857,7 @@
           "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Eleanor_of_Aquitaine"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "coronation-of-edward-the-confessor",
@@ -4876,7 +4881,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pope-nicholas-iv",
@@ -4887,7 +4892,7 @@
       "body": [
         "On 4 April 1292 Pope Nicholas IV died in Rome. Born Girolamo Masci near Ascoli Piceno about 1227, he had entered the Franciscan Order young, succeeded St. Bonaventure as its minister general in 1274, and served as legate to the Greeks before his election on 22 February 1288 — the first Franciscan to occupy the Chair of Peter.",
         "His four years' reign was busy: he crowned Charles II of Anjou king of Sicily in May 1289, and in the same year dispatched the Franciscan John of Montecorvino to the court of the Great Khan, who would plant the Church's first mission at Khanbaliq, the modern Peking. In Rome he adorned Santa Maria Maggiore, where his kneeling portrait survives in the apse mosaic.",
-        "His death opened the longest vacancy of the later medieval Church: the cardinals deadlocked for two years, three months, and two days before electing, on 5 July 1294, the hermit Pietro da Morrone as Celestine V — the last election held outside conclave. Celestine's few troubled months and his abdication led straight to Boniface VIII, and in time to Avignon."
+        "His death opened one of the longest vacancies of the medieval Church, surpassed in that age only by the deadlock that had chosen Gregory X: the cardinals wrangled two years, three months, and two days before electing, on 5 July 1294, the hermit Pietro da Morrone as Celestine V — the last election held outside conclave. Celestine's few troubled months and his abdication led straight to Boniface VIII, and in time to Avignon."
       ],
       "sources": [
         {
@@ -4896,7 +4901,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-on-the-ice",
@@ -4916,7 +4921,7 @@
           "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Alexander_Nevsky,_Saint"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-raphael",
@@ -4936,7 +4941,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-el-greco",
@@ -4956,7 +4961,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-legnica-1241",
@@ -4976,7 +4981,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-magdalene-of-canossa",
@@ -4996,7 +5001,7 @@
           "url": "https://www.archivioradiovaticana.va/storico/2014/01/11/st_magdalen_of_canossa_(1774-1835)her_canonization/in2-763235"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-adrianople-1205",
@@ -5016,7 +5021,7 @@
           "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Baldwin_I._(emperor_of_Romania)"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "birth-of-leonardo-da-vinci",
@@ -5036,7 +5041,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "fire-of-notre-dame-2019",
@@ -5056,7 +5061,7 @@
           "url": "https://press.vatican.va/content/salastampa/en/bollettino/pubblico/2019/04/16/190416c.html"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-benedict-joseph-labre",
@@ -5080,7 +5085,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "capitulations-of-santa-fe",
@@ -5100,7 +5105,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "execution-of-elizabeth-barton",
@@ -5120,7 +5125,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-clement-v",
@@ -5140,7 +5145,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-peter-abelard",
@@ -5160,7 +5165,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-adalbert-of-prague",
@@ -5184,7 +5189,7 @@
           "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Adalbert_(bishop)"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "attack-on-leo-iii-799",
@@ -5204,7 +5209,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "pazzi-conspiracy",
@@ -5224,7 +5229,7 @@
           "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Medici"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-peter-chanel",
@@ -5244,7 +5249,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-marie-of-the-incarnation",
@@ -5264,7 +5269,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "knox-returns-to-scotland",
@@ -5288,7 +5293,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "second-council-of-constantinople",
@@ -5308,7 +5313,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "translation-of-st-nicholas-to-bari",
@@ -5328,7 +5333,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "paul-vi-shenouda-common-declaration",
@@ -5348,7 +5353,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "dedication-of-constantinople",
@@ -5368,7 +5373,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "canonization-martyrs-of-otranto",
@@ -5388,7 +5393,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "assassination-of-henry-iv",
@@ -5399,7 +5404,7 @@
       "body": [
         "On 14 May 1610 Henry IV, the first Bourbon king of France, was assassinated in the Rue de la Ferronnerie in Paris, stabbed by François Ravaillac as his coach halted in the press of traffic for the coronation festivities of his queen, Marie de' Medici, crowned the day before at Saint-Denis. He was fifty-six years old, and had escaped a dozen earlier attempts upon his life.",
         "Born at Pau in Béarn in 1553, Henry of Navarre had led the Huguenot party through the Wars of Religion and inherited the crown in 1589. When Paris would not open its gates to a Protestant, he was received into the Catholic Church at Saint-Denis on 25 July 1593 — 'Paris is well worth a Mass,' as the saying ascribed to him runs — was crowned at Chartres the following February, and was absolved by Clement VIII in 1595.",
-        "His reign healed what sixty years of war had torn: the Edict of Nantes in 1598 granted the Huguenots liberty of conscience and a measure of public worship, and the king who wished every peasant a chicken in his pot restored the kingdom's fortunes with his minister Sully. His death left the throne to a child of nine, Louis XIII, with the queen-mother as regent."
+        "His reign healed what sixty years of war had torn: the Edict of Nantes in 1598 granted the Huguenots liberty of conscience and a measure of public worship, and the king who wished every peasant a chicken in his pot restored the kingdom's fortunes with his minister Sully. His death left the throne to a child of eight, Louis XIII, with the queen-mother as regent."
       ],
       "sources": [
         {
@@ -5412,7 +5417,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "napoleon-annexes-papal-states",
@@ -5436,7 +5441,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "canonization-fisher-and-more",
@@ -5456,7 +5461,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "earthquake-synod-condemns-wyclif",
@@ -5480,7 +5485,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "canonization-la-salle-and-rita",
@@ -5505,7 +5510,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-the-venerable-bede",
@@ -5514,7 +5519,7 @@
       "title": "The death of the Venerable Bede",
       "shortBlurb": "With the last sentence of his English St. John dictated, the father of English history died on the floor of his cell, singing the Gloria…",
       "body": [
-        "On the vigil of the Ascension in 735 — 26 May by civil reckoning, though the Church's feast had already begun at vespers — the Venerable Bede died in his cell at Jarrow in Northumbria, in about his sixty-second year. The account of his last hours was written by his disciple Cuthbert to the priest Cuthwin.",
+        "On Ascension Day, 26 May 735, the Venerable Bede died in his cell at Jarrow in Northumbria, in about his sixty-second year, in the evening after the festival procession. The account of his last hours was written by his disciple Cuthbert to the priest Cuthwin.",
         "All that day he had gone on dictating his translation of the Gospel of St. John into English. In the evening the boy Wilbert, who wrote at his word, said: 'There is still one sentence, dear master, which is not written down.' When it was supplied, 'It is finished,' Bede answered; 'take my head in thy hands.' And so, singing 'Glory be to the Father, and to the Son, and to the Holy Ghost,' he breathed his last upon the floor of his cell.",
         "Born about 673, he had been given at seven years old to Abbot Benedict Biscop at Wearmouth, and passed his whole life in the twin monastery — deacon at nineteen, priest at thirty. 'It was ever my delight,' he wrote, 'to learn or teach or write,' and his Ecclesiastical History of the English People, finished in 731, remains the foundation of our knowledge of early England. In 1899 Leo XIII declared him a Doctor of the Church."
       ],
@@ -5525,7 +5530,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "execution-of-margaret-pole",
@@ -5545,7 +5550,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-germain-of-paris",
@@ -5565,7 +5570,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-ferdinand-iii",
@@ -5585,7 +5590,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "rediscovery-roman-catacombs",
@@ -5609,7 +5614,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-john-story",
@@ -5629,7 +5634,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "vandal-sack-of-rome",
@@ -5653,7 +5658,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "coronation-of-lothair-iii",
@@ -5673,7 +5678,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "louis-ix-takes-damietta",
@@ -5698,7 +5703,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-frederick-barbarossa",
@@ -5722,7 +5727,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "consecration-of-saint-denis",
@@ -5747,7 +5752,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pope-leo-iii",
@@ -5767,7 +5772,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-john-sobieski",
@@ -5787,7 +5792,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-civitate",
@@ -5807,7 +5812,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-the-catalaunian-plains",
@@ -5831,7 +5836,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "fall-of-fort-st-elmo",
@@ -5851,7 +5856,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "first-masonic-grand-lodge",
@@ -5871,7 +5876,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "augsburg-confession-presented",
@@ -5891,7 +5896,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "consecration-of-pope-agatho",
@@ -5915,7 +5920,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-charles-v",
@@ -5935,7 +5940,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "consecration-of-westminster-cathedral",
@@ -5955,7 +5960,7 @@
           "url": "https://westminstercathedral.org.uk/about-us/history/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "credo-of-the-people-of-god",
@@ -5975,7 +5980,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-st-swithun",
@@ -5995,7 +6000,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "founding-of-quebec",
@@ -6020,7 +6025,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-celestine-v",
@@ -6029,7 +6034,7 @@
       "title": "The election of Pope Celestine V",
       "shortBlurb": "After a vacancy of more than two years the cardinals chose an aged hermit, who would reign five months and then resign…",
       "body": [
-        "When Nicholas IV died in April 1292, the cardinals, divided between the Colonna and the Orsini, could not agree upon a successor, and the see of Peter stood vacant for twenty-seven months. At Perugia, on 5 July 1294, at the cry of the aged Cardinal Latino Malabranca, they elected the Benedictine hermit Pietro da Morrone, an ascetic of the Abruzzi then in his eighties, whose little congregation of hermits had been confirmed at the Second Council of Lyons in 1274.",
+        "When Nicholas IV died in April 1292, the cardinals, divided between the Colonna and the Orsini, could not agree upon a successor, and the see of Peter stood vacant for twenty-seven months. At Perugia, on 5 July 1294, at the cry of the aged Cardinal Latino Malabranca, they elected the Benedictine hermit Pietro da Morrone, an aged ascetic of the Abruzzi near eighty, whose little congregation of hermits had been confirmed at the Second Council of Lyons in 1274.",
         "The new pope, who took the name Celestine V, was crowned on 29 August before the basilica of Santa Maria di Collemaggio at L'Aquila, which he himself had built; his was the last papal election held without the forms of a conclave. Utterly without experience of affairs, he fell under the direction of Charles II of Naples and soon longed for his cell.",
         "Advised by Cardinal Benedetto Caetani that a pope might lawfully resign, he issued a constitution affirming the right and laid down the office on 13 December 1294, after a reign of five months. He died a prisoner of his successor Boniface VIII on 19 May 1296, and Clement V numbered him among the saints in 1313."
       ],
@@ -6040,7 +6045,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "rehabilitation-of-joan-of-arc",
@@ -6060,7 +6065,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-eugene-iii",
@@ -6080,7 +6085,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "birth-of-john-calvin",
@@ -6100,7 +6105,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "clement-vii-sentence-against-henry-viii",
@@ -6120,7 +6125,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "civil-constitution-of-the-clergy",
@@ -6130,8 +6135,8 @@
       "shortBlurb": "The Constituent Assembly redrew the Church of France without the pope, and sowed the schism of juror and refractory…",
       "body": [
         "Having seized the goods of the Church in November 1789 and suppressed the monastic orders the following February, the National Constituent Assembly turned to the clergy itself. After debate opened on 1 June, it passed the Civil Constitution of the Clergy on 12 July 1790.",
-        "The law remade the Church upon the map of the state: dioceses were conformed to the eighty-three departments, fifty-seven episcopal sees suppressed, the title of archbishop abolished; bishops and parish priests were to be chosen by civil electoral assemblies, open even to Protestant and Jewish voters; no confirmation might be sought from the pope, and all appeals to Rome were forbidden. The clergy became salaried officers of the nation.",
-        "Louis XVI promulgated the Constitution on 24 August, writing to the pope that he did so with death in his soul. In November the Assembly imposed an oath to the Constitution on every bishop and priest; of one hundred and twenty-five bishops only four took it. Pius VI solemnly condemned the whole work on 13 April 1791, and the Church of France split into the jurors of the Constitutional Church and the refractory priests, whose fidelity was answered with deportation and, in the Terror, with death."
+        "The law remade the Church upon the map of the state: dioceses were conformed to the eighty-three departments, some fifty episcopal sees suppressed, the title of archbishop abolished; bishops and parish priests were to be chosen by civil electoral assemblies, open even to Protestant and Jewish voters; no confirmation might be sought from the pope, and all appeals to Rome were forbidden. The clergy became salaried officers of the nation.",
+        "Louis XVI promulgated the Constitution on 24 August, writing to the pope that he did so with death in his soul. In November the Assembly imposed an oath to the Constitution on every bishop and priest; of some one hundred and thirty bishops only four took it. Pius VI solemnly condemned the whole work on 13 April 1791, and the Church of France split into the jurors of the Constitutional Church and the refractory priests, whose fidelity was answered with deportation and, in the Terror, with death."
       ],
       "sources": [
         {
@@ -6140,7 +6145,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "great-fire-of-rome",
@@ -6159,7 +6164,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-leo-xiii",
@@ -6168,7 +6173,7 @@
       "title": "The death of Pope Leo XIII",
       "shortBlurb": "The author of Rerum novarum, then the oldest man ever to sit in Peter's chair, ended a twenty-five-year pontificate…",
       "body": [
-        "Vincenzo Gioacchino Pecci, born at Carpineto Romano on 2 March 1810, had been for thirty-one years Archbishop of Perugia when, on 20 February 1878, the conclave chose him to succeed Pius IX; expected to prove a transitional pope, he reigned instead for a quarter of a century.",
+        "Vincenzo Gioacchino Pecci, born at Carpineto Romano on 2 March 1810, had been for thirty-two years Archbishop of Perugia when, on 20 February 1878, the conclave chose him to succeed Pius IX; expected to prove a transitional pope, he reigned instead for a quarter of a century.",
         "Leo XIII opened the Vatican Archives to the scholars of the world, restored the study of St. Thomas Aquinas with the encyclical Aeterni Patris in 1879, and on 15 May 1891 issued Rerum novarum, the charter of the Church's social teaching, condemning both the rapacity of unbridled capital and the remedy of socialism. He wrote eleven encyclicals on the Rosary, sought reunion with the separated churches of the East, and lived to be the first pope filmed and the first whose voice was recorded.",
         "He died in the Vatican on 20 July 1903, aged ninety-three years and one hundred and forty days — the oldest of the popes in history. He was buried in St. Peter's, and in 1924 his body was translated to the basilica of St. John Lateran, his cathedral as Bishop of Rome. The conclave that followed him raised Cardinal Sarto, the Patriarch of Venice, to the see of Peter as Pius X."
       ],
@@ -6179,7 +6184,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "sack-of-beziers",
@@ -6199,7 +6204,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "abdication-of-mary-queen-of-scots",
@@ -6219,7 +6224,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-jacques-hamel",
@@ -6228,7 +6233,7 @@
       "title": "The martyrdom of Fr. Jacques Hamel",
       "shortBlurb": "An eighty-five-year-old priest was slain at the altar during morning Mass in Normandy, and the Church numbered him among the martyrs…",
       "body": [
-        "On the morning of 26 July 2016, Fr. Jacques Hamel, an eighty-five-year-old auxiliary priest, was celebrating Mass in the church of Saint-Étienne at Saint-Étienne-du-Rouvray, near Rouen, when two young men who had pledged themselves to the Islamic State burst in with knives. Before the five faithful present — among them two religious sisters — they seized the priest at the altar and cut his throat; one parishioner was gravely wounded before the police shot the two attackers dead.",
+        "On the morning of 26 July 2016, Fr. Jacques Hamel, an eighty-five-year-old auxiliary priest, was celebrating Mass in the church of Saint-Étienne at Saint-Étienne-du-Rouvray, near Rouen, when two young men who had pledged themselves to the Islamic State burst in with knives. Before the five faithful present — among them three religious sisters — they seized the priest at the altar and cut his throat; one parishioner was gravely wounded before the police shot the two attackers dead.",
         "The killing, claimed by the Islamic State, struck the Church as World Youth Day opened in Kraków. Speaking of it with the pilgrims of Rouen at a Mass at Santa Marta on 14 September, the feast of the Exaltation of the Holy Cross, Pope Francis said that in the long chain of Christian martyrs, which begins with Jesus Christ Himself, the Church now reaches our dear Jacques: he is a martyr, and martyrs are blessed.",
         "Dispensing with the five years the law requires, Pope Francis allowed the Archdiocese of Rouen to open the cause of Fr. Hamel's beatification in April 2017. His tomb, and the little church where he died saying Mass, have become places of pilgrimage."
       ],
@@ -6244,7 +6249,7 @@
           "url": "https://www.fides.org/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-bouvines",
@@ -6264,7 +6269,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "accession-of-justinian",
@@ -6284,7 +6289,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "mary-tudor-enters-london",
@@ -6304,7 +6309,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-pius-x",
@@ -6324,7 +6329,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-oswald-maserfield",
@@ -6348,7 +6353,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-cajetan",
@@ -6372,7 +6377,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-henry-iv",
@@ -6392,7 +6397,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "robber-council-of-ephesus",
@@ -6412,7 +6417,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-adrianople-378",
@@ -6432,7 +6437,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-flavian-of-constantinople",
@@ -6452,7 +6457,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-innocent-xi",
@@ -6472,7 +6477,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "human-generis",
@@ -6492,7 +6497,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-paschal-ii",
@@ -6512,7 +6517,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "union-of-krewo",
@@ -6532,7 +6537,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-wenceslaus-iv",
@@ -6552,7 +6557,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "scots-confession",
@@ -6572,7 +6577,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-alexander-vi",
@@ -6592,7 +6597,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pascal",
@@ -6612,7 +6617,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pius-x",
@@ -6632,7 +6637,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-alexander-of-hales",
@@ -6652,7 +6657,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-the-standard",
@@ -6663,7 +6668,7 @@
       "body": [
         "In the anarchy of King Stephen's reign, David I of Scotland came down into England for the third time in 1138, professing the cause of his niece the Empress Matilda, and wasting the country south over the Tyne and the Tees toward York. Thurstan, the aged Archbishop of York, gathered the levies of the north to meet him.",
         "The armies met on Cowton Moor, two miles north of Northallerton, on 22 August 1138. In the midst of the English host stood a cart, and on it a ship's mast, from which hung a silver crucifix and the banners of St. Peter of York, St. John of Beverley, and St. Wilfrid of Ripon — the standard that gave the battle its name. Thurstan, too old and sick to ride with them, sent Ralph, Bishop of the Orkneys, in his place, who absolved the host in the archbishop's name and promised the kingdom of heaven to those who should fall.",
-        "The wild charge of the Galwegians broke upon the dismounted knights and the arrows of the Yorkshire bowmen; the Scots were routed with heavy loss, and David barely brought his remnant back to Carlisle. By Michaelmas a truce was made at Roxburgh, and the north had peace."
+        "The wild charge of the Galwegians broke upon the dismounted knights and the arrows of the Yorkshire bowmen; the Scots were routed with heavy loss, and David barely brought his remnant back to Carlisle. In late September the papal legate Alberic of Ostia brokered a truce at Carlisle, and the following spring the second Treaty of Durham gave the north its peace."
       ],
       "sources": [
         {
@@ -6675,7 +6680,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-philip-benizi",
@@ -6699,7 +6704,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-luis-de-leon",
@@ -6719,7 +6724,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-theodoric",
@@ -6739,7 +6744,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-aidan-lindisfarne",
@@ -6763,7 +6768,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-adrian-iv-1159",
@@ -6783,7 +6788,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "terror-declared-order-of-the-day-1793",
@@ -6803,7 +6808,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-the-frigidus-394",
@@ -6823,7 +6828,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "outrage-of-anagni-1303",
@@ -6843,7 +6848,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "colloquy-of-poissy-1561",
@@ -6863,7 +6868,7 @@
           "url": "https://theodora.com/encyclopedia/p2/colloquy_of_poissy.html"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "council-of-agde-506",
@@ -6883,7 +6888,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "founding-of-cluny-910",
@@ -6903,7 +6908,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-philip-ii-1598",
@@ -6923,7 +6928,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-urban-vii-1590",
@@ -6943,7 +6948,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pope-martin-i-655",
@@ -6963,7 +6968,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-chrysopolis-324",
@@ -6983,7 +6988,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-charles-v-1558",
@@ -7003,7 +7008,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-clement-xiv-1774",
@@ -7023,7 +7028,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "concordat-of-worms-1122",
@@ -7043,7 +7048,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "second-council-of-nicaea-opens-787",
@@ -7063,7 +7068,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "peace-of-augsburg-1555",
@@ -7083,7 +7088,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-the-maritsa-1371",
@@ -7103,7 +7108,7 @@
           "url": "https://theodora.com/encyclopedia/s/servia.html"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-john-paul-i-1978",
@@ -7123,7 +7128,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "excommunication-of-frederick-ii-1227",
@@ -7143,7 +7148,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "coronation-of-mary-i",
@@ -7163,7 +7168,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "saladin-takes-jerusalem",
@@ -7183,7 +7188,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "paul-vi-at-the-united-nations",
@@ -7192,7 +7197,7 @@
       "title": "Paul VI before the United Nations",
       "shortBlurb": "On the feast of St. Francis, Paul VI crossed the Atlantic for a one-day visit to plead before the nations: no more war, war never again…",
       "body": [
-        "On 4 October 1965, the feast of St. Francis of Assisi, Paul VI landed in New York — the first pope to set foot in the Western Hemisphere, and the first to leave Italy since 1809. \"Greetings to you, America,\" he said at the airport; \"the first pope to set foot on your land blesses you with all his heart.\"",
+        "On 4 October 1965, the feast of St. Francis of Assisi, Paul VI landed in New York — the first pope to set foot in the Western Hemisphere, and the first ever to visit the United States. \"Greetings to you, America,\" he said at the airport; \"the first pope to set foot on your land blesses you with all his heart.\"",
         "Greeted by Secretary-General U Thant, he addressed the General Assembly in French, in the organization's twentieth year. \"No more war, war never again,\" he pleaded; \"it is peace, peace, that has to guide the destiny of the nations of all mankind.\" The whole journey lasted fourteen hours and ended with Mass at Yankee Stadium.",
         "In Rome the Second Vatican Council was then holding its fourth and last session; two months later, on 8 December 1965, the pope closed it. His one-day pilgrimage for peace set a pattern: his successors have returned to the same rostrum to speak for the Church before the family of nations."
       ],
@@ -7203,7 +7208,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "fourth-council-of-constantinople-opens",
@@ -7223,7 +7228,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-william-tyndale",
@@ -7243,7 +7248,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "council-of-chalcedon-opens",
@@ -7263,7 +7268,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pius-xii",
@@ -7283,7 +7288,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-tours",
@@ -7303,7 +7308,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-hastings",
@@ -7323,7 +7328,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "mother-teresa-nobel-peace-prize",
@@ -7343,7 +7348,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "revocation-of-the-edict-of-nantes",
@@ -7363,7 +7368,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "marriage-of-ferdinand-and-isabella",
@@ -7383,7 +7388,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "crusaders-reach-antioch",
@@ -7403,7 +7408,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "destruction-of-the-peoples-crusade",
@@ -7423,7 +7428,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-charles-martel",
@@ -7443,7 +7448,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "irish-rising-of-1641",
@@ -7463,7 +7468,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "consecration-of-chartres",
@@ -7473,7 +7478,7 @@
       "shortBlurb": "Rebuilt in a generation after the great fire, Notre-Dame de Chartres was consecrated in the presence of St. Louis, her windows already the wonder of Christendom…",
       "body": [
         "When fire gutted the Romanesque cathedral of Chartres in 1194, the town's despair turned to hope when the relic of the Virgin's veil — brought from Aachen by Charles the Bald about 876 — was found unharmed. Kings, guilds, and peasants gave or dragged stone, and in little more than a generation the new church rose, the most perfectly Gothic of all cathedrals.",
-        "The consecration came in October 1260 — the 24th by the common reckoning, though some authorities give the 17th — and St. Louis is believed to have attended with his mother Blanche of Castile. The royal house had given richly: the upper windows were the gift of the king, of St. Ferdinand, and of the queen mother.",
+        "The consecration came in October 1260 — the 24th by the common reckoning, though some authorities give the 17th — and St. Louis is believed to have attended. The royal house had given richly: the upper windows were the gift of the king, of St. Ferdinand, and of the queen mother Blanche of Castile, who had died in 1252.",
         "Her glass is her glory: the old count numbers near four thousand figures in her windows. Kings came to her as pilgrims — Henry III of France eighteen times, Charles V of France twice, and barefoot; and Henry IV, barred from Reims, was crowned at Chartres in 1594. The Revolution spared her, and two wars; she stands as she was consecrated."
       ],
       "sources": [
@@ -7483,7 +7488,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "abdication-of-charles-v",
@@ -7503,7 +7508,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-alfred-the-great",
@@ -7523,7 +7528,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "assisi-day-of-prayer-for-peace",
@@ -7543,7 +7548,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "execution-of-conradin",
@@ -7563,7 +7568,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-rio-salado",
@@ -7583,7 +7588,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-frances-damboise",
@@ -7603,7 +7608,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "first-us-diocese-baltimore",
@@ -7623,7 +7628,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "bolshevik-revolution-1917",
@@ -7643,7 +7648,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-duns-scotus",
@@ -7663,7 +7668,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "founding-of-the-redemptorists",
@@ -7683,7 +7688,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-cnut-the-great",
@@ -7707,7 +7712,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-nicholas-the-great",
@@ -7727,7 +7732,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "end-of-the-western-schism",
@@ -7747,7 +7752,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-the-winwaed",
@@ -7766,7 +7771,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "deaths-of-mary-i-and-cardinal-pole",
@@ -7786,7 +7791,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "consecration-of-pope-hilarius",
@@ -7806,7 +7811,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "accession-of-diocletian",
@@ -7825,7 +7830,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "imperial-coronation-of-frederick-ii",
@@ -7845,7 +7850,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-chrysogonus",
@@ -7869,7 +7874,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "battle-of-montgisard",
@@ -7889,7 +7894,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-isabella-of-castile",
@@ -7900,7 +7905,7 @@
       "body": [
         "Isabella I of Castile, born on 22 April 1451 at Madrigal de las Altas Torres, joined her crown to that of Ferdinand of Aragon and so laid the foundation of a united Spain. In 1492 the two sovereigns took Granada, the last Moorish kingdom, ending the long Reconquista, and in that same year sponsored the voyage of Christopher Columbus across the ocean.",
         "A queen of fervent and practical piety, she promoted the reform of the Spanish Church and its religious orders, aided by Cardinal Cisneros. Yet her reign is remembered also for its shadows, told here without gloss: the establishment of the Spanish Inquisition in 1478 and the expulsion of the Jews from her realms in 1492.",
-        "Worn by the deaths of her only son John and her daughter Isabella, she withdrew from the cares of government in September 1504. She died a little before noon on 26 November 1504 in the castle of La Mota at Medina del Campo, and was buried, by her own wish, at Granada. A cause for her beatification was in time opened, and she is styled a Servant of God."
+        "Worn by the deaths of her only son John and her daughter Isabella, she withdrew from the cares of government in September 1504. She died a little before noon on 26 November 1504 in the royal palace at Medina del Campo, and was buried, by her own wish, at Granada. A cause for her beatification was in time opened, and she is styled a Servant of God."
       ],
       "sources": [
         {
@@ -7909,7 +7914,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-james-of-the-marches",
@@ -7929,7 +7934,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-clement-iv",
@@ -7949,7 +7954,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-eligius-of-noyon",
@@ -7969,7 +7974,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-birinus-of-dorchester",
@@ -7988,7 +7993,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-crispina",
@@ -8012,7 +8017,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "french-law-of-separation-1905",
@@ -8022,7 +8027,7 @@
       "shortBlurb": "The law of 9 December 1905 ended the century-old Concordat between France and the Holy See and opened the age of laïcité…",
       "body": [
         "On 9 December 1905 the French Republic passed the law on the Separation of the Churches and the State, ending the Concordat of 1801 by which Napoleon and Pius VII had for more than a hundred years governed the relations of Church and State in France.",
-        "The state would no longer recognize or pay the Church, but only associations cultuelles — associations formed in each parish for the conduct of worship; failing such associations, the property of the churches was to be lost forever and handed over to the charitable establishments of the communes. Two days later, on 11 December, Pius X lodged his solemn protest in a public allocution.",
+        "The state would no longer recognize or pay the Church, but only associations cultuelles — associations formed in each parish for the conduct of worship; failing such associations, the property of the churches was to be lost forever and handed over to the charitable establishments of the communes. Pope Pius X met the law with resistance: by the encyclical Vehementer Nos of 11 February 1906 he solemnly condemned it as unjust to God and destructive of the Church's rights.",
         "By the encyclical Gravissimo Officii of 10 August 1906 the pope forbade the associations, fearing they would furnish the state a pretext for meddling in the Church's inner life and the laity a constant temptation to rule the parish; the state then treated the old church corporations as nonexistent and transferred their goods, excepting only the edifices still used for worship. The Church of France was stripped of its endowments, and the law of 1905, much amended, still frames French laïcité."
       ],
       "sources": [
@@ -8032,7 +8037,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-finian-of-clonard",
@@ -8056,7 +8061,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pope-adrian-ii",
@@ -8067,7 +8072,7 @@
       "body": [
         "Of a Roman family that had already given the Church two pontiffs, Stephen III and Sergius II, Adrian was seventy-five when the clergy and people of Rome chose him, much against his will, to succeed Nicholas I. He had been married before taking orders, and his old age was saddened by a domestic tragedy.",
         "He followed closely in the footsteps of his energetic predecessor. At Monte Cassino he readmitted the repentant King Lothair of Lorraine to communion only after exacting a public oath that he would take back his lawful wife Theutberga; and against Hincmar of Reims he upheld the unlimited right of bishops to appeal to the Sovereign Pontiff.",
-        "At the Eighth General Council, which he convened at Constantinople in 869 and guided through ten legates, he effected the deposition of Photius and the restoration of unity between the East and the West. The Bulgarians he could not hold for the western patriarchate, but he seconded the saintly brothers Cyril and Methodius, and his endorsement of their Slavonic liturgy proved of enduring influence. He died on 14 December 872, exactly five years from his consecration."
+        "At the Eighth General Council, which he convened at Constantinople in 869 and guided through three legates, he effected the deposition of Photius and the restoration of unity between the East and the West. The Bulgarians he could not hold for the western patriarchate, but he seconded the saintly brothers Cyril and Methodius, and his endorsement of their Slavonic liturgy proved of enduring influence. He died on 14 December 872, exactly five years from his consecration."
       ],
       "sources": [
         {
@@ -8076,7 +8081,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "consecration-of-eusebius-of-vercelli",
@@ -8099,7 +8104,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-ado-of-vienne",
@@ -8118,7 +8123,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "approval-of-the-trinitarians",
@@ -8138,7 +8143,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-winebald-of-heidenheim",
@@ -8157,7 +8162,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pope-urban-v",
@@ -8177,7 +8182,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-thomas-the-apostle",
@@ -8201,7 +8206,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-mother-cabrini",
@@ -8221,7 +8226,7 @@
           "url": "https://www.vatican.va/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-servulus",
@@ -8240,7 +8245,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "election-of-clement-ii",
@@ -8260,7 +8265,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-pope-dionysius",
@@ -8280,7 +8285,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "consecration-of-westminster-abbey",
@@ -8304,7 +8309,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "martyrdom-of-sabinus-of-assisi",
@@ -8323,7 +8328,7 @@
           "license": "public-domain"
         }
       ],
-      "verified": false
+      "verified": true
     },
     {
       "id": "death-of-john-wycliffe",
@@ -8343,7 +8348,7 @@
           "url": "https://www.newadvent.org/cathen/"
         }
       ],
-      "verified": false
+      "verified": true
     }
   ]
 }

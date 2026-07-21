@@ -1,0 +1,330 @@
+{
+  "months": ["07", "08", "09"],
+  "results": [
+    {
+      "id": "death-of-st-swithun",
+      "verdict": "clean",
+      "reason": "CE agrees: d. 2 July 862 (some say 863, hedged), churchyard burial, translation 15 July 971 by Æthelwold, shrine broken up 1538."
+    },
+    {
+      "id": "founding-of-quebec",
+      "verdict": "clean",
+      "reason": "Champlain founded Quebec 3 July 1608; Recollects 1615, Jesuits 1625, Kirke 1629, Saint-Germain-en-Laye 1632, d. Christmas 1635, Laval 1659, diocese 1674 — all correct."
+    },
+    {
+      "id": "election-of-celestine-v",
+      "verdict": "hedge",
+      "reason": "Date (5 July 1294), 27-month vacancy, resignation 13 Dec 1294, d. 1296, canonized 1313 all correct; but CE/most sources give b. 1215 → age ~79 at election, so 'in his eighties' overstates a contested age. Softened to 'near eighty'.",
+      "fields": {
+        "verified": true,
+        "body": [
+          "When Nicholas IV died in April 1292, the cardinals, divided between the Colonna and the Orsini, could not agree upon a successor, and the see of Peter stood vacant for twenty-seven months. At Perugia, on 5 July 1294, at the cry of the aged Cardinal Latino Malabranca, they elected the Benedictine hermit Pietro da Morrone, an aged ascetic of the Abruzzi near eighty, whose little congregation of hermits had been confirmed at the Second Council of Lyons in 1274.",
+          "The new pope, who took the name Celestine V, was crowned on 29 August before the basilica of Santa Maria di Collemaggio at L'Aquila, which he himself had built; his was the last papal election held without the forms of a conclave. Utterly without experience of affairs, he fell under the direction of Charles II of Naples and soon longed for his cell.",
+          "Advised by Cardinal Benedetto Caetani that a pope might lawfully resign, he issued a constitution affirming the right and laid down the office on 13 December 1294, after a reign of five months. He died a prisoner of his successor Boniface VIII on 19 May 1296, and Clement V numbered him among the saints in 1313."
+        ]
+      }
+    },
+    {
+      "id": "rehabilitation-of-joan-of-arc",
+      "verdict": "clean",
+      "reason": "Burned 30 May 1431 (Cauchon), Isabelle Romée, Bouillé 1450, Bréhal 1452, Callixtus III, opened Paris 7 Nov 1455, ~115 witnesses, sentence 7 July 1456, canonized 16 May 1920 — all correct."
+    },
+    {
+      "id": "death-of-eugene-iii",
+      "verdict": "clean",
+      "reason": "Lucius II d. 15 Feb 1145; first Cistercian pope (abbot of Tre Fontane); Edessa 1144, Second Crusade via St. Bernard, De consideratione, Reims 1148; Arnold excommunicated in 1148 (year correct, no false location asserted); d. Tivoli 8 July 1153; cult confirmed 1872."
+    },
+    {
+      "id": "birth-of-john-calvin",
+      "verdict": "clean",
+      "reason": "b. Noyon 10 July 1509, father Gérard Cauvin; Paris/Orléans/Bourges; Institutes Basel 1536; Geneva 1536, expelled 1538, recalled 1541; d. 27 May 1564; Servetus 1553 — all correct."
+    },
+    {
+      "id": "clement-vii-sentence-against-henry-viii",
+      "verdict": "clean",
+      "reason": "Anne married Jan 1533, Cranmer's nullity 23 May, Anne crowned 1 June; brief of 11 July 1533 (excommunication suspended to end of Sept); definitive sentence 23 March 1534; Act of Supremacy Nov 1534 — all correct."
+    },
+    {
+      "id": "civil-constitution-of-the-clergy",
+      "verdict": "correct",
+      "reason": "Core facts sound (passed 12 July 1790, 83 departments, sanctioned 24 Aug, Pius VI condemned 13 April 1791, four bishops swore). But '57 episcopal sees suppressed' overstates the consensus ~52 (135→83), and '125 bishops' is below the documented count (~129–135); corrected to 'some fifty' and 'some one hundred and thirty'.",
+      "fields": {
+        "verified": true,
+        "body": [
+          "Having seized the goods of the Church in November 1789 and suppressed the monastic orders the following February, the National Constituent Assembly turned to the clergy itself. After debate opened on 1 June, it passed the Civil Constitution of the Clergy on 12 July 1790.",
+          "The law remade the Church upon the map of the state: dioceses were conformed to the eighty-three departments, some fifty episcopal sees suppressed, the title of archbishop abolished; bishops and parish priests were to be chosen by civil electoral assemblies, open even to Protestant and Jewish voters; no confirmation might be sought from the pope, and all appeals to Rome were forbidden. The clergy became salaried officers of the nation.",
+          "Louis XVI promulgated the Constitution on 24 August, writing to the pope that he did so with death in his soul. In November the Assembly imposed an oath to the Constitution on every bishop and priest; of some one hundred and thirty bishops only four took it. Pius VI solemnly condemned the whole work on 13 April 1791, and the Church of France split into the jurors of the Constitutional Church and the refractory priests, whose fidelity was answered with deportation and, in the Terror, with death."
+        ]
+      }
+    },
+    {
+      "id": "great-fire-of-rome",
+      "verdict": "clean",
+      "reason": "Night of 18–19 July 64; six days; Tacitus's district tally (3 leveled, 7 ruined, 4 unharmed) matches Annals 15.40; Nero, Christians, Peter and Paul, Tertullian's 'seed' — all correct."
+    },
+    {
+      "id": "death-of-leo-xiii",
+      "verdict": "correct",
+      "reason": "Dates and age (d. 20 July 1903, 93y 140d) correct, but CE states Pecci 'remained for thirty-two years' at Perugia (installed 1846, elected 1878); 'thirty-one years' is a material slip corrected to 'thirty-two'.",
+      "fields": {
+        "verified": true,
+        "body": [
+          "Vincenzo Gioacchino Pecci, born at Carpineto Romano on 2 March 1810, had been for thirty-two years Archbishop of Perugia when, on 20 February 1878, the conclave chose him to succeed Pius IX; expected to prove a transitional pope, he reigned instead for a quarter of a century.",
+          "Leo XIII opened the Vatican Archives to the scholars of the world, restored the study of St. Thomas Aquinas with the encyclical Aeterni Patris in 1879, and on 15 May 1891 issued Rerum novarum, the charter of the Church's social teaching, condemning both the rapacity of unbridled capital and the remedy of socialism. He wrote eleven encyclicals on the Rosary, sought reunion with the separated churches of the East, and lived to be the first pope filmed and the first whose voice was recorded.",
+          "He died in the Vatican on 20 July 1903, aged ninety-three years and one hundred and forty days — the oldest of the popes in history. He was buried in St. Peter's, and in 1924 his body was translated to the basilica of St. John Lateran, his cathedral as Bishop of Rome. The conclave that followed him raised Cardinal Sarto, the Patriarch of Venice, to the see of Peter as Pius X."
+        ]
+      }
+    },
+    {
+      "id": "sack-of-beziers",
+      "verdict": "clean",
+      "reason": "Castelnau murdered 1208, Innocent III's crusade, legate Arnold Amalric, Trencavel; Béziers stormed 22 July 1209 (St. Mary Magdalen); '~20,000' legate's figure and 'Kill them all' (Caesarius, judged apocryphal) both hedged as in sources."
+    },
+    {
+      "id": "abdication-of-mary-queen-of-scots",
+      "verdict": "clean",
+      "reason": "Returned 1561; Darnley murdered 10 Feb 1567; Bothwell marriage; Carberry Hill 15 June; abdication at Loch Leven 24 July 1567 for James VI (Moray regent); Langside 1568, Fotheringhay 8 Feb 1587 — all correct."
+    },
+    {
+      "id": "martyrdom-of-jacques-hamel",
+      "verdict": "correct",
+      "reason": "Date (26 July 2016), age 85, place, two ISIS attackers, 14 Sept homily, cause opened April 2017 all correct; but witnesses were three nuns and two parishioners (five faithful), so 'two religious sisters' undercounts — corrected to 'three'.",
+      "fields": {
+        "verified": true,
+        "body": [
+          "On the morning of 26 July 2016, Fr. Jacques Hamel, an eighty-five-year-old auxiliary priest, was celebrating Mass in the church of Saint-Étienne at Saint-Étienne-du-Rouvray, near Rouen, when two young men who had pledged themselves to the Islamic State burst in with knives. Before the five faithful present — among them three religious sisters — they seized the priest at the altar and cut his throat; one parishioner was gravely wounded before the police shot the two attackers dead.",
+          "The killing, claimed by the Islamic State, struck the Church as World Youth Day opened in Kraków. Speaking of it with the pilgrims of Rouen at a Mass at Santa Marta on 14 September, the feast of the Exaltation of the Holy Cross, Pope Francis said that in the long chain of Christian martyrs, which begins with Jesus Christ Himself, the Church now reaches our dear Jacques: he is a martyr, and martyrs are blessed.",
+          "Dispensing with the five years the law requires, Pope Francis allowed the Archdiocese of Rouen to open the cause of Fr. Hamel's beatification in April 2017. His tomb, and the little church where he died saying Mass, have become places of pilgrimage."
+        ]
+      }
+    },
+    {
+      "id": "battle-of-bouvines",
+      "verdict": "clean",
+      "reason": "John, Otto IV (excommunicated), Ferrand, Renaud, Longespée vs Philip Augustus; La Roche-aux-Moines; Bouvines Sunday 27 July 1214; captives; Frederick II crowned Aachen 1215, Magna Carta June 1215, Fourth Lateran Nov 1215 — all correct."
+    },
+    {
+      "id": "accession-of-justinian",
+      "verdict": "clean",
+      "reason": "Justin I d. 1 Aug 527, Justinian co-emperor prev. April; b. Petrus Sabbatius ~482 Tauresium; Corpus Juris (529/533/Novels); Belisarius/Narses; Vandals 533; Fifth Council 553/Vigilius; Nika 532/Hagia Sophia; d. 14 Nov 565 — all correct."
+    },
+    {
+      "id": "mary-tudor-enters-london",
+      "verdict": "clean",
+      "reason": "Edward VI d. 6 July 1553; Jane proclaimed 10 July, Mary 19 July; entry 3 Aug 1553 with Elizabeth; prisoners freed (Norfolk, Gardiner, Courtenay); Northumberland executed 22 Aug; crowned 1 Oct — all correct."
+    },
+    {
+      "id": "election-of-pius-x",
+      "verdict": "clean",
+      "reason": "Leo XIII d. 20 July 1903, 62 cardinals; Rampolla 24 first ballot; Puzyna's Austrian veto (jus exclusivae) for Franz Joseph; Sarto elected 4 Aug 1903 (7th ballot); motto; Commissum nobis 20 Jan 1904 — all correct."
+    },
+    {
+      "id": "death-of-oswald-maserfield",
+      "verdict": "clean",
+      "reason": "Son of Æthelfrith; Iona exile; Heavenfield 634; Aidan 635/Lindisfarne; slain by Penda at Maserfield (Oswestry) 5 Aug 642 (year hedged); head/arms; venerated as martyr — matches Bede/CE."
+    },
+    {
+      "id": "death-of-cajetan",
+      "verdict": "clean",
+      "reason": "CE confirms foundation of the Theatines on 3 May 1524 (feast of the Finding of the Cross), approved by Clement VII 24 June 1524; ordained 1516, Naples 1533, d. 7 Aug 1547, canonized by Clement X 12 April 1671 — all correct."
+    },
+    {
+      "id": "death-of-henry-iv",
+      "verdict": "clean",
+      "reason": "King from age six, emperor 1084; excommunicated 1076, Canossa Jan 1077; antipope Clement III, Rome 1084, Gregory VII d. Salerno; Ingelheim Dec 1105; d. Liège 7 Aug 1106, aged 55; entombed 1111; Worms 1122 — all correct."
+    },
+    {
+      "id": "robber-council-of-ephesus",
+      "verdict": "clean",
+      "reason": "Eutyches condemned by Flavian Nov 448; Dioscorus; council 8 Aug 449 (~130 bishops); Tome refused; Eutyches restored, Flavian/Eusebius deposed; Hilary's 'Contradicitur'; latrocinium; undone at Chalcedon 451 — all correct."
+    },
+    {
+      "id": "battle-of-adrianople-378",
+      "verdict": "clean",
+      "reason": "Tervingi cross Danube 376; Fritigern; battle 9 Aug 378; two-thirds lost, Valens killed/body lost; Ammianus 'since Cannae'; Valens last Arian (Eudoxius); Theodosius Aug. Jan 379; Thessalonica edict 380 — all correct."
+    },
+    {
+      "id": "death-of-flavian-of-constantinople",
+      "verdict": "clean",
+      "reason": "Patriarch from 446; condemned Eutyches Nov 448; addressee of Leo's Tome; deposed at Robber Council 8 Aug 449, exiled to Hypaepa; death dated 11 Aug 'by the ancient reckoning' (properly hedged); Pulcheria, Chalcedon 451 restoration — sound."
+    },
+    {
+      "id": "death-of-innocent-xi",
+      "verdict": "clean",
+      "reason": "Odescalchi b. Como 1611, cardinal 1645, elected 21 Sept 1676; Four Gallican Articles 1682, régale, Lavardin/Avignon, 65 propositions/Molinos; Holy League (Vienna 1683, Buda 1686, Belgrade 1688); d. 12 Aug 1689, beatified 1956 — all correct."
+    },
+    {
+      "id": "human-generis",
+      "verdict": "clean",
+      "reason": "Humani Generis published 12 Aug 1950 by Pius XII (Assumption defined same year); warnings on dogma-as-symbol, irenicism, evolution/polygenism accurate; de Lubac d. a cardinal — all correct."
+    },
+    {
+      "id": "election-of-paschal-ii",
+      "verdict": "clean",
+      "reason": "Urban II d. 29 July 1099 (14 days after Jerusalem fell 15 July); Rainerius elected 13 Aug 1099, cardinal-priest of San Clemente; investiture struggle, Henry V 1111 captivity, Lateran 1112; d. 21 Jan 1118; Worms 1122 — all correct."
+    },
+    {
+      "id": "union-of-krewo",
+      "verdict": "clean",
+      "reason": "Union of Krewo 14 Aug 1385; Jogaila's pledge; baptized Władysław 15 Feb 1386, married Jadwiga 18 Feb, crowned 4 March; Vilnius baptism 1387, bishopric 1388; Horodło 1413, Lublin 1569 — all correct."
+    },
+    {
+      "id": "death-of-wenceslaus-iv",
+      "verdict": "clean",
+      "reason": "Son of Charles IV, king of Bohemia from 1378, deposed as King of the Romans 1400; Hus/Bethlehem Chapel; Hus burned 1415; First Defenestration 30 July 1419; d. 16 Aug 1419 aged 58; Sigismund, Žižka, Compactata 1436 — all correct."
+    },
+    {
+      "id": "scots-confession",
+      "verdict": "clean",
+      "reason": "Mary of Guise d. 11 June 1560; Treaty of Edinburgh July; 'six Johns' draft in four days; Confession ratified 17 Aug 1560; 24 Aug acts (papal jurisdiction, Mass banned); Mary refused ratification; standard until 1647 — all correct."
+    },
+    {
+      "id": "death-of-alexander-vi",
+      "verdict": "clean",
+      "reason": "Borgia b. Xàtiva 1 Jan 1431, cardinal at 25, vice-chancellor 35 yrs; elected Aug 1492; Charles VIII, Savonarola, Jubilee 1500, Inter caetera 1493; Lucrezia/Cesare; d. 18 Aug 1503, fever likelier than poison; Julius II — all correct."
+    },
+    {
+      "id": "death-of-pascal",
+      "verdict": "clean",
+      "reason": "b. Clermont 19 June 1623; conics, machine, Puy de Dôme; night of fire 23 Nov 1654/Mémorial; 18 Provincial Letters 1656–57; Pensées/wager; carrosses à cinq sols 1662; d. Paris 19 Aug 1662, aged 39 — all correct."
+    },
+    {
+      "id": "death-of-pius-x",
+      "verdict": "clean",
+      "reason": "80th year, 11th of pontificate; WWI declarations (28 July–4 Aug, 4 Aug his election anniversary); sickened 15 Aug; d. 20 Aug 1914; Benedict XV; canonized by Pius XII 29 May 1954, first since Pius V — all correct."
+    },
+    {
+      "id": "death-of-alexander-of-hales",
+      "verdict": "clean",
+      "reason": "b. Hales ~1185; Paris master of arts by 1210, regent in theology ~1220; Henry III embassy 1235; took Franciscan habit ~1236 keeping his chair; Bonaventure his hearer; Sentences as text; 'Irrefragable Doctor'; d. Paris 21 Aug 1245 — all correct."
+    },
+    {
+      "id": "battle-of-the-standard",
+      "verdict": "correct",
+      "reason": "Battle (Cowton Moor near Northallerton, 22 Aug 1138), standard, Thurstan/Ralph of Orkney, Galwegian charge, David to Carlisle all correct; but the truce was brokered by legate Alberic of Ostia at Carlisle (26 Sept, to Martinmas), not 'at Roxburgh by Michaelmas', and peace came with the second Treaty of Durham (April 1139). Final sentence corrected.",
+      "fields": {
+        "verified": true,
+        "body": [
+          "In the anarchy of King Stephen's reign, David I of Scotland came down into England for the third time in 1138, professing the cause of his niece the Empress Matilda, and wasting the country south over the Tyne and the Tees toward York. Thurstan, the aged Archbishop of York, gathered the levies of the north to meet him.",
+          "The armies met on Cowton Moor, two miles north of Northallerton, on 22 August 1138. In the midst of the English host stood a cart, and on it a ship's mast, from which hung a silver crucifix and the banners of St. Peter of York, St. John of Beverley, and St. Wilfrid of Ripon — the standard that gave the battle its name. Thurstan, too old and sick to ride with them, sent Ralph, Bishop of the Orkneys, in his place, who absolved the host in the archbishop's name and promised the kingdom of heaven to those who should fall.",
+          "The wild charge of the Galwegians broke upon the dismounted knights and the arrows of the Yorkshire bowmen; the Scots were routed with heavy loss, and David barely brought his remnant back to Carlisle. In late September the papal legate Alberic of Ostia brokered a truce at Carlisle, and the following spring the second Treaty of Durham gave the north its peace."
+        ]
+      }
+    },
+    {
+      "id": "death-of-philip-benizi",
+      "verdict": "clean",
+      "reason": "b. Florence 15 Aug 1233; medicine at Paris/Padua; Servites at Monte Senario; prior general 1267; fled the Viterbo conclave; Lyons 1274; Peregrine Laziosi; d. Todi 22 Aug 1285 (octave of Assumption); first Servite canonized (Clement X 1671); feast 23 Aug — all correct."
+    },
+    {
+      "id": "death-of-luis-de-leon",
+      "verdict": "clean",
+      "reason": "b. Belmonte 1527; Augustinian at Salamanca; Song of Songs into Castilian; Inquisition (Valladolid, Mar 1572, ~5 yrs); 'Dicebamus hesterna die' (tradition, hedged); Teresa's works 1588; provincial 14 Aug 1591, d. 23 Aug — all correct."
+    },
+    {
+      "id": "death-of-theodoric",
+      "verdict": "clean",
+      "reason": "King of the Ostrogoths from 471 matches standard dating (Wikipedia reign 471–526); killed Odoacer 493, ruled Italy 33 yrs; Cassiodorus/Boethius; Boethius, Symmachus, Pope John I; d. dysentery Ravenna 30 Aug 526; Athalaric/Amalasuntha — all correct."
+    },
+    {
+      "id": "death-of-aidan-lindisfarne",
+      "verdict": "clean",
+      "reason": "CE (the cited source) states Aidan 'studied under St. Senan, at Iniscathay (Scattery Island)'; Cormán's failure, Lindisfarne 635, Oswald interpreter, Chad/Cedd/Eata, Bamburgh fire, d. 31 Aug 651, Bede's 'surpassing mildness' — all supported."
+    },
+    {
+      "id": "death-of-adrian-iv-1159",
+      "verdict": "clean",
+      "reason": "Breakspear b. ~1100 Abbots Langley; St. Rufus, cardinal-bishop of Albano, Scandinavian legate/Nidaros; elected 4 Dec 1154; crowned Barbarossa 1155, Besançon 1157, Benevento 1156, Laudabiliter (hedged); d. Anagni 1 Sept 1159; schism — all correct."
+    },
+    {
+      "id": "terror-declared-order-of-the-day-1793",
+      "verdict": "clean",
+      "reason": "5 Sept 1793, Paris sections, Barère; Law of Suspects 17 Sept; revolutionary calendar Oct; Notre-Dame Temple of Reason Nov; Rochefort hulks; Compiègne Carmelites July 1794; ~16,000 sentences; Thermidor 27 July 1794 — all correct."
+    },
+    {
+      "id": "battle-of-the-frigidus-394",
+      "verdict": "clean",
+      "reason": "Valentinian II d. Vienne 392; Arbogast/Eugenius, pagan restoration, Altar of Victory; Frigidus (Vipava) 5–6 Sept 394; Bora wind; Eugenius beheaded, Arbogast suicide; Theodosius d. Milan Jan 395; Arcadius/Honorius — all correct."
+    },
+    {
+      "id": "outrage-of-anagni-1303",
+      "verdict": "clean",
+      "reason": "Clericis laicos/Ausculta fili/Unam Sanctam (18 Nov 1302); Nogaret + Sciarra Colonna; 7 Sept 1303, day before Super Petri solio; slap 'reported... with caution' (hedged); freed, d. 11 Oct; Dante; Avignon — all correct."
+    },
+    {
+      "id": "colloquy-of-poissy-1561",
+      "verdict": "clean",
+      "reason": "Opened 9 Sept 1561; Charles IX, Catherine de' Medici, L'Hôpital; Beza + Vermigli, cardinal of Lorraine, Laínez; the Eucharist rupture; Edict of January 1562; Vassy, 36 years of wars — all correct."
+    },
+    {
+      "id": "council-of-agde-506",
+      "verdict": "clean",
+      "reason": "506 under Alaric II (Arian); Caesarius of Arles; St. Andrew's, 10 Sept; ~35 bishops, ~47 canons (hedged 'as commonly reckoned'); orders' ages, asylum; Gratian's Decretum; Vouillé 507 — all correct."
+    },
+    {
+      "id": "founding-of-cluny-910",
+      "verdict": "clean",
+      "reason": "Charter 11 Sept 910 (matches CE); William the Pious to Peter and Paul; Berno of Baume; freedom under Holy See; Odo/Odilo/Hugh/Peter the Venerable; church consecrated 1095; Urban II; suppressed 1790 — all correct."
+    },
+    {
+      "id": "death-of-philip-ii-1598",
+      "verdict": "clean",
+      "reason": "d. El Escorial 13 Sept 1598, aged 71, 52-day illness; king of Spain 1556, Naples/Sicily 1554, Portugal 1580, king-consort of England; Lepanto 1571, Netherlands, Armada 1588, bankruptcies; Philip III — all correct."
+    },
+    {
+      "id": "election-of-urban-vii-1590",
+      "verdict": "clean",
+      "reason": "Sixtus V d. 27 Aug 1590; Castagna elected 15 Sept, aged 69, doctor of laws, abp of Rossano, Inquisitor General; d. malaria 27 Sept (12 days), shortest pontificate, uncrowned; Gregory XIV Dec; three popes in 1590 — all correct."
+    },
+    {
+      "id": "death-of-pope-martin-i-655",
+      "verdict": "clean",
+      "reason": "Tuscan of Todi, apocrisiarius; pope July 649 sans mandate; Lateran Council Oct 649 (105 bishops) vs Monothelitism/Typos; arrested June 653, flogged, exiled to Cherson; d. 16 Sept 655, last martyr-pope; Maximus — all correct."
+    },
+    {
+      "id": "battle-of-chrysopolis-324",
+      "verdict": "clean",
+      "reason": "Edict of Milan 313; Adrianople July 324; Chrysopolis 18 Sept 324; Eusebius's parable; Licinius fled to Nicomedia, spared then killed 325; Constantine sole Augustus; Nicaea 325, Byzantium dedicated 330 — all correct."
+    },
+    {
+      "id": "death-of-charles-v-1558",
+      "verdict": "clean",
+      "reason": "b. Ghent 1500; Worms 1521, Sack of Rome 1527, Augsburg 1530, Mühlberg 1547, Peace 1555; abdications 1555/56, imperial title to Ferdinand (Feb 1558); Yuste; d. 21 Sept 1558 aged 58; last emperor crowned by a pope; Escorial — all correct."
+    },
+    {
+      "id": "death-of-clement-xiv-1774",
+      "verdict": "clean",
+      "reason": "Ganganelli b. Santarcangelo 1705, Conventual Franciscan, cardinal 1759, pope May 1769; Dominus ac Redemptor 21 July 1773 suppressing the Jesuits; d. Rome 22 Sept 1774, poison rumor unsustained; Santi Apostoli; Pius VII 1814 — all correct."
+    },
+    {
+      "id": "concordat-of-worms-1122",
+      "verdict": "clean",
+      "reason": "Gregory VII's 1075 ban; Concordat 23 Sept 1122, Callixtus II and Henry V; emperor renounces ring/crosier, canonical elections; regalia by sceptre (Germany before consecration); First Lateran ratifies March 1123 — all correct."
+    },
+    {
+      "id": "second-council-of-nicaea-opens-787",
+      "verdict": "clean",
+      "reason": "Irene/Constantine VI, Tarasius, Hadrian I's legates; 786 Constantinople attempt scattered; opened Nicaea 24 Sept 787 (~300 bishops); Hieria 754 condemned; veneration not worship; closed Magnaura 23 Oct; Seventh Council; Libri Carolini — all correct."
+    },
+    {
+      "id": "peace-of-augsburg-1555",
+      "verdict": "clean",
+      "reason": "Diet opened Feb 1555, Charles V absent, Ferdinand; peace published 25 Sept 1555; cuius regio eius religio; reservatum ecclesiasticum; Calvinism excluded; 63 years of peace to 1618 — all correct."
+    },
+    {
+      "id": "battle-of-the-maritsa-1371",
+      "verdict": "clean",
+      "reason": "Adrianople fell ~1361 (hedged); Uglješa and Vukašin (king of Prilep); Maritsa 26 Sept 1371 near Chernomen, night attack, Lala Şahin; both brothers killed, 'Sırp Sındığı'; Uroš V d. 1371; Kosovo 1389, Nicopolis 1396, 1453 — all correct."
+    },
+    {
+      "id": "death-of-john-paul-i-1978",
+      "verdict": "clean",
+      "reason": "Luciani b. 1912 Forno di Canale; Vittorio Veneto, Venice; elected 26 Aug 1978; first double name, refused tiara, inauguration 3 Sept; d. night of 28 Sept (33 days), MI; conspiracy theories collapsed; beatified 4 Sept 2022 — all correct."
+    },
+    {
+      "id": "excommunication-of-frederick-ii-1227",
+      "verdict": "clean",
+      "reason": "Crusade vow 1220, San Germano 1225; embarked Brindisi Sept 1227, turned back; excommunicated 29 Sept 1227; sailed under ban 18 June 1228; Jaffa treaty Feb 1229, crowned 18 March; reconciled 1230; deposed Lyons 1245; d. 1250 — all correct."
+    }
+  ]
+}
