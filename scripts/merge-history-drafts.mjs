@@ -47,7 +47,6 @@ function validateEvent(e, label) {
 const corpus = JSON.parse(await readFile(join(SCRIPTS, "history.corpus.json"), "utf8"));
 const existingIds = new Set(corpus.events.map((e) => e.id));
 const existingNorms = new Map(corpus.events.map((e) => [normTitle(e.title), e.id]));
-const existingDays = new Set(corpus.events.map((e) => e.day));
 
 const files = (await readdir(SCRIPTS)).filter((f) => /^history-draft-\d{2}\.json$/.test(f)).sort();
 const allNew = [];

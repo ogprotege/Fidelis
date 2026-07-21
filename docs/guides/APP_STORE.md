@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.22.5
+1.23.0
 ```
 
 The store version string always equals the uploaded build's
@@ -23,15 +23,15 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-Friendlier doors from your Home Screen. The Verse of the Day and Quote of the Day widgets now open the app scrolled straight to their own cards, the way the Mass widget already opens the day's readings. And a freeze some devices met after entering from a widget — where the app seemed alive but no button answered until it was restarted — is healed at the door: the app now recognizes the stuck state and clears it itself. Same texts, same pledge.
+The Church-history chronicle now covers every day of the year — 366 dates, matching the Saint of the Day — so the "Today in the Church" card always has a history lead beneath the saint, never a quiet gap. Same texts, same pledge.
 ```
 
 (ASC shows What's New only for updates after the first released version. The
-same text serves as the TestFlight "What to Test" notes: with the Verse of
-the Day widget on the Home Screen, tap it — the app should open Today
-scrolled to the verse card (likewise the Quote widget to the quote card, the
-Mass widget to the day's readings). Then use the app normally — tabs, cards,
-sheets: nothing should ever stick, and no restart should be needed.)
+same text serves as the TestFlight "What to Test" notes: open the Today tab
+on any date — the "Today in the Church" card should show the Saint of the
+Day and, beneath the hairline, an "In Church History" event. Days that once
+had only a saint (for example July 19, St. Macrina) should now carry history
+as well.)
 
 ## Promotional Text (≤ 170 characters)
 
@@ -208,4 +208,4 @@ Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
-- What's New (1.22.5): 447 / 4,000 ✓ (counted 2026-07-19)
+- What's New (1.23.0): 229 / 4,000 ✓ (counted 2026-07-21)

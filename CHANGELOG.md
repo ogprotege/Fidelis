@@ -6,6 +6,33 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.23.0] — 2026-07-21 — remember the days of old
+
+*"Remember the days of old, think upon every generation." (Deuteronomy 32:7)*
+
+The Church-history chronicle now covers every day of the year.
+
+### Added
+
+- **A Church-history event for every calendar date (366 days, Feb 29
+  included).** The chronicle grows from 147 days / 177 events to **366 days /
+  406 events** — 229 new sourced entries drawn from the Catholic Encyclopedia
+  (1913), Butler, the Roman Martyrology, and vatican.va, matching the saints
+  corpus's full-year coverage so the "Today in the Church" card always has a
+  history lead beneath the Saint of the Day.
+- **Harness gate:** `npm test` turns red if any calendar date lacks a history
+  event (the saints' full-year gate's twin).
+
+### Changed
+
+- All 229 new entries were proof-read in four quarterly passes (208 clean, 20
+  corrected, 1 hedged); every corpus `verified` flag is now true. Material
+  fixes included wrong years, inverted feast timing, a false attendance claim,
+  and a misplaced Italy-exit claim on Paul VI's UN visit.
+
+Corpus rebuilt, manifest re-sealed; no engine/golden/sw change. Shells
+1.23.0/12300.
+
 ## [1.22.5] — 2026-07-19 — I am the door
 
 *"I am the door. By me, if any man enter in, he shall be saved." (John 10:9)*
