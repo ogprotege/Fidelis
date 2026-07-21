@@ -156,8 +156,10 @@ export default function About() {
         Church-history event. Pre-1900 lives rest on the Catholic Encyclopedia
         (1913), Butler&rsquo;s <em>Lives</em>, and the Roman Martyrology;
         modern entries use church-official sources (vatican.va) labelled as such.
-        Text is drawn from those works, never AI-paraphrased; every entry has
-        been proof-read against its named edition.
+        Text is drawn from those works, never AI-paraphrased. Every
+        Church-history event has been proof-read against its named edition; the
+        saints&rsquo; lives are sourced drafts awaiting that pass, and each one
+        says so on its own page.
       </p>
       <p className="small">
         The commentary is two public-domain monuments. <strong>Haydock</strong> —
