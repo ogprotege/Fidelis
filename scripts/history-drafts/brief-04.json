@@ -1,0 +1,96 @@
+{
+  "month": "04",
+  "existingEvents": [
+    "04-02 2005 The death of Pope St. John Paul II",
+    "04-08 1378 The election that began the Western Schism",
+    "04-08 1546 Trent's decree on Scripture and Tradition",
+    "04-11 1963 The encyclical Pacem in Terris",
+    "04-12 1204 The sack of Constantinople",
+    "04-13 1598 The Edict of Nantes",
+    "04-18 1506 The cornerstone of new St. Peter's",
+    "04-18 1521 Luther before the Diet of Worms",
+    "04-19 2005 The election of Pope Benedict XVI",
+    "04-22 1073 The election of Pope St. Gregory VII",
+    "04-24 1870 Vatican I's constitution Dei Filius",
+    "04-27 2014 The canonization of John XXIII and John Paul II",
+    "04-29 1429 Joan of Arc reaches besieged Orléans"
+  ],
+  "uncoveredDays": [
+    {
+      "day": "04-01",
+      "saint": "St. Hugh of Grenoble (Bishop)"
+    },
+    {
+      "day": "04-03",
+      "saint": "St. Richard of Chichester (Bishop)"
+    },
+    {
+      "day": "04-04",
+      "saint": "St. Isidore of Seville (Bishop and Doctor of the Church)"
+    },
+    {
+      "day": "04-05",
+      "saint": "St. Vincent Ferrer (Priest)"
+    },
+    {
+      "day": "04-06",
+      "saint": "Pope St. Celestine I (Pope)"
+    },
+    {
+      "day": "04-07",
+      "saint": "St. John Baptist de la Salle (Priest)"
+    },
+    {
+      "day": "04-09",
+      "saint": "St. Waltrude (Abbess)"
+    },
+    {
+      "day": "04-10",
+      "saint": "St. Fulbert of Chartres (Bishop)"
+    },
+    {
+      "day": "04-14",
+      "saint": "St. Lidwina of Schiedam (Virgin)"
+    },
+    {
+      "day": "04-15",
+      "saint": "St. Hunna (Matron)"
+    },
+    {
+      "day": "04-16",
+      "saint": "St. Bernadette Soubirous (Virgin)"
+    },
+    {
+      "day": "04-17",
+      "saint": "Pope St. Anicetus (Pope and Martyr)"
+    },
+    {
+      "day": "04-20",
+      "saint": "St. Agnes of Montepulciano (Virgin)"
+    },
+    {
+      "day": "04-21",
+      "saint": "St. Anselm of Canterbury (Bishop and Doctor of the Church)"
+    },
+    {
+      "day": "04-23",
+      "saint": "St. George (Martyr)"
+    },
+    {
+      "day": "04-25",
+      "saint": "St. Mark (Evangelist)"
+    },
+    {
+      "day": "04-26",
+      "saint": "St. Paschasius Radbertus (Abbot)"
+    },
+    {
+      "day": "04-28",
+      "saint": "St. Louis Marie de Montfort (Priest)"
+    },
+    {
+      "day": "04-30",
+      "saint": "Pope St. Pius V (Pope)"
+    }
+  ]
+}

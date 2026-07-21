@@ -1,0 +1,91 @@
+{
+  "month": "02",
+  "existingEvents": [
+    "02-02 962 Otto I is crowned Holy Roman Emperor",
+    "02-04 856 The death of Rabanus Maurus",
+    "02-07 1878 The death of Pope Pius IX",
+    "02-11 1858 The first apparition at Lourdes",
+    "02-11 1929 The Lateran Treaty and the birth of Vatican City",
+    "02-14 269 The martyrdom of St. Valentine",
+    "02-20 1878 The election of Pope Leo XIII",
+    "02-22 1300 Boniface VIII proclaims the first Holy Year",
+    "02-23 303 The Great Persecution begins",
+    "02-24 1208 St. Francis hears the call to apostolic life",
+    "02-25 1570 The excommunication of Elizabeth I",
+    "02-27 380 The Edict of Thessalonica"
+  ],
+  "uncoveredDays": [
+    {
+      "day": "02-01",
+      "saint": "St. Brigid of Ireland (Abbess)"
+    },
+    {
+      "day": "02-03",
+      "saint": "St. Blaise (Bishop and Martyr)"
+    },
+    {
+      "day": "02-05",
+      "saint": "St. Agatha (Virgin and Martyr)"
+    },
+    {
+      "day": "02-06",
+      "saint": "Sts. Paul Miki and Companions (Martyrs)"
+    },
+    {
+      "day": "02-08",
+      "saint": "St. Josephine Bakhita (Virgin)"
+    },
+    {
+      "day": "02-09",
+      "saint": "St. Apollonia (Virgin and Martyr)"
+    },
+    {
+      "day": "02-10",
+      "saint": "St. Scholastica (Virgin)"
+    },
+    {
+      "day": "02-12",
+      "saint": "St. Meletius of Antioch (Bishop)"
+    },
+    {
+      "day": "02-13",
+      "saint": "St. Catherine de’ Ricci (Virgin)"
+    },
+    {
+      "day": "02-15",
+      "saint": "St. Claude de la Colombière (Priest)"
+    },
+    {
+      "day": "02-16",
+      "saint": "St. Onesimus (Bishop and Martyr)"
+    },
+    {
+      "day": "02-17",
+      "saint": "The Seven Holy Founders of the Servite Order (Founders)"
+    },
+    {
+      "day": "02-18",
+      "saint": "St. Simeon of Jerusalem (Bishop and Martyr)"
+    },
+    {
+      "day": "02-19",
+      "saint": "St. Conrad of Piacenza (Hermit)"
+    },
+    {
+      "day": "02-21",
+      "saint": "St. Peter Damian (Bishop and Doctor of the Church)"
+    },
+    {
+      "day": "02-26",
+      "saint": "St. Porphyry of Gaza (Bishop)"
+    },
+    {
+      "day": "02-28",
+      "saint": "St. Romanus of Condat (Abbot)"
+    },
+    {
+      "day": "02-29",
+      "saint": "St. Oswald of Worcester (Bishop)"
+    }
+  ]
+}

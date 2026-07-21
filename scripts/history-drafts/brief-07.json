@@ -1,0 +1,86 @@
+{
+  "month": "07",
+  "existingEvents": [
+    "07-01 1681 The martyrdom of St. Oliver Plunkett",
+    "07-04 1187 The Battle of Hattin",
+    "07-06 1415 Jan Hus burned at Constance",
+    "07-06 1535 The execution of St. Thomas More",
+    "07-09 1572 The Martyrs of Gorkum",
+    "07-13 1917 The July apparition at Fátima",
+    "07-14 1614 St. Camillus de Lellis dies in Rome",
+    "07-14 1789 The storming of the Bastille",
+    "07-14 1833 Keble’s “National Apostasy” sermon begins the Oxford Movement",
+    "07-15 1099 The First Crusade captures Jerusalem",
+    "07-15 1274 The death of St. Bonaventure at Lyons",
+    "07-16 1054 The East-West Schism",
+    "07-16 1212 The Battle of Las Navas de Tolosa",
+    "07-17 180 The Scillitan Martyrs",
+    "07-17 1794 The Carmelites of Compiègne go to the guillotine",
+    "07-18 1870 The First Vatican Council defines papal infallibility",
+    "07-21 1773 The suppression of the Society of Jesus",
+    "07-23 1373 The death of St. Bridget of Sweden",
+    "07-25 1471 The death of Thomas à Kempis",
+    "07-28 1794 The fall of Robespierre and the end of the Terror",
+    "07-29 1030 St. Olaf falls at Stiklestad",
+    "07-30 1419 The First Defenestration of Prague",
+    "07-31 1556 The death of St. Ignatius of Loyola"
+  ],
+  "uncoveredDays": [
+    {
+      "day": "07-02",
+      "saint": "Sts. Processus and Martinian (Martyrs)"
+    },
+    {
+      "day": "07-03",
+      "saint": "St. Thomas (Apostle)"
+    },
+    {
+      "day": "07-05",
+      "saint": "St. Anthony Zaccaria (Priest and Founder)"
+    },
+    {
+      "day": "07-07",
+      "saint": "St. Willibald (Bishop)"
+    },
+    {
+      "day": "07-08",
+      "saint": "St. Kilian (Bishop and Martyr)"
+    },
+    {
+      "day": "07-10",
+      "saint": "The Seven Holy Brothers (Martyrs)"
+    },
+    {
+      "day": "07-11",
+      "saint": "St. Benedict (Abbot)"
+    },
+    {
+      "day": "07-12",
+      "saint": "Sts. Louis and Zélie Martin (Married Couple)"
+    },
+    {
+      "day": "07-19",
+      "saint": "St. Macrina the Younger (Virgin)"
+    },
+    {
+      "day": "07-20",
+      "saint": "St. Apollinaris (Bishop and Martyr)"
+    },
+    {
+      "day": "07-22",
+      "saint": "St. Mary Magdalen (Disciple of the Lord)"
+    },
+    {
+      "day": "07-24",
+      "saint": "St. Sharbel Makhlūf (Priest and Hermit)"
+    },
+    {
+      "day": "07-26",
+      "saint": "Sts. Joachim and Anne (Parents of the Blessed Virgin Mary)"
+    },
+    {
+      "day": "07-27",
+      "saint": "St. Pantaleon (Martyr)"
+    }
+  ]
+}

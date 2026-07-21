@@ -1,0 +1,105 @@
+{
+  "month": "10",
+  "existingEvents": [
+    "10-03 1226 The death of St. Francis of Assisi",
+    "10-07 1571 The victory of Lepanto",
+    "10-11 1962 The opening of the Second Vatican Council",
+    "10-12 1492 The landfall in the New World",
+    "10-13 1917 The Miracle of the Sun at Fatima",
+    "10-15 1582 The Gregorian calendar begins",
+    "10-16 1978 The election of Pope John Paul II",
+    "10-28 312 The Battle of the Milvian Bridge",
+    "10-28 1958 The election of Pope John XXIII",
+    "10-31 1517 Luther posts the Ninety-Five Theses"
+  ],
+  "uncoveredDays": [
+    {
+      "day": "10-01",
+      "saint": "St. Thérèse of the Child Jesus (Virgin and Doctor of the Church)"
+    },
+    {
+      "day": "10-02",
+      "saint": "The Holy Guardian Angels (Angelic Guardians)"
+    },
+    {
+      "day": "10-04",
+      "saint": "St. Francis of Assisi (Religious)"
+    },
+    {
+      "day": "10-05",
+      "saint": "St. Faustina Kowalska (Virgin)"
+    },
+    {
+      "day": "10-06",
+      "saint": "St. Bruno (Priest and Founder)"
+    },
+    {
+      "day": "10-08",
+      "saint": "St. Pelagia the Penitent (Penitent)"
+    },
+    {
+      "day": "10-09",
+      "saint": "St. Denis and Companions (Bishop and Martyrs)"
+    },
+    {
+      "day": "10-10",
+      "saint": "St. Francis Borgia (Priest)"
+    },
+    {
+      "day": "10-14",
+      "saint": "St. Callistus I (Pope and Martyr)"
+    },
+    {
+      "day": "10-17",
+      "saint": "St. Ignatius of Antioch (Bishop and Martyr)"
+    },
+    {
+      "day": "10-18",
+      "saint": "St. Luke (Evangelist)"
+    },
+    {
+      "day": "10-19",
+      "saint": "Sts. John de Brébeuf and Isaac Jogues, and Companions (Priests and Martyrs)"
+    },
+    {
+      "day": "10-20",
+      "saint": "St. Paul of the Cross (Priest and Founder)"
+    },
+    {
+      "day": "10-21",
+      "saint": "St. Hilarion (Abbot)"
+    },
+    {
+      "day": "10-22",
+      "saint": "St. John Paul II (Pope)"
+    },
+    {
+      "day": "10-23",
+      "saint": "St. John of Capistrano (Priest)"
+    },
+    {
+      "day": "10-24",
+      "saint": "St. Anthony Mary Claret (Bishop)"
+    },
+    {
+      "day": "10-25",
+      "saint": "Sts. Crispin and Crispinian (Martyrs)"
+    },
+    {
+      "day": "10-26",
+      "saint": "St. Cedd (Bishop)"
+    },
+    {
+      "day": "10-27",
+      "saint": "St. Frumentius (Bishop)"
+    },
+    {
+      "day": "10-29",
+      "saint": "St. Narcissus of Jerusalem (Bishop)"
+    },
+    {
+      "day": "10-30",
+      "saint": "St. Alphonsus Rodríguez (Religious)"
+    }
+  ]
+}

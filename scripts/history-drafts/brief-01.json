@@ -1,0 +1,89 @@
+{
+  "month": "01",
+  "existingEvents": [
+    "01-01 1968 The first World Day of Peace",
+    "01-02 1492 The fall of Granada",
+    "01-03 1521 The excommunication of Martin Luther",
+    "01-05 1066 The death of St. Edward the Confessor",
+    "01-06 1412 The birth of St. Joan of Arc",
+    "01-08 1198 The election of Pope Innocent III",
+    "01-09 1522 The election of Pope Adrian VI",
+    "01-13 1129 The Rule of the Templars approved at Troyes",
+    "01-17 1377 The papacy returns to Rome",
+    "01-22 1973 The Day of Prayer for the Legal Protection of Unborn Children",
+    "01-24 1076 The Synod of Worms and the Investiture Controversy",
+    "01-25 1077 Henry IV at Canossa",
+    "01-26 1564 The confirmation of the Council of Trent",
+    "01-28 814 The death of Charlemagne"
+  ],
+  "uncoveredDays": [
+    {
+      "day": "01-04",
+      "saint": "St. Elizabeth Ann Seton (Religious)"
+    },
+    {
+      "day": "01-07",
+      "saint": "St. Raymond of Penyafort (Priest)"
+    },
+    {
+      "day": "01-10",
+      "saint": "St. Gregory of Nyssa (Bishop)"
+    },
+    {
+      "day": "01-11",
+      "saint": "St. Theodosius the Cenobiarch (Abbot)"
+    },
+    {
+      "day": "01-12",
+      "saint": "St. Aelred of Rievaulx (Abbot)"
+    },
+    {
+      "day": "01-14",
+      "saint": "St. Felix of Nola (Priest)"
+    },
+    {
+      "day": "01-15",
+      "saint": "St. Paul the Hermit (Hermit)"
+    },
+    {
+      "day": "01-16",
+      "saint": "St. Marcellus I (Pope and Martyr)"
+    },
+    {
+      "day": "01-18",
+      "saint": "St. Margaret of Hungary (Virgin)"
+    },
+    {
+      "day": "01-19",
+      "saint": "St. Wulfstan of Worcester (Bishop)"
+    },
+    {
+      "day": "01-20",
+      "saint": "St. Sebastian (Martyr)"
+    },
+    {
+      "day": "01-21",
+      "saint": "St. Agnes (Virgin and Martyr)"
+    },
+    {
+      "day": "01-23",
+      "saint": "St. Ildephonsus of Toledo (Bishop)"
+    },
+    {
+      "day": "01-27",
+      "saint": "St. Angela Merici (Virgin, Founder)"
+    },
+    {
+      "day": "01-29",
+      "saint": "St. Gildas the Wise (Monk)"
+    },
+    {
+      "day": "01-30",
+      "saint": "St. Balthild (Queen)"
+    },
+    {
+      "day": "01-31",
+      "saint": "St. John Bosco (Priest)"
+    }
+  ]
+}

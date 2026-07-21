@@ -1,0 +1,95 @@
+{
+  "month": "11",
+  "existingEvents": [
+    "11-01 1512 The Sistine Chapel ceiling unveiled",
+    "11-01 1755 The Lisbon earthquake",
+    "11-01 1950 The dogma of the Assumption defined",
+    "11-02 998 St. Odilo institutes the commemoration of all the departed",
+    "11-03 1534 The Act of Supremacy",
+    "11-05 1605 The Gunpowder Plot discovered",
+    "11-10 461 The death of Pope St. Leo the Great",
+    "11-11 1215 The Fourth Lateran Council opens",
+    "11-16 1989 The martyrs of the Central American University",
+    "11-18 1302 The bull Unam Sanctam",
+    "11-18 1626 The new St. Peter's Basilica consecrated",
+    "11-21 1964 Lumen Gentium promulgated",
+    "11-23 1927 The martyrdom of Blessed Miguel Pro",
+    "11-27 1095 Urban II preaches the First Crusade at Clermont",
+    "11-27 1830 The apparition of the Miraculous Medal",
+    "11-30 1554 England reconciled to Rome"
+  ],
+  "uncoveredDays": [
+    {
+      "day": "11-04",
+      "saint": "St. Charles Borromeo (Bishop)"
+    },
+    {
+      "day": "11-06",
+      "saint": "St. Leonard of Noblac (Hermit)"
+    },
+    {
+      "day": "11-07",
+      "saint": "St. Willibrord (Bishop)"
+    },
+    {
+      "day": "11-08",
+      "saint": "The Four Crowned Martyrs (Martyrs)"
+    },
+    {
+      "day": "11-09",
+      "saint": "The Dedication of the Lateran Basilica (The Mother Church of Rome and of the World)"
+    },
+    {
+      "day": "11-12",
+      "saint": "St. Josaphat (Bishop and Martyr)"
+    },
+    {
+      "day": "11-13",
+      "saint": "St. Frances Xavier Cabrini (Virgin)"
+    },
+    {
+      "day": "11-14",
+      "saint": "St. Lawrence O'Toole (Bishop)"
+    },
+    {
+      "day": "11-15",
+      "saint": "St. Albert the Great (Bishop and Doctor of the Church)"
+    },
+    {
+      "day": "11-17",
+      "saint": "St. Elizabeth of Hungary (Religious)"
+    },
+    {
+      "day": "11-19",
+      "saint": "St. Mechtilde of Hackeborn (Virgin)"
+    },
+    {
+      "day": "11-20",
+      "saint": "St. Edmund the Martyr (King and Martyr)"
+    },
+    {
+      "day": "11-22",
+      "saint": "St. Cecilia (Virgin and Martyr)"
+    },
+    {
+      "day": "11-24",
+      "saint": "St. Andrew Dung-Lac and Companions (Martyrs)"
+    },
+    {
+      "day": "11-25",
+      "saint": "St. Catherine of Alexandria (Virgin and Martyr)"
+    },
+    {
+      "day": "11-26",
+      "saint": "St. Leonard of Port Maurice (Priest)"
+    },
+    {
+      "day": "11-28",
+      "saint": "St. Catherine Labouré (Virgin)"
+    },
+    {
+      "day": "11-29",
+      "saint": "St. Saturninus of Toulouse (Bishop and Martyr)"
+    }
+  ]
+}
