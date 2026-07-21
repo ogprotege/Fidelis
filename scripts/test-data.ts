@@ -3083,6 +3083,24 @@ console.log("");
     missingHistoryDays.length
       ? `missing ${missingHistoryDays.length}: ${missingHistoryDays.slice(0, 8).join(", ")}…`
       : `${allEvents.length} events / ${historyDays.size} days`);
+  // v1.23.1 — About must not out-claim the corpora. v1.23.0 shipped a blanket
+  // "every entry has been proof-read against its named edition" covering BOTH
+  // memory layers, while all 366 saints were still verified:false and every
+  // Saint page rendered "(draft — pending verification)" underneath. The claim
+  // and the flags are now coupled: while any saint is unverified, About says so
+  // and may not make the blanket claim. Flip the saints to verified and this
+  // turns red, which is the reminder to rewrite the paragraph.
+  const aboutSrc = readFileSync(join(ROOT, "src/pages/About.tsx"), "utf8").replace(/\s+/g, " ");
+  const saintsAllVerified = allSaints.every((s: { verified: boolean }) => s.verified === true);
+  check("memory: About's proof-read claim matches the saints' verified flags",
+    saintsAllVerified
+      ? !aboutSrc.includes("sourced drafts awaiting that pass")
+      : aboutSrc.includes("sourced drafts awaiting that pass") &&
+        !aboutSrc.includes("every entry has been proof-read"),
+    saintsAllVerified
+      ? "all saints verified — drop the drafts caveat from About"
+      : "saints are drafts — About must say so and not claim a blanket proof-read");
+
   const saintIds = allSaints.map((x: { id: string }) => x.id);
   const eventIds = allEvents.map((x: { id: string }) => x.id);
   check("memory: saint and event ids are unique across the corpus",

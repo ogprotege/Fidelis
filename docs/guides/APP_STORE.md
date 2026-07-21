@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.23.0
+1.23.1
 ```
 
 The store version string always equals the uploaded build's
@@ -209,4 +209,4 @@ Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
-- What's New (1.23.0): 229 / 4,000 ✓ (counted 2026-07-21)
+- What's New (1.23.1): 229 / 4,000 ✓ (counted 2026-07-21)

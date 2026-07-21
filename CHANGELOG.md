@@ -6,6 +6,37 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.23.1] — 2026-07-21 — the lip of truth
+
+*"The lip of truth shall be steadfast for ever." (Proverbs 12:19)*
+
+A one-paragraph honesty correction to the About page, found by the post-ship
+review of v1.23.0, plus the harness gate that keeps it honest.
+
+### Fixed
+
+- **About no longer claims the saints' lives are proof-read.** The paragraph
+  v1.23.0 added took *"the Saint of the Day and Today in Church History
+  layers"* as its subject and closed "every entry has been proof-read against
+  its named edition." That is true of the 406 history events — all `verified:
+  true` after v1.22.3 and v1.23.0 — but false of the saints: all 366 entries
+  are still `verified: false`, and every Saint page renders "Sources (draft —
+  pending verification)" underneath. The app contradicted itself on exactly
+  the sourcing-honesty point About exists to make. The claim is now scoped to
+  the history layer, and the saints' lives are named as the sourced drafts
+  they are.
+
+### Added
+
+- **A drift-guard couples the claim to the flags.** `npm test` now turns red
+  if About makes the blanket proof-read claim while any saint is unverified —
+  and red the other way too, so that when the saints' §3.4 proof-read is
+  finally made, the harness is what reminds the maintainer to rewrite the
+  paragraph. Proved red-first against the v1.23.0 text.
+
+No engine, data, golden-snapshot, or service-worker change. Native shells
+1.23.1 / 12301.
+
 ## [1.23.0] — 2026-07-21 — remember the days of old
 
 *"Remember the days of old, think upon every generation." (Deuteronomy 32:7)*

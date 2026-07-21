@@ -2096,6 +2096,67 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
+## The lip of truth (v1.23.1)
+
+*"The lip of truth shall be steadfast for ever: but he that is a hasty witness,
+frameth a lying tongue." (Proverbs 12:19)*
+
+A one-paragraph correction, and the guard that keeps it true.
+
+**The overclaim.** v1.23.0 added a paragraph to About describing the two memory
+layers. It opens on a compound subject — *"The **Saint of the Day** and **Today
+in Church History** layers cover every calendar date (366 days, including
+February 29)"* — names the saints' own editions (*"Pre-1900 lives rest on the
+Catholic Encyclopedia (1913), Butler's Lives, and the Roman Martyrology"*), and
+closes: *"Text is drawn from those works, never AI-paraphrased; every entry has
+been proof-read against its named edition."*
+
+That last clause is true of the history chronicle and false of the saints. All
+406 events carry `verified: true` — the v1.22.3 proof-read closed the first 177,
+this release's four quarterly passes the remaining 229. But the saints corpus
+has never had its §3.4 pass: all 366 entries are `verified: false`, and
+`Saint.tsx` renders that state honestly on every single life —
+`Sources{s.verified ? "" : " (draft — pending verification)"}`. So a reader
+could open More → About, read that every saint's life had been proof-read
+against its named edition, tap "Read the life →" from the Today card on *any*
+day of the year, and be told by the very next screen that the entry was a draft
+pending verification. The app contradicted itself on the one point About exists
+to make, and it would have told a future maintainer that a pass which has not
+begun was finished.
+
+Nothing was broken; nothing crashed. It is the same class of defect the audit
+recorded as FID-PRIV-001 and FID-DOC-001 — a claim the product cannot cash —
+and this repository treats those as real. The paragraph now says what is so: the
+Church-history events have been proof-read against their named editions; the
+saints' lives are sourced drafts awaiting that pass, and each one says so on its
+own page.
+
+**The guard.** A wording fix decays; a coupled assertion does not. The memory
+block now reads `src/pages/About.tsx` and the saints' verified flags together,
+and fails `npm test` in *both* directions: while any saint is unverified, About
+must carry the drafts caveat and must not make the blanket claim; once every
+saint is verified, the caveat must go. The second direction is the useful half —
+when the saints' §3.4 proof-read is finally made, the harness is what remembers
+that a paragraph in About is now out of date. Proved red-first against the
+v1.23.0 text before the fix was written.
+
+**Provenance.** Found by an adversarial post-ship review of v1.23.0 (four
+parallel dimension reviews — corpus integrity, the harness gate, the
+no-regression claim, release bookkeeping — each finding then put to two
+independent refuters). Everything else came back clean: 366 files / 406 events /
+406 unique ids recomputed from disk, corpus↔emitted byte sync verified without
+writing, all 366 manifest SHA-256 hashes recomputed, the four fact-check reports
+tallied to exactly 208 clean / 20 corrected / 1 hedged, and the
+"no engine/golden/service-worker change" claim confirmed by an empty diff. One
+other candidate finding — that the Sep 30 card restates St. Jerome in its
+history lead — was refuted: `leadHistoryEvent`'s fallback is the documented,
+harness-pinned behaviour for a deliberate pairing, the prose is genuinely
+distinct (the life vs. the textual history of the Vulgate), and the entry
+predates this release.
+
+No engine, data, golden-snapshot, or service-worker change. Native shells
+1.23.1 / 12301.
+
 ## Remember the days of old (v1.23.0)
 
 *"Remember the days of old, think upon every generation." (Deuteronomy 32:7)*
