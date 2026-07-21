@@ -173,7 +173,8 @@ the night frame. Both required sizes and RGB color space were verified exactly
 via `sips`; the changed Mass, reading-plan, and Settings surfaces were inspected
 from the generated set.
 
-1. **01-today** — the six-card front page: liturgical day, the day in Church history, Verse of the Day
+1. **01-today** — the six-card front page: Today at Mass, Today in the Church
+   (Saint of the Day + Church history), Verse of the Day
 2. **02-reader-john1** — John 1 in EB Garamond, gold Haydock dots + purple CCC marks
 3. **03-mass-readings** — the day's readings (shows the honest NABRE-import notice);
    **03b-mass-readings-drb** — same page with DRB selected, no notice (pick one)

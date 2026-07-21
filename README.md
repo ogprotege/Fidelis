@@ -168,15 +168,16 @@ verses are shown and the citation marked "(approx.)" — the text itself is neve
 ## The Today page
 
 Six cards, always exactly six — a standing rule (five through v1.17.x; raised once, to six, in
-v1.18.0 for Today in Church History), so the page never sprawls. On a phone the time-sensitive
-card leads, right under the date:
+v1.18.0), so the page never sprawls. On a phone the time-sensitive card leads, right under the
+date:
 
-1. **Today in the Church** — season, week, liturgical color, the principal celebrations of the
+1. **Today at Mass** — season, week, liturgical color, the principal celebrations of the
    General Roman Calendar, today's Mass citations, and the hour's Marian antiphon. When the day's
-   saint has a life in the collection, the memorial name links to a full **Saint of the Day** page.
-2. **✠ Today in Church History** — the most significant events of the Church on this calendar day,
-   drawn from public-domain sources with footnote citations; a blurb on the card, the full
-   account (all of the day's events) one tap away.
+   memorial has a life in the collection, the name links to the **Saint of the Day** page.
+2. **✠ Today in the Church** — the **Saint of the Day** (a gold monogram, name, title, rank,
+   dates, blurb, patronage — one saint for every calendar date, Feb 29 included) with the day's
+   **Church-history** event beneath a hairline (likewise every calendar date; 406 sourced events
+   across 366 days). Blurb on the card; the full life or chronicle one tap away.
 3. **✠ Verse of the Day** — a fixed, curated cycle, deterministic by date (web and the iOS
    widget select the same verse from the same calendar math).
 4. **Quote of the Day** — from the Fathers, Doctors, and saints; public-domain, attributed.
@@ -185,7 +186,8 @@ card leads, right under the date:
 
 The Verse of the Day and Quote of the Day each carry a **Share** affordance — a card for the
 native share sheet (see *Reading &amp; study*); the Saint and Church History pages share too. The
-Saint and Church History text is public-domain, sourced, and never AI-paraphrased.
+Saint and Church History text is public-domain or church-official sourced, and never
+AI-paraphrased.
 
 ---
 
