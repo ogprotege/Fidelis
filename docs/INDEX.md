@@ -2,7 +2,7 @@
 
 *The map. Start here; you're one click from home on every page.*
 
-**Using the app?** → [README](../README.md) · the in-app **About** page.
+**Using the app?** → [README](../README.md) · [screenshots](screenshots/README.md) (every screen, day and night) · the in-app **About** page.
 
 **Contributing or building?** → [CONTRIBUTING](../CONTRIBUTING.md) · [guides](guides/) ([iOS](guides/IOS.md) · [Android](guides/ANDROID.md) · [Releasing](guides/RELEASING.md) · [App Store](guides/APP_STORE.md) · [Device acceptance](guides/DEVICE_ACCEPTANCE.md)) · [CLAUDE.md](../CLAUDE.md).
 
