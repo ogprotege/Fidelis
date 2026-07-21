@@ -1,0 +1,370 @@
+{
+  "months": ["01", "02", "03"],
+  "results": [
+    {
+      "id": "paul-vi-holy-land-pilgrimage",
+      "verdict": "correct",
+      "reason": "Pius VII was carried off from Rome in 1809 but reached France (Fontainebleau) only in 1812; reworded to keep the standard 1809 reference without the false 'to France in 1809'.",
+      "fields": {
+        "body": [
+          "On 4 January 1964 Pope Paul VI landed at Amman, where King Hussein of Jordan received him, and travelled on to Jerusalem, entering the Old City by the Damascus Gate. His three-day pilgrimage, announced barely a month before, was the first journey of a pope outside Italy since Pius VII had been carried off a prisoner of Napoleon in 1809, and the first ever made by air.",
+          "He had come, he said, as a pilgrim to the places where Christ had lived. He prayed at Gethsemane and along the Via Dolorosa, celebrated Mass in the Church of the Holy Sepulchre, and passed into Bethlehem; on 5 January he embraced Athenagoras, the Ecumenical Patriarch of Constantinople, on the Mount of Olives — the first meeting of a pope and a patriarch of Constantinople since the Council of Florence in 1438.",
+          "The journey, made while the Second Vatican Council was still in session, opened the age of the travelling papacy: nine international journeys would follow in his pontificate, from Bombay to the United Nations. The embrace with Athenagoras bore fruit two years later, when Rome and Constantinople together lifted the anathemas of 1054."
+        ]
+      }
+    },
+    {
+      "id": "election-of-pius-v",
+      "verdict": "clean",
+      "reason": "Ghislieri elected 7 Jan 1566, crowned on his 62nd birthday 17 Jan; Trent reforms, Elizabeth's excommunication, Lepanto, canonized 1712 — all accurate."
+    },
+    {
+      "id": "election-of-pope-fabian",
+      "verdict": "clean",
+      "reason": "Fabian's election under the sign of the dove (Eusebius), c. 10 Jan 236 rightly given as 'received chronology'; seven deacons, Privatus, Decian martyrdom — all sound."
+    },
+    {
+      "id": "death-of-paulinus-of-aquileia",
+      "verdict": "correct",
+      "reason": "Catholic Encyclopedia 1913 and modern scholarship (NCE, Britannica) give the death year as 802; Madrisius/804 is the minority reckoning. Primary year corrected 804 to 802 and CE added as source.",
+      "fields": {
+        "year": 802,
+        "body": [
+          "Born about 726 on a farm near Friuli, Paulinus tilled his father's fields yet made himself so eminent a scholar that Charlemagne styled him in a rescript Master of Grammar and Very Venerable, bestowed an estate upon him, and raised him, against his will, to the patriarchate of Aquileia.",
+          "He stood at the emperor's side in the councils of the age — Aachen in 789, Ratisbon in 792, Frankfurt in 794 — and held his own synod at Friuli, where he vindicated the procession of the Holy Spirit from the Father and the Son. When Felix of Urgel taught that Christ as man was God's Son only by adoption, Paulinus refuted him in three books, and his Libellus Sacrosyllabus, approved at Frankfurt, was sent into Spain as an antidote to the spreading error.",
+          "His zeal reached beyond controversy: he preached the gospel to the pagan Carantani of Carinthia and Styria and to the Avars, and Alcuin counted him among his dearest friends. He died on 11 January, in 802 as the Catholic Encyclopedia and most modern scholars reckon, though his eighteenth-century biographer Madrisius gives 804; Aquileia now keeps his feast on 28 January."
+        ],
+        "sources": [
+          {
+            "text": "Catholic Encyclopedia (1913), “St. Paulinus II”",
+            "license": "public-domain",
+            "url": "https://www.newadvent.org/cathen/"
+          },
+          {
+            "text": "Butler, Lives of the Saints (1866 ed.), 28 January",
+            "license": "public-domain"
+          }
+        ]
+      }
+    },
+    {
+      "id": "death-of-benedict-biscop",
+      "verdict": "clean",
+      "reason": "Wearmouth 674, Jarrow, stone/glass from Gaul, guided Theodore 668, reared Bede, died 12 Jan 690 — all accurate."
+    },
+    {
+      "id": "death-of-sava-of-serbia",
+      "verdict": "clean",
+      "reason": "Rastko/Sava, Hilandar, autocephaly at Nicaea 1219 under Patriarch Manuel I, died Tarnovo 14 Jan; 1235/1236 rightly hedged, relics burned 1594."
+    },
+    {
+      "id": "death-of-maurus-of-glanfeuil",
+      "verdict": "clean",
+      "reason": "Given to Benedict at Subiaco, Placidus in the Dialogues, the pseudo-Faustus Glanfeuil Life rightly flagged as a forgery, died 15 Jan 584 — all sound."
+    },
+    {
+      "id": "franciscan-protomartyrs-morocco",
+      "verdict": "clean",
+      "reason": "Berard and companions martyred at Marrakesh 16 Jan 1220, relics at Coimbra move Anthony of Padua, canonized by Sixtus IV 1481 — all accurate."
+    },
+    {
+      "id": "first-church-unity-octave",
+      "verdict": "clean",
+      "reason": "Wattson and White, Graymoor, 18–25 Jan 1908, extended by Benedict XV 1916, WCC Faith and Order from 1968 — all accurate."
+    },
+    {
+      "id": "martyrdom-of-blathmac-iona",
+      "verdict": "correct",
+      "reason": "The abbot of Iona in 825 was Diarmait, then away; Blathmac was prior/acting abbot (Dict. Irish Biography; CE says he became abbot of an Irish house, then 'joined the community' at Iona). Role corrected from 'abbot of Iona' to prior.",
+      "fields": {
+        "shortBlurb": "The prior of Iona who would not betray the shrine of St. Columba to the Danish pirates was cut down at the morning Mass…",
+        "body": [
+          "Blathmac, of Irish royal stock, gave up his patrimony for the cloister and, after governing a monastery in Ireland, came to Iona — the island St. Columba had made the lamp of the northern churches — seeking martyrdom; there he served as prior, keeping the community in the absence of its abbot Diarmait. The Northmen had burned Iona in 802 and slain sixty-eight of its monks in 806; the shrine of Columba had been solemnly restored in 818.",
+          "When the Danes came again, they found Blathmac celebrating the morning Mass. They demanded the shrine of St. Columba, with its gold and silver, and he, refusing to betray the treasures of the church, was struck down upon the altar steps. The Annals of Ulster record his martyrdom under 825; older writers placed it about 793, and the Catholic Encyclopedia about 835. The Irish calendars keep his memory on 19 January.",
+          "His life was written in Latin hexameters by Walafrid Strabo, abbot of Reichenau, and so the story of his witness has been handed down. The relics of Columba were at last carried to Ireland in 849 for safety, and Iona's day as the mother house of the Gaelic church drew towards its close."
+        ]
+      }
+    },
+    {
+      "id": "martyrdom-of-pope-fabian",
+      "verdict": "clean",
+      "reason": "Fabian martyred under Decius 20 Jan 250, Cyprian's 'incomparable man', buried in Callixtus with the Greek slab, see vacant over a year — all accurate."
+    },
+    {
+      "id": "martyrdom-of-fructuosus-tarragona",
+      "verdict": "clean",
+      "reason": "Fructuosus with deacons Augurius and Eulogius burned 21 Jan 259 under Valerian, 'I am a bishop / You were', Augustine's sermon, Prudentius — all sound."
+    },
+    {
+      "id": "founding-of-georgetown-college",
+      "verdict": "clean",
+      "reason": "Carroll's Proposals 1786, deed for the Georgetown hilltop 23 Jan 1789 (the founding date), first bishop the same year, William Gaston 1791, 1815 charter — all accurate."
+    },
+    {
+      "id": "translation-of-chrysostom-relics",
+      "verdict": "clean",
+      "reason": "Chrysostom died Comana 14 Sep 407, relics translated to the Holy Apostles 27 Jan 438 under Theodosius II and Pulcheria; Latin feast 27 Jan, Greek 13 Nov — all sound."
+    },
+    {
+      "id": "death-of-gelasius-ii-cluny",
+      "verdict": "clean",
+      "reason": "John of Gaeta elected 24 Jan 1118, Frangipani, antipope Gregory VIII, fled to France, died Cluny 29 Jan 1119, Callixtus II elected there 2 Feb — all accurate."
+    },
+    {
+      "id": "death-of-aldegundis-of-maubeuge",
+      "verdict": "correct",
+      "reason": "Modern scholarship (Wikipedia, CE, EWTN) puts her birth c. 639 and the foundation of Maubeuge c. 661; the draft's 'born c. 630 ... in 638 took the veil and founded Maubeuge' is impossible (age 8). Dates corrected; veil from St. Amandus.",
+      "fields": {
+        "body": [
+          "Aldegundis was born about 639 in Hainault, daughter of Walbert and Bertilia, of the kindred of the Merovingian kings, and sister of St. Waldetrudis of Mons. Consecrating herself to God in her youth, she resisted every suit of marriage and received the veil from St. Amandus, bishop of Maastricht; then, about 661, she founded on the banks of the Sambre the abbey of Maubeuge, a house of nuns which she governed as its first abbess.",
+          "Her life was a hidden one of prayer, tried by violent slanders and, at the end, by a lingering cancer of the breast, whose tortures — the caustics and incisions of the surgeons — she bore, Butler says, not only with patience but with joy.",
+          "She died on 30 January, in 684 as most modern accounts reckon, though Butler, following the Bollandists, gives 660. Her relics were enshrined at Maubeuge; her name stands on this day in the martyrologies of Rabanus Maurus, Usuard, and Notker, and in the Roman Martyrology; and she is invoked as a patroness of those who suffer from cancer."
+        ]
+      }
+    },
+    {
+      "id": "death-of-maedoc-of-ferns",
+      "verdict": "clean",
+      "reason": "Maedoc/Aidan, pupil of St. David at Menevia, founded Ferns c. 598, first bishop, died 31 Jan; 624/632 rightly hedged — all sound."
+    },
+    {
+      "id": "martyrdom-of-henry-morse",
+      "verdict": "correct",
+      "reason": "Henry Morse was ordained at Rome in 1623 (Jesuits.global, Wikipedia; left for the English Mission 19 June 1624), not 1625.",
+      "fields": {
+        "body": [
+          "On 1 February 1645, by the new reckoning — England still called the year 1644 — Henry Morse, a priest of the Society of Jesus, was hanged, drawn, and quartered at Tyburn under the statute that made his priesthood treason. Born at Brome in Suffolk in 1595 and bred to the law, he had been received into the Church as a young man, trained at Douai and at the English College at Rome, and ordained in 1623.",
+          "He labored first in the north of England, and made his Jesuit novitiate behind prison walls. In London during the plague years of 1636 and 1637 he ministered to the sick beside St. John Southworth, himself falling ill yet returning to his stricken flock. Thrice banished and four times imprisoned, he was seized at last in Cumberland amid the Civil War and brought to the capital for trial.",
+          "At the gallows he forgave his enemies and professed that he died for the faith alone. In 1970 Pope Paul VI canonized him among the Forty Martyrs of England and Wales."
+        ]
+      }
+    },
+    {
+      "id": "death-of-ansgar",
+      "verdict": "clean",
+      "reason": "Ansgar born near Amiens 801, Corbie/Corvey, mission to Danes 826 and Birka c. 829–831, first archbishop of Hamburg, died Bremen 3 Feb 865; Rimbert's Vita — all accurate."
+    },
+    {
+      "id": "twenty-six-martyrs-of-japan",
+      "verdict": "clean",
+      "reason": "26 crucified at Nishizaka, Nagasaki 5 Feb 1597 — six Franciscans, three Jesuits (Miki, Goto, Kisai), 17 laymen; beatified 1627, canonized 1862; feast 6 Feb — all sound."
+    },
+    {
+      "id": "election-of-pius-xi",
+      "verdict": "clean",
+      "reason": "Ratti elected 6 Feb 1922 on the 14th ballot, Urbi et Orbi from the outer loggia (first since 1870), Lateran Pacts seven years later — all accurate."
+    },
+    {
+      "id": "athanasius-flees-into-the-desert",
+      "verdict": "clean",
+      "reason": "Syrianus stormed St. Theonas the night of 8 Feb 356, Psalm 136 antiphon, third exile among the desert monks, returned under Julian 362, died 373 — all sound."
+    },
+    {
+      "id": "execution-of-mary-queen-of-scots",
+      "verdict": "clean",
+      "reason": "Beheaded at Fotheringhay 8 Feb 1587 after 19 years' captivity, warrant signed 1 Feb, last letter to the King of France, translated to Westminster 1612 — all accurate."
+    },
+    {
+      "id": "john-vianney-sent-to-ars",
+      "verdict": "clean",
+      "reason": "Appointed to Ars 9 Feb 1818 after Balley's death, born Dardilly 1786, ordained 1815, decades in the confessional, died 1859, canonized 1925 — all sound."
+    },
+    {
+      "id": "death-of-pius-xi",
+      "verdict": "clean",
+      "reason": "Died 10 Feb 1939 on the eve of the address against the racial laws; Roman Question 1929, More and Fisher canonized 1935, Pacelli chosen 2 March — all accurate."
+    },
+    {
+      "id": "birth-of-vatican-radio",
+      "verdict": "clean",
+      "reason": "Inaugurated 12 Feb 1931, built by Marconi, first papal broadcast Qui arcano Dei; the Isaiah 'Hear, O islands' line and 'every creature' address confirmed by Vatican News. '95 years on' correct for 2026."
+    },
+    {
+      "id": "galileo-arrives-in-rome-1633",
+      "verdict": "clean",
+      "reason": "Arrived Rome 13 Feb 1633 at the Villa Medici, set out 20 Jan, abjured 22 June at the Minerva, Arcetri, died 1642, JP2 commission 1992 — all accurate."
+    },
+    {
+      "id": "pie-postulatio-voluntatis",
+      "verdict": "clean",
+      "reason": "Paschal II's bull of 15 Feb 1113 chartering the Hospital of St. John, Amalfi origins, Bl. Gerard, bull kept at Valletta, Benedict XVI's 2013 address — all sound."
+    },
+    {
+      "id": "martyrdom-of-st-juliana",
+      "verdict": "clean",
+      "reason": "Martyr c. 304, Hieronymian Martyrology at Cumae 16 Feb, Gregory the Great's grant of relics to Januaria, later acts rightly called legend — all sound."
+    },
+    {
+      "id": "burning-of-giordano-bruno",
+      "verdict": "clean",
+      "reason": "Bruno burned in the Campo de' Fiori 17 Feb 1600 after c. 8 years' imprisonment, denounced by Mocenigo 1592, under Clement VIII, 1889 statue, Holy See 'sad episode' — all accurate."
+    },
+    {
+      "id": "death-of-fra-angelico",
+      "verdict": "clean",
+      "reason": "Died at the Minerva 18 Feb 1455, born Guido di Pietro c. 1395, San Marco and the Niccoline Chapel, Vasari's Antonino anecdote, beatified 1982 — all sound."
+    },
+    {
+      "id": "death-of-martin-luther",
+      "verdict": "clean",
+      "reason": "Died at Eisleben 18 Feb 1546, aged 62, Justus Jonas present, 95 Theses 1517, Katharina von Bora 1525, 'We are beggars', buried Wittenberg 22 Feb — all accurate."
+    },
+    {
+      "id": "treaty-of-tolentino",
+      "verdict": "correct",
+      "reason": "The armistice Pius VI broke (renounced Sep 1796) was the Armistice of Bologna (June 1796); there is no 'armistice of Foligno'. Corrected in body[0].",
+      "fields": {
+        "body": [
+          "On 19 February 1797, at Tolentino in the Marches, Pope Pius VI signed a treaty of peace with General Bonaparte. The Pope had broken the armistice of Bologna, and the French army, fresh from Rivoli and the fall of Mantua, had swept the papal troops aside and stood within reach of Rome.",
+          "The price of peace was heavy: the Pope renounced Avignon and the Venaissin, annexed by France in 1791, ceded the Legations of Bologna, Ferrara, and the Romagna, and promised thirty million francs for the Directory — besides the pictures, statues, and manuscripts already exacted by the armistice of Bologna.",
+          "It bought the papacy a year's respite. When a French general was killed in a Roman riot, the Directory answered with occupation: in February 1798 a Roman Republic was proclaimed in the city, and Pius VI, an old man, was carried into exile, dying at Valence on 29 August 1799."
+        ]
+      }
+    },
+    {
+      "id": "death-of-pope-julius-ii",
+      "verdict": "clean",
+      "reason": "Died night of 20–21 Feb 1513, elected 1503, League of Cambrai, Fifth Lateran, St. Peter's cornerstone 1506, Sistine ceiling, Swiss Guard, Leo X 9 March — all accurate."
+    },
+    {
+      "id": "battle-of-benevento",
+      "verdict": "clean",
+      "reason": "Charles of Anjou defeated and killed Manfred 26 Feb 1266 on the Calore; papal backing, crowned at Rome Epiphany 1266, Dante's Manfred, Tagliacozzo 1268 — all sound."
+    },
+    {
+      "id": "resignation-of-benedict-xvi-takes-effect",
+      "verdict": "clean",
+      "reason": "Effective 8 pm 28 Feb 2013, declared 11 Feb, 'pilgrim' remark, first resignation since Gregory XII 1415 / freely since Celestine V 1294, Francis 13 March — all accurate."
+    },
+    {
+      "id": "death-of-pope-st-hilarius",
+      "verdict": "clean",
+      "reason": "Died 29 Feb 468 (feast 28 Feb), reign 6y 3m 10d fits 19 Nov 461–29 Feb 468, legate at the Robber Synod 449, Chalcedon confirmed, buried at St. Lawrence — all sound."
+    },
+    {
+      "id": "massacre-of-vassy",
+      "verdict": "clean",
+      "reason": "1 March 1562, Francis 2nd Duke of Guise, Edict of Saint-Germain, worshippers in a barn; the 23 dead attributed to CE with the Huguenot higher count rightly hedged — sound."
+    },
+    {
+      "id": "election-of-pius-xii",
+      "verdict": "clean",
+      "reason": "Pacelli elected 2 March 1939 (his 63rd birthday) on the third ballot, first Secretary of State since Clement IX 1667, first radio-announced election, crowned 12 March — all accurate."
+    },
+    {
+      "id": "election-of-eugene-iv",
+      "verdict": "clean",
+      "reason": "Condulmer elected 3 March 1431 (4th rightly hedged), Basel, exile to Florence, Laetentur Caeli 1439, Florence Cathedral consecrated 1436, died 1447 — all sound."
+    },
+    {
+      "id": "birth-of-henry-the-navigator",
+      "verdict": "clean",
+      "reason": "Born Porto 4 March 1394, Ceuta 1415, Order of Christ, Bojador under Gil Eanes 1434, Sagres school rightly doubted, died 1460, Dias 1488, da Gama 1498 — all accurate."
+    },
+    {
+      "id": "third-lateran-council",
+      "verdict": "clean",
+      "reason": "Opened 5 March 1179 after the Peace of Venice 1177, ~300 bishops, 27 canons, the two-thirds cardinal-election rule, Cathars and routiers condemned — all sound."
+    },
+    {
+      "id": "death-of-celestine-ii",
+      "verdict": "clean",
+      "reason": "Guido di Castello, pupil of Abelard, elected 26 Sep 1143, lifted the French interdict over Bourges, died 8 March 1144 — all accurate (reign length within source variation)."
+    },
+    {
+      "id": "election-of-leo-x",
+      "verdict": "clean",
+      "reason": "Giovanni de' Medici elected 9 March 1513, ordained priest 15 March and crowned 19th — last non-priest elected pope; Exsurge Domine 1520, Decet Romanum 1521 — all sound."
+    },
+    {
+      "id": "martyrdom-of-john-ogilvie",
+      "verdict": "clean",
+      "reason": "Ogilvie hanged at Glasgow Cross 10 March 1615 for denying the king's spiritual supremacy, the 'old hat' retort, spared quartering, canonized by Paul VI 1976 — all accurate."
+    },
+    {
+      "id": "triumph-of-orthodoxy",
+      "verdict": "clean",
+      "reason": "First Sunday of Lent 11 March 843, Theodora and Methodios restore the icons after the second iconoclasm, the Synodikon and the Sunday of Orthodoxy — all sound."
+    },
+    {
+      "id": "mit-brennender-sorge",
+      "verdict": "clean",
+      "reason": "Dated Passion Sunday 14 March 1937, drafted with Pacelli and Faulhaber, smuggled and read Palm Sunday 21 March, Divini Redemptoris 19 March — all accurate."
+    },
+    {
+      "id": "election-of-pius-vii",
+      "verdict": "clean",
+      "reason": "Venice conclave at San Giorgio Maggiore opened 30 Nov 1799, elected Chiaramonti 14 March 1800 (last conclave outside Rome), crowned 21 March, restored the Jesuits 1814 — all sound."
+    },
+    {
+      "id": "columbus-returns-to-palos",
+      "verdict": "clean",
+      "reason": "Sailed 3 Aug 1492, landfall 12 Oct, Tagus 4 March 1493, Palos 15 March (224 days), letter to Santángel, second voyage with Buil and Pané — all accurate."
+    },
+    {
+      "id": "magellan-sights-philippines",
+      "verdict": "clean",
+      "reason": "Samar sighted 16 March 1521 per Pigafetta, Isles of St. Lazarus, first Mass 31 March at Mazaua, Cebu baptisms, Mactan 27 April, Elcano 1522 — all sound."
+    },
+    {
+      "id": "martyrdom-of-gabriel-lalemant",
+      "verdict": "clean",
+      "reason": "Taken with Brébeuf 16 March 1649, tortured through the night, died 17 March; North American Martyrs canonized by Pius XI 1930, feast 19 October — all accurate."
+    },
+    {
+      "id": "coronation-of-frederick-iii",
+      "verdict": "clean",
+      "reason": "Nicholas V crowned Frederick III 19 March 1452 (St. Joseph) in St. Peter's — the last imperial coronation in Rome; married Eleanor 16 March; only Charles V crowned later (1530) — all sound."
+    },
+    {
+      "id": "death-of-ebbo-of-reims",
+      "verdict": "correct",
+      "reason": "Ebbo did not die 'in retirement'; Louis the German made him bishop of Hildesheim (845–851) and he died in the seat of that diocese (CE 1913, Britannica). Corrected in body[2] and shortBlurb.",
+      "fields": {
+        "shortBlurb": "The archbishop of Reims who presided over the public penance of Louis the Pious, and was twice deposed in the Carolingian civil wars, ended his days as bishop of Hildesheim…",
+        "body": [
+          "Born a serf on the royal fisc and raised at the palace school, Ebbo became librarian to Louis the Pious and, in 816, archbishop of Reims. In 822 at Attigny he presided over the emperor's public penance for the blinding and death of his nephew Bernard of Italy — a spectacle of imperial humility the age never forgot.",
+          "He preached the Gospel among the Danes in the years that prepared St. Ansgar's mission; but in the wars of Louis's sons he chose Lothair's side, and at Soissons in 833 he led the bishops who deposed the emperor and imposed a second public penance. Louis's restoration brought Ebbo's fall: imprisoned, he was deposed at Thionville in 835 and shut up at Fulda.",
+          "Restored to Reims by Lothair in 840, he was driven out for good after Fontenoy; Louis the German at length made him bishop of Hildesheim, and there he died on 20 March 851. The school of manuscript painting he fostered at Reims left him a memorial in the radiant Ebbo Gospels, which still bears his name."
+        ]
+      }
+    },
+    {
+      "id": "suppression-of-the-templars",
+      "verdict": "correct",
+      "reason": "Jacques de Molay was burned on 18 March 1314 (traditional date; modern scholarship 11 March) — not 19 March. Corrected in body[2].",
+      "fields": {
+        "body": [
+          "The blow had fallen in a single dawn: on Friday, 13 October 1307, every Templar in France was seized at King Philip's command, and confessions of blasphemy and heresy were wrung from many by torture. Clement V, after years of inquiry, summoned the Council of Vienne in October 1311 to judge the Order.",
+          "The fathers leaned toward hearing the Templars' defense, but the king descended on Vienne in person. On the Wednesday of Holy Week, 22 March 1312, in a secret consistory, Clement suppressed the Order — not by definitive sentence upon its guilt, but 'by way of provision', as the bull Vox in excelso declares, published in the council's second session on 3 April.",
+          "By Ad providam of 2 May the Templars' goods passed chiefly to the Hospitallers; the last Grand Master, Jacques de Molay, held a prisoner, was burned at Paris on 18 March 1314. The Chinon parchment, found in the Vatican archives, records that the pope had absolved the Order's leaders — the suppression stood as policy, not as judgment."
+        ]
+      }
+    },
+    {
+      "id": "death-of-julius-iii",
+      "verdict": "clean",
+      "reason": "Del Monte opened Trent 13 Dec 1545, elected 7 Feb 1550, confirmed the Jesuits by Exposcit debitum, Collegium Germanicum 1552, England reconciled 1554, died 23 March 1555 — all sound."
+    },
+    {
+      "id": "coronation-of-conrad-ii",
+      "verdict": "clean",
+      "reason": "John XIX crowned Conrad II emperor Easter (26 March) 1027 in Old St. Peter's, Gisela empress, Cnut and Rudolph III present, Milan–Ravenna precedence quarrel — all accurate."
+    },
+    {
+      "id": "populorum-progressio",
+      "verdict": "clean",
+      "reason": "Paul VI's Easter (26 March) 1967 encyclical, 'development is the new name for peace', drawn from Bombay/UN and Gaudium et spes, Sollicitudo rei socialis 1987 — all sound."
+    },
+    {
+      "id": "death-of-stephen-ix",
+      "verdict": "clean",
+      "reason": "Frederick of Lorraine, legate at Hagia Sophia 1054, abbot of Monte Cassino, elected Aug 1057, died Florence 29 March 1058, forbade election before Hildebrand's return — all accurate."
+    },
+    {
+      "id": "sicilian-vespers",
+      "verdict": "clean",
+      "reason": "Easter Monday 30 March 1282 at the church of the Holy Spirit near Palermo (Tuesday rightly hedged), 'ciciri' shibboleth, Peter III of Aragon, Caltabellotta 1302 — all sound."
+    }
+  ]
+}

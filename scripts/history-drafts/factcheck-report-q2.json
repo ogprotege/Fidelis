@@ -1,0 +1,296 @@
+{
+  "months": ["04", "05", "06"],
+  "results": [
+    {
+      "id": "death-of-eleanor-of-aquitaine",
+      "verdict": "clean",
+      "reason": "Died 1 Apr 1204 at Fontevraud (some sources 31 Mar); heir of William X, wife of Louis VII then Henry II, mother of Richard and John — all confirmed."
+    },
+    {
+      "id": "coronation-of-edward-the-confessor",
+      "verdict": "clean",
+      "reason": "Crowned Easter Day 3 Apr 1043 at Winchester by Eadsige; Harthacnut died Jun 1042; Westminster consecrated 28 Dec 1065; canonized 1161 — confirmed."
+    },
+    {
+      "id": "death-of-pope-nicholas-iv",
+      "verdict": "correct",
+      "reason": "Vacancy arithmetic (2 yrs 3 mo 2 days per CE) is right, but it was NOT the longest of the later medieval Church — the 1268-71 deadlock (2 yrs 10 mo) was longer.",
+      "fields": {
+        "body": [
+          "On 4 April 1292 Pope Nicholas IV died in Rome. Born Girolamo Masci near Ascoli Piceno about 1227, he had entered the Franciscan Order young, succeeded St. Bonaventure as its minister general in 1274, and served as legate to the Greeks before his election on 22 February 1288 — the first Franciscan to occupy the Chair of Peter.",
+          "His four years' reign was busy: he crowned Charles II of Anjou king of Sicily in May 1289, and in the same year dispatched the Franciscan John of Montecorvino to the court of the Great Khan, who would plant the Church's first mission at Khanbaliq, the modern Peking. In Rome he adorned Santa Maria Maggiore, where his kneeling portrait survives in the apse mosaic.",
+          "His death opened one of the longest vacancies of the medieval Church, surpassed in that age only by the deadlock that had chosen Gregory X: the cardinals wrangled two years, three months, and two days before electing, on 5 July 1294, the hermit Pietro da Morrone as Celestine V — the last election held outside conclave. Celestine's few troubled months and his abdication led straight to Boniface VIII, and in time to Avignon."
+        ]
+      }
+    },
+    {
+      "id": "battle-on-the-ice",
+      "verdict": "clean",
+      "reason": "Battle on the Ice, Lake Peipus, 5 Apr 1242; Nevsky (Neva victory Jul 1240); canonized 1547; ice-breaking legend properly hedged — confirmed."
+    },
+    {
+      "id": "death-of-raphael",
+      "verdict": "clean",
+      "reason": "Died Good Friday 6 Apr 1520 aged 37 (Easter 1520 = 8 Apr); buried Pantheon with Bembo's epitaph; chief architect of St Peter's 1514 — confirmed."
+    },
+    {
+      "id": "death-of-el-greco",
+      "verdict": "clean",
+      "reason": "Died 7 Apr 1614 at Toledo; born 1541 Candia; Burial of Count of Orgaz 1586-88; Philip II and the St Maurice altarpiece — confirmed."
+    },
+    {
+      "id": "battle-of-legnica-1241",
+      "verdict": "clean",
+      "reason": "9 Apr 1241; Henry II the Pious, son of St Hedwig; Chmielnik 18 Mar, Mohi 11 Apr; Ogedei's death ended the campaign — confirmed."
+    },
+    {
+      "id": "death-of-magdalene-of-canossa",
+      "verdict": "clean",
+      "reason": "Died 10 Apr 1835, which was indeed the Friday of Passion Week (not Good Friday, 17 Apr); canonized by JP II 2 Oct 1988 — confirmed."
+    },
+    {
+      "id": "battle-of-adrianople-1205",
+      "verdict": "clean",
+      "reason": "14 Apr 1205; Kaloyan captured Baldwin I; Louis of Blois slain; Dandolo led the remnant; Henry succeeded — confirmed."
+    },
+    {
+      "id": "birth-of-leonardo-da-vinci",
+      "verdict": "clean",
+      "reason": "Born 15 Apr 1452 near Vinci; grandfather Antonio's note (Saturday, third hour of night, baptized by Piero di Bartolomeo); died Amboise 2 May 1519 — confirmed."
+    },
+    {
+      "id": "fire-of-notre-dame-2019",
+      "verdict": "clean",
+      "reason": "15 Apr 2019, Monday of Holy Week; Viollet-le-Duc spire; Fr Fournier saved the Crown of Thorns; Pope Francis wrote Abp Aupetit; reopened 7 Dec 2024 — confirmed."
+    },
+    {
+      "id": "death-of-benedict-joseph-labre",
+      "verdict": "clean",
+      "reason": "Died 16 Apr 1783 in Rome aged 35; born 26 Mar 1748 Amettes; buried Santa Maria ai Monti; canonized by Leo XIII 8 Dec 1881 — confirmed."
+    },
+    {
+      "id": "capitulations-of-santa-fe",
+      "verdict": "clean",
+      "reason": "17 Apr 1492 (second agreement 30 Apr); Granada surrendered 2 Jan; sailed Palos 3 Aug, landfall 12 Oct; Fray Bernardo Buil — confirmed."
+    },
+    {
+      "id": "execution-of-elizabeth-barton",
+      "verdict": "clean",
+      "reason": "Hanged Tyburn 20 Apr 1534 with Bocking, Masters, Risby, Rich; attainted by Parliament; Holy Maid of Kent's prophecy against Henry VIII — confirmed."
+    },
+    {
+      "id": "death-of-clement-v",
+      "verdict": "clean",
+      "reason": "Died 20 Apr 1314 at Roquemaure, 33 days after Molay's burning; elected 1305; Avignon 1309; Vox in excelso 22 Mar 1312 — confirmed."
+    },
+    {
+      "id": "death-of-peter-abelard",
+      "verdict": "clean",
+      "reason": "Died 21 Apr 1142 at Saint-Marcel; Sens condemnation dated 1141 per modern consensus (Mews) — a defensible, source-supported date; Soissons 1121 — confirmed."
+    },
+    {
+      "id": "martyrdom-of-adalbert-of-prague",
+      "verdict": "clean",
+      "reason": "Martyred 23 Apr 997 among the Prussians; bishop of Prague 982; founded Brevnov 993; Otto III at Gniezno 1000; canonized c.999 — confirmed."
+    },
+    {
+      "id": "attack-on-leo-iii-799",
+      "verdict": "clean",
+      "reason": "25 Apr 799 during the Greater Litanies; elected 26 Dec 795; fled to Charlemagne at Paderborn; crowned him emperor Christmas 800 — confirmed."
+    },
+    {
+      "id": "pazzi-conspiracy",
+      "verdict": "clean",
+      "reason": "Sunday 26 Apr 1478 at High Mass; Giuliano de' Medici killed, Lorenzo escaped; Salviati hanged; Sixtus IV's interdict — confirmed."
+    },
+    {
+      "id": "martyrdom-of-peter-chanel",
+      "verdict": "clean",
+      "reason": "Clubbed to death 28 Apr 1841 on Futuna; Marist; landed 8 Nov 1837; King Niuliki, Musumusu; canonized by Pius XII 12 Jun 1954 — confirmed."
+    },
+    {
+      "id": "death-of-marie-of-the-incarnation",
+      "verdict": "clean",
+      "reason": "Died 30 Apr 1672 at Quebec; born Tours 28 Oct 1599; sailed 1639 with Mme de la Peltrie; equipollent canonization by Francis 2014 with Laval — confirmed."
+    },
+    {
+      "id": "knox-returns-to-scotland",
+      "verdict": "clean",
+      "reason": "Landed 2 May 1559; Perth sermon nine days later (11 May); Mary of Guise died Jun 1560; Parliament abolished the Mass Aug 1560; died 24 Nov 1572 — confirmed."
+    },
+    {
+      "id": "second-council-of-constantinople",
+      "verdict": "clean",
+      "reason": "Opened 5 May 553; CE 1913 (cited) states verbatim 'only six Western (African) bishops'; Eutychius presided; condemned the Three Chapters 2 Jun in 14 anathemas — source-consistent."
+    },
+    {
+      "id": "translation-of-st-nicholas-to-bari",
+      "verdict": "clean",
+      "reason": "Relics landed at Bari 9 May 1087 (16 yrs after Manzikert); Urban II enshrined them 1089; feast of the translation kept 9 May — confirmed."
+    },
+    {
+      "id": "paul-vi-shenouda-common-declaration",
+      "verdict": "clean",
+      "reason": "Common Declaration 10 May 1973, first Rome-Alexandria meeting since Chalcedon; relics of St Mark returned 1968; 2013/2023 anniversaries — confirmed."
+    },
+    {
+      "id": "dedication-of-constantinople",
+      "verdict": "clean",
+      "reason": "Dedicated 11 May 330; Byzantium of Byzas; ranked next after Rome by the council of 381; fell 29 May 1453 — confirmed."
+    },
+    {
+      "id": "canonization-martyrs-of-otranto",
+      "verdict": "clean",
+      "reason": "Canonized 12 May 2013 by Francis (first of his pontificate); ~800 martyrs beheaded 14 Aug 1480; also Montoya and Garcia Zavala — confirmed."
+    },
+    {
+      "id": "assassination-of-henry-iv",
+      "verdict": "correct",
+      "reason": "All correct except Louis XIII's age: born 27 Sep 1601, he was EIGHT (not nine) at Henry IV's death on 14 May 1610.",
+      "fields": {
+        "body": [
+          "On 14 May 1610 Henry IV, the first Bourbon king of France, was assassinated in the Rue de la Ferronnerie in Paris, stabbed by François Ravaillac as his coach halted in the press of traffic for the coronation festivities of his queen, Marie de' Medici, crowned the day before at Saint-Denis. He was fifty-six years old, and had escaped a dozen earlier attempts upon his life.",
+          "Born at Pau in Béarn in 1553, Henry of Navarre had led the Huguenot party through the Wars of Religion and inherited the crown in 1589. When Paris would not open its gates to a Protestant, he was received into the Catholic Church at Saint-Denis on 25 July 1593 — 'Paris is well worth a Mass,' as the saying ascribed to him runs — was crowned at Chartres the following February, and was absolved by Clement VIII in 1595.",
+          "His reign healed what sixty years of war had torn: the Edict of Nantes in 1598 granted the Huguenots liberty of conscience and a measure of public worship, and the king who wished every peasant a chicken in his pot restored the kingdom's fortunes with his minister Sully. His death left the throne to a child of eight, Louis XIII, with the queen-mother as regent."
+        ]
+      }
+    },
+    {
+      "id": "napoleon-annexes-papal-states",
+      "verdict": "clean",
+      "reason": "Decrees from Schonbrunn 17 May 1809; Miollis occupied Rome Feb 1808; Quum memoranda; Radet arrested Pius VII night of 5-6 Jul 1809 — confirmed."
+    },
+    {
+      "id": "canonization-fisher-and-more",
+      "verdict": "clean",
+      "reason": "Canonized 19 May 1935 by Pius XI (4th centenary); Fisher beheaded 22 Jun, More 6 Jul 1535; beatified 1886; More patron of statesmen 2000 — confirmed."
+    },
+    {
+      "id": "earthquake-synod-condemns-wyclif",
+      "verdict": "clean",
+      "reason": "Blackfriars 'Earthquake Synod' 21 May 1382 under Courtenay; 10 heretical + 14 erroneous articles; Wyclif died 31 Dec 1384; bones cast out 1428 — confirmed."
+    },
+    {
+      "id": "canonization-la-salle-and-rita",
+      "verdict": "clean",
+      "reason": "Leo XIII canonized La Salle and Rita of Cascia together 24 May 1900; La Salle patron of teachers 1950; Rita's feast 22 May — confirmed."
+    },
+    {
+      "id": "death-of-the-venerable-bede",
+      "verdict": "correct",
+      "reason": "Bede died ON Ascension Day, 26 May 735 (per CE and Cuthbert's letter), not on 'the vigil'; the draft's day (05-26) is right but the framing inverted the feast.",
+      "fields": {
+        "body": [
+          "On Ascension Day, 26 May 735, the Venerable Bede died in his cell at Jarrow in Northumbria, in about his sixty-second year, in the evening after the festival procession. The account of his last hours was written by his disciple Cuthbert to the priest Cuthwin.",
+          "All that day he had gone on dictating his translation of the Gospel of St. John into English. In the evening the boy Wilbert, who wrote at his word, said: 'There is still one sentence, dear master, which is not written down.' When it was supplied, 'It is finished,' Bede answered; 'take my head in thy hands.' And so, singing 'Glory be to the Father, and to the Son, and to the Holy Ghost,' he breathed his last upon the floor of his cell.",
+          "Born about 673, he had been given at seven years old to Abbot Benedict Biscop at Wearmouth, and passed his whole life in the twin monastery — deacon at nineteen, priest at thirty. 'It was ever my delight,' he wrote, 'to learn or teach or write,' and his Ecclesiastical History of the English People, finished in 731, remains the foundation of our knowledge of early England. In 1899 Leo XIII declared him a Doctor of the Church."
+        ]
+      }
+    },
+    {
+      "id": "execution-of-margaret-pole",
+      "verdict": "clean",
+      "reason": "Beheaded in the Tower 27 May 1541 (de Marillac's 28th hedged); daughter of Clarence; mother of Cardinal Pole; beatified 1886 — confirmed."
+    },
+    {
+      "id": "death-of-germain-of-paris",
+      "verdict": "clean",
+      "reason": "Died 28 May 576; bishop of Paris from 555; dedicated St Vincent 23 Dec 558, the very day Childebert I died (confirmed); relics translated 754 — confirmed."
+    },
+    {
+      "id": "death-of-ferdinand-iii",
+      "verdict": "clean",
+      "reason": "Died 30 May 1252 at Seville; took Cordoba 1236, Seville 1248; cousin of St Louis IX; buried in the Franciscan habit; canonized 1671 — confirmed."
+    },
+    {
+      "id": "rediscovery-roman-catacombs",
+      "verdict": "clean",
+      "reason": "Via Salaria find 31 May 1578 (per Bosio/De Rossi); ascribed then to St Priscilla; Bosio's Roma Sotterranea 1632; De Rossi founded the discipline — confirmed."
+    },
+    {
+      "id": "martyrdom-of-john-story",
+      "verdict": "clean",
+      "reason": "Hanged at Tyburn 1 Jun 1571; Oxford civilian, Broadgates Hall (later Pembroke); Bonner's chancellor; decoyed from Antwerp 1570; beatified 1886 — confirmed."
+    },
+    {
+      "id": "vandal-sack-of-rome",
+      "verdict": "clean",
+      "reason": "Sack began 2 Jun 455, lasting 14 days; Leo I met Genseric (Prosper); Eudoxia and daughters taken; Gregoire coined 'vandalism' 1794 — confirmed."
+    },
+    {
+      "id": "coronation-of-lothair-iii",
+      "verdict": "clean",
+      "reason": "Crowned at the Lateran 4 Jun 1133 by Innocent II (Anacletus held St Peter's); Bernard's championing; Matilda's lands as papal fief; schism ended 1138 — confirmed."
+    },
+    {
+      "id": "louis-ix-takes-damietta",
+      "verdict": "clean",
+      "reason": "Damietta fell 6 Jun 1249 (CE's 7 Jun hedged); vowed cross 1244; sailed Aigues-Mortes 1248; king captured Apr 1250 — confirmed."
+    },
+    {
+      "id": "death-of-frederick-barbarossa",
+      "verdict": "clean",
+      "reason": "Drowned in the Saleph 10 Jun 1190; crowned emperor 1155; Legnano 1176; set out 11 May 1189; Iconium May 1190; Kyffhauser legend — confirmed."
+    },
+    {
+      "id": "consecration-of-saint-denis",
+      "verdict": "clean",
+      "reason": "New choir consecrated 11 Jun 1144 before Louis VII; Abbot Suger; first Gothic per CE; Pepin anointed there 754 — confirmed."
+    },
+    {
+      "id": "death-of-pope-leo-iii",
+      "verdict": "clean",
+      "reason": "Died 12 Jun 816; elected 26 Dec 795; 799 attack; crowned Charlemagne Christmas 800; canonized 1673; feast on death day — confirmed."
+    },
+    {
+      "id": "death-of-john-sobieski",
+      "verdict": "clean",
+      "reason": "Died 17 Jun 1696 at Wilanow; born Olesko 1629; Chocim 1673; Kahlenberg/Vienna relief 11-12 Sep 1683; buried Wawel — confirmed."
+    },
+    {
+      "id": "battle-of-civitate",
+      "verdict": "clean",
+      "reason": "18 Jun 1053 (17th hedged); Leo IX captured by the Normans; held at Benevento; died Apr 1054; Humbert to Constantinople, 1054 schism — confirmed."
+    },
+    {
+      "id": "battle-of-the-catalaunian-plains",
+      "verdict": "clean",
+      "reason": "451; 20 Jun date given 'as conventionally reckoned' (properly hedged); Aetius and Theodoric's Visigoths vs Attila; Jordanes; Attila died 453 — confirmed."
+    },
+    {
+      "id": "fall-of-fort-st-elmo",
+      "verdict": "clean",
+      "reason": "St Elmo fell 23 Jun 1565; La Valette's Knights; Mustafa and Piyale; Dragut mortally wounded; relief came Sep; Valletta named for him — confirmed."
+    },
+    {
+      "id": "first-masonic-grand-lodge",
+      "verdict": "clean",
+      "reason": "Grand Lodge of England founded 24 Jun 1717 (feast of the Baptist), Goose and Gridiron, Anthony Sayer; In Eminenti 1738 — CE-consistent."
+    },
+    {
+      "id": "augsburg-confession-presented",
+      "verdict": "clean",
+      "reason": "Read before Charles V 25 Jun 1530; Melanchthon drafted, Luther at Coburg; seven princes plus Nuremberg and Reutlingen; Confutatio in August — confirmed."
+    },
+    {
+      "id": "consecration-of-pope-agatho",
+      "verdict": "clean",
+      "reason": "Consecrated 27 Jun 678; Sicilian; Wilfrid's appeal; Sixth Council opened 7 Nov 680, condemned Monothelitism and Honorius; died 10 Jan 681 — confirmed."
+    },
+    {
+      "id": "election-of-charles-v",
+      "verdict": "clean",
+      "reason": "Elected at Frankfurt 28 Jun 1519 over Francis I; not yet twenty (b. Feb 1500); crowned Aachen 1520; abdicated, died Yuste 1558 — confirmed."
+    },
+    {
+      "id": "consecration-of-westminster-cathedral",
+      "verdict": "clean",
+      "reason": "Consecrated 28 Jun 1910; Vaughan's foundation 29 Jun 1895; Bentley's Byzantine design; debt cleared Apr 1910; Bourne finished it — confirmed."
+    },
+    {
+      "id": "credo-of-the-people-of-god",
+      "verdict": "clean",
+      "reason": "Solemni Hac Liturgia, 30 Jun 1968, closing the Year of Faith (19th centenary of Peter and Paul); transubstantiation; original sin by propagation — confirmed."
+    }
+  ]
+}

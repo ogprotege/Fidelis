@@ -8,13 +8,14 @@ release ledger, standing rules); this file is the practical summary.
 
 ## Project overview
 
-**Fidelis** (`fidelis-catholic-bible`, currently v1.21.0) is a Catholic Bible
+**Fidelis** (`fidelis-catholic-bible`, currently v1.23.0) is a Catholic Bible
 app — the full 73-book canon in three unaltered public-domain texts
 (Douay-Rheims Challoner `drc`, Catholic Public Domain Version `cpdv`, Clementine
 Latin Vulgate `vulgate`) — with a liturgical calendar engine, daily Mass
-readings, Haydock + Catena Aurea commentary, a CCC citation index, saint/history
-corpora, and quiet devotional features (rosary, reading plans, verse/quote of
-the day). Free forever: no accounts, no server, no telemetry, no ads.
+readings, Haydock + Catena Aurea commentary, a CCC citation index, full-year
+saint and Church-history corpora (366 days each), and quiet devotional features
+(rosary, reading plans, verse/quote of the day). Free forever: no accounts, no
+server, no telemetry, no ads.
 
 It ships as:
 
@@ -74,7 +75,11 @@ bundled texts from pinned upstreams), `lectionary`, `commentary` (haydock +
 catena), `ccc`, `trent`, `quotes`, `saints`, `history`, `widgets` (votd-widget +
 calendar-widget), `manifest` (re-seal `public/data/manifest.json` after any
 data change), `report` (`data-report.txt`). Upstream sources are pinned by
-commit hash in `scripts/pins.mjs`.
+commit hash in `scripts/pins.mjs`. The saints and history corpora are curated
+JSON under `scripts/{saints,history}.corpus.json` — edit those, then
+`npm run saints` / `npm run history`; never hand-edit `public/data/`. Both
+cover every calendar date (366, Feb 29 included); the harness turns red if
+any date is missing. How to add an entry: [CONTRIBUTING.md](CONTRIBUTING.md#editing-saints--church-history).
 
 ## Repository layout
 
@@ -103,7 +108,8 @@ commit hash in `scripts/pins.mjs`.
   bundled EB Garamond (SIL OFL).
 - `scripts/` — the build/data pipeline and both test harnesses (see above);
   `scripts/golden/` the snapshots; `*.corpus.json` the curated sources for
-  quotes/saints/history.
+  quotes/saints/history; `scripts/history-drafts/` the v1.23.0 fact-check
+  ledger (provenance only — not a build input).
 - `public/data/` — **generated, manifest-sealed corpus: NEVER hand-edit.**
   Subdirs per translation (`drc/`, `cpdv/`, `vulgate/`) plus `commentary/`,
   `ccc/`, `trent/`, `saints/`, `history/`, `lectionary.json`, `quotes.json`,

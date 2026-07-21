@@ -1,0 +1,340 @@
+{
+  "months": ["10", "11", "12"],
+  "results": [
+    {
+      "id": "coronation-of-mary-i",
+      "verdict": "clean",
+      "reason": "Mary I crowned 1 Oct 1553 at Westminster by Gardiner (Cranmer imprisoned); first English queen regnant anointed — all correct."
+    },
+    {
+      "id": "saladin-takes-jerusalem",
+      "verdict": "clean",
+      "reason": "Hattin 4 Jul 1187, Jerusalem surrendered under Balian 2 Oct 1187, 88 years of Latin rule, ransom terms all accurate; Night-Journey detail hedged."
+    },
+    {
+      "id": "paul-vi-at-the-united-nations",
+      "verdict": "correct",
+      "reason": "'First to leave Italy since 1809' belongs to the Jan 1964 Holy Land trip, not the Oct 1965 UN visit (he had already traveled abroad).",
+      "fields": {
+        "verified": true,
+        "body": [
+          "On 4 October 1965, the feast of St. Francis of Assisi, Paul VI landed in New York — the first pope to set foot in the Western Hemisphere, and the first ever to visit the United States. \"Greetings to you, America,\" he said at the airport; \"the first pope to set foot on your land blesses you with all his heart.\"",
+          "Greeted by Secretary-General U Thant, he addressed the General Assembly in French, in the organization's twentieth year. \"No more war, war never again,\" he pleaded; \"it is peace, peace, that has to guide the destiny of the nations of all mankind.\" The whole journey lasted fourteen hours and ended with Mass at Yankee Stadium.",
+          "In Rome the Second Vatican Council was then holding its fourth and last session; two months later, on 8 December 1965, the pope closed it. His one-day pilgrimage for peace set a pattern: his successors have returned to the same rostrum to speak for the Church before the family of nations."
+        ]
+      }
+    },
+    {
+      "id": "fourth-council-of-constantinople-opens",
+      "verdict": "clean",
+      "reason": "Opened 5 Oct 869 in Hagia Sophia under three Roman legates, ~100 bishops, last session 28 Feb 870, Photius condemned, Hormisdas formula; 8th council in West — accurate."
+    },
+    {
+      "id": "death-of-william-tyndale",
+      "verdict": "clean",
+      "reason": "Strangled and burned at Vilvoorde c. 6 Oct 1536; NT printing Cologne 1525/Worms 1526; Foxe's dying words — all correct."
+    },
+    {
+      "id": "council-of-chalcedon-opens",
+      "verdict": "clean",
+      "reason": "Opened 8 Oct 451 at St. Euphemia, Chalcedon; Leo's legates, Dioscorus deposed, the Tome, Definition, canon 28, sessions to 1 Nov, Marcian at sixth session 25 Oct — accurate."
+    },
+    {
+      "id": "death-of-pius-xii",
+      "verdict": "clean",
+      "reason": "Born/elected 2 Mar (1876/1939), died Castel Gandolfo 9 Oct 1958; Summi Pontificatus, Munificentissimus Deus 1 Nov 1950; John XXIII elected 28 Oct (19 days) — all correct."
+    },
+    {
+      "id": "battle-of-tours",
+      "verdict": "clean",
+      "reason": "732; Abd al-Rahman, Eudes, Charles Martel; day already hedged (10th or 25th) — accurate."
+    },
+    {
+      "id": "battle-of-hastings",
+      "verdict": "clean",
+      "reason": "14 Oct 1066 at Senlac; Stamford Bridge 25 Sep, William landed Pevensey 28 Sep, papal banner, Gyrth and Leofwine, Battle Abbey — accurate."
+    },
+    {
+      "id": "mother-teresa-nobel-peace-prize",
+      "verdict": "clean",
+      "reason": "Announced 17 Oct 1979; Skopje 1910, 'call within a call' 1946, MC founded 7 Oct 1950, Oslo 10 Dec, canonized 2016 — accurate."
+    },
+    {
+      "id": "revocation-of-the-edict-of-nantes",
+      "verdict": "clean",
+      "reason": "Edict of Fontainebleau 18 Oct 1685 revoking the 1598 grant (87 years); Vauban/Saint-Simon, emigration ban, Camisard war 1702 — accurate."
+    },
+    {
+      "id": "marriage-of-ferdinand-and-isabella",
+      "verdict": "clean",
+      "reason": "19 Oct 1469 at the Vivero house, Valladolid; secret marriage, forged bull of a dead pope, later crowns 1474/1479, Granada/Columbus 1492 — accurate."
+    },
+    {
+      "id": "crusaders-reach-antioch",
+      "verdict": "clean",
+      "reason": "Arrived before Antioch 20 Oct 1097; Nicaea/Dorylaeum, Yaghi-Siyan, city fell 3 Jun 1098, Kerbogha 28 Jun — accurate."
+    },
+    {
+      "id": "destruction-of-the-peoples-crusade",
+      "verdict": "clean",
+      "reason": "People's Crusade destroyed near Civetot 21 Oct 1096; Peter the Hermit, Walter the Penniless, Xerigordos, Kilij Arslan — accurate."
+    },
+    {
+      "id": "death-of-charles-martel",
+      "verdict": "clean",
+      "reason": "Died Quierzy 22 Oct 741 (21st hedged); Boniface's protector, sons Carloman and Pepin, Saint-Denis burial — accurate."
+    },
+    {
+      "id": "irish-rising-of-1641",
+      "verdict": "clean",
+      "reason": "Rising of night 22-23 Oct 1641; Phelim O'Neill at Charlemont, Dublin plot betrayed, Confederation 1642, Cromwell 1649; casualty inflation noted — accurate."
+    },
+    {
+      "id": "consecration-of-chartres",
+      "verdict": "correct",
+      "reason": "Blanche of Castile died in 1252 and could not have attended the 1260 consecration; she was a window-donor, not an attendee.",
+      "fields": {
+        "verified": true,
+        "body": [
+          "When fire gutted the Romanesque cathedral of Chartres in 1194, the town's despair turned to hope when the relic of the Virgin's veil — brought from Aachen by Charles the Bald about 876 — was found unharmed. Kings, guilds, and peasants gave or dragged stone, and in little more than a generation the new church rose, the most perfectly Gothic of all cathedrals.",
+          "The consecration came in October 1260 — the 24th by the common reckoning, though some authorities give the 17th — and St. Louis is believed to have attended. The royal house had given richly: the upper windows were the gift of the king, of St. Ferdinand, and of the queen mother Blanche of Castile, who had died in 1252.",
+          "Her glass is her glory: the old count numbers near four thousand figures in her windows. Kings came to her as pilgrims — Henry III of France eighteen times, Charles V of France twice, and barefoot; and Henry IV, barred from Reims, was crowned at Chartres in 1594. The Revolution spared her, and two wars; she stands as she was consecrated."
+        ]
+      }
+    },
+    {
+      "id": "abdication-of-charles-v",
+      "verdict": "clean",
+      "reason": "25 Oct 1555 at Coudenberg, Brussels, resigning the Netherlands to Philip, leaning on William of Orange; Yuste, died 21 Sep 1558 — accurate."
+    },
+    {
+      "id": "death-of-alfred-the-great",
+      "verdict": "clean",
+      "reason": "Died 26 Oct 899 (modern scholarly consensus); born Wantage 849, Athelney/Edington 878, translations, buried Old Minster — accurate."
+    },
+    {
+      "id": "assisi-day-of-prayer-for-peace",
+      "verdict": "clean",
+      "reason": "27 Oct 1986; ~160 leaders, 'came together to pray' not pray together, spirit of Assisi, Sant'Egidio, JPII 2002 / B16 2011 — accurate."
+    },
+    {
+      "id": "execution-of-conradin",
+      "verdict": "clean",
+      "reason": "Beheaded Naples 29 Oct 1268 aged 16; Charles of Anjou crowned 6 Jan 1266, Tagliacozzo 23 Aug 1268, the 'lamb' fable rejected, Clement IV died 29 Nov — accurate."
+    },
+    {
+      "id": "battle-of-rio-salado",
+      "verdict": "clean",
+      "reason": "30 Oct 1340 near Tarifa; Abu al-Hasan and Yusuf I, Benedict XII's crusade, Alfonso XI and Afonso IV, last great African invasion — accurate."
+    },
+    {
+      "id": "death-of-frances-damboise",
+      "verdict": "clean",
+      "reason": "Died 4 Nov 1485 near Nantes; Duchess of Brittany, John Soreth, Bondon 1463 first French Carmel of nuns, cult confirmed Pius IX 1863 — accurate."
+    },
+    {
+      "id": "first-us-diocese-baltimore",
+      "verdict": "clean",
+      "reason": "Baltimore erected 6 Nov 1789 by Ex hac apostolicae; Carroll elected 24/26, consecrated 15 Aug 1790 at Lulworth by Walmesley; 1808 metropolitan — accurate."
+    },
+    {
+      "id": "bolshevik-revolution-1917",
+      "verdict": "clean",
+      "reason": "7 Nov (25 Oct O.S.) 1917; Jan 1918 separation decree, Patriarch Tikhon, Divini Redemptoris 19 Mar 1937 quote accurate."
+    },
+    {
+      "id": "death-of-duns-scotus",
+      "verdict": "clean",
+      "reason": "Died Cologne 8 Nov 1308; Doctor Subtilis, Immaculate Conception defense, 'potuit decuit ergo fecit', epitaph, beatified JPII 1993 — accurate."
+    },
+    {
+      "id": "founding-of-the-redemptorists",
+      "verdict": "clean",
+      "reason": "CSSR founded 9 Nov 1732 at Scala (feast of the Lateran) with Bp. Falcoia; Alphonsus aged 36, Benedict XIV approval 1749 — accurate."
+    },
+    {
+      "id": "death-of-cnut-the-great",
+      "verdict": "clean",
+      "reason": "Died Shaftesbury 12 Nov 1035; king of England 1016/Denmark c.1018/Norway 1028, Rome 1027 under John XIX, the 1027 letter, buried Winchester — accurate."
+    },
+    {
+      "id": "death-of-nicholas-the-great",
+      "verdict": "clean",
+      "reason": "Elected 24 Apr 858, died 13 Nov 867; only Leo I, Gregory I, Nicholas styled 'the Great'; Lothair II, Rothad, Photius; Urban VIII 1630 — accurate."
+    },
+    {
+      "id": "end-of-the-western-schism",
+      "verdict": "clean",
+      "reason": "Constance opened 5 Nov 1414; Martin V elected 11 Nov 1417, consecrated bishop 14 Nov, crowned 21st; John XXIII/Benedict XIII deposed, Gregory XII resigned — accurate."
+    },
+    {
+      "id": "battle-of-the-winwaed",
+      "verdict": "clean",
+      "reason": "15 Nov 655; Oswiu over Penda, Edwin (633)/Oswald (642), Aelfflaed vow, Bede's drowning line, site disputed noted — accurate."
+    },
+    {
+      "id": "deaths-of-mary-i-and-cardinal-pole",
+      "verdict": "clean",
+      "reason": "Mary died ~7am and Pole ~7pm on 17 Nov 1558 (twelve hours apart); influenza epidemic, Elizabeth's accession, Canterbury burial — accurate."
+    },
+    {
+      "id": "consecration-of-pope-hilarius",
+      "verdict": "clean",
+      "reason": "Leo died 10 Nov 461; Hilarius consecrated 19 Nov 461 (nine days after); Robber Synod 449, synods 462/465, died 29 Feb 468 — accurate (title 'election' vs body 'consecrated' is stylistic)."
+    },
+    {
+      "id": "accession-of-diocletian",
+      "verdict": "clean",
+      "reason": "Proclaimed 20 Nov 284 near Nicomedia; 21-year reign, Great Persecution 303, Coptic Era of Martyrs from his accession, Lactantius — accurate."
+    },
+    {
+      "id": "imperial-coronation-of-frederick-ii",
+      "verdict": "clean",
+      "reason": "Crowned emperor 22 Nov 1220 in St. Peter's by Honorius III (Cencio Savelli), ward of Innocent III, crusade vow, deposed at Lyons 1245 — accurate."
+    },
+    {
+      "id": "martyrdom-of-chrysogonus",
+      "verdict": "clean",
+      "reason": "Beheaded at Aquileia c. 304, name in the Canon, San Crisogono, RM 24 Nov; legendary acts properly hedged — accurate."
+    },
+    {
+      "id": "battle-of-montgisard",
+      "verdict": "clean",
+      "reason": "25 Nov 1177 (St. Catherine's day); Baldwin IV aged 16, Templars under Odo of St Amand, Saladin routed reaching Egypt 8 Dec, site debated — accurate."
+    },
+    {
+      "id": "death-of-isabella-of-castile",
+      "verdict": "correct",
+      "reason": "She died in the royal palace at Medina del Campo, not the Castillo de la Mota — a debunked myth CE 1913 repeats but modern scholarship and the palace museum correct.",
+      "fields": {
+        "verified": true,
+        "body": [
+          "Isabella I of Castile, born on 22 April 1451 at Madrigal de las Altas Torres, joined her crown to that of Ferdinand of Aragon and so laid the foundation of a united Spain. In 1492 the two sovereigns took Granada, the last Moorish kingdom, ending the long Reconquista, and in that same year sponsored the voyage of Christopher Columbus across the ocean.",
+          "A queen of fervent and practical piety, she promoted the reform of the Spanish Church and its religious orders, aided by Cardinal Cisneros. Yet her reign is remembered also for its shadows, told here without gloss: the establishment of the Spanish Inquisition in 1478 and the expulsion of the Jews from her realms in 1492.",
+          "Worn by the deaths of her only son John and her daughter Isabella, she withdrew from the cares of government in September 1504. She died a little before noon on 26 November 1504 in the royal palace at Medina del Campo, and was buried, by her own wish, at Granada. A cause for her beatification was in time opened, and she is styled a Servant of God."
+        ]
+      }
+    },
+    {
+      "id": "death-of-james-of-the-marches",
+      "verdict": "clean",
+      "reason": "Died Naples 28 Nov 1476; born Monteprandone c. 1391, formed under Bernardine, with Capistrano, IHS devotion, Monti di Pieta, canonized Benedict XIII 1726 — accurate."
+    },
+    {
+      "id": "death-of-clement-iv",
+      "verdict": "clean",
+      "reason": "Gui Foucois, elected Perugia 5 Feb 1265, patron of Aquinas and Bacon, died Viterbo 29 Nov 1268; 1006-day vacancy and origin of the enclosed conclave — accurate."
+    },
+    {
+      "id": "death-of-eligius-of-noyon",
+      "verdict": "clean",
+      "reason": "Died Noyon 1 Dec 660; master of the mint, Dagobert's councillor, Solignac 632, bishop of Noyon-Tournai c. 641, patron of goldsmiths — accurate."
+    },
+    {
+      "id": "death-of-birinus-of-dorchester",
+      "verdict": "clean",
+      "reason": "Apostle of Wessex sent by Honorius I; baptized Cynegils, see of Dorchester, died 3 Dec (649/650 hedged), relics translated to Winchester — accurate."
+    },
+    {
+      "id": "martyrdom-of-crispina",
+      "verdict": "clean",
+      "reason": "Beheaded at Theveste 5 Dec 304 before proconsul Anulinus; named by Augustine with Agnes and Thecla; her acts — accurate."
+    },
+    {
+      "id": "french-law-of-separation-1905",
+      "verdict": "correct",
+      "reason": "No 11 Dec 1905 protest allocution: the consistorial allocution was 2 Dec 1905, and the solemn condemnation was the encyclical Vehementer Nos of 11 Feb 1906.",
+      "fields": {
+        "verified": true,
+        "body": [
+          "On 9 December 1905 the French Republic passed the law on the Separation of the Churches and the State, ending the Concordat of 1801 by which Napoleon and Pius VII had for more than a hundred years governed the relations of Church and State in France.",
+          "The state would no longer recognize or pay the Church, but only associations cultuelles — associations formed in each parish for the conduct of worship; failing such associations, the property of the churches was to be lost forever and handed over to the charitable establishments of the communes. Pope Pius X met the law with resistance: by the encyclical Vehementer Nos of 11 February 1906 he solemnly condemned it as unjust to God and destructive of the Church's rights.",
+          "By the encyclical Gravissimo Officii of 10 August 1906 the pope forbade the associations, fearing they would furnish the state a pretext for meddling in the Church's inner life and the laity a constant temptation to rule the parish; the state then treated the old church corporations as nonexistent and transferred their goods, excepting only the edifices still used for worship. The Church of France was stripped of its endowments, and the law of 1905, much amended, still frames French laïcité."
+        ]
+      }
+    },
+    {
+      "id": "death-of-finian-of-clonard",
+      "verdict": "clean",
+      "reason": "Master of Clonard, Twelve Apostles of Erin; died 12 Dec of the yellow plague, year hedged (549 modern / 552 Annals of Inisfallen) — accurate."
+    },
+    {
+      "id": "death-of-pope-adrian-ii",
+      "verdict": "correct",
+      "reason": "'Ten legates' is a CE 1913 slip (Rome sent three legates to the 869 council, as the project's own October entry states); 'Stephen III' matches CE's numbering and is left.",
+      "fields": {
+        "verified": true,
+        "body": [
+          "Of a Roman family that had already given the Church two pontiffs, Stephen III and Sergius II, Adrian was seventy-five when the clergy and people of Rome chose him, much against his will, to succeed Nicholas I. He had been married before taking orders, and his old age was saddened by a domestic tragedy.",
+          "He followed closely in the footsteps of his energetic predecessor. At Monte Cassino he readmitted the repentant King Lothair of Lorraine to communion only after exacting a public oath that he would take back his lawful wife Theutberga; and against Hincmar of Reims he upheld the unlimited right of bishops to appeal to the Sovereign Pontiff.",
+          "At the Eighth General Council, which he convened at Constantinople in 869 and guided through three legates, he effected the deposition of Photius and the restoration of unity between the East and the West. The Bulgarians he could not hold for the western patriarchate, but he seconded the saintly brothers Cyril and Methodius, and his endorsement of their Slavonic liturgy proved of enduring influence. He died on 14 December 872, exactly five years from his consecration."
+        ]
+      }
+    },
+    {
+      "id": "consecration-of-eusebius-of-vercelli",
+      "verdict": "clean",
+      "reason": "First bishop of Vercelli, consecration c. 340 kept 15 Dec by the RM (year hedged); Milan 355, Scythopolis exile, died 1 Aug 371 — accurate."
+    },
+    {
+      "id": "death-of-ado-of-vienne",
+      "verdict": "clean",
+      "reason": "Reviser of the martyrology (Ravenna copy, published c. 858); archbishop of Vienne, died 16 Dec, year hedged (874 modern / 875 Butler) — accurate."
+    },
+    {
+      "id": "approval-of-the-trinitarians",
+      "verdict": "clean",
+      "reason": "Innocent III approved the Trinitarians 17 Dec 1198 by Operante divinae dispositionis; John of Matha and Felix of Valois, Cerfroid, three-part revenues, San Tommaso in Formis — accurate."
+    },
+    {
+      "id": "death-of-winebald-of-heidenheim",
+      "verdict": "clean",
+      "reason": "Brother of Willibald and Walburga, kinsman of Boniface; Heidenheim double monastery, died 18 Dec, year hedged (760 Butler / 761 modern) — accurate."
+    },
+    {
+      "id": "death-of-pope-urban-v",
+      "verdict": "clean",
+      "reason": "Benedictine, elected 1362 (not a cardinal); left Avignon 30 Apr 1367, entered Rome 16 Oct, St. Bridget's warning, died Avignon 19 Dec 1370, cult 1870 — accurate."
+    },
+    {
+      "id": "martyrdom-of-thomas-the-apostle",
+      "verdict": "clean",
+      "reason": "Latin feast 21 Dec, tradition of martyrdom by lance at Mylapore (year 72); Origen/Parthia, Tillemont's Edessa view, 1523 excavation — well hedged and accurate."
+    },
+    {
+      "id": "death-of-mother-cabrini",
+      "verdict": "clean",
+      "reason": "Died Columbus Hospital, Chicago 22 Dec 1917 aged 67; 67 institutions, naturalized 1909, canonized Pius XII 1946 (first US-citizen saint), Francis' 2017 letter — accurate."
+    },
+    {
+      "id": "death-of-servulus",
+      "verdict": "clean",
+      "reason": "Palsied beggar of St. Clement's porch in Gregory the Great's Dialogues; his dying words and death c. 590, RM 23 Dec — accurate."
+    },
+    {
+      "id": "election-of-clement-ii",
+      "verdict": "clean",
+      "reason": "Synod of Sutri 20 Dec 1046, Roman continuation 23-24 Dec deposed Benedict IX; Suidger acclaimed 24 Dec, enthroned Christmas Day, crowned Henry III — accurate."
+    },
+    {
+      "id": "death-of-pope-dionysius",
+      "verdict": "clean",
+      "reason": "Raised 22 Jul 259 after the vacancy following Sixtus II (6 Aug 258); Gallienus' toleration, first non-martyr pope, synod vs Sabellianism, died 26 Dec 268 (27th hedged) — accurate."
+    },
+    {
+      "id": "consecration-of-westminster-abbey",
+      "verdict": "clean",
+      "reason": "Dedicated 28 Dec 1065 (Holy Innocents); Edward the Confessor absent through illness, died 5 Jan 1066; Henry III rebuild 1245, translation 13 Oct 1163 — accurate."
+    },
+    {
+      "id": "martyrdom-of-sabinus-of-assisi",
+      "verdict": "clean",
+      "reason": "Bishop of Assisi under Diocletian's edicts (303); deacons Marcellus and Exuperantius, governor Venustianus converted, beaten to death at Spoleto, RM 30 Dec (304) — accurate."
+    },
+    {
+      "id": "death-of-john-wycliffe",
+      "verdict": "clean",
+      "reason": "Balliol master, Bruges commission 1374, John of Gaunt; stroke at Mass, died Lutterworth 31 Dec 1384; Constance 1415 order, remains cast out 1428 — accurate."
+    }
+  ]
+}

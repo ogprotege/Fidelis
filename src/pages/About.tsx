@@ -150,6 +150,16 @@ export default function About() {
         the repository in the open.
       </p>
       <p className="small">
+        The <strong>Saint of the Day</strong> and <strong>Today in Church
+        History</strong> layers cover every calendar date (366 days, including
+        February 29) — one principal saint per day, and at least one sourced
+        Church-history event. Pre-1900 lives rest on the Catholic Encyclopedia
+        (1913), Butler&rsquo;s <em>Lives</em>, and the Roman Martyrology;
+        modern entries use church-official sources (vatican.va) labelled as such.
+        Text is drawn from those works, never AI-paraphrased; every entry has
+        been proof-read against its named edition.
+      </p>
+      <p className="small">
         The commentary is two public-domain monuments. <strong>Haydock</strong> —
         the classic annotated Douay, notes by Haydock, Challoner, Calmet, Witham,
         and others across the whole canon — is the 1883 Dunigan edition as the{" "}

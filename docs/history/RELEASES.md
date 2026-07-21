@@ -2096,6 +2096,35 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
+## Remember the days of old (v1.23.0)
+
+*"Remember the days of old, think upon every generation." (Deuteronomy 32:7)*
+
+The Church-history chronicle completes the calendar.
+
+**Every day now has a history.** Until this release the "Today in the Church"
+card could show a Saint of the Day with nothing beneath — 147 of 366 dates
+carried a chronicle event (177 events after the v1.22.3 proof-read). The gap
+was content, not a loader bug: most mornings simply had no entry yet. Twelve
+monthly drafting passes filled the 219 uncovered days (plus a few rich-day
+extras) with sourced prose drawn from the Catholic Encyclopedia 1913, Butler's
+*Lives*, the Roman Martyrology, and vatican.va — the same provenance gate the
+existing chronicle keeps — producing **229 new events**. Coverage is now
+**366 days / 406 events**, matching the saints corpus so the history lead is
+never absent for want of an entry. Where a day already has a saint, the new
+event complements rather than retelling that life (the v1.22.0 same-day rule).
+
+**Proof-read before ship.** Four quarterly fact-check passes over the new
+entries alone (day, year, people, documents, quoted words) found 208 clean, 20
+corrected, and 1 hedged — wrong years (Paulinus of Aquileia 802 not 804), an
+inverted Ascension claim for Bede, Blanche of Castile falsely attending
+Chartres's 1260 consecration (she had died in 1252), a "first to leave Italy
+since 1809" claim misplaced onto Paul VI's 1965 UN visit, and quieter slips
+of count and wording. Every corpus `verified` flag is now true. The harness
+gains the saints' twin gate: `npm test` turns red if any calendar date lacks
+a history event. Corpus rebuilt via `npm run history`, manifest re-sealed; no
+engine/golden/service-worker change. Shells 1.23.0 (`versionCode` 12300).
+
 ## I am the door (v1.22.5)
 
 *"I am the door. By me, if any man enter in, he shall be saved." (John 10:9)*

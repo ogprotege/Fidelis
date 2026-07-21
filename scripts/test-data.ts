@@ -3074,6 +3074,15 @@ console.log("");
   check("memory: a Saint of the Day exists for every calendar date (365/366)",
     missingSaintDays.length === 0,
     missingSaintDays.length ? `missing ${missingSaintDays.length}: ${missingSaintDays.slice(0, 8).join(", ")}…` : `${allSaints.length} saints`);
+  // v1.23.0 — the chronicle matches the saints' full-year coverage: every
+  // calendar date (incl. Feb 29) has at least one Church-history event.
+  const historyDays = new Set(allEvents.map((x: { day: string }) => x.day));
+  const missingHistoryDays = allDates.filter((d) => !historyDays.has(d));
+  check("memory: a Church-history event exists for every calendar date (365/366)",
+    missingHistoryDays.length === 0,
+    missingHistoryDays.length
+      ? `missing ${missingHistoryDays.length}: ${missingHistoryDays.slice(0, 8).join(", ")}…`
+      : `${allEvents.length} events / ${historyDays.size} days`);
   const saintIds = allSaints.map((x: { id: string }) => x.id);
   const eventIds = allEvents.map((x: { id: string }) => x.id);
   check("memory: saint and event ids are unique across the corpus",
