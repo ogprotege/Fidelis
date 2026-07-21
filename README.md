@@ -47,6 +47,31 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 ---
 
+<div align="center">
+
+<img src="docs/screenshots/today.png" alt="The Today page — the day's Mass, the Saint of the Day, and Church history" width="30%" />
+&nbsp;
+<img src="docs/screenshots/mass.png" alt="Daily Mass readings for the day, with the honest NABRE-copyright fallback notice" width="30%" />
+&nbsp;
+<img src="docs/screenshots/reader.png" alt="The Reader — John 1 in the Douay-Rheims, with gold commentary dots and purple Catechism marks" width="30%" />
+
+<img src="docs/screenshots/saint.png" alt="The Saint of the Day — the life of St. Lawrence of Brindisi" width="30%" />
+&nbsp;
+<img src="docs/screenshots/search.png" alt="Search across all 78 books with exact per-section counts" width="30%" />
+&nbsp;
+<img src="docs/screenshots/reader-night.png" alt="The Reader in Night theme — Psalm 22 in traditional Vulgate numbering" width="30%" />
+
+<sub>
+Captured on iOS Simulator (iPhone 17 Pro) from the v1.23.1 build. Left to right: the Today page ·
+daily Mass readings · the Reader · the Saint of the Day · Search · the Reader at night.
+The green accent is not a brand color — it is <b>Ordinary Time</b>: the interface wears the
+liturgical color of the day.
+</sub>
+
+</div>
+
+---
+
 ## Contents
 
 - [Docs map](#docs-map)
