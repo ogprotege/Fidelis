@@ -2096,6 +2096,54 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
+## Honour to whom honour (v1.23.2)
+
+*"Render therefore to all men their dues. Tribute, to whom tribute is due:
+custom, to whom custom: fear, to whom fear: honour, to whom honour."
+(Romans 13:7)*
+
+A factual title corrected at its source and carried through every runtime.
+
+**The mistake.** Nine entries in the canonical quote corpus identified Réginald
+Garrigou-Lagrange as a cardinal. He was a Dominican priest and theologian. He
+was never created a cardinal. The [Dominican Friars of the Province of St.
+Joseph](https://dominicanfriars.org/fr-garrigou-lagrange-on-the-rosary/)
+identify him as "Fr. Reginald Garrigou-Lagrange, O.P." The existing
+`authorTitle`, "Dominican Priest and Theologian," was already correct. Only the
+false honorific in `author` needed correction.
+
+The error had spread to forty-two tracked strings: nine canonical records,
+nine records in the emitted web corpus, and twelve scheduled appearances in
+each native widget calendar. On 22 July 2026 it was not dormant. The current
+Quote of the Day selected one of those records on the web and on both widgets.
+The source now reads `Fr. Reginald Garrigou-Lagrange, O.P.` in all nine records;
+`npm run quotes` rebuilt `public/data/quotes.json` and re-sealed its manifest,
+and `npm run widgets` rebuilt the iOS and Android calendars.
+
+**The installed-PWA trap.** Regenerating the files was necessary but not
+sufficient. The service worker served every non-manifest data file cache-first.
+An existing PWA that had already read `quotes.json` could therefore retain the
+false title after this release. Bumping the data-cache name would not solve that
+case because activation deliberately migrates downloaded files into the new
+cache. The quote corpus is curated release data, not a pinned Scripture text,
+so it now follows the manifest's network-first policy with cached offline
+fallback. The network request explicitly revalidates the HTTP cache. A factual
+correction lands online, and the corrected corpus remains available offline.
+Downloaded Bible bundles remain intact, and the data-cache name stays at v2.
+
+**The guard.** The quote harness now gathers every `garrigou-*` record and
+requires the exact author and the existing Dominican title. A second assertion
+rejects any committed native calendar containing the false cardinal form. Both
+checks were proved red against v1.23.1. The browser suite also places the stale
+title into CacheStorage, fetches the live corpus through the service worker,
+proves that the corrected response replaces the cached copy, then goes offline
+and reads that corrected copy again.
+
+No liturgical-engine or golden-snapshot change. Quote data, its manifest seal,
+and native widget calendars changed. The service worker changed only its
+freshness policy for `quotes.json`. No cache-name bump was needed. Native
+shells 1.23.2 / 12302.
+
 ## The lip of truth (v1.23.1)
 
 *"The lip of truth shall be steadfast for ever: but he that is a hasty witness,

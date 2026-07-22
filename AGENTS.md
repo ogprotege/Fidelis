@@ -8,7 +8,7 @@ release ledger, standing rules); this file is the practical summary.
 
 ## Project overview
 
-**Fidelis** (`fidelis-catholic-bible`, currently v1.23.1) is a Catholic Bible
+**Fidelis** (`fidelis-catholic-bible`, currently v1.23.2) is a Catholic Bible
 app — the full 73-book canon in three unaltered public-domain texts
 (Douay-Rheims Challoner `drc`, Catholic Public Domain Version `cpdv`, Clementine
 Latin Vulgate `vulgate`) — with a liturgical calendar engine, daily Mass

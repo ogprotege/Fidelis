@@ -23,7 +23,7 @@
   }
  },
  "fileCount": 1051,
- "rootHash": "1110edf723e212425d93abb9f3987f378019da6b6d5934d4c232acee6e889081",
+ "rootHash": "d839e6cb741cc2bdcd420118642692a4fbdd1b9cb69cd18594c13ec9840300e1",
  "bundles": {
   "ccc": {
    "files": 2,
@@ -663,7 +663,7 @@
   "history/12-30.json": "7710f818e3b77fd2855bd82efb5dff4443ae9f7b1826e5d79d6b421435b086ce",
   "history/12-31.json": "40c5e99f0cee26a052add422b5fe2dd2240cc2597132d7fcad0e771d6d32ace9",
   "lectionary.json": "6f7cd44d64ab72780aab09b132e24eefa98732f8df1e3d93b3c1e68e82b65973",
-  "quotes.json": "f63b94c0dac0c23a24421226851a8d42f9f32a77f5cbe4054c24ff5c8764c880",
+  "quotes.json": "98bf93ae4f44f912eec496318a072fbc98d515a712be625290d44af7f8a1f048",
   "saints/01-01.json": "fadf7527779866ce0ee8f2f6561a7a39cd9b346de198bfdff9f74000d53a1900",
   "saints/01-02.json": "254acad386deedb1427f106ef494e9bb1eacee2272f06f383b8e57bd23364d26",
   "saints/01-03.json": "a72bc3935e2a13a39660c62b16af27bd25461c917068d0adce2f8a216bb25430",
