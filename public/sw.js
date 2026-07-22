@@ -4,12 +4,13 @@
  * behavior there comes from dist/ shipping in the app bundle (see docs/IOS.md).
  */
 const SHELL_CACHE = "fidelis-shell-v6";
-// Cache-first store for the immutable corpus. Bump ONLY when an existing data
+// Cache-first store for the bulk corpus. Bump ONLY when an existing cache-first
 // file's bytes change (a deliberate pin bump to scripture/lectionary). On
 // activate the prior data cache is migrated forward first, so a bump never
 // discards the translations a user downloaded for offline reading. Adding new
 // files (e.g. the commentary layer) or re-sealing manifest.json needs NO bump:
-// new files miss and fetch fresh, and manifest.json is served network-first.
+// new files miss and fetch fresh. Small mutable release data (manifest + quotes)
+// is served network-first below, with the cache retained for offline fallback.
 const DATA_CACHE = "fidelis-data-v2";
 
 const ASSET_RE = /(?:src|href)="([^"]*assets\/[^"]+)"/g;
@@ -120,22 +121,32 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
 
   // Scripture data: cache-first (the texts never change between pin bumps).
-  // The manifest is the one exception — it is re-sealed every release, so it is
-  // served network-first (cache fallback when offline). That lets a new seal
-  // land without bumping — and wiping — the whole data cache.
+  // The manifest and curated quote corpus are exceptions: both can change in a
+  // release, so they are network-first with cache fallback. That lets a new seal
+  // or factual quote correction land without wiping downloaded Bible bundles.
   if (url.pathname.includes("/data/")) {
-    const isManifest = url.pathname.endsWith("/data/manifest.json");
+    const isNetworkFirst =
+      url.pathname.endsWith("/data/manifest.json") ||
+      url.pathname.endsWith("/data/quotes.json");
     event.respondWith(
       caches.open(DATA_CACHE).then(async (cache) => {
-        if (isManifest) {
+        if (isNetworkFirst) {
           try {
-            const res = await fetch(event.request);
-            if (res.ok) cache.put(event.request, res.clone());
-            return res;
+            const res = await fetch(event.request, { cache: "no-cache" });
+            if (res.ok) {
+              try {
+                await cache.put(event.request, res.clone());
+              } catch {
+                // A cache write failure must not hide a fresh network response.
+              }
+              return res;
+            }
+            const hit = await cache.match(event.request);
+            return hit || res;
           } catch {
             const hit = await cache.match(event.request);
             if (hit) return hit;
-            throw new Error("offline and manifest not cached");
+            throw new Error("offline and mutable data not cached");
           }
         }
         const hit = await cache.match(event.request);

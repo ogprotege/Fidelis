@@ -6,6 +6,37 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.23.2] — 2026-07-22 — honour to whom honour
+
+*"Render therefore to all men their dues. Tribute, to whom tribute is due:
+custom, to whom custom: fear, to whom fear: honour, to whom honour."
+(Romans 13:7)*
+
+A factual correction to the Quote of the Day corpus and every surface that
+displays it.
+
+### Fixed
+
+- **Fr. Reginald Garrigou-Lagrange, O.P., now carries his correct title.** All
+  nine quotations had incorrectly named the Dominican priest and theologian a
+  cardinal. The canonical corpus, emitted web data, and both native widget
+  calendars now identify him as `Fr. Reginald Garrigou-Lagrange, O.P.`
+- **Existing PWA installations receive the correction.** The curated quote
+  corpus is now network-first with cache fallback. An online launch replaces
+  an old cached attribution, while the latest successful copy remains
+  available offline.
+
+### Added
+
+- **Regression guards cover the source and native output.** `npm test` requires
+  every `garrigou-*` record to carry the exact priestly attribution and rejects
+  a widget calendar that still calls him a cardinal. A browser test seeds the
+  stale title and proves that an online fetch replaces it in the offline cache.
+
+Quote corpus rebuilt, manifest re-sealed, and widget data regenerated. No
+liturgical-engine or golden-snapshot change. Service-worker freshness policy
+changed without a data-cache-name bump. Native shells 1.23.2 / 12302.
+
 ## [1.23.1] — 2026-07-21 — the lip of truth
 
 *"The lip of truth shall be steadfast for ever." (Proverbs 12:19)*

@@ -60,6 +60,7 @@ function check(name: string, ok: boolean, detail = "") {
 
 import { fileURLToPath } from "node:url";
 const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
+const GARRIGOU_AUTHOR = "Fr. Reginald Garrigou-Lagrange, O.P.";
 const lect: Record<string, { t: number; b: string; s: [number, number, number][]; partial?: boolean }[]> =
   JSON.parse(readFileSync(join(ROOT, "public/data/lectionary.json"), "utf8"));
 const keys = new Set(Object.keys(lect));
@@ -579,7 +580,11 @@ check(
 //     with `npm run widgets` (docs/guides/RELEASING.md) and commit the JSON.
 {
   const iosCalRaw = readFileSync(join(ROOT, "ios/WidgetExtension/calendar.json"), "utf8");
-  const calKeys = Object.keys(JSON.parse(iosCalRaw));
+  const iosCalendar = JSON.parse(iosCalRaw) as Record<
+    string,
+    { quote?: { author?: string } | null }
+  >;
+  const calKeys = Object.keys(iosCalendar);
   const iso = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const now = new Date();
@@ -600,6 +605,14 @@ check(
     "Android widget calendar.json is byte-identical to the iOS one (both read one resolution)",
     androidCalRaw === iosCalRaw,
     "android res/raw/calendar.json differs from ios/WidgetExtension/calendar.json — re-run npm run calendar-widget"
+  );
+  check(
+    "every native-widget appearance carries Fr. Garrigou-Lagrange's exact attribution",
+    Object.values(iosCalendar)
+      .flatMap((entry) => entry.quote?.author ?? [])
+      .filter((author) => author.includes("Garrigou-Lagrange"))
+      .every((author) => author === GARRIGOU_AUTHOR),
+    "incorrect Garrigou-Lagrange attribution — re-run npm run calendar-widget"
   );
 }
 
@@ -862,6 +875,18 @@ console.log("");
     else if (q.season !== null && !SEASONS.has(q.season)) schemaBad++;
   }
   check("every quote satisfies the spec §3.1 schema", schemaBad === 0, `${schemaBad} bad`);
+
+  const garrigou = quotes.filter((q) => q.id.startsWith("garrigou-"));
+  check(
+    "Garrigou-Lagrange is identified as a Dominican priest, never a cardinal",
+    garrigou.length === 9 &&
+      garrigou.every(
+        (q) =>
+          q.author === GARRIGOU_AUTHOR &&
+          q.authorTitle === "Dominican Priest and Theologian"
+      ),
+    `${garrigou.length} entries; authors: ${[...new Set(garrigou.map((q) => q.author))].join(", ")}`
+  );
 
   // The build's §3.3 red list is a HARD failure since v1.14.2: build-quotes.mjs
   // throws on any non-PD-author match unless ALLOW_RED_LIST=1 is set — the
@@ -3437,6 +3462,12 @@ console.log("");
   const dataCacheInSw = swSrc.match(/DATA_CACHE = "([^"]+)"/)?.[1];
   check("§33 offline probe: data.ts and sw.js agree on the data-cache name",
     !!dataCacheInData && dataCacheInData === dataCacheInSw);
+  check("§33 offline probe: mutable quotes refresh network-first with cache fallback",
+      swSrc.includes('url.pathname.endsWith("/data/quotes.json")') &&
+      swSrc.includes("if (isNetworkFirst)") &&
+      swSrc.includes('fetch(event.request, { cache: "no-cache" })') &&
+      swSrc.includes("await cache.put(event.request, res.clone())") &&
+      swSrc.includes("const hit = await cache.match(event.request)"));
   check("§33 offline probe: Settings shows Saved only from cache truth (verifyOfflineBundle)",
     settingsSrc.includes("verifyOfflineBundle(") && settingsSrc.includes("Repair"));
   check("§33 storage banner: App mounts the deduped warning with Export as recovery",

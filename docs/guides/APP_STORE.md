@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.23.1
+1.23.2
 ```
 
 The store version string always equals the uploaded build's
@@ -23,15 +23,14 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-The Church-history chronicle now covers every day of the year — 366 dates, matching the Saint of the Day — so the "Today in the Church" card always has a history lead beneath the saint, never a quiet gap. Same texts, same pledge.
+Corrected Fr. Reginald Garrigou-Lagrange, O.P.’s title across all nine quotations and both home-screen widget calendars. He was a Dominican priest and theologian, never a cardinal. Existing web installs now refresh the quote corpus online while retaining it for offline use.
 ```
 
 (ASC shows What's New only for updates after the first released version. The
-same text serves as the TestFlight "What to Test" notes: open the Today tab
-on any date — the "Today in the Church" card should show the Saint of the
-Day and, beneath the hairline, an "In Church History" event. Days that once
-had only a saint (for example July 19, St. Macrina) should now carry history
-as well.)
+same text serves as the TestFlight "What to Test" notes. The Quote of the Day
+card and native Quote widget must identify him as "Fr. Reginald
+Garrigou-Lagrange, O.P.," never as a cardinal. July 22, 2026 is one known
+scheduled appearance in both widget calendars.)
 
 ## Promotional Text (≤ 170 characters)
 
@@ -209,4 +208,4 @@ Counted as unicode code points (how ASC counts). Verified 2026-07-13:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 1,916 / 4,000 ✓
-- What's New (1.23.1): 229 / 4,000 ✓ (counted 2026-07-21)
+- What's New (1.23.2): 274 / 4,000 ✓ (counted 2026-07-22)

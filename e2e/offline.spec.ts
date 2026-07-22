@@ -42,3 +42,44 @@ test("offline Saved is cache truth: download, evict, Repair, never lie", async (
   expect(await page.evaluate(() => localStorage.getItem("fidelis:offline"))).toContain("drc");
   expect(await drbRow.getByRole("button", { name: /Saved/ }).count()).toBe(0);
 });
+
+test("mutable quote data replaces a stale cached attribution", async ({ page, context }) => {
+  await page.goto("/");
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload({ waitUntil: "networkidle" });
+
+  const quoteUrl = await page.evaluate(() => `${location.origin}/data/quotes.json`);
+  await page.evaluate(async (url) => {
+    const cache = await caches.open("fidelis-data-v2");
+    await cache.put(
+      url,
+      new Response(
+        JSON.stringify({
+          quotes: [{
+            id: "stale-garrigou-attribution",
+            author: "Cardinal Reginald Garrigou-Lagrange, OP"
+          }]
+        }),
+        { headers: { "Content-Type": "application/json" } }
+      )
+    );
+  }, quoteUrl);
+
+  const online = await page.evaluate(async (url) => (await fetch(url)).text(), quoteUrl);
+  expect(online).toContain("Fr. Reginald Garrigou-Lagrange, O.P.");
+  expect(online).not.toContain("Cardinal Reginald Garrigou-Lagrange");
+
+  const cached = await page.evaluate(async (url) => {
+    const response = await (await caches.open("fidelis-data-v2")).match(url);
+    return response?.text() ?? "";
+  }, quoteUrl);
+  expect(cached).toBe(online);
+
+  await context.setOffline(true);
+  try {
+    const offline = await page.evaluate(async (url) => (await fetch(url)).text(), quoteUrl);
+    expect(offline).toBe(online);
+  } finally {
+    await context.setOffline(false);
+  }
+});
