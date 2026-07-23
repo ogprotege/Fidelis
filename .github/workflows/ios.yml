@@ -74,6 +74,15 @@ jobs:
           node-version: "22"
           cache: npm
 
+      # The project-wiring scripts require xcodeproj directly. Do not depend on
+      # whichever Ruby gems happen to be present on the hosted macOS image.
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install pinned Xcode project tooling
+        run: gem install xcodeproj --version 1.27.0 --no-document
+
       # Build the web bundle and copy it + the Capacitor plugins into the Xcode
       # project (writes ios/App/App/public, which is gitignored and regenerated).
       - run: npm ci
@@ -82,10 +91,10 @@ jobs:
 
       - name: Verify native target and entitlement wiring
         run: |
-          /usr/bin/ruby scripts/add-ios-widget-target.rb
-          /usr/bin/ruby scripts/configure-ios-app-target.rb
-          /usr/bin/ruby scripts/add-ios-native-test-target.rb
-          /usr/bin/ruby scripts/verify-ios-widget-wiring.rb
+          ruby scripts/add-ios-widget-target.rb
+          ruby scripts/configure-ios-app-target.rb
+          ruby scripts/add-ios-native-test-target.rb
+          ruby scripts/verify-ios-widget-wiring.rb
 
       # Surface the available schemes in the log (xcodebuild auto-creates the
       # "App" scheme when none is shared), then resolve the local Swift package.
