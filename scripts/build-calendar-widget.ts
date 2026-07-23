@@ -42,7 +42,7 @@ import {
   EXACT_CALENDAR_CATALOG_THROUGH,
   NATIVE_WIDGET_SNAPSHOT_BUILD_YEAR,
   SUPPORTED_CALENDAR_PROFILES,
-  US_LECTIONARY_PACK,
+  DERIVED_ROMAN_LECTIONARY_PACK,
   type CalendarProfileId
 } from "../src/lib/calendarProfile";
 import { getBook } from "../src/lib/canon";
@@ -294,7 +294,7 @@ const snapshot: WidgetCalendarSnapshot = {
   },
   lectionaryPack: {
     id: DEFAULT_LECTIONARY_PACK_ID,
-    version: US_LECTIONARY_PACK.version,
+    version: DERIVED_ROMAN_LECTIONARY_PACK.version,
     fingerprint: DEFAULT_LECTIONARY_PACK_FINGERPRINT
   },
   defaultProfileId: DEFAULT_CALENDAR_PROFILE_ID,

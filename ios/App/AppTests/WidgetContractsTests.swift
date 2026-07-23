@@ -395,6 +395,37 @@ final class WidgetContractsTests: XCTestCase {
                 now: now,
                 hasIndividualChurchProper: true,
                 localProperFingerprint: fingerprint,
+                localOverlayData: try localOverlayData(
+                    localFingerprint: fingerprint,
+                    generatedAt: "2026-07-23T00:00:00.000Z",
+                    lectionaryFingerprint:
+                        "roman.ordinary.derived-citation-table@stale:sha256:stale"
+                )
+            )
+        )
+        XCTAssertNil(
+            FidelisGospelResolver.resolve(
+                snapshot,
+                requestedProfile: "roman.general",
+                dayKey: "2026-07-23",
+                now: now,
+                hasIndividualChurchProper: true,
+                localProperFingerprint: fingerprint,
+                localOverlayData: try localOverlayData(
+                    localFingerprint: fingerprint,
+                    generatedAt: "2026-07-23T00:00:00.000Z",
+                    lectionaryFingerprint: nil
+                )
+            )
+        )
+        XCTAssertNil(
+            FidelisGospelResolver.resolve(
+                snapshot,
+                requestedProfile: "roman.general",
+                dayKey: "2026-07-23",
+                now: now,
+                hasIndividualChurchProper: true,
+                localProperFingerprint: fingerprint,
                 lectionaryPackId: "roman.unsupported",
                 localOverlayData: overlay
             )
@@ -490,7 +521,7 @@ final class WidgetContractsTests: XCTestCase {
             ],
             "lectionaryPack": [
                 "id": FidelisWidgetContract.derivedRomanLectionary,
-                "version": "tamil-catholic-lectionary-c6c9d79+fidelis-supplement-2026.1",
+                "version": "tamil-catholic-lectionary-c6c9d79+fidelis-supplement-2026.2",
                 "fingerprint": lectionaryFingerprint
             ],
             "defaultProfileId": "roman.us.ascension-sunday",
@@ -500,10 +531,11 @@ final class WidgetContractsTests: XCTestCase {
 
     private func localOverlayData(
         localFingerprint: String,
-        generatedAt: String
+        generatedAt: String,
+        lectionaryFingerprint: String? = FidelisWidgetContract.derivedRomanLectionaryFingerprint
     ) throws -> Data {
         let baseFingerprint = FidelisWidgetContract.expectedProfileFingerprints["roman.general"]!
-        return try JSONSerialization.data(withJSONObject: [
+        var overlay: [String: Any] = [
             "schemaVersion": FidelisWidgetContract.localOverlaySchemaVersion,
             "generatedAt": generatedAt,
             "expiresAt": "2027-01-01T00:00:00.000Z",
@@ -531,6 +563,10 @@ final class WidgetContractsTests: XCTestCase {
                     "readings": [["label": "Gospel", "cite": "John 10:22-30"]]
                 ]
             ]
-        ], options: [.sortedKeys])
+        ]
+        if let lectionaryFingerprint {
+            overlay["lectionaryPackFingerprint"] = lectionaryFingerprint
+        }
+        return try JSONSerialization.data(withJSONObject: overlay, options: [.sortedKeys])
     }
 }

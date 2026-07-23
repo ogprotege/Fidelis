@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import {
   LECTIONARY_CODE_BY_FORMULARY_ID,
   celebrationFormularyCodes,
@@ -11,6 +12,7 @@ import {
   formatLectionaryCitation,
   hebrewSpanToVulgate,
   lectionaryDataForPack,
+  lectionaryResolverCatalogInput,
   missingLocalFormularyStateForCelebration,
   resolveReadings,
   LectionaryRow
@@ -372,6 +374,42 @@ check(
   "an unmarked General memorial exposes its selectable formulary",
   hilary.code.startsWith("OW01-2Tue") &&
     hilary.optionalMemorials?.some((option) => option.label.includes("Hilary")) === true
+);
+const blaise = res(2026, 2, 3)!;
+check(
+  "St. Blaise uses the corpus-backed Blase formulary instead of reporting it absent",
+  blaise.optionalMemorials?.some(
+    (option) => option.label.includes("Blaise") && option.code.includes("Saint Blase")
+  ) === true &&
+    !blaise.unavailableFormularies?.some((item) => item.celebrationId === "grc.blaise"),
+  `${JSON.stringify(blaise.optionalMemorials?.map((option) => option.code))}; ${JSON.stringify(
+    blaise.unavailableFormularies
+  )}`
+);
+const firstMartyrs = res(2026, 6, 30)!;
+check(
+  "the First Martyrs use their corpus-backed formulary instead of reporting it absent",
+  firstMartyrs.optionalMemorials?.some(
+    (option) => option.label.includes("First Martyrs") &&
+      option.code.includes("First Martyrs of the Church of Rome")
+  ) === true &&
+    !firstMartyrs.unavailableFormularies?.some(
+      (item) => item.celebrationId === "grc.first-martyrs-rome"
+    ),
+  `${JSON.stringify(
+    firstMartyrs.optionalMemorials?.map((option) => option.code)
+  )}; ${JSON.stringify(firstMartyrs.unavailableFormularies)}`
+);
+const bridget = res(2026, 7, 23)!;
+check(
+  "St. Bridget uses the corpus-backed Birgitta formulary instead of reporting it absent",
+  bridget.optionalMemorials?.some(
+    (option) => option.label.includes("Bridget") && option.code.includes("Saint Birgitta")
+  ) === true &&
+    !bridget.unavailableFormularies?.some((item) => item.celebrationId === "grc.bridget"),
+  `${JSON.stringify(bridget.optionalMemorials?.map((option) => option.code))}; ${JSON.stringify(
+    bridget.unavailableFormularies
+  )}`
 );
 const holyNameJesus = res(2026, 1, 3)!;
 check(
@@ -933,6 +971,15 @@ check(
     "incorrect Garrigou-Lagrange attribution — re-run npm run calendar-widget"
   );
   for (const pack of CALENDAR_PACKS) {
+    const semanticPack = Object.fromEntries(
+      Object.entries(pack).filter(
+        ([key]) => key !== "contentHash" && key !== "canonicalCatalogInput"
+      )
+    );
+    check(
+      `${pack.id} canonical catalog contains every live semantic field exactly`,
+      isDeepStrictEqual(JSON.parse(pack.canonicalCatalogInput), semanticPack)
+    );
     check(
       `${pack.id} canonical catalog hash matches its fingerprint input`,
       `sha256:${createHash("sha256").update(pack.canonicalCatalogInput).digest("hex")}` ===
@@ -951,9 +998,28 @@ check(
   }
   for (const pack of SUPPORTED_LECTIONARY_PACKS) {
     const raw = readFileSync(join(ROOT, "public", pack.dataPath));
+    const semanticPack = Object.fromEntries(
+      Object.entries(pack).filter(
+        ([key]) => key !== "contentHash" && key !== "canonicalCatalogInput"
+      )
+    );
     check(
-      `${pack.id} content hash matches its manifest-sealed citation table`,
-      `sha256:${createHash("sha256").update(raw).digest("hex")}` === pack.contentHash
+      `${pack.id} canonical catalog contains every live semantic field exactly`,
+      isDeepStrictEqual(JSON.parse(pack.canonicalCatalogInput), semanticPack)
+    );
+    check(
+      `${pack.id} citation-table hash matches its manifest-sealed generated data`,
+      `sha256:${createHash("sha256").update(raw).digest("hex")}` === pack.citationTableHash
+    );
+    check(
+      `${pack.id} resolver-catalog hash covers stable mappings, supplements, and Mass sets`,
+      `sha256:${createHash("sha256").update(lectionaryResolverCatalogInput()).digest("hex")}` ===
+        pack.resolverCatalogHash
+    );
+    check(
+      `${pack.id} effective-pack hash matches its complete fingerprint input`,
+      `sha256:${createHash("sha256").update(pack.canonicalCatalogInput).digest("hex")}` ===
+        pack.contentHash
     );
   }
   check(
@@ -987,7 +1053,7 @@ check(
 }
 
 // 7c. The native individual-church overlay is sparse, atomic, and tied to the
-// exact selected base profile, local proper, and citation table.
+// exact selected base profile, local proper, and lectionary content.
 {
   const now = new Date("2026-07-23T12:00:00.000Z");
   const proper = normalizeIndividualChurchProper({
@@ -1032,7 +1098,7 @@ check(
     )
   );
   check(
-    "individual-church overlay validates only for its selected profile, proper, and lectionary",
+    "individual-church overlay validates only for its selected profile, proper, and lectionary fingerprint",
     validateLocalWidgetCalendarOverlay(overlay, expected) &&
       !validateLocalWidgetCalendarOverlay(overlay, {
         ...expected,
@@ -1040,6 +1106,18 @@ check(
       }) &&
       !validateLocalWidgetCalendarOverlay(
         { ...overlay, lectionaryPackId: "roman.unsupported" },
+        expected
+      ) &&
+      !validateLocalWidgetCalendarOverlay(
+        {
+          ...overlay,
+          lectionaryPackFingerprint:
+            "roman.ordinary.derived-citation-table@tamil-catholic-lectionary-c6c9d79+fidelis-supplement-2026.1:sha256:stale"
+        },
+        expected
+      ) &&
+      !validateLocalWidgetCalendarOverlay(
+        (({ lectionaryPackFingerprint: _stale, ...legacyOverlay }) => legacyOverlay)(overlay),
         expected
       )
   );
@@ -1780,6 +1858,10 @@ console.log("");
   // About carries the anchor the Data line points at.
   const about = readFileSync(join(ROOT, "src/pages/About.tsx"), "utf8");
   check("About marks the integrity line with id=\"integrity\"", about.includes('id="integrity"'));
+  check(
+    "About identifies the installed lectionary as a derived Roman citation pack",
+    about.includes("bundled derived Roman citation pack") && !about.includes("bundled U.S. pack")
+  );
 
   // No-flash boot: index.html resolves theme + face before paint.
   const html = readFileSync(join(ROOT, "index.html"), "utf8");

@@ -113,6 +113,30 @@ public class WidgetNativeContractTest {
     }
 
     @Test
+    public void localOverlayRequiresTheExactCurrentLectionaryFingerprint() {
+        String currentFingerprint =
+                "roman.ordinary.derived-citation-table@tamil-catholic-lectionary-c6c9d79"
+                        + "+fidelis-supplement-2026.2:sha256:"
+                        + "7afff82803e3c7abca0fa74020c491f184edfd13dc59505837bb0e7672ec21dc";
+        assertTrue(CalendarData.isExpectedLocalOverlayLectionary(
+                WidgetSharedSettings.DERIVED_ROMAN_LECTIONARY,
+                WidgetSharedSettings.DERIVED_ROMAN_LECTIONARY,
+                currentFingerprint));
+        assertFalse(CalendarData.isExpectedLocalOverlayLectionary(
+                WidgetSharedSettings.DERIVED_ROMAN_LECTIONARY,
+                WidgetSharedSettings.DERIVED_ROMAN_LECTIONARY,
+                "roman.ordinary.derived-citation-table@stale:sha256:stale"));
+        assertFalse(CalendarData.isExpectedLocalOverlayLectionary(
+                WidgetSharedSettings.DERIVED_ROMAN_LECTIONARY,
+                WidgetSharedSettings.DERIVED_ROMAN_LECTIONARY,
+                ""));
+        assertFalse(CalendarData.isExpectedLocalOverlayLectionary(
+                WidgetSharedSettings.DERIVED_ROMAN_LECTIONARY,
+                "roman.unsupported",
+                currentFingerprint));
+    }
+
+    @Test
     public void calendarSnapshotRejectsMalformedOrReversedGenerationMetadata() throws Exception {
         long now = instantMillis("2026-07-23T13:19:12.064Z");
         CalendarData.validateTimestamps(

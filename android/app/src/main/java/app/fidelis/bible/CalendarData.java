@@ -34,8 +34,8 @@ final class CalendarData {
     private static final String EXACT_CATALOG_THROUGH = "2031-12-31";
     private static final String LECTIONARY_PACK_FINGERPRINT =
             "roman.ordinary.derived-citation-table@tamil-catholic-lectionary-c6c9d79"
-                    + "+fidelis-supplement-2026.1:sha256:"
-                    + "6f7cd44d64ab72780aab09b132e24eefa98732f8df1e3d93b3c1e68e82b65973";
+                    + "+fidelis-supplement-2026.2:sha256:"
+                    + "7afff82803e3c7abca0fa74020c491f184edfd13dc59505837bb0e7672ec21dc";
     /** Tolerate small build/device clock disagreement without accepting a
      * snapshot whose asserted provenance is materially in the future. */
     private static final long MAX_GENERATED_CLOCK_SKEW_MILLIS = 5L * 60L * 1000L;
@@ -143,8 +143,10 @@ final class CalendarData {
             if (overlay.optInt("schemaVersion", -1) != LOCAL_OVERLAY_SCHEMA_VERSION
                     || !profileId.equals(overlay.optString("baseProfileId"))
                     || !profileFingerprint.equals(overlay.optString("baseProfileFingerprint"))
-                    || !WidgetSharedSettings.lectionaryPack(context).equals(
-                            overlay.optString("lectionaryPackId"))
+                    || !isExpectedLocalOverlayLectionary(
+                            WidgetSharedSettings.lectionaryPack(context),
+                            overlay.optString("lectionaryPackId"),
+                            overlay.optString("lectionaryPackFingerprint"))
                     || localLayer == null
                     || !"local.individual-church".equals(localLayer.optString("id"))
                     || !"1".equals(localLayer.optString("version"))
@@ -198,6 +200,17 @@ final class CalendarData {
             }
             throw new IllegalStateException("Individual-church overlay is corrupt.", error);
         }
+    }
+
+    /** Package-visible seam proving persisted overlays bind to exact content,
+     * not only the stable pack identifier. Missing fields are rejected. */
+    static boolean isExpectedLocalOverlayLectionary(
+            String selectedPackId,
+            String overlayPackId,
+            String overlayPackFingerprint) {
+        return WidgetSharedSettings.DERIVED_ROMAN_LECTIONARY.equals(selectedPackId)
+                && selectedPackId.equals(overlayPackId)
+                && LECTIONARY_PACK_FINGERPRINT.equals(overlayPackFingerprint);
     }
 
     private static JSONObject parse(Context context) throws Exception {

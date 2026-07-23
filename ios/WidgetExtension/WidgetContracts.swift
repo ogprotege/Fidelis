@@ -90,7 +90,7 @@ enum FidelisWidgetContract {
     static let exactCatalogThrough = "2031-12-31"
     static let derivedRomanLectionary = "roman.ordinary.derived-citation-table"
     static let derivedRomanLectionaryFingerprint =
-        "roman.ordinary.derived-citation-table@tamil-catholic-lectionary-c6c9d79+fidelis-supplement-2026.1:sha256:6f7cd44d64ab72780aab09b132e24eefa98732f8df1e3d93b3c1e68e82b65973"
+        "roman.ordinary.derived-citation-table@tamil-catholic-lectionary-c6c9d79+fidelis-supplement-2026.2:sha256:7afff82803e3c7abca0fa74020c491f184edfd13dc59505837bb0e7672ec21dc"
 
     /// Must match src/lib/calendarProfile.ts. A pack change without a matching
     /// native snapshot fails closed rather than presenting another jurisdiction.
@@ -316,6 +316,7 @@ struct FidelisLoadedCalendar {
     let expiresAt: Date
     let window: FidelisCalendarWindow
     let exactCatalogWindow: FidelisCalendarWindow
+    let lectionaryPackFingerprint: String
     let profile: FidelisCalendarProfileSnapshot
     let localDays: [String: CalendarDay]
 }
@@ -354,6 +355,7 @@ enum FidelisCalendarSnapshotValidator {
             expiresAt: expiresAt,
             window: snapshot.window,
             exactCatalogWindow: snapshot.exactCatalogWindow,
+            lectionaryPackFingerprint: snapshot.lectionaryPack.fingerprint,
             profile: snapshot.selectedProfile,
             localDays: [:]
         )
@@ -435,6 +437,7 @@ enum FidelisGospelResolver {
                     expectedBaseFingerprint: calendar.profile.fingerprint,
                     expectedLocalFingerprint: localProperFingerprint,
                     expectedLectionaryPackId: lectionaryPackId,
+                    expectedLectionaryPackFingerprint: calendar.lectionaryPackFingerprint,
                     expectedWindow: calendar.window,
                     now: now
                 )
@@ -482,6 +485,7 @@ private struct FidelisLocalCalendarOverlay: Decodable {
     let baseProfileId: String
     let baseProfileFingerprint: String
     let lectionaryPackId: String
+    let lectionaryPackFingerprint: String
     let localLayer: FidelisLocalCalendarLayer
     let days: [String: CalendarDay]
 }
@@ -497,6 +501,7 @@ enum FidelisLocalCalendarOverlayValidator {
         expectedBaseFingerprint: String,
         expectedLocalFingerprint: String,
         expectedLectionaryPackId: String,
+        expectedLectionaryPackFingerprint: String,
         expectedWindow: FidelisCalendarWindow,
         now: Date = Date()
     ) -> FidelisLoadedLocalCalendarOverlay? {
@@ -506,6 +511,7 @@ enum FidelisLocalCalendarOverlayValidator {
             overlay.baseProfileId == expectedProfileId,
             overlay.baseProfileFingerprint == expectedBaseFingerprint,
             overlay.lectionaryPackId == expectedLectionaryPackId,
+            overlay.lectionaryPackFingerprint == expectedLectionaryPackFingerprint,
             overlay.window == expectedWindow,
             overlay.localLayer.id == "local.individual-church",
             overlay.localLayer.version == "1",

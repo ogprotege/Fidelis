@@ -38,6 +38,8 @@ A widget, navigation, accessibility, motion, and Roman-calendar repair release.
   window, so an installed build remains valid across New Year. Android System
   appearance retains day/night resource aliases instead of freezing the current
   palette into `RemoteViews`; explicit Day and Night choices remain pinned.
+  Persisted local overlays bind to the exact lectionary content fingerprint, so
+  an app update rejects old overlays until the app regenerates current data.
 - **Responsive and keyboard paths are repaired.** Library controls no longer
   force page overflow at phone widths. Calendar settings and the Mass date
   toolbar stay inside a 320 px viewport with 44 px controls. Reader verses use
@@ -52,6 +54,12 @@ A widget, navigation, accessibility, motion, and Roman-calendar repair release.
   first paint, typography is pinned to Garamond, and a versioned ResizeObserver
   message replaces the fixed-height assumption. The host validates window and
   origin and clamps the reported height.
+- **Corpus-backed memorial readings are not misreported as absent.** Stable
+  formulary IDs now connect St. Blaise, St. Bridget, and the First Martyrs of
+  the Holy Roman Church to their existing citation rows, with date-level
+  regression coverage. The lectionary fingerprint now seals those mappings,
+  bundled supplements, and composed Mass sets as well as the generated table.
+  Regeneration also restores the source em dash in one 2030 native quote.
 
 ### Added
 

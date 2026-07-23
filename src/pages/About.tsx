@@ -203,8 +203,8 @@ export default function About() {
         >
           USCCB proper calendar
         </a>. Daily Mass reading citations use the independently selected lectionary
-        pack. The bundled U.S. pack follows Roman Lectionary cycles (Sundays A/B/C,
-        weekdays I/II), derived from the public-domain tables of{" "}
+        pack. The bundled derived Roman citation pack follows Roman Lectionary cycles
+        (Sundays A/B/C, weekdays I/II), from the public-domain tables of{" "}
         <a
           href="https://github.com/jayarathina/Tamil-Catholic-Lectionary"
           target="_blank"

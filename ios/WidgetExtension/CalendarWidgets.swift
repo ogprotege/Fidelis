@@ -96,6 +96,7 @@ private func loadCalendar() -> FidelisLoadedCalendar? {
                 expectedBaseFingerprint: baseCalendar.profile.fingerprint,
                 expectedLocalFingerprint: localProperFingerprint,
                 expectedLectionaryPackId: lectionaryPack,
+                expectedLectionaryPackFingerprint: baseCalendar.lectionaryPackFingerprint,
                 expectedWindow: baseCalendar.window
             )
         else {
@@ -106,6 +107,7 @@ private func loadCalendar() -> FidelisLoadedCalendar? {
             expiresAt: baseCalendar.expiresAt,
             window: baseCalendar.window,
             exactCatalogWindow: baseCalendar.exactCatalogWindow,
+            lectionaryPackFingerprint: baseCalendar.lectionaryPackFingerprint,
             profile: baseCalendar.profile,
             localDays: overlay.days
         )

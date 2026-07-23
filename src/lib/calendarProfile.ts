@@ -202,8 +202,13 @@ export interface LectionaryPack {
   formularyNamespace: string;
   /** Built citation table selected by the resolver. */
   dataPath: string;
-  /** SHA-256 of the manifest-sealed citation table consumed by this pack. */
+  /** SHA-256 of the manifest-sealed generated citation table. */
+  citationTableHash: `sha256:${string}`;
+  /** SHA-256 of stable-ID mappings, code-backed supplements, and Mass sets. */
+  resolverCatalogHash: `sha256:${string}`;
+  /** SHA-256 of canonicalCatalogInput, used to invalidate native snapshots. */
   contentHash: `sha256:${string}`;
+  canonicalCatalogInput: string;
   /** Accurate provenance for the bundled table, distinct from official ordo sources. */
   corpusProvenance: string;
   sourceLoci: readonly CalendarSourceLocus[];
@@ -1020,15 +1025,15 @@ export const CALENDAR_PACKS: readonly CalendarPack[] = [
   UNITED_STATES_ASCENSION_THURSDAY_PACK
 ];
 
-export const US_LECTIONARY_PACK: LectionaryPack = {
-  schemaVersion: CALENDAR_PROFILE_SCHEMA_VERSION,
+const LECTIONARY_PACK_FIELDS = {
   id: "roman.ordinary.derived-citation-table",
-  version: "tamil-catholic-lectionary-c6c9d79+fidelis-supplement-2026.1",
+  version: "tamil-catholic-lectionary-c6c9d79+fidelis-supplement-2026.2",
   title: "Roman Mass citation table (derived public-domain data)",
   authority: "Fidelis, derived from jayarathina/Tamil-Catholic-Lectionary",
   formularyNamespace: "fidelis.lectionary.roman-derived",
   dataPath: "data/lectionary.json",
-  contentHash: "sha256:6f7cd44d64ab72780aab09b132e24eefa98732f8df1e3d93b3c1e68e82b65973",
+  citationTableHash: "sha256:6f7cd44d64ab72780aab09b132e24eefa98732f8df1e3d93b3c1e68e82b65973",
+  resolverCatalogHash: "sha256:373b4936523f50ddc7698b403e96f224c5d37d9d78c82568b8271decb81bce3b",
   corpusProvenance:
     "Citation rows derive from the pinned Unlicense Tamil-Catholic-Lectionary table; they are not a licensed transcription of an official episcopal-conference Lectionary edition.",
   sourceLoci: [
@@ -1039,12 +1044,24 @@ export const US_LECTIONARY_PACK: LectionaryPack = {
       locator: "MySQL/liturgy_lectionary_table_readings__list.sql at pinned commit c6c9d79"
     }
   ]
+} as const;
+
+const LECTIONARY_PACK_CANONICAL_INPUT = JSON.stringify({
+  schemaVersion: CALENDAR_PROFILE_SCHEMA_VERSION,
+  ...LECTIONARY_PACK_FIELDS
+});
+
+export const DERIVED_ROMAN_LECTIONARY_PACK: LectionaryPack = {
+  schemaVersion: CALENDAR_PROFILE_SCHEMA_VERSION,
+  ...LECTIONARY_PACK_FIELDS,
+  contentHash: "sha256:7afff82803e3c7abca0fa74020c491f184edfd13dc59505837bb0e7672ec21dc",
+  canonicalCatalogInput: LECTIONARY_PACK_CANONICAL_INPUT
 };
 
-export const SUPPORTED_LECTIONARY_PACKS: readonly LectionaryPack[] = [US_LECTIONARY_PACK];
-export const DEFAULT_LECTIONARY_PACK_ID: LectionaryPackId = US_LECTIONARY_PACK.id;
+export const SUPPORTED_LECTIONARY_PACKS: readonly LectionaryPack[] = [DERIVED_ROMAN_LECTIONARY_PACK];
+export const DEFAULT_LECTIONARY_PACK_ID: LectionaryPackId = DERIVED_ROMAN_LECTIONARY_PACK.id;
 export const DEFAULT_LECTIONARY_PACK_FINGERPRINT =
-  `${US_LECTIONARY_PACK.id}@${US_LECTIONARY_PACK.version}:${US_LECTIONARY_PACK.contentHash}` as const;
+  `${DERIVED_ROMAN_LECTIONARY_PACK.id}@${DERIVED_ROMAN_LECTIONARY_PACK.version}:${DERIVED_ROMAN_LECTIONARY_PACK.contentHash}` as const;
 
 export function isLectionaryPackId(value: unknown): value is LectionaryPackId {
   return SUPPORTED_LECTIONARY_PACKS.some((pack) => pack.id === value);
@@ -1057,7 +1074,13 @@ export function normalizeLectionaryPackId(value: unknown): LectionaryPackId {
 
 export function lectionaryPack(value: unknown): LectionaryPack {
   const id = normalizeLectionaryPackId(value);
-  return SUPPORTED_LECTIONARY_PACKS.find((pack) => pack.id === id) ?? US_LECTIONARY_PACK;
+  return SUPPORTED_LECTIONARY_PACKS.find((pack) => pack.id === id) ?? DERIVED_ROMAN_LECTIONARY_PACK;
+}
+
+/** Exact version-and-content identity used by persisted native widget data. */
+export function lectionaryPackFingerprint(value: unknown): string {
+  const pack = lectionaryPack(value);
+  return `${pack.id}@${pack.version}:${pack.contentHash}`;
 }
 
 const BASE_RULES: CalendarProfileRules = {

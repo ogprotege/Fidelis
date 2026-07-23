@@ -644,6 +644,28 @@ expect(
     (item) => item.id === "grc.fixed.03-25" && item.transferredTo === "2024-04-08"
   )
 );
+const crossYearProper = normalizeIndividualChurchProper({
+  churchTitle: "Holy Family Church",
+  titleDate: { month: 12, day: 25 },
+  titleColor: "white",
+  dedicationAnniversary: { month: 12, day: 30 },
+  principalPatronTitle: "St. Sylvester",
+  principalPatronDate: { month: 12, day: 31 },
+  principalPatronColor: "white"
+});
+const crossYearSource = liturgicalDay(d(2024, 12, 25), "roman.general", crossYearProper);
+const crossYearTarget = liturgicalDay(d(2025, 1, 2), "roman.general", crossYearProper);
+expect(
+  "a crowded individual-church solemnity transfer crosses New Year with reciprocal receipts",
+  crossYearSource.suppressed.some(
+    (item) =>
+      item.id === "local.individual-church.title" && item.transferredTo === "2025-01-02"
+  ) &&
+    crossYearTarget.celebrations.some(
+      (item) =>
+        item.id === "local.individual-church.title" && item.transferredFrom === "2024-12-25"
+    )
+);
 expect(
   "stable celebration and formulary IDs survive legacy/profile selection aliases",
   liturgicalDay(d(2026, 1, 4), "usa").celebrations[0]?.id ===

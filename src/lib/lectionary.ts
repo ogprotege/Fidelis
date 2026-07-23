@@ -246,6 +246,7 @@ export const LECTIONARY_CODE_BY_FORMULARY_ID: Readonly<Record<string, string>> =
   "grc.francis-de-sales": "Saint Francis de Sales, bishop and doctor",
   "grc.angela-merici": "Saint Angela Merici, virgin",
   "grc.ansgar": "Saint Ansgar, bishop",
+  "grc.blaise": "Saint Blase, bishop and martyr",
   "grc.agatha": "Saint Agatha, virgin and martyr",
   "grc.paul-miki": "Saints Paul Miki and companions, martyrs",
   "grc.jerome-emiliani": "Saint Jerome Emiliani, priest",
@@ -290,6 +291,7 @@ export const LECTIONARY_CODE_BY_FORMULARY_ID: Readonly<Record<string, string>> =
   "grc.paulinus-nola": "Saint Paulinus of Nola, bishop",
   "grc.fisher-more": "Saints John Fisher, bishop and martyr and Thomas More, martyr",
   "grc.cyril-alexandria": "Saint Cyril of Alexandria, bishop and doctor",
+  "grc.first-martyrs-rome": "First Martyrs of the Church of Rome",
   "grc.st-elizabeth-portugal": "Saint Elizabeth of Portugal",
   "grc.anthony-mary-zaccaria": "Saint Anthony Zaccaria, priest",
   "grc.maria-goretti": "Saint Maria Goretti, virgin and martyr",
@@ -297,6 +299,7 @@ export const LECTIONARY_CODE_BY_FORMULARY_ID: Readonly<Record<string, string>> =
   "grc.st-camillus": "Saint Camillus de Lellis, priest",
   "grc.fixed.07-15": "Saint Bonaventure, bishop and doctor",
   "grc.lawrence-brindisi": "Saint Lawrence of Brindisi, priest and doctor",
+  "grc.bridget": "Saint Birgitta, religious",
   "grc.peter-chrysologus": "Saint Peter Chrysologus, bishop and doctor",
   "grc.eusebius-vercelli": "Saint Eusebius of Vercelli, bishop",
   "grc.mary-major": "Dedication of the Basilica of Saint Mary Major",
@@ -472,6 +475,30 @@ export const MASS_SETS_BY_CELEBRATION_ID: Readonly<Record<string, MassSetDefinit
     alternatives: [{ code: "Assumption of the Blessed Virgin Mary - Vigil", label: "Vigil Mass" }]
   }
 };
+
+function canonicalLectionaryValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalLectionaryValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, child]) => [key, canonicalLectionaryValue(child)])
+    );
+  }
+  return value;
+}
+
+/** Canonical input for the code-backed portion of the installed citation pack.
+ * Native snapshot invalidation must change when a stable-ID mapping, bundled
+ * supplement, or complete-Mass composition changes, even if the raw generated
+ * citation table itself is byte-identical. */
+export function lectionaryResolverCatalogInput(): string {
+  return JSON.stringify(canonicalLectionaryValue({
+    formularyCodes: LECTIONARY_CODE_BY_FORMULARY_ID,
+    massSets: MASS_SETS_BY_CELEBRATION_ID,
+    supplements: LECTIONARY_SUPPLEMENTS
+  }));
+}
 
 /** Resolve a celebration without consulting its mutable display name. */
 export function celebrationFormularyCodes(

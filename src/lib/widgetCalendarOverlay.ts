@@ -14,6 +14,7 @@ import {
   NATIVE_WIDGET_SNAPSHOT_BUILD_YEAR,
   calendarProfile,
   individualChurchCalendarLayer,
+  lectionaryPackFingerprint,
   normalizeCalendarProfile,
   normalizeIndividualChurchProper,
   normalizeLectionaryPackId,
@@ -79,6 +80,7 @@ export interface LocalWidgetCalendarOverlay {
   baseProfileId: CalendarProfileId;
   baseProfileFingerprint: string;
   lectionaryPackId: LectionaryPackId;
+  lectionaryPackFingerprint: string;
   localLayer: {
     id: "local.individual-church";
     version: "1";
@@ -261,6 +263,7 @@ export function buildLocalWidgetCalendarOverlayFromData(
     baseProfileId: profileId,
     baseProfileFingerprint: profile.fingerprint,
     lectionaryPackId,
+    lectionaryPackFingerprint: lectionaryPackFingerprint(lectionaryPackId),
     localLayer: {
       id: layer.id,
       version: layer.version,
@@ -313,6 +316,7 @@ export function validateLocalWidgetCalendarOverlay(
     !overlay.localLayer?.authority ||
     !overlay.localLayer?.provenance ||
     overlay.lectionaryPackId !== expected.lectionaryPackId ||
+    overlay.lectionaryPackFingerprint !== lectionaryPackFingerprint(expected.lectionaryPackId) ||
     !Number.isFinite(generated) ||
     !Number.isFinite(expires) ||
     generated > now + LOCAL_WIDGET_OVERLAY_CLOCK_SKEW_MS ||
