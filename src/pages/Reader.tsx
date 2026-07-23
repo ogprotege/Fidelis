@@ -54,7 +54,11 @@ export default function Reader() {
   // column with no word said — the reader couldn't tell the setting was active.
   const [parallelError, setParallelError] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [verseCursor, setVerseCursor] = useState<number | null>(null);
   const [focusedVerse, setFocusedVerse] = useState<number | null>(null);
+  const focusActionsAfterSelect = useRef(false);
+  const selectionFromKeyboard = useRef(false);
+  const actionEntryRef = useRef<HTMLButtonElement>(null);
   const [plan, setPlan] = useState(activePlan);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
@@ -179,6 +183,31 @@ export default function Reader() {
     setCopyStatus(null);
   }, [translation, bookSlug, chapter, book]);
 
+  const interactiveVerseNumbers = useMemo(
+    () =>
+      (data?.chapters[chapter - 1] ?? []).flatMap((text, index) =>
+        text && text.trim() ? [index + 1] : []
+      ),
+    [data, chapter]
+  );
+  const rovingVerse = interactiveVerseNumbers.includes(verseCursor ?? -1)
+    ? verseCursor
+    : interactiveVerseNumbers[0] ?? null;
+
+  useEffect(() => {
+    if (interactiveVerseNumbers.length === 0) {
+      setVerseCursor(null);
+      return;
+    }
+    setVerseCursor((current) =>
+      interactiveVerseNumbers.includes(current ?? -1)
+        ? current
+        : focusVerse && interactiveVerseNumbers.includes(focusVerse)
+          ? focusVerse
+          : interactiveVerseNumbers[0]
+    );
+  }, [focusVerse, interactiveVerseNumbers]);
+
   // Clear the copy-status timer if the reader unmounts mid-flash.
   useEffect(() => () => {
     if (copyTimer.current) clearTimeout(copyTimer.current);
@@ -213,12 +242,24 @@ export default function Reader() {
           typeof window.matchMedia === "function" &&
           window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+        setVerseCursor(focusVerse);
+        el.focus({ preventScroll: true });
         setFocusedVerse(focusVerse);
         const t = setTimeout(() => setFocusedVerse(null), 3000);
         return () => clearTimeout(t);
       }
     }
   }, [focusVerse, data]);
+
+  // Enter or Space on a verse is a disclosure action. Once its toolbar mounts,
+  // move keyboard focus into the first action rather than forcing the user to
+  // Tab through the remaining chapter. Pointer selection keeps focus in place.
+  useEffect(() => {
+    if (selected === null || !focusActionsAfterSelect.current) return;
+    focusActionsAfterSelect.current = false;
+    const frame = requestAnimationFrame(() => actionEntryRef.current?.focus({ preventScroll: true }));
+    return () => cancelAnimationFrame(frame);
+  }, [selected]);
 
   // P1-8: book.chapters is the cross-translation maximum, so a chapter that
   // exists in one translation may not exist in another (imported RSV-2CE/
@@ -261,6 +302,8 @@ export default function Reader() {
   // the moment scrollY diverges, so this scroll can never fight it.
   useEffect(() => {
     if (selected === null) return;
+    const keyboardActivation = selectionFromKeyboard.current;
+    selectionFromKeyboard.current = false;
     const el = document.getElementById(`v-${selected}`);
     const bar = barRef.current;
     if (!el || !bar) return;
@@ -274,7 +317,10 @@ export default function Reader() {
     const reduce =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.scrollBy({ top: dy, behavior: reduce ? "auto" : "smooth" });
+    window.scrollBy({
+      top: dy,
+      behavior: keyboardActivation || reduce ? "auto" : "smooth"
+    });
   }, [selected]);
 
   if (!book) {
@@ -336,8 +382,12 @@ export default function Reader() {
     setPickerOpen(true);
   };
 
-  const onSelectVerse = (v: number) => {
-    setSelected(selected === v ? null : v);
+  const onSelectVerse = (v: number, fromKeyboard = false) => {
+    const next = selected === v ? null : v;
+    focusActionsAfterSelect.current = fromKeyboard && next !== null;
+    selectionFromKeyboard.current = fromKeyboard;
+    setVerseCursor(v);
+    setSelected(next);
     setNoteOpen(false);
     setCccFor(null);
     setCopyStatus(null);
@@ -364,7 +414,13 @@ export default function Reader() {
   const renderVerses = (vs: string[], interactive: boolean, transId: string) => (
     // Reading size in rem (the stored preset / 16) so it scales with the iOS
     // text-size / browser-zoom setting instead of being pinned to device px.
-    <div className="verses" style={{ fontSize: `${fontSize / 16}rem` }} lang={langAttr(transId)}>
+    <div
+      className="verses"
+      style={{ fontSize: `${fontSize / 16}rem` }}
+      lang={langAttr(transId)}
+      role={interactive ? "group" : undefined}
+      aria-label={interactive ? `${displayName} chapter ${chapter} verses` : undefined}
+    >
       {vs.map((text, i) => {
         // Grid-empty slot (see data-report.txt): no text in this translation.
         if (!text || !text.trim()) return null;
@@ -385,15 +441,35 @@ export default function Reader() {
             id={interactive ? `v-${v}` : undefined}
             className={cls}
             role={interactive ? "button" : undefined}
-            tabIndex={interactive ? 0 : undefined}
+            tabIndex={interactive ? (rovingVerse === v ? 0 : -1) : undefined}
             aria-pressed={interactive ? selected === v : undefined}
             onClick={interactive ? () => onSelectVerse(v) : undefined}
+            onFocus={interactive ? () => setVerseCursor(v) : undefined}
             onKeyDown={
               interactive
                 ? (e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      onSelectVerse(v);
+                      onSelectVerse(v, true);
+                      return;
+                    }
+                    const current = interactiveVerseNumbers.indexOf(v);
+                    let nextVerse: number | undefined;
+                    if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+                      nextVerse = interactiveVerseNumbers[Math.min(current + 1, interactiveVerseNumbers.length - 1)];
+                    } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+                      nextVerse = interactiveVerseNumbers[Math.max(current - 1, 0)];
+                    } else if (e.key === "Home") {
+                      nextVerse = interactiveVerseNumbers[0];
+                    } else if (e.key === "End") {
+                      nextVerse = interactiveVerseNumbers[interactiveVerseNumbers.length - 1];
+                    }
+                    if (nextVerse !== undefined) {
+                      e.preventDefault();
+                      setVerseCursor(nextVerse);
+                      const next = document.getElementById(`v-${nextVerse}`);
+                      next?.focus({ preventScroll: true });
+                      next?.scrollIntoView({ block: "nearest", behavior: "auto" });
                     }
                   }
                 : undefined
@@ -590,6 +666,7 @@ export default function Reader() {
           </span>
           <button
             className="icon-btn"
+            ref={actionEntryRef}
             aria-pressed={bookmarks.has(selKey)}
             onClick={() => {
               toggleBookmark({ ...selRef, translation });

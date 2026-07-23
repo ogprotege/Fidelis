@@ -2,7 +2,8 @@
 # Adds the WidgetKit "FidelisWidgetExtension" app-extension target to the iOS
 # Xcode project and embeds it in the App target, so the Verse of the Day, Today
 # at Mass, and Quote of the Day home-screen widgets are actually built and
-# installed. Idempotent: re-running is a no-op once the target exists.
+# installed. Idempotent and reconciling: re-running adds any newly committed
+# widget sources/resources to an existing target without duplicating phases.
 #
 # Run from the repo root:  ruby scripts/add-ios-widget-target.rb
 #
@@ -27,7 +28,13 @@ DEPLOYMENT_TARGET = "17.0" # containerBackground(for: .widget) needs iOS 17+
 # Source root is the directory holding the .xcodeproj (ios/App); the widget
 # files live one level up in ios/WidgetExtension.
 WIDGET_DIR_REL = "../WidgetExtension"
-SWIFT_FILES = ["FidelisWidget.swift", "CalendarWidgets.swift"]
+WIDGET_ENTITLEMENTS = "#{WIDGET_DIR_REL}/WidgetExtension.entitlements"
+SWIFT_FILES = [
+  "FidelisWidget.swift",
+  "CalendarWidgets.swift",
+  "WidgetContracts.swift",
+  "WidgetSharedSettings.swift"
+]
 RESOURCE_FILES = ["votd.json", "calendar.json"]
 
 project = Xcodeproj::Project.open(PROJECT_PATH)
@@ -35,8 +42,41 @@ project = Xcodeproj::Project.open(PROJECT_PATH)
 app_target = project.targets.find { |t| t.name == "App" }
 raise "App target not found" unless app_target
 
-if project.targets.any? { |t| t.name == TARGET_NAME }
-  puts "[skip] #{TARGET_NAME} already exists"
+existing_widget = project.targets.find { |t| t.name == TARGET_NAME }
+if existing_widget
+  group = project.main_group.children.find do |child|
+    child.is_a?(Xcodeproj::Project::Object::PBXGroup) &&
+      (child.name == TARGET_NAME || child.path == WIDGET_DIR_REL)
+  end
+  raise "#{TARGET_NAME} source group not found" unless group
+
+  changed = []
+  SWIFT_FILES.each do |name|
+    ref = group.files.find { |file| file.path == name } || group.new_reference(name)
+    before = existing_widget.source_build_phase.files.size
+    existing_widget.source_build_phase.add_file_reference(ref, true)
+    changed << "#{name} → widget sources" if existing_widget.source_build_phase.files.size > before
+  end
+  RESOURCE_FILES.each do |name|
+    ref = group.files.find { |file| file.path == name } || group.new_reference(name)
+    before = existing_widget.resources_build_phase.files.size
+    existing_widget.resources_build_phase.add_file_reference(ref, true)
+    changed << "#{name} → widget resources" if existing_widget.resources_build_phase.files.size > before
+  end
+
+  existing_widget.build_configurations.each do |config|
+    next if config.build_settings["CODE_SIGN_ENTITLEMENTS"] == WIDGET_ENTITLEMENTS
+    config.build_settings["CODE_SIGN_ENTITLEMENTS"] = WIDGET_ENTITLEMENTS
+    changed << "#{config.name}: App Group entitlements"
+  end
+
+  project.save unless changed.empty?
+  if changed.empty?
+    puts "[skip] #{TARGET_NAME} already reconciled"
+  else
+    puts "[ok] reconciled #{TARGET_NAME}:"
+    changed.each { |item| puts "       - #{item}" }
+  end
   exit 0
 end
 
@@ -78,6 +118,7 @@ widget.build_configurations.each do |config|
     "MARKETING_VERSION" => PACKAGE_VERSION,
     "CURRENT_PROJECT_VERSION" => app_build,
     "CODE_SIGN_STYLE" => "Automatic",
+    "CODE_SIGN_ENTITLEMENTS" => WIDGET_ENTITLEMENTS,
     "SKIP_INSTALL" => "YES",
     "SWIFT_EMIT_LOC_STRINGS" => "YES",
     "LD_RUNPATH_SEARCH_PATHS" => [

@@ -11,6 +11,50 @@
 export type NavType = "PUSH" | "POP" | "REPLACE";
 export type ScrollAction = "restore" | "top" | "skip";
 
+/** Add or update one saved offset while keeping the long-lived native shell's
+ * cache truly bounded. ScrollManager stores both an entry key and a route
+ * fallback, so eviction must run for each newly inserted key. */
+export function rememberScrollOffset(
+  offsets: Map<string, number>,
+  key: string,
+  value: number,
+  maximumKeys = 50
+): void {
+  if (maximumKeys <= 0) {
+    offsets.clear();
+    return;
+  }
+  if (!offsets.has(key) && offsets.size >= maximumKeys) {
+    const oldest = offsets.keys().next().value;
+    if (oldest !== undefined) offsets.delete(oldest);
+  }
+  offsets.set(key, value);
+}
+
+/** Hash changes created outside React Router have the synthetic key "default".
+ * Key those entries by their route instead, or the short widget document can
+ * overwrite the page offset it must restore on Back. */
+export function scrollEntryKey(location: {
+  key: string;
+  pathname: string;
+  search: string;
+  hash: string;
+}): string {
+  return location.key === "default"
+    ? scrollRouteKey(location)
+    : `entry:${location.key}`;
+}
+
+/** URL fallback for host-created hash entries whose history key is missing or
+ * reconstructed differently on Back. A real entry key remains the priority. */
+export function scrollRouteKey(location: {
+  pathname: string;
+  search: string;
+  hash: string;
+}): string {
+  return `route:${location.pathname}${location.search}${location.hash}`;
+}
+
 /**
  * How to position the window after a navigation:
  *  - targets a specific element (`?v=` verse or `#hash` anchor) → `skip`; the

@@ -86,7 +86,7 @@ export const TRANSLATIONS: Translation[] = [
     bundled: false,
     copyright: "© Confraternity of Christian Doctrine (USCCB)",
     description:
-      "The translation of the U.S. lectionary — the Daily Readings prefer it when your calendar region is the United States. Under copyright, so its text cannot be distributed with this app; import a licensed copy you own from the Translations page and it is used automatically (until then, the readings fall back to the Douay-Rheims)."
+      "The translation used by the U.S. lectionary. Calendar jurisdiction, lectionary edition, and displayed Bible text are separate settings. Under copyright, so its text cannot be distributed with this app; import a licensed copy you own from the Translations page. When NABRE is your Mass-text preference but is unavailable, readings fall back visibly to the Douay-Rheims."
   }
 ];
 

@@ -3,17 +3,22 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import {
+  LECTIONARY_CODE_BY_FORMULARY_ID,
+  celebrationFormularyCodes,
   dayCodeCandidates,
   displayReadings,
   formatCitation,
   formatLectionaryCitation,
   hebrewSpanToVulgate,
+  lectionaryDataForPack,
+  missingLocalFormularyStateForCelebration,
   resolveReadings,
   LectionaryRow
 } from "../src/lib/lectionary";
-import { liturgicalDay } from "../src/lib/liturgical";
+import { easterDate, liturgicalDay } from "../src/lib/liturgical";
 import { DailyQuote, quoteOfTheDay } from "../src/lib/quotes";
 import { dayOfYear } from "../src/lib/votd";
+import { parseLocalISODate } from "../src/lib/dateKey";
 import { MYSTERY_SETS } from "../src/lib/rosary";
 import { passageText } from "../src/lib/passage";
 import { PRAYERS } from "../src/lib/prayers";
@@ -51,6 +56,46 @@ import {
 import { THEME_OPTIONS, isThemeChoice, resolveTheme } from "../src/lib/theme";
 import { formatBytes } from "../src/lib/format";
 import { GOLDEN_REGIONS, GOLDEN_YEARS, goldenYear } from "./golden";
+import {
+  CALENDAR_PROFILE_SCHEMA_VERSION,
+  CALENDAR_PACKS,
+  DEFAULT_CALENDAR_PROFILE_ID,
+  DEFAULT_LECTIONARY_PACK_FINGERPRINT,
+  DEFAULT_LECTIONARY_PACK_ID,
+  EXACT_CALENDAR_CATALOG_FROM,
+  EXACT_CALENDAR_CATALOG_THROUGH,
+  GENERAL_ROMAN_PACK,
+  NATIVE_WIDGET_SNAPSHOT_BUILD_YEAR,
+  SUPPORTED_CALENDAR_PROFILES,
+  SUPPORTED_LECTIONARY_PACKS,
+  UNITED_STATES_PACK,
+  calendarProfile,
+  normalizeIndividualChurchProper
+} from "../src/lib/calendarProfile";
+import {
+  WIDGET_LINK_DEDUPE_MS,
+  acceptWidgetLinkDelivery,
+  appHistoryIndex,
+  canDiscardDuplicateWidgetEntry,
+  canConsumeAppHistory,
+  isDuplicateWidgetLinkDelivery,
+  isSameWidgetTarget,
+  widgetLinkDestination,
+  widgetLinkHistoryMode,
+  widgetLinkStartupActivations,
+  widgetLinkTarget,
+  widgetReturnContractFromHistoryState,
+  widgetReturnNavigationState
+} from "../src/lib/widgetLinks";
+import {
+  widgetPinConfirmationMessage,
+  widgetPinRequestMessage
+} from "../src/lib/widgetPin";
+import {
+  LOCAL_WIDGET_OVERLAY_MAX_DAYS,
+  buildLocalWidgetCalendarOverlayFromData,
+  validateLocalWidgetCalendarOverlay
+} from "../src/lib/widgetCalendarOverlay";
 
 let failures = 0;
 function check(name: string, ok: boolean, detail = "") {
@@ -64,6 +109,8 @@ const GARRIGOU_AUTHOR = "Fr. Reginald Garrigou-Lagrange, O.P.";
 const lect: Record<string, { t: number; b: string; s: [number, number, number][]; partial?: boolean }[]> =
   JSON.parse(readFileSync(join(ROOT, "public/data/lectionary.json"), "utf8"));
 const keys = new Set(Object.keys(lect));
+const effectiveLect = lectionaryDataForPack(lect);
+const effectiveKeys = new Set(Object.keys(effectiveLect));
 const totalRows = Object.values(lect).reduce((a, r) => a + r.length, 0);
 const partial = Object.values(lect).flat().filter((r) => r.partial).length;
 // Pinned shape of the committed lectionary data: changes only when the
@@ -72,20 +119,70 @@ check("lectionary.json carries 1140 day codes", keys.size === 1140, `${keys.size
 check("lectionary.json carries 3013 rows", totalRows === 3013, `${totalRows}`);
 check("566 rows flagged partial (P2-4)", partial === 566, `${partial}`);
 
-// 1. NAMED map coverage — every value must exist as a key (plain or with cycle suffix)
-const src = readFileSync(join(ROOT, "src/lib/lectionary.ts"), "utf8");
-// crude but effective: extract the NAMED object literal values
-const namedBlock = src.slice(src.indexOf("const NAMED"), src.indexOf("const ww"));
-const vals = [...namedBlock.matchAll(/:\s*(?:\n\s*)?"([^"]+)"/g)].map((m) => m[1]);
+// 1. Stable formulary map coverage. Display names never act as resolver keys.
+const mappedFormularies = Object.entries(LECTIONARY_CODE_BY_FORMULARY_ID);
 let missing = 0;
-for (const v of vals) {
-  const ok = keys.has(v) || keys.has(`${v} A`) || keys.has(`${v} B`) || keys.has(`${v} C`);
+for (const [formularyId, code] of mappedFormularies) {
+  const ok =
+    effectiveKeys.has(code) ||
+    effectiveKeys.has(`${code} A`) ||
+    effectiveKeys.has(`${code} B`) ||
+    effectiveKeys.has(`${code} C`);
   if (!ok) {
-    console.log(`NAMED target missing from data: "${v}"`);
+    console.log(`Stable formulary target missing from data: ${formularyId} -> "${code}"`);
     missing++;
   }
 }
-check(`every NAMED target exists in lectionary.json (${vals.length} checked)`, missing === 0, `${missing} missing`);
+check(
+  `every stable formulary target exists in the effective derived table (${mappedFormularies.length} checked)`,
+  missing === 0,
+  `${missing} missing`
+);
+const calendarFormularyIds = new Set(
+  CALENDAR_PACKS.flatMap((pack) => [
+    ...pack.celebrations,
+    ...pack.temporalAlternatives
+  ])
+    .map((celebration) => celebration.formularyId)
+    .filter((id): id is string => id !== null)
+);
+check(
+  "every lectionary mapping is keyed by a declared stable calendar formulary ID",
+  mappedFormularies.every(([formularyId]) => calendarFormularyIds.has(formularyId))
+);
+const annunciation = liturgicalDay(new Date(2026, 2, 25), "universal").celebrations[0]!;
+const renamedAnnunciation = { ...annunciation, name: "Localized celebration name" };
+check(
+  "renaming a celebration cannot disconnect its stable formulary",
+  JSON.stringify(celebrationFormularyCodes(annunciation, "A")) ===
+    JSON.stringify(celebrationFormularyCodes(renamedAnnunciation, "A")) &&
+    celebrationFormularyCodes(renamedAnnunciation, "A")?.[1] === "Annunciation of the Lord"
+);
+check(
+  "a null local feast formulary produces the typed missing-formulary state",
+  missingLocalFormularyStateForCelebration({
+    ...annunciation,
+    id: "local.test.patron",
+    formularyId: null,
+    packId: "local.test.pack",
+    name: "Principal Patron",
+    rank: "Feast"
+  })?.kind === "missing-local-formulary"
+);
+const strictLeapDay = parseLocalISODate("2024-02-29");
+check(
+  "route dates accept a real leap day without UTC conversion",
+  strictLeapDay?.getFullYear() === 2024 &&
+    strictLeapDay.getMonth() === 1 &&
+    strictLeapDay.getDate() === 29
+);
+check(
+  "route dates reject impossible, normalized, and non-padded input",
+  parseLocalISODate("2026-02-29") === null &&
+    parseLocalISODate("2026-02-30") === null &&
+    parseLocalISODate("2026-13-01") === null &&
+    parseLocalISODate("2026-2-03") === null
+);
 
 // 2. Full-sweep: every day of 2024, 2025, 2026 must resolve to a gospel
 function mergeHasGospel(groups: string[][]): { ok: boolean; code: string } {
@@ -234,8 +331,10 @@ check(
 );
 const agnes = res(2026, 1, 21)!;
 check(
-  "St. Agnes (no prescribed propers) keeps the ferial, no secondary set",
-  agnes.code.startsWith("OW02-3Wed") && !agnes.secondary,
+  "St. Agnes keeps the ferial primary and exposes the unmarked memorial formulary",
+  agnes.code.startsWith("OW02-3Wed") &&
+    !agnes.secondary &&
+    agnes.memorialFormularies?.some((option) => option.label.includes("Agnes")) === true,
   agnes.code
 );
 const natJtB = res(2026, 6, 24)!;
@@ -244,12 +343,178 @@ check(
   natJtB.code.startsWith("Birth of Saint John the Baptist") && !natJtB.secondary,
   natJtB.code
 );
+const guadalupe = resolveReadings(lect, new Date(2026, 11, 12), "usa")!;
+check(
+  "an unmapped governing local feast returns an explicit seasonal-fallback receipt",
+  guadalupe.formularyState?.kind === "missing-local-formulary" &&
+    guadalupe.formularyState.celebrationId === "grc.our-lady-guadalupe" &&
+    guadalupe.formularyState.formularyId === "grc.our-lady-guadalupe" &&
+    guadalupe.formularyState.calendarPackId === "roman.us.pack" &&
+    guadalupe.formularyState.fallback === "seasonal-readings" &&
+    guadalupe.code.startsWith("AW02-6Sat"),
+  `${guadalupe.code}; ${JSON.stringify(guadalupe.formularyState)}`
+);
 const josephWorker = res(2026, 5, 1)!;
 check(
   "St. Joseph the Worker (optional memorial) never displaces the Easter ferial",
   josephWorker.code.startsWith("EW04-5Fri") && !josephWorker.secondary,
   josephWorker.code
 );
+const lourdes = res(2026, 2, 11)!;
+check(
+  "an ordinary-feria optional memorial exposes its selectable formulary",
+  lourdes.code.startsWith("OW05-3Wed") &&
+    lourdes.optionalMemorials?.some((option) => option.label.includes("Lourdes")) === true,
+  `${lourdes.code}; ${JSON.stringify(lourdes.optionalMemorials?.map((option) => option.label))}`
+);
+const hilary = res(2026, 1, 13)!;
+check(
+  "an unmarked General memorial exposes its selectable formulary",
+  hilary.code.startsWith("OW01-2Tue") &&
+    hilary.optionalMemorials?.some((option) => option.label.includes("Hilary")) === true
+);
+const holyNameJesus = res(2026, 1, 3)!;
+check(
+  "an absent General optional formulary stays explicit instead of name-guessed",
+  !holyNameJesus.optionalMemorials?.some((option) => option.label.includes("Holy Name")) &&
+    holyNameJesus.unavailableFormularies?.some(
+      (item) =>
+        item.celebrationId === "grc.most-holy-name-jesus" &&
+        item.formularyId === "grc.most-holy-name-jesus" &&
+        item.calendarPackId === "roman.general.pack"
+    ) === true,
+  JSON.stringify(holyNameJesus.unavailableFormularies)
+);
+const newman = res(2026, 10, 9)!;
+const newmanOption = newman.optionalMemorials?.find((option) => option.label.includes("Newman"));
+check(
+  "the effective table includes the Holy See's 2026 Newman supplement",
+  newmanOption?.code === "OLM655bis-Newman" &&
+    newmanOption.rows.some((row) => row.b === "sirach") &&
+    newmanOption.rows.some((row) => row.b === "matthew")
+);
+const saturdayBvm = res(2026, 2, 7)!;
+check(
+  "an unimpeded Ordinary-Time Saturday exposes the BVM memorial and all three permitted formularies",
+  saturdayBvm.optionalMemorials?.some((option) => option.label.includes("Blessed Virgin Mary")) === true &&
+    saturdayBvm.formularyOptions?.length === 3
+);
+const prayerForLife = resolveReadings(lect, new Date(2026, 0, 22), "usa")!;
+check(
+  "the U.S. January 22 observance exposes both official white and violet Mass choices",
+  prayerForLife.primaryLabel === "Weekday readings" &&
+    prayerForLife.formularyOptions?.map((option) => `${option.color}:${option.lectionaryReference}`).join("|") ===
+      "white:947A–947E|violet:887–891" &&
+    !prayerForLife.formularyState
+);
+const patrickCommemoration = res(2026, 3, 17)!;
+check(
+  "a privileged-weekday commemoration retains only the Lenten readings",
+  patrickCommemoration.code.startsWith("LW04-2Tue") &&
+    !patrickCommemoration.optionalMemorials?.some((option) => option.label.includes("Patrick")),
+  `${patrickCommemoration.code}; ${JSON.stringify(patrickCommemoration.optionalMemorials)}`
+);
+for (const year of [2025, 2026]) {
+  const allSouls = resolveReadings(lect, new Date(year, 10, 2), "roman.general")!;
+  check(
+    `All Souls ${year} exposes all three lawful selections independent of Sunday cycle`,
+    allSouls.code === "All Souls A" &&
+      allSouls.massAlternatives?.map((option) => option.code).join("|") ===
+        "All Souls B|All Souls C",
+    `${allSouls.code}; ${allSouls.massAlternatives?.map((option) => option.code).join("|")}`
+  );
+}
+const christmas = res(2026, 12, 25)!;
+const isCompleteMass = (rows: LectionaryRow[]) =>
+  [1, 2, 3, 6].every((type) => rows.some((row) => Math.floor(row.t) === type));
+check(
+  "Christmas exposes Vigil, Night, Dawn, and Day Masses",
+  christmas.code === "Nativity of the Lord 4" &&
+    christmas.primaryLabel === "Mass during the Day" &&
+    isCompleteMass(christmas.rows) &&
+    christmas.massAlternatives
+      ?.map((option) => `${option.label}:${option.code}`)
+      .join("|") ===
+      "Vigil Mass:Nativity of the Lord 1|Mass during the Night:Nativity of the Lord 2|Mass at Dawn:Nativity of the Lord 3" &&
+    christmas.massAlternatives.every((option) => isCompleteMass(option.rows)),
+  `${christmas.code}; ${JSON.stringify(
+    christmas.massAlternatives?.map((option) => ({
+      label: option.label,
+      code: option.code,
+      types: [...new Set(option.rows.map((row) => Math.floor(row.t)))]
+    }))
+  )}`
+);
+for (const year of [2026, 2027, 2028]) {
+  const cycle = year === 2026 ? "A" : year === 2027 ? "B" : "C";
+  const easter = resolveReadings(lect, easterDate(year), "roman.us.ascension-sunday")!;
+  const yearCGospel = easter.massAlternatives?.find((option) =>
+    option.label.includes("Year C Gospel")
+  );
+  const afternoon = easter.massAlternatives?.find(
+    (option) => option.label === "Afternoon or evening Mass"
+  );
+  const nonGospel = (rows: LectionaryRow[]) =>
+    rows.filter((row) => Math.floor(row.t) !== 6);
+  check(
+    `Easter Sunday ${year} exposes every lawful ${cycle}-cycle Mass form`,
+    easter.code === "EW01-0Sun" &&
+      easter.primaryLabel === "Mass during the Day" &&
+      isCompleteMass(easter.rows) &&
+      easter.rows.some(
+        (row) =>
+          Math.floor(row.t) === 6 &&
+          row.b === "john" &&
+          JSON.stringify(row.s) === JSON.stringify([[20, 1, 9]])
+      ) &&
+      afternoon?.code === "EW01-0Sun Afternoon-Evening" &&
+      isCompleteMass(afternoon.rows) &&
+      JSON.stringify(nonGospel(afternoon.rows)) === JSON.stringify(nonGospel(easter.rows)) &&
+      afternoon.rows.some(
+        (row) =>
+          Math.floor(row.t) === 6 &&
+          row.b === "luke" &&
+          JSON.stringify(row.s) === JSON.stringify([[24, 13, 35]])
+      ) &&
+      (cycle === "C"
+        ? yearCGospel?.code === "EW01-0Sun C-Gospel" &&
+          isCompleteMass(yearCGospel.rows) &&
+          JSON.stringify(nonGospel(yearCGospel.rows)) === JSON.stringify(nonGospel(easter.rows)) &&
+          yearCGospel.rows.some(
+            (row) =>
+              Math.floor(row.t) === 6 &&
+              row.b === "luke" &&
+              JSON.stringify(row.s) === JSON.stringify([[24, 1, 12]])
+          ) &&
+          easter.massAlternatives?.length === 2
+        : yearCGospel === undefined && easter.massAlternatives?.length === 1),
+    JSON.stringify(
+      easter.massAlternatives?.map((option) => ({
+        label: option.label,
+        code: option.code,
+        gospel: option.rows.filter((row) => Math.floor(row.t) === 6)
+      }))
+    )
+  );
+}
+const pentecost = res(2026, 5, 24)!;
+check(
+  "Pentecost exposes its Vigil alongside Mass during the Day",
+  pentecost.primaryLabel === "Mass during the Day" &&
+    pentecost.massAlternatives?.some((option) => option.label === "Vigil Mass") === true
+);
+for (const [month, day, celebration] of [
+  [6, 24, "Nativity of St. John the Baptist"],
+  [6, 29, "Sts. Peter and Paul"],
+  [8, 15, "Assumption"]
+] as const) {
+  const resolved = res(2026, month, day)!;
+  check(
+    `${celebration} exposes its Vigil Mass`,
+    resolved.primaryLabel === "Mass during the Day" &&
+      resolved.massAlternatives?.some((option) => option.label === "Vigil Mass") === true
+  );
+}
 const immaculateHeart = res(2024, 6, 8)!;
 check(
   "Immaculate Heart propers on its Saturday (clear year 2024)",
@@ -571,31 +836,83 @@ check(
   javaFormulaAgrees,
   javaFormulaAgrees ? "" : "selection formula or Gregorian calendar pin missing from VotdWidget.java"
 );
+check(
+  "native VOTD decode failures show an explicit update state, never a plausible John 8:12 fallback",
+  swiftWidget.includes("FidelisWidgetContract.updateMessage") &&
+    swiftWidget.includes("requiresUpdate: true") &&
+    javaWidget.includes("R.string.widget_update_required") &&
+    javaWidget.includes("boolean available = false") &&
+    !swiftWidget.includes("John 8:12") &&
+    !javaWidget.includes("John 8:12")
+);
 
-// 7b. Pre-resolved calendar widget data: the committed calendar.json is a fixed
-//     window (build year → Dec 31 of the next), so it EXPIRES. On the day the
-//     window runs out, every installed widget silently degrades to its fallback
-//     text. This assertion turns that cliff into a red harness months ahead:
-//     the committed window must cover today through today+180 days. Regenerate
-//     with `npm run widgets` (docs/guides/RELEASING.md) and commit the JSON.
+// 7b. Atomic, versioned native calendar snapshot. It covers the preceding year
+//     through five future years for every selectable profile. Native readers
+//     fail closed on schema, fingerprint, expiry, or day lookup errors.
 {
   const iosCalRaw = readFileSync(join(ROOT, "ios/WidgetExtension/calendar.json"), "utf8");
-  const iosCalendar = JSON.parse(iosCalRaw) as Record<
-    string,
-    { quote?: { author?: string } | null }
-  >;
-  const calKeys = Object.keys(iosCalendar);
+  const iosCalendar = JSON.parse(iosCalRaw) as {
+    schemaVersion: number;
+    generatedAt: string;
+    expiresAt: string;
+    window: { from: string; through: string };
+    exactCatalogWindow: { from: string; through: string };
+    lectionaryPack: { id: string; version: string; fingerprint: string };
+    defaultProfileId: string;
+    profiles: Record<
+      string,
+      {
+        id: string;
+        fingerprint: string;
+        days: Record<string, { quote?: { author?: string } | null }>;
+      }
+    >;
+  };
+  const defaultDays = iosCalendar.profiles[iosCalendar.defaultProfileId]?.days ?? {};
+  const calKeys = Object.keys(defaultDays);
   const iso = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const now = new Date();
-  const horizon = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 180);
-  const missing = [iso(now), iso(horizon)].filter((k) => !calKeys.includes(k));
+  const farHorizon = new Date(now.getFullYear() + 5, 11, 31);
+  const missing = [iso(now), iso(farHorizon)].filter((k) => !calKeys.includes(k));
   check(
-    "widget calendar.json covers today through today+180 (no staleness cliff within 6 months)",
+    "widget calendar snapshot schema and default profile are current",
+    iosCalendar.schemaVersion === CALENDAR_PROFILE_SCHEMA_VERSION &&
+      iosCalendar.defaultProfileId === DEFAULT_CALENDAR_PROFILE_ID &&
+      iosCalendar.lectionaryPack?.id === DEFAULT_LECTIONARY_PACK_ID &&
+      iosCalendar.lectionaryPack?.fingerprint === DEFAULT_LECTIONARY_PACK_FINGERPRINT &&
+      iosCalendar.exactCatalogWindow?.from === EXACT_CALENDAR_CATALOG_FROM &&
+      iosCalendar.exactCatalogWindow?.through === EXACT_CALENDAR_CATALOG_THROUGH
+  );
+  check(
+    "native widget snapshot epoch is deliberately pinned to the current release year",
+    NATIVE_WIDGET_SNAPSHOT_BUILD_YEAR === new Date().getFullYear(),
+    `snapshot epoch ${NATIVE_WIDGET_SNAPSHOT_BUILD_YEAR}; current year ${new Date().getFullYear()}`
+  );
+  check(
+    "widget calendar snapshot covers today through the end of the fifth future year",
     missing.length === 0,
     missing.length
       ? `missing ${missing.join(", ")} (window ${calKeys[0]}…${calKeys[calKeys.length - 1]}) — run npm run widgets and commit`
       : ""
+  );
+  check(
+    "widget calendar snapshot carries a valid generation time and future expiry",
+    Number.isFinite(Date.parse(iosCalendar.generatedAt)) &&
+      Date.parse(iosCalendar.expiresAt) > farHorizon.getTime()
+  );
+  check(
+    "every supported profile is present with the exact engine fingerprint and full window",
+    SUPPORTED_CALENDAR_PROFILES.every((profile) => {
+      const native = iosCalendar.profiles[profile.id];
+      return (
+        native?.id === profile.id &&
+        native.fingerprint === profile.fingerprint &&
+        Object.keys(native.days).length === calKeys.length &&
+        native.days[calKeys[0]] !== undefined &&
+        native.days[calKeys[calKeys.length - 1]] !== undefined
+      );
+    })
   );
   const androidCalRaw = readFileSync(
     join(ROOT, "android/app/src/main/res/raw/calendar.json"),
@@ -608,11 +925,184 @@ check(
   );
   check(
     "every native-widget appearance carries Fr. Garrigou-Lagrange's exact attribution",
-    Object.values(iosCalendar)
+    Object.values(iosCalendar.profiles)
+      .flatMap((profile) => Object.values(profile.days))
       .flatMap((entry) => entry.quote?.author ?? [])
       .filter((author) => author.includes("Garrigou-Lagrange"))
       .every((author) => author === GARRIGOU_AUTHOR),
     "incorrect Garrigou-Lagrange attribution — re-run npm run calendar-widget"
+  );
+  for (const pack of CALENDAR_PACKS) {
+    check(
+      `${pack.id} canonical catalog hash matches its fingerprint input`,
+      `sha256:${createHash("sha256").update(pack.canonicalCatalogInput).digest("hex")}` ===
+        pack.contentHash
+    );
+    check(
+      `${pack.id} has authoritative source loci`,
+      pack.sourceLoci.length > 0 &&
+        pack.sourceLoci.every(
+          (source) =>
+            source.url.startsWith("https://") &&
+            source.authority.length > 0 &&
+            source.locator.length > 0
+        )
+    );
+  }
+  for (const pack of SUPPORTED_LECTIONARY_PACKS) {
+    const raw = readFileSync(join(ROOT, "public", pack.dataPath));
+    check(
+      `${pack.id} content hash matches its manifest-sealed citation table`,
+      `sha256:${createHash("sha256").update(raw).digest("hex")}` === pack.contentHash
+    );
+  }
+  check(
+    "calendar packs carry executable typed date rules instead of metadata-only labels",
+    GENERAL_ROMAN_PACK.celebrations.length === 238 &&
+      UNITED_STATES_PACK.celebrations.length === 26 &&
+      CALENDAR_PACKS.every((pack) =>
+        pack.celebrations.every(
+          (celebration) => celebration.id.length > 0 && celebration.dateRule.kind.length > 0
+        ) && new Set(pack.celebrations.map((celebration) => celebration.id)).size ===
+          pack.celebrations.length
+      )
+  );
+  check(
+    "the 2026 Newman inscription cites its direct Holy See decree",
+    GENERAL_ROMAN_PACK.sourceLoci.some(
+      (source) => source.url ===
+        "https://press.vatican.va/content/salastampa/en/bollettino/pubblico/2026/02/03/260203a.html"
+    )
+  );
+  check(
+    "calendar profiles are ordered pack compositions with unique fingerprints",
+    SUPPORTED_CALENDAR_PROFILES.every(
+      (profile) =>
+        profile.packs.length === profile.packIds.length &&
+        profile.packs.every((pack, index) => pack.id === profile.packIds[index])
+    ) &&
+      new Set(SUPPORTED_CALENDAR_PROFILES.map((profile) => profile.fingerprint)).size ===
+        SUPPORTED_CALENDAR_PROFILES.length
+  );
+}
+
+// 7c. The native individual-church overlay is sparse, atomic, and tied to the
+// exact selected base profile, local proper, and citation table.
+{
+  const now = new Date("2026-07-23T12:00:00.000Z");
+  const proper = normalizeIndividualChurchProper({
+    churchTitle: "St. Test Church",
+    titleDate: { month: 7, day: 23 },
+    titleColor: "white",
+    dedicationAnniversary: { month: 10, day: 18 },
+    principalPatronTitle: "St. Thomas Aquinas",
+    principalPatronDate: { month: 1, day: 28 },
+    principalPatronColor: "white"
+  });
+  const overlay = buildLocalWidgetCalendarOverlayFromData(
+    {
+      profileId: "roman.general",
+      lectionaryPackId: DEFAULT_LECTIONARY_PACK_ID,
+      individualChurchProper: proper,
+      now
+    },
+    lect,
+    []
+  );
+  const expected = {
+    profileId: "roman.general" as const,
+    baseProfileFingerprint: calendarProfile("roman.general").fingerprint,
+    localProperFingerprint: overlay.localLayer.fingerprint,
+    lectionaryPackId: DEFAULT_LECTIONARY_PACK_ID,
+    window: overlay.window,
+    now
+  };
+  const overlayDays = Object.values(overlay.days);
+  check(
+    "individual-church widget overlay stays sparse across the seven-year native window",
+    overlayDays.length > 0 && overlayDays.length <= LOCAL_WIDGET_OVERLAY_MAX_DAYS
+  );
+  check(
+    "individual-church overlay days carry explicit missing-proper receipts",
+    overlayDays.every(
+      (day) =>
+        day.celebration.length > 0 &&
+        day.formularyState?.kind === "missing-local-formulary" &&
+        Object.prototype.hasOwnProperty.call(day, "quote")
+    )
+  );
+  check(
+    "individual-church overlay validates only for its selected profile, proper, and lectionary",
+    validateLocalWidgetCalendarOverlay(overlay, expected) &&
+      !validateLocalWidgetCalendarOverlay(overlay, {
+        ...expected,
+        localProperFingerprint: `${overlay.localLayer.fingerprint}-stale`
+      }) &&
+      !validateLocalWidgetCalendarOverlay(
+        { ...overlay, lectionaryPackId: "roman.unsupported" },
+        expected
+      )
+  );
+  check(
+    "future-generated and expired local overlays fail closed",
+    !validateLocalWidgetCalendarOverlay(
+      { ...overlay, generatedAt: "2026-07-23T12:06:00.001Z" },
+      expected
+    ) &&
+      !validateLocalWidgetCalendarOverlay(
+        { ...overlay, expiresAt: "2026-07-23T11:59:59.000Z" },
+        expected
+      )
+  );
+  let rejectedFarFutureClock = false;
+  try {
+    buildLocalWidgetCalendarOverlayFromData(
+      {
+        profileId: "roman.general",
+        lectionaryPackId: DEFAULT_LECTIONARY_PACK_ID,
+        individualChurchProper: proper,
+        now: new Date("2033-07-23T12:00:00.000Z")
+      },
+      lect,
+      []
+    );
+  } catch (error) {
+    rejectedFarFutureClock =
+      error instanceof Error && error.message.includes("outside the bundled widget snapshot window");
+  }
+  const correctedClockOverlay = buildLocalWidgetCalendarOverlayFromData(
+    {
+      profileId: "roman.general",
+      lectionaryPackId: DEFAULT_LECTIONARY_PACK_ID,
+      individualChurchProper: proper,
+      now
+    },
+    lect,
+    []
+  );
+  check(
+    "far-future clock data is refused and unchanged settings rebuild after correction",
+    rejectedFarFutureClock && validateLocalWidgetCalendarOverlay(correctedClockOverlay, expected)
+  );
+  const rolloverOverlay = buildLocalWidgetCalendarOverlayFromData(
+    {
+      profileId: "roman.general",
+      lectionaryPackId: DEFAULT_LECTIONARY_PACK_ID,
+      individualChurchProper: proper,
+      now: new Date("2027-01-02T12:00:00.000Z")
+    },
+    lect,
+    []
+  );
+  check(
+    "New Year settings sync preserves the bundled native snapshot window",
+    rolloverOverlay.window.from === overlay.window.from &&
+      rolloverOverlay.window.through === overlay.window.through &&
+      validateLocalWidgetCalendarOverlay(rolloverOverlay, {
+        ...expected,
+        window: overlay.window,
+        now: new Date("2027-01-02T12:00:00.000Z")
+      })
   );
 }
 
@@ -822,7 +1312,7 @@ check(
 );
 
 // 11. Golden-year snapshots (review §B.2): the full computed calendar and
-//     lectionary resolution for 2024–2027, both regions, must match the
+//     lectionary resolution for 2024–2031, every supported profile, must match the
 //     committed snapshots byte-for-byte. A deliberate engine change is
 //     re-blessed with `npm run golden` and reviewed in the diff.
 console.log("");
@@ -1139,10 +1629,10 @@ console.log("");
       .map((l) => tabCode.search(new RegExp(`>\\s*${l}`)))
       .every((i, n, a) => i >= 0 && (n === 0 || i > a[n - 1])));
 
-  // "More" opens exactly Library, Translations, Settings, About — and nothing
-  // routes there (it is a popover, not a route).
-  const MORE = ["/library", "/translations", "/settings", "/about"];
-  check("More opens exactly Library/Translations/Settings/About (spec §2.1)",
+  // "More" exposes each secondary destination, including the native widget
+  // gallery. More itself remains a popover, not a route.
+  const MORE = ["/library", "/widgets", "/translations", "/settings", "/about"];
+  check("More opens Library/Widgets/Translations/Settings/About (spec §2.1)",
     MORE.every((to) => new RegExp(`["']${to}["']`).test(tabCode)), MORE.join(", "));
 
   // The header delegates to <TabBar>; the old seven-link inline nav is gone.
@@ -1244,10 +1734,26 @@ console.log("");
     set.includes("THEME_OPTIONS") && /role="switch"/.test(set) && set.includes("followLiturgicalYear"));
   check("Settings: the follow-the-year catechesis line (spec §2.2)",
     set.includes("violet in Advent, rose on Gaudete"));
-  check("Settings: the calendar region select (moved from Readings)",
-    set.includes("calendarRegion") &&
-      set.includes('value="universal"') &&
-      set.includes('value="usa"'));
+  check("Settings: manual country, province, and diocese controls remain fail-closed",
+    set.includes("calendarCountryCode") &&
+      set.includes("US_ECCLESIASTICAL_PROVINCES") &&
+      set.includes("calendarDiocese") &&
+      set.includes("will not claim a"));
+  check("Settings: calendar, lectionary, and displayed Mass Bible are independent controls",
+    set.includes("settings.calendarProfile") &&
+      set.includes("SUPPORTED_LECTIONARY_PACKS") &&
+      set.includes("settings.lectionaryPackId") &&
+      set.includes("settings.massTranslation") &&
+      set.includes("Displayed Mass Bible"));
+  check("Settings: the constrained individual-church proper has title, dedication, and patron controls",
+    set.includes("individualChurchProper") &&
+      set.includes("Title celebration") &&
+      set.includes("Dedication anniversary") &&
+      set.includes("Principal patron celebration"));
+  check("Settings: local-proper dates reject duplicates and permit a leap-day selection",
+    set.includes("individualChurchProperDateConflicts") &&
+      set.includes("blockedDates") &&
+      set.includes("[31, 29, 31"));
   check("Settings: Data offers per-bundle download with real sizes",
     set.includes("downloadBundle") && set.includes("formatBytes"));
   check("Settings: Data reuses the P2-6 export/import",
@@ -1260,7 +1766,16 @@ console.log("");
   check("Readings no longer renders the region select or writes settings",
     !readings.includes('value="usa"') && !readings.includes("saveSettings"));
   check("Readings reads the region live from the context",
-    readings.includes("useSettings") && readings.includes("settings.calendarRegion"));
+    readings.includes("useSettings") && readings.includes("settings.calendarProfile"));
+  check("Readings labels a missing local proper without misrepresenting the fallback",
+    readings.includes('formularyState?.kind === "missing-local-formulary"') &&
+      readings.includes("not presented as the celebration&apos;s proper readings"));
+  const home = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
+  check("Today and Readings distinguish commemorations from optional memorials",
+    home.includes('c.rank === "Commemoration"') &&
+      readings.includes('c.rank === "Commemoration"') &&
+      home.includes("permitted commemoration") &&
+      readings.includes("permitted commemoration"));
 
   // About carries the anchor the Data line points at.
   const about = readFileSync(join(ROOT, "src/pages/About.tsx"), "utf8");
@@ -1351,7 +1866,7 @@ check(
 );
 check(
   "modal backdrop uses the --scrim token, no raw color",
-  /\.sheet-backdrop\s*\{[^}]*var\(--scrim\)/.test(sheetCss)
+  /\.sheet-backdrop\.open\s*\{[^}]*var\(--scrim\)/.test(sheetCss)
 );
 
 // 12. The reading-time indulgence accumulator (v1.2 B2, spec §6.1). Pure; driven
@@ -2086,20 +2601,101 @@ console.log("");
   check("ccc/index.json + ccc/url.json are sealed in the manifest", !!man.files["ccc/index.json"] && !!man.files["ccc/url.json"]);
 }
 
-// §20 — the Mass-readings translation preference (src/lib/storage.ts). Pure: an
-// explicit choice wins; otherwise the NABRE for the USA region (the U.S.
-// lectionary text), and the general reading translation elsewhere.
+// §20 — jurisdiction, lectionary edition, and displayed Mass text are three
+// independently persisted settings. A legacy "match region" value resolves
+// once during migration so existing users keep the text they saw.
 {
-  const { massTranslationFor } = await import("../src/lib/storage");
-  const base = { translation: "drc", calendarRegion: "universal", massTranslation: "" } as unknown as Parameters<typeof massTranslationFor>[0];
-  check("massTranslationFor: USA region (auto) → nabre", massTranslationFor({ ...base, calendarRegion: "usa" }) === "nabre");
-  check("massTranslationFor: universal (auto) → the reading translation", massTranslationFor({ ...base, translation: "cpdv" }) === "cpdv");
-  check("massTranslationFor: an explicit choice wins over the region", massTranslationFor({ ...base, calendarRegion: "usa", massTranslation: "drc" }) === "drc");
+  const { getSettings: readSettings, massTranslationFor } = await import("../src/lib/storage");
+  const base = { translation: "drc", calendarProfile: "roman.general", massTranslation: "" } as unknown as Parameters<typeof massTranslationFor>[0];
+  check("massTranslationFor: jurisdiction cannot silently change displayed text",
+    massTranslationFor({ ...base, calendarProfile: "roman.us.ascension-sunday", translation: "cpdv" }) === "cpdv" &&
+      massTranslationFor({ ...base, calendarProfile: "roman.general", translation: "cpdv" }) === "cpdv");
+  check("massTranslationFor: an explicit displayed-text choice wins",
+    massTranslationFor({ ...base, calendarProfile: "roman.us.ascension-thursday", massTranslation: "drc" }) === "drc");
+  const previousStorage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  let storedSettings: unknown = { calendarRegion: "universal", translation: "cpdv", massTranslation: "" };
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (key: string) =>
+        key === "fidelis:settings" ? JSON.stringify(storedSettings) : null,
+      setItem: () => {},
+      removeItem: () => {}
+    }
+  });
+  try {
+    const migrated = readSettings();
+    check(
+      "getSettings migrates legacy universal to roman.general without retaining two sources",
+      migrated.calendarProfile === "roman.general" &&
+        migrated.calendarCountryCode === "" &&
+        migrated.massTranslation === "cpdv" &&
+        migrated.lectionaryPackId === DEFAULT_LECTIONARY_PACK_ID &&
+        !("calendarRegion" in migrated)
+    );
+    storedSettings = {
+      calendarRegion: "usa",
+      translation: "cpdv",
+      massTranslation: "",
+      calendarDiocese: "  Diocese of Example  "
+    };
+    const migratedUs = readSettings();
+    check(
+      "legacy U.S. match-region text resolves once while manual jurisdiction fields remain separate",
+      migratedUs.calendarProfile === "roman.us.ascension-sunday" &&
+        migratedUs.calendarCountryCode === "US" &&
+        migratedUs.massTranslation === "nabre" &&
+        migratedUs.calendarDiocese === "Diocese of Example"
+    );
+    storedSettings = {
+      individualChurchProper: {
+        churchTitle: "  St. Joseph  ",
+        titleDate: { month: 3, day: 19 },
+        titleColor: "violet",
+        dedicationAnniversary: { month: 2, day: 31 },
+        principalPatronTitle: "  St. Thomas Aquinas  ",
+        principalPatronDate: { month: 1, day: 28 },
+        principalPatronColor: "red",
+        rank: "user-controlled"
+      }
+    };
+    const sanitizedProper = readSettings().individualChurchProper;
+    check(
+      "individual-church proper storage strips rank injection and invalid dates",
+      sanitizedProper.churchTitle === "St. Joseph" &&
+        sanitizedProper.titleColor === "white" &&
+        sanitizedProper.dedicationAnniversary === null &&
+        sanitizedProper.principalPatronTitle === "St. Thomas Aquinas" &&
+        sanitizedProper.principalPatronColor === "red" &&
+        !("rank" in sanitizedProper)
+    );
+    storedSettings = null;
+    check(
+      "getSettings rejects a non-object settings payload without crashing",
+      readSettings().calendarProfile === DEFAULT_CALENDAR_PROFILE_ID &&
+        readSettings().lectionaryPackId === DEFAULT_LECTIONARY_PACK_ID
+    );
+  } finally {
+    if (previousStorage) Object.defineProperty(globalThis, "localStorage", previousStorage);
+    else Reflect.deleteProperty(globalThis, "localStorage");
+  }
+  check(
+    "the supported lectionary catalog is explicit and not derived from a calendar profile",
+    SUPPORTED_LECTIONARY_PACKS.length === 1 &&
+      SUPPORTED_LECTIONARY_PACKS[0].id === DEFAULT_LECTIONARY_PACK_ID &&
+      !SUPPORTED_CALENDAR_PROFILES.some((profile) => "lectionaryPackId" in profile)
+  );
 }
 
 // §21 — navigation scroll authority + the overlay back-stack (nav/IA redesign).
 {
-  const { decideScroll, hasScrollTarget } = await import("../src/lib/scroll");
+  const {
+    decideScroll,
+    hasScrollTarget,
+    rememberScrollOffset,
+    scrollEntryKey,
+    scrollRouteKey
+  } = await import("../src/lib/scroll");
   // A target (?v=/#hash) owns its own scroll — checked first, so Back to a verse
   // glides to it instead of fighting a restore.
   check("decideScroll: a target → skip (any nav type)", decideScroll("PUSH", true) === "skip" && decideScroll("POP", true) === "skip" && decideScroll("REPLACE", true) === "skip");
@@ -2111,15 +2707,64 @@ console.log("");
   check("hasScrollTarget: ?v= verse is a target", hasScrollTarget("?v=16", "") === true);
   check("hasScrollTarget: #anchor is a target", hasScrollTarget("", "#rsv2ce") === true);
   check("hasScrollTarget: plain location is not", hasScrollTarget("?date=2026-06-17", "") === false && hasScrollTarget("", "") === false);
+  check("scrollEntryKey: external HashRouter entries do not collide on 'default'",
+    scrollEntryKey({ key: "default", pathname: "/about", search: "", hash: "" }) !==
+      scrollEntryKey({ key: "default", pathname: "/widget/votd", search: "", hash: "" }) &&
+      scrollEntryKey({ key: "abc", pathname: "/about", search: "", hash: "" }) === "entry:abc" &&
+      scrollRouteKey({ pathname: "/about", search: "", hash: "" }) === "route:/about");
+  const boundedOffsets = new Map<string, number>();
+  for (let index = 0; index < 80; index++) {
+    rememberScrollOffset(boundedOffsets, `entry:${index}`, index, 50);
+    rememberScrollOffset(boundedOffsets, `route:/${index}`, index, 50);
+  }
+  check("scroll offsets remain bounded when each navigation stores entry and route keys",
+    boundedOffsets.size === 50 &&
+      boundedOffsets.get("entry:79") === 79 &&
+      boundedOffsets.get("route:/79") === 79);
 
-  const { pushOverlay, closeTopOverlay, overlayCount, removeOverlay } = await import("../src/lib/overlays");
+  const { pushOverlay, closeTopOverlay, dismissAllOverlays, isTopOverlay, overlayCount, removeOverlay } = await import("../src/lib/overlays");
   const closed: string[] = [];
-  pushOverlay(() => closed.push("a"));
-  pushOverlay(() => closed.push("b"));
+  let aId = 0;
+  let bId = 0;
+  aId = pushOverlay(() => {
+    closed.push("a");
+    removeOverlay(aId); // model the component cleanup after its close callback
+  });
+  bId = pushOverlay(() => {
+    closed.push("b");
+    removeOverlay(bId);
+  });
   check("overlay stack: count tracks opens", overlayCount() === 2);
   check("overlay stack: closeTop closes the newest first", closeTopOverlay() === true && closed.join() === "b");
   check("overlay stack: closeTop then closes the next", closeTopOverlay() === true && closed.join() === "b,a");
   check("overlay stack: closeTop on empty is a no-op", closeTopOverlay() === false && overlayCount() === 0);
+
+  // An animating top overlay retains ownership of Back until React cleanup.
+  // A rapid second press must be consumed without re-running the closer or
+  // reaching the route/overlay underneath it.
+  let underneathCalls = 0;
+  const underneath = pushOverlay(() => { underneathCalls += 1; });
+  let closingCalls = 0;
+  const closing = pushOverlay(() => { closingCalls += 1; });
+  check("overlay stack: first Back starts the top close", closeTopOverlay() === true && closingCalls === 1);
+  check("overlay stack: rapid second Back is consumed during exit",
+    closeTopOverlay() === true && closingCalls === 1 && underneathCalls === 0 && overlayCount() === 2);
+  removeOverlay(closing);
+  removeOverlay(underneath);
+
+  let first = 0;
+  let second = 0;
+  first = pushOverlay(() => {
+    closed.push("c");
+    removeOverlay(first);
+  });
+  second = pushOverlay(() => {
+    closed.push("d");
+    removeOverlay(second);
+  });
+  check("overlay stack: only the newest overlay is top", !isTopOverlay(first) && isTopOverlay(second));
+  check("overlay stack: dismissAll closes every overlay newest first",
+    dismissAllOverlays() === 2 && closed.slice(-2).join() === "d,c" && overlayCount() === 0);
   removeOverlay(999); // removing an absent id is harmless
 }
 
@@ -2454,12 +3099,17 @@ console.log("");
   const calBuilder = readFileSync(join(ROOT, "scripts/build-calendar-widget.ts"), "utf8");
   check("widget builder cites via formatLectionaryCitation (not bookDisplayName/translation)",
     calBuilder.includes("formatLectionaryCitation") && !calBuilder.includes("bookDisplayName"));
-  // FID-NATIVE-001: the widget/Siri calendar is pinned to the USCCB (USA) region
-  // by design (see docs/guides/IOS.md "Region policy"). Pin it here so a silent
-  // flip to "universal" — which would make the home-screen widgets and Siri
-  // disagree with the app's default calendar — turns npm test red.
-  check('widget builder is pinned to the USA region (FID-NATIVE-001)',
-    /const REGION = "usa" as const;/.test(calBuilder));
+  check("widget builder emits every supported profile with schema/expiry metadata",
+    calBuilder.includes("SUPPORTED_CALENDAR_PROFILES") &&
+      calBuilder.includes("schemaVersion") &&
+      calBuilder.includes("expiresAt") &&
+      calBuilder.includes("profile.fingerprint"));
+  check("widget builder has a strict no-write byte-verification mode",
+    calBuilder.includes('process.argv.includes("--verify")') &&
+      calBuilder.includes("calendar widget snapshot is stale"));
+  check("widget builder emits its expiry boundary in canonical UTC",
+    calBuilder.includes("new Date(Date.UTC(buildYear + 6, 0, 1)).toISOString()") &&
+      !calBuilder.includes("new Date(buildYear + 6, 0, 1).toISOString()"));
   // and the committed, generated widget data must carry no Douay-only book names
   for (const rel of ["ios/WidgetExtension/calendar.json", "android/app/src/main/res/raw/calendar.json"]) {
     const cal = readFileSync(join(ROOT, rel), "utf8");
@@ -2485,7 +3135,14 @@ console.log("");
   check("MainViewController subclasses CAPBridgeViewController",
     /class\s+MainViewController\s*:\s*CAPBridgeViewController/.test(mvc));
   check("MainViewController registers SaveImagePlugin in capacitorDidLoad()",
-    /capacitorDidLoad/.test(mvc) && /registerPluginInstance\(\s*SaveImagePlugin\(\)\s*\)/.test(mvc));
+    /capacitorDidLoad/.test(mvc) &&
+      /makeFidelisPlugins\(\)[\s\S]*SaveImagePlugin\(\)/.test(mvc) &&
+      /makeFidelisPlugins\(\)\.forEach[\s\S]*registerPluginInstance\(plugin\)/.test(mvc));
+  check("MainViewController bridges an explicit iOS edge-back gesture into HashRouter history",
+    mvc.includes("UIScreenEdgePanGestureRecognizer") &&
+      mvc.includes("fidelis-native-edge-back") &&
+      mvc.includes("allowsBackForwardNavigationGestures = false") &&
+      mvc.includes("evaluateJavaScript"));
   // the subclass must be compiled into the App target (reproducibly, via the script)
   const cfg = readFileSync(join(ROOT, "scripts/configure-ios-app-target.rb"), "utf8");
   check("configure-ios-app-target.rb wires MainViewController.swift into App sources",
@@ -2988,6 +3645,62 @@ console.log("");
     check(`§32 ${theme} --on-accent on --purple-strong ≥ 4.5:1 (${onAccent.toFixed(2)})`, onAccent >= 4.5);
     const badge = contrast(tokenOf(base, "badge-pd-text"), tokenOf(base, "badge-pd-bg"));
     check(`§32 ${theme} PD badge text on its badge ≥ 4.5:1 (${badge.toFixed(2)})`, badge >= 4.5);
+  }
+
+  // Native widget labels are only 10pt/sp, so they must keep the normal-text
+  // 4.5:1 threshold too. Parse Android's actual resources and SwiftUI's actual
+  // RGB literals; a comment that merely says "accessible" is not evidence.
+  const androidColors = readFileSync(
+    join(ROOT, "android/app/src/main/res/values/colors.xml"),
+    "utf8"
+  );
+  const androidColor = (name: string) =>
+    androidColors.match(new RegExp(`<color name="${name}">(#[0-9A-Fa-f]{6})</color>`))?.[1] ?? "";
+  for (const theme of ["day", "night"] as const) {
+    const background = androidColor(`fidelis_${theme}_parchment`);
+    const label = androidColor(`fidelis_${theme}_gold_text`);
+    const ratio = background && label ? contrast(label, background) : 0;
+    check(
+      `§32 Android ${theme} 10sp gold label ≥ 4.5:1 (${ratio.toFixed(2)})`,
+      ratio >= 4.5
+    );
+  }
+
+  const swiftWidgets = [
+    readFileSync(join(ROOT, "ios/WidgetExtension/FidelisWidget.swift"), "utf8"),
+    readFileSync(join(ROOT, "ios/WidgetExtension/CalendarWidgets.swift"), "utf8")
+  ].join("\n");
+  const rgbHex = (red: string, green: string, blue: string) =>
+    `#${[red, green, blue]
+      .map((component) => Math.round(Number(component) * 255).toString(16).padStart(2, "0"))
+      .join("")}`;
+  const swiftPairs = (
+    property: "parchment" | "goldText"
+  ): Array<{ night: string; day: string }> => {
+    const capitalized = property[0].toUpperCase() + property.slice(1);
+    const matcher = new RegExp(
+      `(?:${property}|k${capitalized}): Color \\{ dark \\? Color\\(red: ([0-9.]+), green: ([0-9.]+), blue: ([0-9.]+)\\) : Color\\(red: ([0-9.]+), green: ([0-9.]+), blue: ([0-9.]+)\\) \\}`,
+      "g"
+    );
+    return [...swiftWidgets.matchAll(matcher)].map((match) => ({
+      night: rgbHex(match[1], match[2], match[3]),
+      day: rgbHex(match[4], match[5], match[6])
+    }));
+  };
+  const swiftBackgrounds = swiftPairs("parchment");
+  const swiftLabels = swiftPairs("goldText");
+  check(
+    "§32 iOS parses all three widget gold-label/background palettes",
+    swiftBackgrounds.length === 3 && swiftLabels.length === 3
+  );
+  for (let index = 0; index < Math.min(swiftBackgrounds.length, swiftLabels.length); index++) {
+    for (const theme of ["day", "night"] as const) {
+      const ratio = contrast(swiftLabels[index][theme], swiftBackgrounds[index][theme]);
+      check(
+        `§32 iOS widget ${index + 1} ${theme} 10pt gold label ≥ 4.5:1 (${ratio.toFixed(2)})`,
+        ratio >= 4.5
+      );
+    }
   }
 
   // FID-A11Y-004, the other half: a link inside prose is underlined by default —
@@ -3494,7 +4207,7 @@ console.log("");
   // FID-PERF-002: the five secondary surfaces (and the plan creator) load
   // lazily; the worship-critical path (Today, Reader, Search, Mass, the book
   // list) stays eager — no chunking framework, just React.lazy.
-  for (const page of ["Settings", "Library", "Translations", "Plans", "PlanCreator", "About"]) {
+  for (const page of ["Settings", "Library", "Widgets", "Translations", "Plans", "PlanCreator", "About"]) {
     check(`§34 route split: ${page} is a lazy route`,
       app.includes(`lazy(() => import("./pages/${page}"))`) &&
         !app.includes(`import ${page} from "./pages/${page}"`));
@@ -3515,7 +4228,7 @@ console.log("");
     search.includes(".catch(() => {})"));
 
   // FID-QUAL-001: the committed browser suite — specs, config, script, deps, CI.
-  const specs = ["today", "reader", "search", "library", "import", "offline", "axe"];
+  const specs = ["today", "reader", "search", "library", "navigation-widget", "import", "offline", "axe"];
   for (const s of specs) {
     check(`§34 suite: e2e/${s}.spec.ts exists`, existsSync(join(ROOT, `e2e/${s}.spec.ts`)));
   }
@@ -3542,9 +4255,11 @@ console.log("");
   const search = read("src/pages/Search.tsx");
   const css = read("src/styles.css");
   const app = read("src/App.tsx");
+  const tabBar = read("src/components/TabBar.tsx");
   const home = read("src/pages/Home.tsx");
   const settings = read("src/pages/Settings.tsx");
   const about = read("src/pages/About.tsx");
+  const widgetsPage = read("src/pages/Widgets.tsx");
   const html = read("index.html");
   const headers = read("public/_headers");
 
@@ -3580,20 +4295,161 @@ console.log("");
   // cold launch (getLaunchUrl) and a tap while running (appUrlOpen).
   check("§36 NATIVE-002 (web): App handles appUrlOpen AND the cold-launch URL",
     app.includes('addListener("appUrlOpen"') && app.includes("getLaunchUrl"));
+  const massTarget = widgetLinkTarget("fidelis://mass");
+  const verseTarget = widgetLinkTarget("fidelis://verse");
+  const quoteTarget = widgetLinkTarget("fidelis://quote");
+  const todayTarget = widgetLinkTarget("fidelis://today");
   check("§36 NATIVE-002 (web): fidelis://mass → Mass readings; verse/quote → their Today cards; today → Today",
-    app.includes("fidelis:") &&
-      app.includes('return "/readings"') &&
-      app.includes('return "/#votd"') &&
-      app.includes('return "/#qotd"') &&
-      app.includes('return "/"'));
+    !!massTarget && widgetLinkDestination(massTarget) === "/readings" &&
+      !!verseTarget && widgetLinkDestination(verseTarget) === "/#votd" &&
+      !!quoteTarget && widgetLinkDestination(quoteTarget) === "/#qotd" &&
+      !!todayTarget && widgetLinkDestination(todayTarget) === "/");
+  check("§36 NATIVE-002 (web): malformed and foreign links are refused",
+    widgetLinkTarget("https://example.com/verse") === null &&
+      widgetLinkTarget("fidelis://unknown") === null);
+  check("§36 NATIVE-002 (web): cold replaces, warm pushes, repeat target only focuses",
+    widgetLinkHistoryMode("cold", false) === "replace" &&
+      widgetLinkHistoryMode("warm", false) === "push" &&
+      widgetLinkHistoryMode("warm", true) === "focus" &&
+      !!verseTarget &&
+        isSameWidgetTarget({ pathname: "/", search: "", hash: "#votd" }, verseTarget));
+  check("§36 NATIVE-002 (web): native edge-Back consumes only router-owned history",
+    canConsumeAppHistory({ idx: 1 }) &&
+      canConsumeAppHistory({ idx: 9 }) &&
+      !canConsumeAppHistory({ idx: 0 }) &&
+      !canConsumeAppHistory({ idx: -1 }) &&
+      !canConsumeAppHistory({ idx: 1.5 }) &&
+      !canConsumeAppHistory({}) &&
+      !canConsumeAppHistory(null) &&
+      app.includes('Capacitor.getPlatform() !== "ios"') &&
+      app.includes("canConsumeAppHistory(window.history.state)") &&
+      app.includes("consumeNativeWidgetReturn()") &&
+      app.includes("callerDestination: locationDestination(locationRef.current)") &&
+      app.includes("currentDestination !== expected.widgetDestination"));
+  const returnContract = {
+    version: 1 as const,
+    widgetDestination: "/readings",
+    callerDestination: "/library",
+    callerHistoryIndex: 0
+  };
+  const returnHistoryState = {
+    idx: 1,
+    usr: widgetReturnNavigationState(returnContract)
+  };
+  check("§36 NATIVE-002 (web): warm widget return is versioned in router history state",
+    appHistoryIndex(returnHistoryState) === 1 &&
+      widgetReturnContractFromHistoryState(returnHistoryState)?.callerDestination === "/library" &&
+      widgetReturnContractFromHistoryState({ idx: 1, usr: {} }) === null &&
+      widgetReturnContractFromHistoryState({
+        idx: 1,
+        usr: { fidelisWidgetReturn: { ...returnContract, callerHistoryIndex: -1 } }
+      }) === null &&
+      app.includes("state: widgetReturnNavigationState(returnContract)"));
+  check("§36 NATIVE-002 (web): a same-hash duplicate is discarded only above its recorded caller",
+    canDiscardDuplicateWidgetEntry(returnHistoryState, returnContract, "/readings") &&
+      canDiscardDuplicateWidgetEntry({ ...returnHistoryState, idx: 2 }, returnContract, "/readings") &&
+      !canDiscardDuplicateWidgetEntry({ ...returnHistoryState, idx: 0 }, returnContract, "/readings") &&
+      !canDiscardDuplicateWidgetEntry(returnHistoryState, returnContract, "/") &&
+      app.includes("canDiscardDuplicateWidgetEntry(window.history.state, expected") &&
+      app.includes("verifyReturn(discardAttempts + 1)"));
+  check("§36 NATIVE-002 (web): a dated Mass screen differs from the widget's today target",
+    !!massTarget &&
+      !isSameWidgetTarget(
+        { pathname: "/readings", search: "?date=2026-12-25", hash: "" },
+        massTarget
+      ));
+  const bufferedCold = widgetLinkStartupActivations(null, ["fidelis://verse"]);
+  check("§36 NATIVE-002 (web): a first buffered URL becomes cold when getLaunchUrl is empty",
+    bufferedCold.length === 1 &&
+      bufferedCold[0].url === "fidelis://verse" &&
+      bufferedCold[0].source === "cold");
+  const launchAndDuplicate = widgetLinkStartupActivations(
+    "fidelis://mass",
+    ["fidelis://mass"]
+  );
+  check("§36 NATIVE-002 (web): an authoritative launch URL stays cold and its buffered duplicate stays warm",
+    launchAndDuplicate.length === 2 &&
+      launchAndDuplicate[0].url === "fidelis://mass" &&
+      launchAndDuplicate[0].source === "cold" &&
+      launchAndDuplicate[1].url === "fidelis://mass" &&
+      launchAndDuplicate[1].source === "warm");
+  check("§36 NATIVE-002 (web): cold/warm duplicate delivery is accepted once per activation window",
+    !!verseTarget &&
+      isDuplicateWidgetLinkDelivery(
+        { destination: "/#votd", receivedAt: 1000 },
+        verseTarget,
+        1000 + WIDGET_LINK_DEDUPE_MS
+      ) &&
+      !isDuplicateWidgetLinkDelivery(
+        { destination: "/#votd", receivedAt: 1000 },
+        verseTarget,
+        1001 + WIDGET_LINK_DEDUPE_MS
+      ) &&
+      !!quoteTarget &&
+      !isDuplicateWidgetLinkDelivery(
+        { destination: "/#votd", receivedAt: 1000 },
+        quoteTarget,
+        1001
+      ));
+  const concurrentDeliveries = new Map();
+  check("§36 NATIVE-002 (web): destination-scoped dedupe preserves distinct concurrent intents",
+    !!massTarget && !!verseTarget &&
+      acceptWidgetLinkDelivery(concurrentDeliveries, massTarget, 1000) &&
+      acceptWidgetLinkDelivery(concurrentDeliveries, verseTarget, 1001) &&
+      !acceptWidgetLinkDelivery(concurrentDeliveries, massTarget, 1002));
+  const widgetDismissIndex = app.indexOf("const dismissed = dismissAllOverlays();");
+  const widgetCleanupDelayIndex = app.indexOf(
+    "const timer = window.setTimeout(() => {",
+    widgetDismissIndex
+  );
+  const widgetHealIndex = app.indexOf(
+    "healStrandedScrollLock({ restoreScroll: false })",
+    widgetCleanupDelayIndex
+  );
   check("§36 NATIVE-002 (web): the verse/quote cards carry the deep-link anchors, and widget entry heals a stranded lock first",
     home.includes('id="votd"') &&
       home.includes('id="qotd"') &&
-      /const open = \(url[\s\S]*?healStrandedScrollLock\(\{ restoreScroll: false \}\)[\s\S]*?navigate\(route\)/.test(app));
+      home.includes("tabIndex={-1}") &&
+      app.includes("dismissAllOverlays()") &&
+      app.includes("widgetNavigationQueue.current = widgetNavigationQueue.current") &&
+      widgetDismissIndex >= 0 &&
+      widgetDismissIndex < widgetCleanupDelayIndex &&
+      widgetCleanupDelayIndex < widgetHealIndex &&
+      app.includes("healStrandedScrollLock({ restoreScroll: false })") &&
+      app.includes("widgetLinkDestination(target)"));
+  check("§36 NATIVE-002 (web): Escape closes only the topmost More overlay",
+    tabBar.includes("isTopOverlay(overlayId)") &&
+      tabBar.includes("e.stopImmediatePropagation()"));
+  const promptRequested = widgetPinRequestMessage({
+    requested: true,
+    reason: "supported",
+    token: "request-1"
+  });
+  check("§36 Android pin truth: a requested prompt never claims installation",
+    promptRequested.includes("confirmation prompt") &&
+      promptRequested.includes("only after you approve") &&
+      !promptRequested.includes("was added"));
+  check("§36 Android pin truth: only the positive callback claims installation",
+    widgetPinConfirmationMessage("verse") ===
+      "Verse of the Day was added to your Home Screen.");
+  check("§36 Android pin truth: unsupported API and launcher states stay distinct",
+    widgetPinRequestMessage({ requested: false, reason: "android_version" })
+      .includes("Android version") &&
+      widgetPinRequestMessage({ requested: false, reason: "launcher_or_profile" })
+        .includes("launcher or device profile"));
+  check("§36 widget configuration counts refresh after returning from the Home Screen",
+    widgetsPage.includes('addListener("appStateChange"') &&
+      widgetsPage.includes('document.addEventListener("visibilitychange"') &&
+      widgetsPage.includes("if (isActive) refresh()"));
+  check("§36 native widget settings retry after a corrected manual clock",
+    app.includes('document.addEventListener("visibilitychange", onVisible)') &&
+      app.includes('CapApp.addListener("appStateChange", ({ isActive })') &&
+      app.includes("if (isActive) scheduleSync()"));
 
   // ── Native shells (source-shape guards; the iOS/Android CI builds prove them) ──
   const calSwift = read("ios/WidgetExtension/CalendarWidgets.swift");
   const votdSwift = read("ios/WidgetExtension/FidelisWidget.swift");
+  const widgetContractsSwift = read("ios/WidgetExtension/WidgetContracts.swift");
   const infoPlist = read("ios/App/App/Info.plist");
   const calData = read("android/app/src/main/java/app/fidelis/bible/CalendarData.java");
   const calJava = read("android/app/src/main/java/app/fidelis/bible/CalendarWidget.java");
@@ -3603,17 +4459,52 @@ console.log("");
 
   // FID-PERF-004: memoize the widgets' calendar.json decode.
   check("§36 PERF-004 (iOS): CalendarWidgets memoizes the calendar decode",
-    calSwift.includes("calendarCache"));
+    calSwift.includes("calendarCache") &&
+      calSwift.includes("guard WidgetSharedSettings.isAvailable else { return nil }") &&
+      !calSwift.includes("case invalid"));
   check("§36 PERF-004 (Android): CalendarData memoizes; both widgets delegate",
     calData.includes("SoftReference") &&
       calJava.includes("CalendarData.load(context)") &&
       quoteJava.includes("CalendarData.load(context)"));
+  const widgetAppearanceJava = read(
+    "android/app/src/main/java/app/fidelis/bible/WidgetAppearance.java"
+  );
+  check("§36 Android System appearance retains day/night resource aliases",
+    widgetAppearanceJava.includes("usesSystemResources(appearance)") &&
+      widgetAppearanceJava.includes("return;") &&
+      !manifest.includes("android.intent.action.CONFIGURATION_CHANGED"));
 
   // FID-NATIVE-002 (iOS): every widget carries a widgetURL; the scheme is registered.
   check("§36 NATIVE-002 (iOS): the three widgets carry widgetURL(fidelis://…)",
-    votdSwift.includes('widgetURL(URL(string: "fidelis://verse"))') &&
-      calSwift.includes('widgetURL(URL(string: "fidelis://mass"))') &&
-      calSwift.includes('widgetURL(URL(string: "fidelis://quote"))'));
+    widgetContractsSwift.includes('URL(string: "fidelis://\\(rawValue)")') &&
+      votdSwift.includes("widgetURL(FidelisWidgetDescriptor.verse.destinationURL)") &&
+      calSwift.includes("widgetURL(FidelisWidgetDescriptor.mass.destinationURL)") &&
+      calSwift.includes("widgetURL(FidelisWidgetDescriptor.quote.destinationURL)"));
+  const javaFingerprint = (constant: string): string | null => {
+    const assignment = calData.match(
+      new RegExp(`private static final String ${constant}\\s*=([\\s\\S]*?);`)
+    )?.[1];
+    return assignment
+      ? [...assignment.matchAll(/"([^"]*)"/g)].map((match) => match[1]).join("")
+      : null;
+  };
+  const javaFingerprintConstants: Record<string, string> = {
+    "roman.general": "GENERAL_PROFILE_FINGERPRINT",
+    "roman.us.ascension-sunday": "US_ASCENSION_SUNDAY_PROFILE_FINGERPRINT",
+    "roman.us.ascension-thursday": "US_ASCENSION_THURSDAY_PROFILE_FINGERPRINT"
+  };
+  check("§36 native calendars bind the selected derived lectionary fingerprint exactly",
+    widgetContractsSwift.includes(DEFAULT_LECTIONARY_PACK_FINGERPRINT) &&
+      widgetContractsSwift.includes("lectionaryPack.fingerprint") &&
+      javaFingerprint("LECTIONARY_PACK_FINGERPRINT") ===
+        DEFAULT_LECTIONARY_PACK_FINGERPRINT &&
+      calData.includes("isSupportedLectionaryPack(WidgetSharedSettings.lectionaryPack(context))"));
+  check("§36 calendar fingerprints match the Swift and Android fail-closed constants exactly",
+    SUPPORTED_CALENDAR_PROFILES.every((profile) =>
+      widgetContractsSwift.includes(`"${profile.id}":`) &&
+      widgetContractsSwift.includes(`"${profile.fingerprint}"`) &&
+      javaFingerprint(javaFingerprintConstants[profile.id]) === profile.fingerprint
+    ));
   check("§36 NATIVE-002 (iOS): Info.plist registers the fidelis URL scheme",
     infoPlist.includes("CFBundleURLTypes") && infoPlist.includes("<string>fidelis</string>"));
 
@@ -3842,9 +4733,13 @@ console.log("");
     rankOf("francis-of-assisi") === "Memorial");
   check("§38 saints: St. David of Wales carries the corpus's non-GRC rank (Commemoration)",
     rankOf("david-of-wales") === "Commemoration");
-  const engineSrc = readFileSync(join(ROOT, "src/lib/liturgical.ts"), "utf8");
   check("§38 engine: St. Patrick is an optional memorial (GRC memoria ad libitum)",
-    /St\. Patrick, Bishop", rank: "Memorial", color: "white", opt: true/.test(engineSrc));
+    GENERAL_ROMAN_PACK.celebrations.some(
+      (celebration) =>
+        celebration.name === "St. Patrick, Bishop" &&
+        celebration.rank === "Memorial" &&
+        celebration.optional === true
+    ));
 
   // ── Privacy honesty under OS backup (audit FID-PRIV-001, Option B: disclose).
   // The configuration allows OS backups (android:allowBackup, no iOS exclusion),
@@ -3911,13 +4806,21 @@ console.log("");
   check("§39 the Mass footnote drops the raw lectionary code, keeps the USCCB link",
     !rdSrc.includes("Lectionary day:") && !rdSrc.includes("readings.code") &&
       rdSrc.includes("bible.usccb.org"));
+  check("§39 calendar copy separates annual ordo evidence from engine projections",
+    rdSrc.includes("annual official-ordo cross-check") &&
+      rdSrc.includes("current-law") &&
+      rdSrc.includes("not presented as a complete official yearly ordo") &&
+      !rdSrc.includes("exact sourced and golden-verified"));
   check("§39 Settings drops the manifest hash, keeps verified-at-build and the About link",
     !stSrc.includes("rootHash") && stSrc.includes("Texts verified at build") &&
       stSrc.includes("/about"));
   check("§39 the Read tab explains reading plans in one line",
     blSrc.includes('to="/plans"') && blSrc.includes("at your pace"));
+  const commentarySection = stSrc.match(
+    /<section className="card" id="commentary">([\s\S]*?)<\/section>/
+  )?.[1] ?? "";
   check("§39 the three dependent commentary switches nest visually",
-    (stSrc.match(/setting-row nested/g) ?? []).length === 3);
+    (commentarySection.match(/setting-row nested/g) ?? []).length === 3);
   check("§39 the nested rule uses tokens only (no raw hex)",
     /\.setting-row\.nested\s*\{[^}]*var\(--/.test(cssSrc39) &&
       !/\.setting-row\.nested\s*\{[^}]*#[0-9a-fA-F]{3,8}/.test(cssSrc39));

@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.23.2%20·%20honour%20to%20whom%20honour-5B3A8E)
+![version](https://img.shields.io/badge/version-1.24.0%20·%20the%20doors%20shall%20not%20be%20shut-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -117,7 +117,7 @@ five spokes:
 |---|---|
 | **73-book canon** | The complete Catholic Bible in traditional Vulgate order, deuterocanon and the Greek portions of Esther and Daniel included — plus the clearly-marked Vulgate appendix. |
 | **Three translations, bundled & unaltered** | Douay-Rheims (Challoner), Catholic Public Domain Version, and the Clementine Latin Vulgate — all public domain, byte-for-byte. |
-| **The daily Mass** | A liturgical engine implementing the Table of Liturgical Days: precedence, transfers, the Easter Vigil ladder, memorial propers, and Vulgate-aligned responsorial psalms — Universal or USA calendar. |
+| **The daily Mass** | A profile-based Ordinary Form engine implementing all thirteen classes in the Table of Liturgical Days: precedence, transfers, alternatives, commemorations, the Easter Vigil ladder, memorial propers, and Vulgate-aligned responsorial psalms. The verified catalog is General Roman plus the U.S. proper. |
 | **The liturgical year, in color** | The working accent takes the day's liturgical color; the sacred marks stay gold. The calendar catechizes without a word. |
 | **The daily soul** | A tappable rosary with the traditional prayers, a quiet half-hour reading indulgence, and citation-only reading plans — devotion that never nags. |
 | **The Fathers, one tap away** | Haydock across the whole canon and the Catena Aurea on the Gospels — a small gold dot marks a commented verse, a sheet opens the commentary with per-Father chips and a Doctors-only filter. Scripture stays Scripture; study stays study. |
@@ -149,12 +149,12 @@ five spokes:
   scrollmapper-style **JSON** (with roman-numeral and SWORD book-name aliases); `npm run build-nabre`
   converts a NAB/NABRE PDF you own into an importable file (the output stays on your device and is
   gitignored — never bundled or committed).
-- **USCCB by default** — out of the box the calendar **Region** is *United States* (the USCCB
-  calendar) and the Daily Readings default to the **NABRE**, the translation of the U.S.
-  lectionary. The NABRE is copyrighted and never bundled, so until you import your licensed copy
-  the readings fall back to the bundled Douay-Rheims (with a pointer to import); you can switch the
-  region to *Universal* or change the readings translation at any time under
-  Settings → Calendar (*Region* / *Mass readings*).
+- **USCCB by default, with independent choices** — a new install selects the verified U.S.
+  calendar profile, the pinned public-domain-derived Roman Mass citation table, and NABRE as the displayed Mass Bible. These are
+  separate settings. The NABRE is copyrighted and never bundled, so readings visibly fall back to
+  the Douay-Rheims until you import a licensed copy. Settings also permits manual country,
+  ecclesiastical-province, and diocese entry. Unsupported jurisdictions receive an explicit
+  General Roman fallback notice; Fidelis does not claim unverified local coverage.
 
 > Because the bundles follow the Vulgate, the **Psalms use the traditional Septuagint
 > numbering** (the "Lord is my shepherd" psalm is Psalm 22, not 23) and the Douay names
@@ -177,9 +177,10 @@ Sunday), omission of impeded feasts, and demotion of colliding memorials. It inc
   dataset marks) take the day as "Proper of the Memorial," with the ferial cycle alongside;
 - **responsorial psalms aligned to the Vulgate-versified texts** span by span (titles, split and
   joined psalms), cited with both numberings, e.g. Psalm 51(50);
-- a **calendar region** setting — Universal, or United States (Epiphany on the Sunday of
-  Jan 2–8, Ascension on the Seventh Sunday of Easter, the six USA obligatory memorials, the
-  Guadalupe Feast).
+- a versioned **calendar profile** setting. The exact catalog is General Roman, U.S. with
+  Ascension on Sunday, and U.S. with Ascension on Thursday for Boston, Hartford, New York, Omaha,
+  and Philadelphia. Calendar jurisdiction, lectionary edition, and displayed Bible text remain
+  independent; unsupported countries fall back explicitly to General Roman.
 
 Citation data derives from the public-domain
 [jayarathina/Tamil-Catholic-Lectionary](https://github.com/jayarathina/Tamil-Catholic-Lectionary)
@@ -201,8 +202,8 @@ date:
    dates, blurb, patronage — one saint for every calendar date, Feb 29 included) with the day's
    **Church-history** event beneath a hairline (likewise every calendar date; 406 sourced events
    across 366 days). Blurb on the card; the full life or chronicle one tap away.
-3. **✠ Verse of the Day** — a fixed, curated cycle, deterministic by date (web and the iOS
-   widget select the same verse from the same calendar math).
+3. **✠ Verse of the Day** — a fixed, curated cycle, deterministic by date (web, iOS, and Android
+   select the same verse from the same calendar math).
 4. **Quote of the Day** — from the Fathers, Doctors, and saints; public-domain, attributed.
 5. **The Holy Rosary** — the day's mysteries, now **tappable** (see below).
 6. **Continue Reading** — picks up where you left off, and surfaces your active reading plan.
@@ -288,15 +289,16 @@ piety, never gamification.
 - **Five-tab navigation** — Today · Read · Search · Mass · More — one header row with the brand on
   wide screens; on phones the **collapsing masthead**: the gold brand row scrolls away in normal
   flow while a slim tab row stays pinned below the status bar. "More" is a popover
-  over Library, Translations, Settings, and About — not a route, so deep links are unchanged.
+  over Library, Widgets, Translations, Settings, and About — not a route, so deep links are unchanged.
 - **Seamless movement** — Back and Forward restore your scroll position; long pages (Mass readings,
   Settings, About, the book list) carry a sticky in-page **section jump-bar**; the Android hardware
   Back closes an open sheet before leaving the page; focus moves to the new page's content for
   keyboard and screen-reader users, with a skip-to-content link; and Search survives a round-trip
   (its query rides in the URL). Selected controls wear the day's **liturgical color as an outline**.
 - **One Settings screen** with a live Scripture preview (Genesis 1:1–2, re-rendering as you adjust
-  the controls below): Bible version, text size, reading face, appearance, calendar region
-  (with the **Mass-readings translation** override — NABRE for the U.S. by default), offline
+  the controls below): Bible version, text size, reading face, appearance, a versioned Roman
+  calendar profile, an independently selected lectionary source, and the Bible text used to
+  display Mass readings, plus offline
   download (per translation **and** the Fathers' commentary, with real sizes), the
   indulgence toggle, the commentary controls (master switch, Haydock/Catena, Doctors-only), the
   **Magisterium** CCC-links toggle, and JSON export/import.

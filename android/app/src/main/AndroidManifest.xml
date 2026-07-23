@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -50,6 +53,7 @@
              app's own daily-rollover alarm. -->
         <receiver
             android:name=".VotdWidget"
+            android:label="@string/widget_votd_name"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -65,6 +69,7 @@
              own daily-rollover alarm. -->
         <receiver
             android:name=".CalendarWidget"
+            android:label="@string/widget_calendar_name"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -80,6 +85,7 @@
              own daily-rollover alarm. -->
         <receiver
             android:name=".QuoteWidget"
+            android:label="@string/widget_quote_name"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -89,9 +95,28 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/quote_widget_info" />
         </receiver>
+
+        <!-- Positive callback for AppWidgetManager.requestPinAppWidget(). The
+             explicit one-shot PendingIntent can reach this private receiver;
+             arbitrary external broadcasts cannot. -->
+        <receiver
+            android:name=".WidgetPinResultReceiver"
+            android:exported="false" />
+
+        <!-- System lifecycle changes that can invalidate "today" or clear the
+             inexact midnight alarms. One coordinator refreshes and re-arms all
+             installed widget families. -->
+        <receiver
+            android:name=".WidgetRefreshCoordinator"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
     </application>
 
-    <!-- Permissions -->
-
-    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>

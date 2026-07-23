@@ -2,9 +2,8 @@
 //  FidelisWidget.swift
 //  Verse of the Day home-screen widget for Fidelis.
 //
-//  Add this file and votd.json to a Widget Extension target in Xcode
-//  (File ▸ New ▸ Target ▸ Widget Extension, name it "FidelisWidget",
-//  untick "Include Configuration App Intent"). See docs/IOS.md.
+//  The committed FidelisWidgetExtension target compiles this file and bundles
+//  votd.json through scripts/add-ios-widget-target.rb. See docs/guides/IOS.md.
 //
 //  The selection algorithm matches src/lib/votd.ts so the widget and the
 //  app always show the same verse: index = (dayOfYear + year) mod count.
@@ -22,24 +21,34 @@ struct VotdEntry: TimelineEntry {
     let date: Date
     let reference: String
     let text: String
+    let requiresUpdate: Bool
 }
 
-private func loadCycle() -> [VotdItem] {
+private func loadCycle() -> [VotdItem]? {
     guard
         let url = Bundle.main.url(forResource: "votd", withExtension: "json"),
         let data = try? Data(contentsOf: url),
         let items = try? JSONDecoder().decode([VotdItem].self, from: data),
-        !items.isEmpty
+        !items.isEmpty,
+        items.allSatisfy({
+            !$0.reference.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        })
     else {
-        return [VotdItem(
-            reference: "John 8:12",
-            text: "I am the light of the world: he that followeth me, walketh not in darkness, but shall have the light of life."
-        )]
+        return nil
     }
     return items
 }
 
-private func entry(for date: Date, cycle: [VotdItem]) -> VotdEntry {
+private func entry(for date: Date, cycle: [VotdItem]?) -> VotdEntry {
+    guard let cycle, !cycle.isEmpty else {
+        return VotdEntry(
+            date: date,
+            reference: "",
+            text: FidelisWidgetContract.updateMessage,
+            requiresUpdate: true
+        )
+    }
     // Pin Gregorian so dayOfYear/year match the web app's JS Date components
     // even when the device calendar is Japanese, Buddhist, etc. The time
     // zone stays the device's current one, as on the web.
@@ -47,7 +56,12 @@ private func entry(for date: Date, cycle: [VotdItem]) -> VotdEntry {
     let dayOfYear = cal.ordinality(of: .day, in: .year, for: date) ?? 1
     let year = cal.component(.year, from: date)
     let item = cycle[(dayOfYear + year) % cycle.count]
-    return VotdEntry(date: date, reference: item.reference, text: item.text)
+    return VotdEntry(
+        date: date,
+        reference: item.reference,
+        text: item.text,
+        requiresUpdate: false
+    )
 }
 
 struct VotdProvider: TimelineProvider {
@@ -92,6 +106,7 @@ private struct CrossIcon: View {
         }
         .stroke(color, style: StrokeStyle(lineWidth: 1.6 * (size / 24), lineCap: .round, lineJoin: .round))
         .frame(width: size, height: size)
+        .accessibilityHidden(true)
     }
 }
 
@@ -100,49 +115,74 @@ struct FidelisWidgetView: View {
     @Environment(\.widgetFamily) var family
     @Environment(\.colorScheme) private var scheme
 
-    // Day + night theme tokens from src/styles.css, resolved at render time via the
-    // colorScheme environment so the widget follows the system appearance like the
-    // app (which defaults to System) — pure SwiftUI, no UIKit / App Group / entitlement:
+    // Day + night theme tokens from src/styles.css. The optional shared-settings
+    // seam can force Day/Night after its App Group is provisioned; until then the
+    // safe .system fallback follows the colorScheme environment:
     //   --bg-0 #F4F2EE/#1B1B1E · --text #26241F/#ECEAE4 · --text-muted #6E6A61/#A19D94
-    //   · --gold #A8862C/#D4B254. No off-token red — the two-accent grammar (gold
-    //   honors) holds on the native surface in both appearances.
-    private var dark: Bool { scheme == .dark }
+    //   · --gold #A8862C/#D4B254 for the decorative cross · --gold-text
+    //   #7C621C/#D4B254 for the 10pt label. Separating mark from text preserves
+    //   the sacred gold while keeping day-mode label contrast above 4.5:1.
+    private var dark: Bool {
+        switch WidgetSharedSettings.theme {
+        case .system: return scheme == .dark
+        case .day: return false
+        case .night: return true
+        }
+    }
     private var parchment: Color { dark ? Color(red: 0.106, green: 0.106, blue: 0.118) : Color(red: 0.957, green: 0.949, blue: 0.933) }
     private var ink: Color { dark ? Color(red: 0.925, green: 0.918, blue: 0.894) : Color(red: 0.149, green: 0.141, blue: 0.122) }
     private var muted: Color { dark ? Color(red: 0.631, green: 0.616, blue: 0.580) : Color(red: 0.431, green: 0.416, blue: 0.380) }
-    private var gold: Color { dark ? Color(red: 0.831, green: 0.698, blue: 0.329) : Color(red: 0.659, green: 0.525, blue: 0.173) }
+    private var goldMark: Color { dark ? Color(red: 0.831, green: 0.698, blue: 0.329) : Color(red: 0.659, green: 0.525, blue: 0.173) }
+    private var goldText: Color { dark ? Color(red: 0.831, green: 0.698, blue: 0.329) : Color(red: 0.486, green: 0.384, blue: 0.110) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 4) {
-                CrossIcon(color: gold)
+                CrossIcon(color: goldMark)
                 Text("VERSE OF THE DAY")
                     .font(.system(size: 10, weight: .semibold))
                     .tracking(1.2)
-                    .foregroundColor(gold)
+                    .foregroundColor(goldText)
             }
-            Text("“\(entry.text)”")
-                .font(.system(family == .systemSmall ? .caption : .body, design: .serif))
-                .italic()
-                .foregroundColor(ink)
-                .lineLimit(family == .systemSmall ? 5 : 8)
-                .minimumScaleFactor(0.7)
-            Spacer(minLength: 0)
-            Text(entry.reference)
-                .font(.system(.caption2, design: .serif).weight(.semibold))
-                .foregroundColor(muted)
+            if entry.requiresUpdate {
+                Spacer(minLength: 0)
+                Text(entry.text)
+                    .font(.system(.subheadline, design: .serif).weight(.semibold))
+                    .foregroundColor(muted)
+                    .lineLimit(2)
+                Spacer(minLength: 0)
+            } else {
+                Text("“\(entry.text)”")
+                    .font(.system(family == .systemSmall ? .caption : .body, design: .serif))
+                    .italic()
+                    .foregroundColor(ink)
+                    .lineLimit(family == .systemSmall ? 5 : 8)
+                    .minimumScaleFactor(0.7)
+                Spacer(minLength: 0)
+                Text(entry.reference)
+                    .font(.system(.caption2, design: .serif).weight(.semibold))
+                    .foregroundColor(muted)
+            }
         }
         .padding(2)
         .containerBackground(parchment, for: .widget)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            entry.requiresUpdate
+                ? "Verse of the Day. \(FidelisWidgetContract.updateMessage)."
+                : "Verse of the Day. \(entry.text). \(entry.reference)."
+        )
+        .accessibilityHint("Opens Fidelis at the Verse of the Day.")
+        .accessibilityAddTraits(.isButton)
         // FID-NATIVE-002: tapping the Verse of the Day widget opens Today scrolled
         // to the verse card. Routed by src/App.tsx via Capacitor appUrlOpen.
-        .widgetURL(URL(string: "fidelis://verse"))
+        .widgetURL(FidelisWidgetDescriptor.verse.destinationURL)
     }
 }
 
 struct FidelisWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "FidelisVotdWidget", provider: VotdProvider()) { entry in
+        StaticConfiguration(kind: FidelisWidgetDescriptor.verse.kind, provider: VotdProvider()) { entry in
             FidelisWidgetView(entry: entry)
         }
         .configurationDisplayName("Verse of the Day")

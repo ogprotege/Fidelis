@@ -14,10 +14,18 @@ import { COLOR_HEX, liturgicalDay } from "../lib/liturgical";
 import { TRANSLATIONS } from "../lib/translations";
 import { massTranslationFor } from "../lib/storage";
 import { importedTranslations, loadSaints } from "../lib/data";
-import { dayKey } from "../lib/dateKey";
+import { dayKey, parseLocalISODate } from "../lib/dateKey";
 import { SaintDay, saintForCelebration } from "../lib/saints";
 import { useSettings } from "../SettingsContext";
 import { useToday } from "../useToday";
+import {
+  EXACT_CALENDAR_CATALOG_FROM,
+  EXACT_CALENDAR_CATALOG_THROUGH,
+  OFFICIAL_ORDO_VERIFIED_FROM,
+  OFFICIAL_ORDO_VERIFIED_THROUGH,
+  hasExactCalendarCatalogForDate,
+  hasOfficialOrdoVerificationForDate
+} from "../lib/calendarProfile";
 
 function toISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
@@ -32,20 +40,16 @@ export default function Readings() {
   // in the resident native shell instead of pinning yesterday's Mass.
   const today = useToday();
   const date = useMemo(() => {
-    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-      const [y, m, d] = dateParam.split("-").map(Number);
-      return new Date(y, m - 1, d);
-    }
-    return today;
+    return parseLocalISODate(dateParam) ?? today;
   }, [dateParam, today]);
 
   // The calendar region lives on the Settings screen now (spec §2.2); read it
   // live from context so changing it there re-resolves this page at once. The
   // reading translation stays a local switcher on this toolbar.
   const settings = useSettings();
-  const region = settings.calendarRegion;
-  // Default the readings to the Mass translation — the NABRE for the USA region
-  // (the U.S. lectionary text) — and let the toolbar swap it for this visit.
+  const region = settings.calendarProfile;
+  // Default to the separately selected Mass-text translation. NABRE is the
+  // U.S. liturgical Bible, but it is not bundled with the derived citation table.
   const [translation, setTranslation] = useState(() => massTranslationFor(settings));
   const [imported, setImported] = useState<Set<string>>(new Set());
   useEffect(() => {
@@ -72,13 +76,18 @@ export default function Readings() {
   useEffect(() => {
     let alive = true;
     setReadings("loading");
-    readingsForDate(date)
+    readingsForDate(
+      date,
+      region,
+      settings.lectionaryPackId,
+      settings.individualChurchProper
+    )
       .then((r) => alive && setReadings(r))
       .catch(() => alive && setReadings(null));
     return () => {
       alive = false;
     };
-  }, [date, region]);
+  }, [date, region, settings.lectionaryPackId, settings.individualChurchProper]);
 
   // Day-stepping is a view change, not a destination — replace the entry so a
   // single Back leaves the Mass page instead of unwinding each day visited.
@@ -112,6 +121,20 @@ export default function Readings() {
     );
     if (readings !== "loading" && readings?.secondary) {
       items.push({ id: "secondary", label: readings.secondary.label });
+    }
+    if (readings !== "loading" && readings?.formularyOptions?.length) {
+      items.push({ id: "permitted-formularies", label: "Permitted formularies" });
+    }
+    if (readings !== "loading") {
+      readings?.massAlternatives?.forEach((option, index) => {
+        items.push({ id: `mass-option-${index}`, label: option.label });
+      });
+      readings?.memorialFormularies?.forEach((option, index) => {
+        items.push({ id: `memorial-formulary-${index}`, label: option.label });
+      });
+      readings?.optionalMemorials?.forEach((option, index) => {
+        items.push({ id: `optional-memorial-${index}`, label: option.label });
+      });
     }
     return items;
   }, [sections, readings]);
@@ -215,12 +238,98 @@ export default function Readings() {
             </div>
           );
         })}
+        {lit.alternatives.map((c) => {
+          const s = saintDay ? saintForCelebration(saintDay.saints, [c.name]) : null;
+          const alternativeType = c.rank === "Commemoration" ? "Commemoration" : "Optional";
+          return s ? (
+            <Link
+              className="lit-celebration lit-celebration-link lit-alternative"
+              key={`alternative-${c.id}`}
+              to={`/saint/${dayOfDate}/${s.id}`}
+            >
+              <span className="rank">{alternativeType}</span>
+              {c.name}
+              <span className="lit-celebration-go" aria-hidden="true">›</span>
+              <span className="sr-only">
+                {c.rank === "Commemoration"
+                  ? " — permitted commemoration; read the life of "
+                  : " — lawful optional memorial; read the life of "}
+                {s.name}
+              </span>
+            </Link>
+          ) : (
+            <div className="lit-celebration lit-alternative" key={`alternative-${c.id}`}>
+              <span className="rank">{alternativeType}</span>
+              {c.name}
+            </div>
+          );
+        })}
         <p className="muted small sans mb-0">
           {cycleLabel}
         </p>
       </div>
 
       {navItems.length >= 3 && <SectionNav sections={navItems} />}
+
+      {!hasOfficialOrdoVerificationForDate(date) && (
+        <div className="notice" role="status">
+          The current source catalog has an annual official-ordo cross-check for{" "}
+          {OFFICIAL_ORDO_VERIFIED_FROM} through {OFFICIAL_ORDO_VERIFIED_THROUGH}.
+          This date applies the promulgated rules and documented amendments as a current-law
+          projection. It is not presented as a complete official yearly ordo.
+        </div>
+      )}
+
+      {!hasExactCalendarCatalogForDate(date) && (
+        <div className="notice" role="status">
+          The full-year engine goldens cover {EXACT_CALENDAR_CATALOG_FROM} through{" "}
+          {EXACT_CALENDAR_CATALOG_THROUGH}. This date is outside that deterministic regression
+          window and should be checked against the competent calendar authority.
+        </div>
+      )}
+
+      {readings !== "loading" && readings?.formularyState?.kind === "missing-local-formulary" && (
+        <div className="notice" role="status">
+          The selected calendar observes {readings.formularyState.celebrationName}, but this
+          lectionary pack does not contain a mapped proper formulary. The seasonal readings
+          appear below and are not presented as the celebration&apos;s proper readings.
+        </div>
+      )}
+
+      {readings !== "loading" && readings?.formularyOptions?.length ? (
+        <section className="card card-spaced" aria-labelledby="permitted-formularies">
+          <h2 id="permitted-formularies">Permitted Mass formularies</h2>
+          <p className="muted small sans">
+            The primary readings below remain a valid choice. The selected calendar also permits:
+          </p>
+          <ul className="plain-list">
+            {readings.formularyOptions.map((option) => (
+              <li className="lit-celebration" key={option.id}>
+                <span
+                  className="lit-color-chip"
+                  style={{ background: COLOR_HEX[option.color] }}
+                  aria-hidden="true"
+                />
+                <span>
+                  {option.label} <span className="muted small sans">(Lectionary {option.lectionaryReference})</span>
+                </span>
+                <span className="sr-only"> Liturgical color: {option.color}.</span>
+              </li>
+            ))}
+          </ul>
+          <p className="muted small sans mb-0">
+            This build identifies these official reading tables but does not bundle their selections.
+          </p>
+        </section>
+      ) : null}
+
+      {readings !== "loading" && readings?.unavailableFormularies?.length ? (
+        <div className="notice" role="status">
+          <strong>Additional formularies are not present in this citation table:</strong>{" "}
+          {readings.unavailableFormularies.map((item) => item.celebrationName).join(", ")}.
+          The app keeps the seasonal readings visible and does not invent a proper.
+        </div>
+      ) : null}
 
       {readings === "loading" && (
         <>
@@ -281,10 +390,80 @@ export default function Readings() {
         </>
       )}
 
+      {readings !== "loading" && readings?.massAlternatives?.map((option, optionIndex) => (
+        <details
+          className="card card-spaced"
+          id={`mass-option-${optionIndex}`}
+          key={`${option.label}-${option.code}`}
+        >
+          <summary className="setting-label">{option.label}</summary>
+          {displayReadings({ code: option.code, rows: option.rows }).map((section, sectionIndex) => (
+            <section key={`${optionIndex}-${sectionIndex}`} className="reading-group">
+              {section.map(({ label, row }, rowIndex) => (
+                <ReadingText
+                  key={`m-${optionIndex}-${row.t}-${row.b}-${rowIndex}`}
+                  row={row}
+                  translation={translation}
+                  label={label}
+                  showFallbackNotice={false}
+                />
+              ))}
+            </section>
+          ))}
+        </details>
+      ))}
+
+      {readings !== "loading" && readings?.memorialFormularies?.map((option, optionIndex) => (
+        <details
+          className="card card-spaced"
+          id={`memorial-formulary-${optionIndex}`}
+          key={`${option.label}-${option.code}`}
+        >
+          <summary className="setting-label">Memorial Formulary: {option.label}</summary>
+          {displayReadings({ code: option.code, rows: option.rows }).map((section, sectionIndex) => (
+            <section key={`${optionIndex}-${sectionIndex}`} className="reading-group">
+              {section.map(({ label, row }, rowIndex) => (
+                <ReadingText
+                  key={`mf-${optionIndex}-${row.t}-${row.b}-${rowIndex}`}
+                  row={row}
+                  translation={translation}
+                  label={label}
+                  showFallbackNotice={false}
+                />
+              ))}
+            </section>
+          ))}
+        </details>
+      ))}
+
+      {readings !== "loading" && readings?.optionalMemorials?.map((option, optionIndex) => (
+        <details
+          className="card card-spaced"
+          id={`optional-memorial-${optionIndex}`}
+          key={`${option.label}-${option.code}`}
+        >
+          <summary className="setting-label">Optional Memorial: {option.label}</summary>
+          {displayReadings({ code: option.code, rows: option.rows }).map((section, sectionIndex) => (
+            <section key={`${optionIndex}-${sectionIndex}`} className="reading-group">
+              {section.map(({ label, row }, rowIndex) => (
+                <ReadingText
+                  key={`o-${optionIndex}-${row.t}-${row.b}-${rowIndex}`}
+                  row={row}
+                  translation={translation}
+                  label={label}
+                  showFallbackNotice={false}
+                />
+              ))}
+            </section>
+          ))}
+        </details>
+      ))}
+
       {readings !== "loading" && readings && (
         <p className="muted small sans">
-          Citations follow the Roman
-          Lectionary; psalms are shown with both modern and Vulgate chapter numbers,
+          Citations come from Fidelis&rsquo;s pinned, public-domain-derived Roman Mass table;
+          they are not a licensed transcription of an official national Lectionary edition.
+          Psalms are shown with both modern and Vulgate chapter numbers,
           e.g. Psalm 23(22), with verse numbers following the Vulgate text as
           rendered. Where the lectionary subdivides verses (e.g. “12b”), whole
           verses are shown — the text itself is never altered. The official U.S. daily

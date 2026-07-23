@@ -1,7 +1,7 @@
 {
   "name": "fidelis-catholic-bible",
   "private": true,
-  "version": "1.23.2",
+  "version": "1.24.0",
   "type": "module",
   "description": "Fidelis — a Catholic Bible app with unaltered public-domain texts: Douay-Rheims, Catholic Public Domain Version, and the Clementine Latin Vulgate.",
   "repository": {
@@ -12,7 +12,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "lint": "eslint src scripts e2e",
-    "test": "tsx scripts/test-liturgical.ts && tsx scripts/test-data.ts && node scripts/build-manifest.mjs --verify && eslint src scripts e2e",
+    "test": "tsx scripts/test-liturgical.ts && tsx scripts/test-data.ts && npm run verify-widgets && node scripts/build-manifest.mjs --verify && eslint src scripts e2e",
     "golden": "tsx scripts/build-golden.ts",
     "preview": "vite preview",
     "data": "node scripts/build-data.mjs",
@@ -30,6 +30,7 @@
     "votd-widget": "node scripts/build-votd-widget.mjs",
     "calendar-widget": "tsx scripts/build-calendar-widget.ts",
     "widgets": "npm run votd-widget && npm run calendar-widget",
+    "verify-widgets": "node scripts/build-votd-widget.mjs --verify && tsx scripts/build-calendar-widget.ts --verify",
     "ccc": "tsx scripts/build-ccc.mjs && node scripts/build-ccc-urls.mjs && npm run manifest",
     "build-nabre": "node scripts/build-nabre.mjs",
     "build-ccc-text": "node scripts/build-ccc-text.mjs",

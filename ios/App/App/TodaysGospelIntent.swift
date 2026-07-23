@@ -3,14 +3,11 @@
 //  An App Intent (Siri / Shortcuts) — "What's today's Gospel?" — that speaks or
 //  prints the day's Mass Gospel citation without opening the app.
 //
-//  It reads the SAME pre-resolved calendar.json the home-screen widgets read
-//  (emitted by scripts/build-calendar-widget.ts from the web app's own
-//  resolveReadings()/liturgicalDay()), keyed by local ISO date on the Gregorian
-//  calendar in the device time zone — the exact key the widgets and the Android
-//  app look up — so Siri, the widgets, and Android always agree with each other,
-//  and with the app at its default (USCCB) calendar region; the generated data
-//  is fixed to that region, so the app's Universal-calendar setting does not
-//  reach these surfaces. No engine is ported. See docs/guides/IOS.md §5.
+//  It reads the SAME versioned, multi-profile calendar.json the home-screen
+//  widgets read (emitted by scripts/build-calendar-widget.ts from the web app's
+//  own resolveReadings()/liturgicalDay()). The shared validator selects the
+//  app's current calendar profile, verifies schema/provenance/expiry, and then
+//  resolves the local Gregorian date. No engine is ported. See IOS.md §5.
 //
 //  AppIntents is iOS 16+, while the App target deploys to iOS 15, so everything
 //  here is gated behind @available(iOS 16.0, *). On iOS 15 the shortcut is simply
@@ -20,27 +17,24 @@
 import AppIntents
 import Foundation
 
-// ── The slice of one calendar.json day the Intent needs ───────────────────────
-private struct IntentReadingCite: Decodable {
-    let label: String
-    let cite: String
-}
-
-private struct IntentCalendarDay: Decodable {
-    let celebration: String?
-    let seasonLabel: String?
-    let readings: [IntentReadingCite]?
-}
-
-private func loadCalendarForIntent() -> [String: IntentCalendarDay] {
+private func loadGospelForIntent(at date: Date) -> FidelisGospelSelection? {
     guard
+        WidgetSharedSettings.isAvailable,
         let url = Bundle.main.url(forResource: "calendar", withExtension: "json"),
-        let data = try? Data(contentsOf: url),
-        let map = try? JSONDecoder().decode([String: IntentCalendarDay].self, from: data)
+        let data = try? Data(contentsOf: url)
     else {
-        return [:]
+        return nil
     }
-    return map
+    return FidelisGospelResolver.resolve(
+        data,
+        requestedProfile: WidgetSharedSettings.calendarProfileIdentifier,
+        dayKey: intentDayKey(for: date),
+        now: date,
+        hasIndividualChurchProper: WidgetSharedSettings.hasIndividualChurchProper,
+        localProperFingerprint: WidgetSharedSettings.localProperFingerprint,
+        lectionaryPackId: WidgetSharedSettings.lectionaryPackIdentifier,
+        localOverlayData: WidgetSharedSettings.localCalendarOverlayData
+    )
 }
 
 /// "yyyy-MM-dd" in the device time zone on the Gregorian calendar — the exact key
@@ -63,19 +57,12 @@ struct TodaysGospelIntent: AppIntent {
     static var openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        let days = loadCalendarForIntent()
-        let day = days[intentDayKey(for: Date())]
-        let gospel = day?.readings?.first { $0.label.caseInsensitiveCompare("Gospel") == .orderedSame }
-
-        guard let cite = gospel?.cite, !cite.isEmpty else {
+        guard let gospel = loadGospelForIntent(at: Date()) else {
             return .result(dialog: "Open Fidelis to see today's Gospel.")
         }
 
-        let celeb = day?.celebration ?? ""
-        let season = day?.seasonLabel ?? ""
-        let occasion = !celeb.isEmpty ? celeb : season
-        let lead = occasion.isEmpty ? "" : "\(occasion): "
-        return .result(dialog: "\(lead)Today's Gospel is \(cite).")
+        let lead = gospel.occasion.isEmpty ? "" : "\(gospel.occasion): "
+        return .result(dialog: "\(lead)Today's Gospel is \(gospel.citation).")
     }
 }
 

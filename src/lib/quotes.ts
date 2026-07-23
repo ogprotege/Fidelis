@@ -20,7 +20,8 @@
  *   3. Random — every remaining day takes the next entry of a seeded shuffle of
  *      all still-unused quotes. No repeats within the calendar year.
  */
-import { LiturgicalDay, Season, CalendarRegion } from "./liturgical";
+import { LiturgicalDay, Season } from "./liturgical";
+import { calendarProfile, type CalendarSelection } from "./calendarProfile";
 import { dayOfYear } from "./votd";
 
 export interface DailyQuote {
@@ -74,7 +75,18 @@ function celebratesAuthor(author: string, lit: LiturgicalDay): boolean {
     .replace(/[().,]/g, " ")
     .split(/\s+/)
     .filter((t) => t.length > 2 && !STOP.has(t));
-  return lit.celebrations.some((c) => {
+  const localGovernor = lit.celebrations.some((item) => item.packId === "local.individual-church");
+  const candidates = localGovernor
+    ? [
+        ...lit.celebrations,
+        ...lit.suppressed.filter((item) => item.packId !== "local.individual-church")
+      ]
+    : lit.celebrations;
+  return candidates.some((c) => {
+    // The curated quote corpus is keyed to sourced General/particular
+    // calendars. A free-text individual-church title must not create a
+    // coincidental author match or perturb the whole year's no-repeat plan.
+    if (c.packId === "local.individual-church") return false;
     const name = c.name.toLowerCase();
     return tokens.some((t) => name.includes(t));
   });
@@ -194,11 +206,11 @@ export function quoteOfTheDay(
   quotes: DailyQuote[],
   date: Date,
   litFor: (d: Date) => LiturgicalDay,
-  region: CalendarRegion
+  region: CalendarSelection
 ): DailyQuote | null {
   if (!quotes.length) return null;
   const year = date.getFullYear();
-  const key = `${region}:${year}:${quotes.length}`;
+  const key = `${calendarProfile(region).fingerprint}:${year}:${quotes.length}`;
   let assign = yearCache.get(key);
   if (!assign) {
     assign = buildYearAssignment(quotes, year, litFor);

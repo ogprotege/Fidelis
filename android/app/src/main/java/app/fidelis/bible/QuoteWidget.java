@@ -41,39 +41,68 @@ public class QuoteWidget extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         if (ACTION_MIDNIGHT.equals(intent.getAction())) {
-            AppWidgetManager manager = AppWidgetManager.getInstance(context);
-            ComponentName self = new ComponentName(context, QuoteWidget.class);
-            for (int id : manager.getAppWidgetIds(self)) updateWidget(context, manager, id);
-            scheduleNextMidnight(context);
+            refreshAll(context);
         }
     }
 
     @Override
     public void onDisabled(Context context) {
+        cancelMidnight(context);
+    }
+
+    static void refreshAll(Context context) {
+        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        ComponentName self = new ComponentName(context, QuoteWidget.class);
+        int[] ids = manager.getAppWidgetIds(self);
+        if (ids.length == 0) {
+            cancelMidnight(context);
+            return;
+        }
+        for (int id : ids) updateWidget(context, manager, id);
+        scheduleNextMidnight(context);
+    }
+
+    private static void cancelMidnight(Context context) {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am != null) am.cancel(midnightIntent(context));
     }
 
-    private void updateWidget(Context context, AppWidgetManager manager, int id) {
-        String text = "Be still, and see that I am God.";
-        String author = "Psalm 45:11";
+    private static void updateWidget(Context context, AppWidgetManager manager, int id) {
+        String text = context.getString(R.string.widget_update_required);
+        String author = "";
+        boolean available = false;
         try {
-            JSONObject all = loadDays(context);
-            JSONObject d = all.optJSONObject(todayKey());
-            JSONObject q = d != null ? d.optJSONObject("quote") : null;
-            if (q != null) {
-                text = q.optString("text", text);
-                author = q.optString("author", author);
+            JSONObject quote = loadDay(context).optJSONObject("quote");
+            if (quote == null) throw new IllegalStateException("Calendar day has no quote.");
+            String candidateText = quote.optString("text", "").trim();
+            String candidateAuthor = quote.optString("author", "").trim();
+            if (candidateText.isEmpty() || candidateAuthor.isEmpty()) {
+                throw new IllegalStateException("Calendar quote is incomplete.");
             }
+            text = candidateText;
+            author = candidateAuthor;
+            available = true;
         } catch (Exception ignored) {
-            // keep the fallback
+            // Fail closed. Never show a plausible but unverified daily quote.
         }
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_quote);
         String q1 = String.valueOf((char) 0x201C); // U+201C left double quote
         String q2 = String.valueOf((char) 0x201D); // U+201D right double quote
-        views.setTextViewText(R.id.quote_text, q1 + text + q2);
+        views.setTextViewText(R.id.quote_text, available ? q1 + text + q2 : text);
         views.setTextViewText(R.id.quote_author, author);
+        views.setContentDescription(R.id.quote_root, available
+                ? context.getString(R.string.widget_quote_accessibility, text, author)
+                : context.getString(R.string.widget_update_accessibility));
+        WidgetAppearance.apply(
+                context,
+                views,
+                R.id.quote_root,
+                R.id.quote_cross,
+                R.id.quote_label,
+                R.id.quote_text,
+                R.id.quote_author
+        );
 
         // FID-NATIVE-002: the Quote card lives on Today; open it there, scrolled
         // to the card, via fidelis://quote (Capacitor appUrlOpen → src/App.tsx routes it).
@@ -87,18 +116,18 @@ public class QuoteWidget extends AppWidgetProvider {
         manager.updateAppWidget(id, views);
     }
 
-    private String todayKey() {
+    private static String todayKey() {
         Calendar cal = new GregorianCalendar();
         return String.format(Locale.US, "%04d-%02d-%02d",
                 cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
     }
 
-    private JSONObject loadDays(Context context) throws Exception {
+    private static JSONObject loadDay(Context context) throws Exception {
         // FID-PERF-004: shared, process-local memoized decode (see CalendarData).
-        return CalendarData.load(context);
+        return CalendarData.selectedDay(context, CalendarData.load(context), todayKey());
     }
 
-    private void scheduleNextMidnight(Context context) {
+    private static void scheduleNextMidnight(Context context) {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
         Calendar next = new GregorianCalendar();
@@ -110,7 +139,7 @@ public class QuoteWidget extends AppWidgetProvider {
         am.set(AlarmManager.RTC, next.getTimeInMillis(), midnightIntent(context));
     }
 
-    private PendingIntent midnightIntent(Context context) {
+    private static PendingIntent midnightIntent(Context context) {
         Intent intent = new Intent(context, QuoteWidget.class).setAction(ACTION_MIDNIGHT);
         return PendingIntent.getBroadcast(context, RC_MIDNIGHT, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

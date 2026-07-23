@@ -72,6 +72,56 @@ jobs:
       - run: npm run build
       - run: npx cap sync android
 
+      - name: Android lint and host unit tests
+        run: ./gradlew lintDebug testDebugUnitTest --no-daemon
+        working-directory: android
+
       - name: Build debug APK (unsigned)
         run: ./gradlew assembleDebug --no-daemon
         working-directory: android
+
+  android-instrumentation:
+    name: Android instrumentation (API ${{ matrix.api-level }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 24 proves the manual-install fallback, 26 introduces pin requests,
+        # 31 exercises mutable callback PendingIntents, and 36 is current.
+        api-level: [24, 26, 31, 36]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run native wiring tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: default
+          profile: pixel_2
+          disable-animations: true
+          # Scope to the application module. The generated empty Cordova
+          # library subproject has no instrumentation tests and carries an old
+          # Kotlin test dependency that conflicts if Gradle assembles its APK.
+          script: cd android && ./gradlew :app:connectedDebugAndroidTest --no-daemon

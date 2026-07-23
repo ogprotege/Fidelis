@@ -6,10 +6,26 @@
      Night variants live in values-night/colors.xml; the system dark setting picks them,
      so the widget follows the system appearance like the app (which defaults to System). -->
 <resources>
-    <color name="fidelis_parchment">#F4F2EE</color>
-    <color name="fidelis_ink">#26241F</color>
-    <color name="fidelis_muted">#6E6A61</color>
-    <color name="fidelis_gold">#A8862C</color>
+    <!-- Fixed palettes let a pinned app preference differ from the OS theme. -->
+    <color name="fidelis_day_parchment">#F4F2EE</color>
+    <color name="fidelis_day_ink">#26241F</color>
+    <color name="fidelis_day_muted">#6E6A61</color>
+    <color name="fidelis_day_gold">#A8862C</color>
+    <color name="fidelis_day_gold_text">#7C621C</color>
+    <color name="fidelis_day_widget_stroke">#22000000</color>
+    <color name="fidelis_night_parchment">#1B1B1E</color>
+    <color name="fidelis_night_ink">#ECEAE4</color>
+    <color name="fidelis_night_muted">#A19D94</color>
+    <color name="fidelis_night_gold">#D4B254</color>
+    <color name="fidelis_night_gold_text">#D4B254</color>
+    <color name="fidelis_night_widget_stroke">#22FFFFFF</color>
+
+    <!-- System-following aliases used by the initial and picker-preview layout. -->
+    <color name="fidelis_parchment">@color/fidelis_day_parchment</color>
+    <color name="fidelis_ink">@color/fidelis_day_ink</color>
+    <color name="fidelis_muted">@color/fidelis_day_muted</color>
+    <color name="fidelis_gold">@color/fidelis_day_gold</color>
+    <color name="fidelis_gold_text">@color/fidelis_day_gold_text</color>
     <!-- Card hairline; values-night/colors.xml flips it to a light edge on dark. -->
-    <color name="fidelis_widget_stroke">#22000000</color>
+    <color name="fidelis_widget_stroke">@color/fidelis_day_widget_stroke</color>
 </resources>

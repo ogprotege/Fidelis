@@ -5,11 +5,14 @@
  * android/app/src/main/res/raw/votd.json (App Widget). The entry order and
  * selection algorithm must match src/lib/votd.ts.
  */
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const VERIFY = process.argv.includes("--verify");
+const unknownArgs = process.argv.slice(2).filter((arg) => arg !== "--verify");
+if (unknownArgs.length) throw new Error(`unknown argument(s): ${unknownArgs.join(", ")}`);
 
 // Book display names (Douay style, matching what the app shows for DRC).
 const NAMES = JSON.parse(
@@ -71,8 +74,29 @@ const dests = [
   join(ROOT, "ios", "WidgetExtension", "votd.json"),
   join(ROOT, "android", "app", "src", "main", "res", "raw", "votd.json")
 ];
-for (const dest of dests) {
-  await mkdir(dirname(dest), { recursive: true });
-  await writeFile(dest, json);
-  console.log(`wrote ${dest} (${out.length} entries)`);
+if (VERIFY) {
+  const mismatches = [];
+  for (const dest of dests) {
+    try {
+      if ((await readFile(dest, "utf8")) !== json) mismatches.push(dest);
+    } catch {
+      mismatches.push(dest);
+    }
+  }
+  if (mismatches.length) {
+    throw new Error(
+      `VotD widget data is stale: ${mismatches
+        .map((dest) => dest.slice(ROOT.length + 1))
+        .join(", ")}; run npm run votd-widget`
+    );
+  }
+  console.log(`verified ${dests.length} byte-identical VotD widget files (${out.length} entries)`);
+} else {
+  for (const dest of dests) {
+    await mkdir(dirname(dest), { recursive: true });
+    const temporary = `${dest}.tmp-${process.pid}`;
+    await writeFile(temporary, json);
+    await rename(temporary, dest);
+    console.log(`wrote ${dest} (${out.length} entries)`);
+  }
 }

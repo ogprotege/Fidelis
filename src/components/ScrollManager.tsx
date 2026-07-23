@@ -1,7 +1,18 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
-import { decideScroll, hasScrollTarget } from "../lib/scroll";
+import {
+  decideScroll,
+  hasScrollTarget,
+  rememberScrollOffset,
+  scrollEntryKey,
+  scrollRouteKey
+} from "../lib/scroll";
 import { isScrollLocked } from "../lib/scrollLock";
+
+// Module-owned so a shell-branch reconciliation can never discard Back-state.
+// App keeps ScrollManager in the same first-child slot across widget mode, but
+// the store also survives a defensive unmount/remount during hot or host reloads.
+const scrollOffsets = new Map<string, number>();
 
 /**
  * The single scroll authority for the app (nav/IA redesign). Mounted once in
@@ -15,29 +26,28 @@ import { isScrollLocked } from "../lib/scrollLock";
 export default function ScrollManager() {
   const location = useLocation();
   const navType = useNavigationType();
-  const offsets = useRef<Map<string, number>>(new Map());
-  const currentKey = useRef<string>(location.key);
+  const currentKey = useRef<string>(scrollEntryKey(location));
+  const currentRouteKey = useRef<string>(scrollRouteKey(location));
 
   // Continuously remember the current entry's scroll position (one write per
   // frame) so a later Back can restore it.
   useEffect(() => {
     let raf = 0;
+    const writeCurrent = () => {
+      if (isScrollLocked()) return;
+      const key = currentKey.current;
+      // Entry and route fallback are two keys. The helper bounds each insert,
+      // so adding both can never leak one extra key per navigation.
+      rememberScrollOffset(scrollOffsets, key, window.scrollY);
+      rememberScrollOffset(scrollOffsets, currentRouteKey.current, window.scrollY);
+    };
     const onScroll = () => {
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
         // While a sheet pins the body, window.scrollY is 0 regardless of where
         // the page really was — recording it would make Back restore to top.
-        if (isScrollLocked()) return;
-        const m = offsets.current;
-        const key = currentKey.current;
-        // Bound the map in the long-lived native shell: evict the oldest entry
-        // only when a brand-new history key first appears (updates are free).
-        if (!m.has(key) && m.size >= 50) {
-          const oldest = m.keys().next().value;
-          if (oldest !== undefined) m.delete(oldest);
-        }
-        m.set(key, window.scrollY);
+        writeCurrent();
       });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -49,7 +59,10 @@ export default function ScrollManager() {
 
   // Position the window after each navigation (before paint).
   useLayoutEffect(() => {
-    currentKey.current = location.key;
+    const entryKey = scrollEntryKey(location);
+    currentKey.current = entryKey;
+    const routeKey = scrollRouteKey(location);
+    currentRouteKey.current = routeKey;
     const action = decideScroll(navType, hasScrollTarget(location.search, location.hash));
     if (action === "skip") {
       // A #hash anchor (a cross-page fragment link like /translations#rsv2ce)
@@ -63,7 +76,12 @@ export default function ScrollManager() {
           if (cancelled) return;
           const el = document.getElementById(id);
           if (el) {
-            el.scrollIntoView();
+            el.scrollIntoView({ block: "start", behavior: "auto" });
+            // Moving the viewport alone is invisible to assistive technology.
+            // Cross-page anchors therefore become temporary programmatic focus
+            // targets, while remaining outside the normal Tab order.
+            if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
+            el.focus({ preventScroll: true });
             return;
           }
           if (performance.now() - start < 1000) requestAnimationFrame(tryAnchor);
@@ -84,7 +102,7 @@ export default function ScrollManager() {
     // action === "restore": the page may still be growing (async data — the
     // Reader, the Mass readings), so retry briefly until the saved offset is
     // reachable or a short budget elapses. Always instant (no animation).
-    const target = offsets.current.get(location.key) ?? 0;
+    const target = scrollOffsets.get(entryKey) ?? scrollOffsets.get(routeKey) ?? 0;
     if (target <= 0) {
       window.scrollTo(0, 0);
       return;
@@ -115,7 +133,7 @@ export default function ScrollManager() {
     return () => {
       cancelled = true;
     };
-  }, [location.key, navType, location.search, location.hash]);
+  }, [location, navType]);
 
   return null;
 }

@@ -5,7 +5,9 @@
 Fidelis ships as a [Capacitor](https://capacitorjs.com) app: the same web code
 that runs in the browser and inside the iOS shell also runs inside a native
 Android shell. Building requires [Android Studio](https://developer.android.com/studio)
-(latest stable) with a JDK 17+ and the Android SDK it installs.
+(latest stable), **JDK 21**, and the Android SDK it installs. Android Gradle
+Plugin 8.13 is the binding reason for JDK 21; an older JDK is not a supported
+release environment.
 
 ## 1. Build and run
 
@@ -35,8 +37,8 @@ npx cap run android
 
 ## 2. Requirements, the short list
 
-- **Android Studio** (latest stable) — it bundles the right JDK and SDK; let it
-  install the recommended SDK Platform and Build-Tools on first launch.
+- **Android Studio** (latest stable) — select its bundled JDK 21 for Gradle and
+  let it install the recommended SDK Platform and Build-Tools on first launch.
 - An **emulator** (create one in *Device Manager*; a Pixel image on a recent API
   level is fine) or a physical device with **Developer options ▸ USB debugging**
   enabled.
@@ -72,37 +74,73 @@ npm run build && npx cap sync android
 — only the Gradle project and resources are tracked, mirroring the iOS setup
 where `ios/App/App/public/` is generated.
 
-## 5. The home-screen widget
+## 5. Home-screen widgets
 
-A native **Verse of the Day App Widget** ships in the Android project —
-`android/app/src/main/java/app/fidelis/bible/VotdWidget.java` plus
-`res/layout/widget_votd.xml`, `res/xml/votd_widget_info.xml`, and the bundled
-`res/raw/votd.json`. It is the Android counterpart of the iOS WidgetKit widget
-(see [iOS guide](IOS.md) §2) and shows the **same verse**: both read the
-pre-resolved `votd.json` (emitted by `scripts/build-votd-widget.mjs`) and apply
-the web app's formula — `index = (dayOfYear + year) mod count`, Gregorian, device
-time zone — so the widget, the iOS widget, and the app never disagree. It draws
-the gold cross natively (the §1.5 icon, not an emoji), matches the day-theme
-colors, refreshes at local midnight via an inexact `AlarmManager`, opens the app
-when tapped, and is fully offline.
+Android ships three native App Widgets: **Verse of the Day**, **Today at Mass**,
+and **Quote of the Day**. Their providers are `VotdWidget`, `CalendarWidget`, and
+`QuoteWidget`; their committed layouts, picker metadata, populated preview
+layouts, and accessible RemoteViews descriptions live under
+`android/app/src/main/res/`. Each widget opens its exact destination through the
+allowlisted `fidelis://verse`, `fidelis://mass`, or `fidelis://quote` scheme.
 
-**Add it:** long-press the home screen ▸ **Widgets** ▸ **Fidelis** ▸ *Verse of the
-Day*, then drag it out. No Xcode-style manual target step is needed — unlike iOS,
-an Android App Widget is just a receiver + resources already declared in
-`AndroidManifest.xml`, so it is built into the committed project.
+**Add from Fidelis:** open **More ▸ Widgets**. On Android 8.0 / API 26 and later,
+the page reports the installed-instance count for each provider and asks a
+supporting launcher to show its confirmation prompt. “Prompt requested” is not
+treated as installation. Fidelis says that a widget was added only after the
+one-shot `requestPinAppWidget()` success callback returns an actual widget id.
+The native bridge accepts only the three committed providers. Android 7.x and
+launchers that do not support pin requests get manual instructions instead.
 
-After editing the curated cycle in `src/lib/votd.ts`, regenerate the bundled data
-for **both** platforms:
+**Add manually:** long-press the Home Screen ▸ **Widgets** ▸ **Fidelis**, then
+drag out the desired widget. No separate target step is needed because every
+provider and resource is already declared in `AndroidManifest.xml`.
+
+The Verse widget reads `votd.json` and applies the web formula
+`(dayOfYear + year) mod count` with a Gregorian, device-local calendar. Mass and
+Quote read the same versioned `calendar.json` as iOS. That atomic snapshot holds
+every supported calendar profile from the previous year through five future
+years, plus schema version, generation time, expiry, profile fingerprints, and
+the exact manifest-sealed lectionary-pack fingerprint. An expired, corrupt,
+unknown-profile, unknown-lectionary, or missing-day snapshot shows **Open Fidelis
+to update**. It never substitutes a plausible generic feast or quote.
+
+The app writes the selected calendar profile and pinned Day, Night, or System
+appearance to private shared preferences, then refreshes every installed
+provider. `WidgetRefreshCoordinator` also refreshes all instances and rearms
+their inexact midnight alarms after boot, package replacement, date change,
+manual clock change, and time-zone change. `RECEIVE_BOOT_COMPLETED` is declared
+because Android clears alarms at reboot.
+
+When appearance is **System**, the widget keeps its `values` / `values-night`
+resource references instead of freezing resolved color integers into
+`RemoteViews`. The launcher can therefore re-inflate the correct palette after
+a system light/dark change even when Fidelis is not running. Explicit Day and
+Night choices remain pinned and are refreshed by the settings bridge.
+
+Regenerate both platforms after calendar, lectionary, quote, or VOTD-cycle
+changes, then prove the checked-in output is current without writing:
 
 ```bash
-npm run votd-widget
+npm run widgets
+npm run verify-widgets
 ```
 
-> **Caveat:** the midnight refresh is rescheduled on each widget update; after a
-> reboot it re-arms the next time the launcher refreshes the widget. A
-> `BOOT_COMPLETED` receiver to re-arm immediately is a small future refinement.
+## 6. Native test gate
 
-## 6. Service worker note
+The Android workflow uses Node 22 and JDK 21, syncs the web bundle, then runs:
+
+```bash
+cd android
+./gradlew lintDebug testDebugUnitTest --no-daemon
+./gradlew assembleDebug --no-daemon
+```
+
+The host tests cover provider allowlisting, pin-confirmation validation, and
+refresh actions. The instrumentation test verifies the installed manifest and
+private receivers. The physical API 24, 26, 31, and 36 matrix remains part of
+[device acceptance](DEVICE_ACCEPTANCE.md); CI compilation does not replace it.
+
+## 7. Service worker note
 
 `public/sw.js` (shell precache + offline data cache) is a web/PWA concern only:
 service workers do not run inside Capacitor's Android WebView. That costs nothing

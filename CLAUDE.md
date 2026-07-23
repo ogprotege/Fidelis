@@ -34,11 +34,12 @@ npm run build      # type-check (tsc) + Vite build
 npm run e2e        # the committed browser suite (Playwright vs the BUILT app — run build first)
 npm run golden     # re-bless golden-year snapshots after a DELIBERATE engine change; review the diff
 npm run verify-data
+npm run verify-widgets # no-write, byte-for-byte native widget generation check
 ```
 
 Harnesses assert everything (review §B.1 — no print-only expectations remain). Golden-year
-snapshots (§B.2) in `scripts/golden/{2024..2027}.json` pin the full computed calendar, day
-codes, and reading resolution per day for both regions; `test-data.ts` diffs them, so any
+snapshots (§B.2) in `scripts/golden/{2024..2031}.json` pin the full computed calendar, day
+codes, and reading resolution per day for every supported profile; `test-data.ts` diffs them, so any
 engine change that silently moves a feast is a red `npm test`. §B.3 (CI) is closed:
 `.github/workflows/ci.yml` runs `npm ci`, `npm test`, and `npm run build` on Node 22 for
 every pull request and every push to main, so a red harness or a type error fails the build.
@@ -54,12 +55,17 @@ React); `src/components/` and `src/pages/` are the UI; `scripts/` is the build/d
 the two test harnesses; `public/data/` is the generated, manifest-sealed corpus (never hand-edited);
 `src/styles.css` holds the design tokens; `ios/` and `android/` are the committed native shells.
 
-**The liturgical engines** (`src/lib/liturgical.ts`, `src/lib/lectionary.ts`) are pure and
-region-aware, and read the region **lazily** from settings (`currentRegion()`), so they stay
-testable with an explicit region param. `liturgicalDay(date, region)` resolves the governing
-celebration through a numeric precedence table (Triduum → Christmas/Sundays → Solemnities → Feasts →
-Memorials → Ferias) with a whole-year transfer pass for impeded solemnities, cached per
-`region:year`. `resolveReadings(data, date, region)` (wrapped by `readingsForDate`) resolves the
+**The liturgical engines** (`src/lib/calendarProfile.ts`, `src/lib/liturgical.ts`,
+`src/lib/lectionary.ts`) are pure and profile-aware. They read `calendarProfile`
+**lazily** from settings, so they stay testable with an explicit profile parameter.
+The v1 catalog contains General Roman, U.S. Sunday Ascension, and U.S. Thursday
+Ascension for Boston, Hartford, New York, Omaha, and Philadelphia; unsupported
+jurisdictions receive an explicit General Roman fallback receipt. Legacy
+`universal` / `usa` values migrate without changing behavior.
+`liturgicalDay(date, profile)` resolves the governing celebration through all
+thirteen Table-of-Liturgical-Days classes, with stable celebration/formulary IDs,
+alternatives, suppression receipts, and a whole-year transfer pass for impeded solemnities, cached per
+`profile:year`. `resolveReadings(data, date, profile)` (wrapped by `readingsForDate`) resolves the
 Mass readings — promoting an obligatory memorial's proper formulary over the ferial cycle, handling
 the Easter Vigil ladder and the dual Holy Thursday Masses — and `displayReadings()` lays them out in
 ordered, labeled sections. The lectionary numbers psalms in the modern (Hebrew) grid; the bundle is
@@ -122,17 +128,26 @@ official URLs ship.
 **The native shells** wrap the same web bundle (offline by construction; the whole `dist/` ships in
 the app). `capacitor.config.ts` pins `appId: app.fidelis.bible` and `ios.contentInset: "never"` (the
 CSS safe-area insets are the single source of truth). The home-screen widgets read a **pre-resolved**
-JSON — `scripts/build-votd-widget.mjs` + `scripts/build-calendar-widget.ts` emit `votd.json` and
-`calendar.json` to **both** `ios/WidgetExtension/` and `android/.../res/raw/` (no engine is ported;
-the same `(dayOfYear + year) mod count` formula keeps iOS/Android/web in lockstep). iOS draws three
+JSON — `scripts/build-votd-widget.mjs` + `scripts/build-calendar-widget.ts` emit
+`votd.json` and an atomic, versioned `calendar.json` to **both**
+`ios/WidgetExtension/` and `android/.../res/raw/` (no engine is ported;
+`npm run verify-widgets` regenerates in memory and requires byte parity). The
+calendar snapshot covers every supported profile from the previous year through
+five future years and fails closed on schema, fingerprint, expiry, profile, or
+day errors. iOS draws three
 WidgetKit widgets (`ios/WidgetExtension/*.swift`; the extension target is added idempotently by
 `scripts/add-ios-widget-target.rb`); Android draws the matching App Widgets
-(`android/.../VotdWidget.java`, `CalendarWidget.java`, `QuoteWidget.java`).
+(`android/.../VotdWidget.java`, `CalendarWidget.java`, `QuoteWidget.java`). More
+▸ Widgets reports WidgetKit configurations and requests allowlisted Android
+pins; a requested prompt is distinct from the Android success callback. Android
+refreshes and rearms all providers on boot, package replacement, date, time, and
+time-zone changes. Both iOS targets request the shared App Group; a distribution
+build must still prove that both signed profiles grant it.
 
 **The quality model.** Two harnesses assert everything (no print-only checks): `scripts/test-liturgical.ts`
 (computus, precedence, region acceptance) and `scripts/test-data.ts` (reading resolution, the parsers,
 the pure helpers, a both-region gospel sweep, and the manifest re-walk). Golden-year snapshots in
-`scripts/golden/{2024..2027}.json` pin the full computed calendar + readings per day for both regions,
+`scripts/golden/{2024..2031}.json` pin the full computed calendar + readings per day for every profile,
 so any engine change that silently moves a feast is a red `npm test` — re-bless deliberately with
 `npm run golden` and review the diff. `.github/workflows/ci.yml` runs lint → `npm test` → `npm run
 build` → `npm run check-docs` on every PR and push to main (so a dead doc link fails the build too;
@@ -146,6 +161,20 @@ five upstream pins and the vatican.va CCC pages monthly (`scripts/check-sources.
 One line per release. The unabridged narrative is
 [docs/history/RELEASES.md](docs/history/RELEASES.md); the changelog is [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.24.0 — the doors shall not be shut** — the widget/UI/calendar repair:
+  deterministic cold/warm/same-target widget routing now dismisses overlays,
+  preserves honest Back history, and focuses Verse/Quote destinations; More ▸
+  Widgets reports iOS configurations and offers truthful, allowlisted Android pin
+  requests. Android rearms every provider after boot/package/date/time/time-zone
+  changes; native calendar readers fail closed. Library/Reader keyboard and
+  responsive paths, 44px targets, reduced motion, sheets, theme transitions, and
+  the transparent resizing embed are repaired. A versioned Ordinary Form
+  calendar-profile boundary supplies all 13 precedence classes, stable IDs,
+  source/fingerprint receipts, General Roman + two verified U.S. profiles, and
+  explicit fallback; native snapshots span previous year through five future
+  years with no-write verification. Lockfile advisories are cleared. Shells
+  1.24.0/12400, PWA shell v7. **Not store-ready until the physical iPhone and
+  Pixel/Samsung matrix passes.** → [detail](docs/history/RELEASES.md#the-doors-shall-not-be-shut-v1240)
 - **v1.23.2 — honour to whom honour** — all nine Garrigou-Lagrange quotations now carry his correct attribution, **Fr. Reginald Garrigou-Lagrange, O.P.**, instead of falsely naming the Dominican priest and theologian a cardinal; the emitted web corpus, manifest, and both native widget calendars were regenerated. Two harness guards pin the source and widget output, and an e2e stale-cache test proves installed PWAs replace the old title: `quotes.json` is now network-first with cache fallback and explicit HTTP-cache revalidation, while downloaded Bible bundles remain untouched. No liturgical-engine or golden-snapshot change; service-worker freshness policy changed without a data-cache-name bump. Shells 1.23.2/12302. → [detail](docs/history/RELEASES.md#honour-to-whom-honour-v1232)
 - **v1.23.1 — the lip of truth** — a one-paragraph honesty correction, found by the adversarial post-ship review of v1.23.0: the About paragraph that release added took **both** memory layers as its subject and closed "every entry has been proof-read against its named edition" — true of the 406 history events (all `verified:true`), **false of the saints** (all 366 still `verified:false`, with every Saint page rendering "Sources (draft — pending verification)" underneath). A reader could be told in About that every life was proof-read and told the opposite by the very next screen. The claim is now scoped to the history layer and the lives are named as the sourced drafts they are; a **drift-guard couples the claim to the flags** in both directions (blanket claim while any saint is unverified → red; caveat left behind once they are all verified → red), proved red-first against the v1.23.0 text. Everything else in the review came back clean (corpus recomputed from disk, manifest hashes re-hashed, the no-engine-change claim confirmed by an empty diff). No engine/data/golden/sw change. Shells 1.23.1/12301. → [detail](docs/history/RELEASES.md#the-lip-of-truth-v1231)
 - **v1.23.0 — remember the days of old** — the full-year chronicle: **Church history now covers every calendar date (366 days / 406 events)**, matching the saints corpus — 229 new sourced entries (CE 1913 / Butler / Martyrology / vatican.va), proof-read in four quarterly passes (208 clean, 20 corrected, 1 hedged), every `verified` flag true; harness turns red if any date lacks a history event. Corpus rebuilt, manifest re-sealed; no engine/golden/sw change. Shells 1.23.0/12300. → [detail](docs/history/RELEASES.md#remember-the-days-of-old-v1230)

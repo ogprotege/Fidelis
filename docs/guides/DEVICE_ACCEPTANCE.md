@@ -2,18 +2,21 @@
 
 *For: the maintainer, running the audit's [§10 native acceptance checklist](../review/Fidelis_Full_Product_Audit_2026-07-15.md) on real hardware.*  · [← Docs index](../INDEX.md)
 
-These are the §10 items that **only physical hardware can prove** — the ones a
-browser capture, the iOS Simulator, or static source review cannot settle
-(VoiceOver speech, live Dynamic Type, the on-screen-keyboard geometry, the
-Photos permission dialog, widget midnight/time-zone rollover, Siri). Run them
-from the **current TestFlight build** (iOS) and a debug APK / device (Android).
-Everything else in §10 is confirmed at build time — see the release notes for
-the version you are testing.
+These are the items that **only physical hardware can prove**. A browser,
+simulator, emulator, or static review cannot settle VoiceOver/TalkBack speech,
+live Dynamic Type, launcher-specific widget installation, killed-process entry,
+midnight/DST/reboot behavior, or signing entitlements. Run them from the
+**1.24.0 TestFlight build** and the matching Android build.
 
-The rest of §10 (launch/theme/safe-area code, the sheet scroll-lock, the
-docked-bar reservation, the offline corpus, the archive contents, the region
-policy) is confirmed by source/build inspection and does not need this pass;
-this document is only the hardware residue.
+**Status for 1.24.0: not completed.** Automated gates may be green, but the code
+must not be called store-ready until the results below are recorded for a
+physical iPhone and physical Pixel **and** Samsung device. The Android emulator
+API 24, 26, 31, and 36 matrix and iOS 17/current iOS 26 builds are additional
+gates, not substitutes.
+
+Record OS version, device, build number, result, and evidence for each row. A
+finding closes only after both its regression test and this independent runtime
+check pass.
 
 ---
 
@@ -81,60 +84,108 @@ this document is only the hardware residue.
    line; grant → the card lands in Photos and Fidelis appears under Settings →
    Privacy → Photos as **add-only**.
 
-9. **Widgets — families, appearance, rollover.** Add the Verse, Mass, and Quote
-   widgets in Small/Medium/Large and toggle system Light/Dark.
-   *Pass:* parchment/ink/gold render, text not clipped. Near local midnight, the
-   verse/quote/Mass flip to the next day and match the Today card. Change the
-   device time zone across a day boundary → widget and app agree after refresh.
-   Tap each widget → it opens the app to the right screen (Mass → Readings,
-   Verse/Quote → Today).
+9. **Widgets — installation truth and families.** For Verse, Mass, and Quote,
+   test Small/Medium/Large. Add from the Home Screen, deny/cancel, add again,
+   remove, and configure duplicate instances. Open **More ▸ Widgets** after each
+   change.
+   *Pass:* WidgetKit reports only configurations it actually knows about and
+   lists the right families. Fidelis gives manual installation instructions and
+   never claims it can open or complete Apple's gallery. Parchment/ink,
+   decorative gold, and readable gold labels render without clipping at every
+   family, Dynamic Type setting, and appearance.
 
-10. **Siri — "Today's Gospel."** With the app at its default region, invoke
+10. **Widgets — app entry in every lifecycle state.** Tap each widget while the
+    app is terminated, suspended, warm on another page, already at the target,
+    and showing a live sheet. Repeat with edge-swipe Back.
+    *Pass:* Mass focuses Readings; Verse and Quote scroll **and move VoiceOver
+    focus** to the matching Today card. A cold launch has no synthetic Back
+    entry. A warm launch returns to the prior app page. Same-target taps add no
+    duplicate history. Every sheet closes, Back works, and the body never
+    remains pinned.
+
+11. **Widgets — rollover and corrupt-data state.** Cross midnight and a DST
+    boundary; move the time zone across a date boundary; set the clock manually;
+    repeat after force-quit. Exercise all three calendar profiles.
+    *Pass:* Verse/Quote/Mass match the app after refresh. An expired, corrupt,
+    unknown-profile, or absent date snapshot says **Open Fidelis to update**,
+    never a plausible generic feast or quotation.
+
+12. **App Group capability.** Check **More ▸ Widgets** and switch calendar
+    profile plus Day/Night/System appearance.
+    *Pass when the signed group is unavailable:* the page reports that calendar
+    settings cannot be shared, and the Mass and Quote widgets show **Open Fidelis
+    to update** instead of a plausible jurisdiction. *Pass after provisioning
+    `group.app.fidelis.bible` on both signed targets:* the matching widget changes
+    after `WidgetCenter` reload. Record which state the submitted build uses.
+
+13. **Siri — "Today's Gospel."** With the app at its default profile, invoke
     "Today's Gospel."
     *Pass:* the spoken citation matches the Gospel line on the Mass tab verbatim.
-    *Note:* the widget/Siri data is fixed to the USCCB calendar, so it
-    intentionally diverges if the app is switched to the Universal calendar.
+    Repeat the supported profile selections and confirm the result never implies
+    a verified local proper outside the three-profile catalog.
 
-11. **Airplane-mode offline.** Enable Airplane mode, cold launch, and open the
+14. **Airplane-mode offline.** Enable Airplane mode, cold launch, and open the
     Reader in DRB, CPDV, and the Clementine Vulgate, plus a Haydock note and a
     Catena Aurea note.
     *Pass:* all render with no network.
 
-## Android — run on a physical device or emulator
+## Android — run on physical Pixel and Samsung devices
 
 1. **Hardware Back drains overlays first.** Open any sheet or the More popover →
    Back dismisses it, not the page. Mash Back twice as fast as possible under a
    sheet → the route behind never navigates or flashes.
 
-2. **Widgets — midnight, reboot, time zone, tap.** Cross local midnight → each
-   widget re-renders the new day. **Reboot with the app never opened** → confirm
-   the widgets still roll over (there is no `BOOT_COMPLETED` receiver; the alarm
-   is re-armed on the next `APPWIDGET_UPDATE` — verify this actually happens).
-   Change the time zone across a boundary → re-resolves. Tap each widget → opens
-   the right screen.
+2. **Widget add truth.** On API 26+, use **More ▸ Widgets** for Verse, Mass, and
+   Quote. Accept, deny/cancel, remove, add again, and add duplicates. Repeat on a
+   launcher that does not support pin requests and on API 24/25.
+   *Pass:* “prompt requested” appears before approval; “added” appears only after
+   the one-shot success callback. Counts match real instances. Unsupported
+   launchers and API 24/25 get manual instructions. No unlisted provider can be
+   requested.
 
-3. **Airplane-mode + imported text.** Airplane mode, cold launch → the bundled
+3. **Widget refresh coordinator.** Cross midnight and DST. Reboot with the app
+   never opened. Install an update (`MY_PACKAGE_REPLACED`), change the date and
+   clock manually, and change time zone across a date boundary.
+   *Pass:* every installed provider refreshes and rearms its daily alarm after
+   each event. The app need not be opened after reboot. Mass and Quote show
+   **Open Fidelis to update** for expired/corrupt/unknown-profile/missing-day
+   data.
+
+4. **Widget entry and Back.** Tap each widget with the process killed,
+   suspended, warm elsewhere, already at its target, and under an open sheet.
+   Repeat gesture Back and hardware Back.
+   *Pass:* destinations and focus are correct; overlays close before navigation;
+   cold/warm/same-target history follows the iOS item above; no page remains
+   frozen.
+
+5. **TalkBack, scale, and appearance.** Swipe through every provider and picker
+   entry at 100% and 200% font scale, Day/Night/System, and every supported size.
+   *Pass:* provider labels are distinct, the card has a meaningful content
+   description, the focused destination is announced after a tap, all readable
+   labels clear contrast, and no text clips.
+
+6. **Airplane-mode + imported text.** Airplane mode, cold launch → the bundled
    corpus reads. Import a translation, enable airplane mode, force-stop, cold
    relaunch → the imported text still renders from IndexedDB with no textless
    window (the v1.18.0 "both are preserved" atomic-import contract).
 
-4. **Safe areas + navigation modes.** In **both** gesture nav and 3-button nav:
+7. **Safe areas + navigation modes.** In **both** gesture nav and 3-button nav:
    the docked verse-action bar sits above the gesture pill / nav bar and is
    tappable; the sticky top tab row clears the status bar; rotate to landscape
    and confirm the side controls clear the cutout.
 
 ---
 
-## Standing concerns to fold into a future pass
+## Standing release blockers
 
 - **Night cold-launch splash is light-pinned** (iOS item 1 above) — minor; fix is
   a dark-appearance Splash variant + a night-aware native `backgroundColor`.
-- **The Universal-region widget policy is explicit but not harness-pinned.**
-  `scripts/build-calendar-widget.ts` fixes `REGION = "usa"` in code and documents
-  it (and `CalendarWidgets.swift` / `TodaysGospelIntent.swift` / [IOS.md](IOS.md)
-  restate it), but no harness assertion guards it — flipping the constant would
-  not turn `npm test` red. Consider adding a check that pins `REGION` to `"usa"`
-  so the policy itself, not just the artifact's freshness/parity, is guarded.
+- **The full matrix above is uncompleted for 1.24.0.** No automated result may
+  close it or justify “release-ready.”
+- **The App Group entitlement is committed but distribution provisioning is
+  unverified.** Both signed profiles must grant the group and the shared-settings
+  flow must be retested; otherwise this build must retain and disclose the safe
+  fail-closed behavior.
 
 ---
 [← Docs index](../INDEX.md) · Related: [iOS guide](IOS.md) · [Releasing](RELEASING.md) · [audit §10](../review/Fidelis_Full_Product_Audit_2026-07-15.md)

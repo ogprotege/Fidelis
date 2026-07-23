@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static picker artwork for launchers below Android 12. Android 12+ uses
+     previewLayout, which renders the representative text in widget_votd.xml. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="133dp"
+    android:viewportWidth="240"
+    android:viewportHeight="160">
+    <path
+        android:fillColor="#242027"
+        android:pathData="M14,2 H226 C232.6,2 238,7.4 238,14 V146 C238,152.6 232.6,158 226,158 H14 C7.4,158 2,152.6 2,146 V14 C2,7.4 7.4,2 14,2 Z"
+        android:strokeColor="#514A55"
+        android:strokeWidth="2" />
+    <path
+        android:fillColor="#D6B85A"
+        android:pathData="M29,18 H37 V29 H48 V37 H37 V55 H29 V37 H18 V29 H29 Z" />
+    <path
+        android:fillColor="#B79AD6"
+        android:pathData="M59,24 H135 V30 H59 Z" />
+    <path
+        android:fillColor="#F4F2EE"
+        android:pathData="M20,75 H220 V82 H20 Z M20,92 H204 V99 H20 Z M20,109 H181 V116 H20 Z" />
+    <path
+        android:fillColor="#A8A0AB"
+        android:pathData="M142,135 H220 V141 H142 Z" />
+</vector>

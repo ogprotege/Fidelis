@@ -10,7 +10,7 @@
  *
  *  Non-React code (the calendar/lectionary engines, votd, build scripts) keeps
  *  calling getSettings() directly: update() writes localStorage synchronously,
- *  so a lazy currentRegion() read sees the new value on the very next render. */
+ *  so a lazy currentCalendarProfile() read sees the new value on the next render. */
 
 /* eslint-disable react-refresh/only-export-components -- a context module: the
    provider component and its hooks (useSettings/useUpdateSettings) live together

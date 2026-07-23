@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.23.2
+1.24.0
 ```
 
 The store version string always equals the uploaded build's
@@ -23,14 +23,12 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-Corrected Fr. Reginald Garrigou-Lagrange, O.P.’s title across all nine quotations and both home-screen widget calendars. He was a Dominican priest and theologian, never a cardinal. Existing web installs now refresh the quote corpus online while retaining it for offline use.
+Widgets now open the right place without trapping Back, report installation honestly, refresh after clock and time-zone changes, and fail safely when calendar data needs an update. More includes a Widgets guide, Android can request an add prompt, and iOS reports configured families. Reader keyboard access, responsive Library controls, reduced motion, touch targets, sheets, and embedded Verse cards are repaired. The calendar now uses versioned General Roman and verified U.S. profiles, including the five Ascension-Thursday provinces.
 ```
 
 (ASC shows What's New only for updates after the first released version. The
-same text serves as the TestFlight "What to Test" notes. The Quote of the Day
-card and native Quote widget must identify him as "Fr. Reginald
-Garrigou-Lagrange, O.P.," never as a cardinal. July 22, 2026 is one known
-scheduled appearance in both widget calendars.)
+same text can seed the TestFlight "What to Test" notes. Use the full physical
+matrix in [Device acceptance](DEVICE_ACCEPTANCE.md), not this summary alone.)
 
 ## Promotional Text (≤ 170 characters)
 
@@ -51,13 +49,13 @@ THE BIBLE
 • Typeset like a book: four Scripture faces, adjustable size, day and night themes
 
 THE LITURGY
-• The complete liturgical calendar, computed for the General Roman and USA calendars — every solemnity, feast, memorial, and feria, with correct precedence and transfers
+• The General Roman Calendar and verified U.S. profiles, including the provinces that keep Ascension Thursday — with precedence, transfers, and an explicit General Roman fallback where no local proper is verified
 • The Mass readings for any day of any year, laid out as they are read at Mass
 • Let the app's accent follow the liturgical year — green in Ordinary Time, violet in Advent and Lent, red on the feasts of martyrs
 
 EVERY DAY
 • A Today page that never clutters: the day's celebration and Mass readings, the Saint of the Day with a full life to read, the day in Church history, a Verse of the Day, and a verified quote from the saints — never more than six cards
-• Home-screen widgets for the Verse of the Day, today's Mass, and the daily quote — in light and dark
+• Home-screen widgets for the Verse of the Day, today's Mass, and the daily quote — in Day, Night, or System appearance, with an in-app setup guide
 • "What's today's Gospel?" — ask Siri
 
 STUDY
@@ -151,7 +149,9 @@ Fidelis is a Catholic Bible and liturgical-calendar app. Notes for review:
 
 • Photo library access (add-only) is requested solely when the user taps "Save image" on the Scripture share card.
 
-• The app includes three home-screen widgets (Verse of the Day, today's Mass readings, daily quote) and a Siri App Intent ("What's today's Gospel?").
+• The app includes three home-screen widgets (Verse of the Day, today's Mass readings, daily quote), an in-app Widgets guide, and a Siri App Intent ("What's today's Gospel?"). On iOS, Apple requires the user to add widgets from the Home Screen; the app can report configured families but cannot install a widget or open the gallery.
+
+• The verified Ordinary Form calendar catalog currently contains General Roman, U.S. Sunday Ascension, and U.S. Thursday Ascension for Boston, Hartford, New York, Omaha, and Philadelphia. Unsupported jurisdictions are identified as General Roman fallback; the app does not claim worldwide local-calendar coverage.
 
 • No analytics or tracking SDKs. The app makes no network requests of its own; the only egress is user-tapped external links.
 
@@ -165,12 +165,10 @@ sizes are required: iPhone 6.9″ **1284 × 2778** (`appstore/screenshots/`) and
 iPad 12.9″ **2048 × 2732** (`appstore/screenshots-ipad/`). Up to 10; the first 3
 appear on the install sheet. Shot list (day theme unless noted):
 
-Regenerated **2026-07-18 for v1.22.1** after the visible Mass-page, Read-tab,
-and Settings changes. Every replacement frame carries the masthead (iPhone) or
-the one-row desktop nav (iPad), shows no bottom bar, and uses current tokens in
-the night frame. Both required sizes and RGB color space were verified exactly
-via `sips`; the changed Mass, reading-plan, and Settings surfaces were inspected
-from the generated set.
+The v1.22.1 set was last regenerated on **2026-07-18**. It predates the visible
+v1.24.0 Widgets page, calendar-profile selector, responsive Library repair, and
+motion/focus changes. **Regenerate and inspect both device classes before App
+Store submission.** Do not reuse the old set as proof of the 1.24.0 UI.
 
 1. **01-today** — the six-card front page: Today at Mass, Today in the Church
    (Saint of the Day + Church history), Verse of the Day
@@ -180,8 +178,9 @@ from the generated set.
 4. **04-commentary-john3** — Commentary sheet on John 3:16 (Witham, St. Augustine)
 5. **05-search-charity** — 87 results with OT/NT/Gospels filters and highlights
 6. **06-reader-psalm22-night** — Psalm 22 in the night theme
-7. **07-settings** — Scripture preview, version cards, text size
-8. **08-canon** — the 73-book canon in Vulgate order
+7. **07-settings** — Scripture preview, calendar profiles, version cards, text size
+8. **08-widgets** — native setup/status page and the truthful platform instructions
+9. **09-canon** — the 73-book canon in Vulgate order
 
 Generated files land in `appstore/screenshots/` and
 `appstore/screenshots-ipad/` (both gitignored — large, regenerable PNGs).
@@ -201,11 +200,12 @@ localStorage before the pre-paint script, so the night frame has no Day-flash.
 
 ### Character-count verification record
 
-Counted as unicode code points (how ASC counts). Verified 2026-07-13:
+Counted as Unicode code points (how ASC counts), 2026-07-23. Re-run the
+repository's metadata guard after any edit:
 
 - Promotional text: 163 / 170 ✓
-- Description: 2,416 / 4,000 ✓ (re-counted 2026-07-16 after the Saint-of-the-Day + import-line edits)
+- Description: 2,505 / 4,000 ✓
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
-- Review notes: 1,916 / 4,000 ✓
-- What's New (1.23.2): 274 / 4,000 ✓ (counted 2026-07-22)
+- Review notes: 2,414 / 4,000 ✓
+- What's New (1.24.0): 537 / 4,000 ✓
