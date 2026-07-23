@@ -6,7 +6,7 @@ name: TestFlight release
 # and a maintainer without a Mac at hand can still cut a release.
 #
 # Manual trigger only: shipping to TestFlight stays a deliberate release step
-# (Releasing guide §7), never a side effect of a push.
+# (Releasing guide §8), never a side effect of a push.
 #
 # One-time setup — four repository Actions secrets (Settings → Secrets and
 # variables → Actions), the same values scripts/ios-release.local.env holds

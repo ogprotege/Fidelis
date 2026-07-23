@@ -30,7 +30,10 @@ on:
       - "scripts/verify-ios-widget-wiring.rb"
       - "scripts/build-votd-widget.mjs"
       - "scripts/build-calendar-widget.ts"
+      - "scripts/ios-release-contract.ts"
       - "scripts/ios-testflight.sh"
+      - "scripts/ios-testflight-dispatch.sh"
+      - "scripts/verify-ios-export.ts"
   pull_request:
     paths:
       - "ios/**"
@@ -46,7 +49,10 @@ on:
       - "scripts/verify-ios-widget-wiring.rb"
       - "scripts/build-votd-widget.mjs"
       - "scripts/build-calendar-widget.ts"
+      - "scripts/ios-release-contract.ts"
       - "scripts/ios-testflight.sh"
+      - "scripts/ios-testflight-dispatch.sh"
+      - "scripts/verify-ios-export.ts"
 
 concurrency:
   group: ios-${{ github.ref }}
