@@ -1,6 +1,17 @@
 /** Data harness. Run: npx tsx scripts/test-data.ts */
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import {
@@ -45,6 +56,13 @@ import { parseReference } from "../src/lib/refparse";
 import { getTranslation, DEFAULT_TRANSLATION } from "../src/lib/translations";
 import { parseHaydockSfm } from "./build-haydock.mjs";
 import { parseCatenaOsis } from "./build-catena.mjs";
+import {
+  IOS_APP_BUNDLE_ID,
+  IOS_WIDGET_BUNDLE_ID,
+  REQUIRED_IOS_APP_GROUP,
+  assertIosReleaseContract
+} from "./ios-release-contract";
+import type { IosReleaseContract } from "./ios-release-contract";
 import { normalizeFather, groupCatena, fathersOf, isDoctor, yearOf, circaOf, sortChronological, FATHER_IDS, expandCatenaSpans, isCatenaSpanDoc } from "../src/lib/commentary";
 import { getSettings } from "../src/lib/storage";
 import {
@@ -4876,9 +4894,155 @@ console.log("");
   const homeSrc39 = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
   const cssSrc39 = readFileSync(join(ROOT, "src/styles.css"), "utf8");
   const appStoreSrc39 = readFileSync(join(ROOT, "docs/guides/APP_STORE.md"), "utf8");
+  const iosPackageSrc39 = readFileSync(
+    join(ROOT, "ios/App/CapApp-SPM/Package.swift"),
+    "utf8"
+  );
+  const testFlightScriptSrc39 = readFileSync(
+    join(ROOT, "scripts/ios-testflight.sh"),
+    "utf8"
+  );
+  const testFlightDispatchSrc39 = readFileSync(
+    join(ROOT, "scripts/ios-testflight-dispatch.sh"),
+    "utf8"
+  );
+  const iosExportVerifierSrc39 = readFileSync(
+    join(ROOT, "scripts/verify-ios-export.ts"),
+    "utf8"
+  );
   const packageVersion39 = (JSON.parse(
     readFileSync(join(ROOT, "package.json"), "utf8")
   ) as { version: string }).version;
+
+  const releaseContract39 = (
+    appGroups: unknown[] = [REQUIRED_IOS_APP_GROUP],
+    widgetGroups: unknown[] = [REQUIRED_IOS_APP_GROUP]
+  ): IosReleaseContract => ({
+    expectedVersion: packageVersion39,
+    expectedBuild: "999",
+    app: {
+      bundleIdentifier: IOS_APP_BUNDLE_ID,
+      version: packageVersion39,
+      build: "999",
+      entitlements: { "com.apple.security.application-groups": appGroups }
+    },
+    widget: {
+      bundleIdentifier: IOS_WIDGET_BUNDLE_ID,
+      version: packageVersion39,
+      build: "999",
+      entitlements: { "com.apple.security.application-groups": widgetGroups }
+    }
+  });
+  const releaseContractRejects39 = (contract: IosReleaseContract): boolean => {
+    try {
+      assertIosReleaseContract(contract);
+      return false;
+    } catch {
+      return true;
+    }
+  };
+  const validReleaseContract39 = releaseContract39();
+  let validReleaseContractAccepted39 = true;
+  try {
+    assertIosReleaseContract(validReleaseContract39);
+  } catch {
+    validReleaseContractAccepted39 = false;
+  }
+  const suffixOnlyContract39 = releaseContract39(
+    [`${REQUIRED_IOS_APP_GROUP}.staging`]
+  );
+  const missingWidgetGroupContract39 = releaseContract39(
+    [REQUIRED_IOS_APP_GROUP],
+    []
+  );
+  const mismatchedVersionContract39 = releaseContract39();
+  mismatchedVersionContract39.widget.version = "0.0.0";
+  const mismatchedBuildContract39 = releaseContract39();
+  mismatchedBuildContract39.app.build = "998";
+  const mismatchedBundleContract39 = releaseContract39();
+  mismatchedBundleContract39.widget.bundleIdentifier = `${IOS_WIDGET_BUNDLE_ID}.staging`;
+
+  const releaseDispatchRuns39 = (() => {
+    const workDir = mkdtempSync(join(tmpdir(), "fidelis-ios-dispatch-"));
+    try {
+      const fakeNpx = join(workDir, "npx");
+      const fakeXcrun = join(workDir, "xcrun");
+      const fakeIpa = join(workDir, "App.ipa");
+      const fakeKey = join(workDir, "AuthKey_test-key.p8");
+      const logPath = join(workDir, "dispatch.log");
+      writeFileSync(fakeNpx, `#!/usr/bin/env bash
+printf 'verify\\n' >> "$IOS_RELEASE_TEST_LOG"
+exit "\${FAKE_VERIFY_EXIT:-0}"
+`);
+      writeFileSync(fakeXcrun, `#!/usr/bin/env bash
+if [ "\${2:-}" = "--validate-app" ]; then
+  printf 'validate\\n' >> "$IOS_RELEASE_TEST_LOG"
+  exit "\${FAKE_VALIDATE_EXIT:-0}"
+fi
+if [ "\${2:-}" = "--upload-app" ]; then
+  printf 'upload\\n' >> "$IOS_RELEASE_TEST_LOG"
+  exit "\${FAKE_UPLOAD_EXIT:-0}"
+fi
+exit 99
+`);
+      chmodSync(fakeNpx, 0o755);
+      chmodSync(fakeXcrun, 0o755);
+      writeFileSync(fakeIpa, "mock ipa");
+      writeFileSync(fakeKey, "mock private key");
+
+      const run = (
+        verifyExit: number,
+        validateExit: number,
+        appStoreKeysDir = join(workDir, "keys")
+      ) => {
+        writeFileSync(logPath, "");
+        const result = spawnSync(
+          "bash",
+          [
+            join(ROOT, "scripts/ios-testflight-dispatch.sh"),
+            fakeIpa,
+            packageVersion39,
+            "999"
+          ],
+          {
+            cwd: ROOT,
+            encoding: "utf8",
+            env: {
+              ...process.env,
+              NPM_BIN: fakeNpx,
+              XCRUN_BIN: fakeXcrun,
+              IOS_RELEASE_TEST_LOG: logPath,
+              FAKE_VERIFY_EXIT: String(verifyExit),
+              FAKE_VALIDATE_EXIT: String(validateExit),
+              FAKE_UPLOAD_EXIT: "0",
+              ASC_KEY_ID: "test-key",
+              ASC_ISSUER_ID: "test-issuer",
+              ASC_KEY_PATH: fakeKey,
+              APPSTORE_KEYS_DIR: appStoreKeysDir
+            }
+          }
+        );
+        const keyDestination = join(appStoreKeysDir, "AuthKey_test-key.p8");
+        return {
+          status: result.status,
+          log: readFileSync(logPath, "utf8").trim().split("\n").filter(Boolean),
+          output: `${result.stdout}${result.stderr}`.trim(),
+          keyMode: existsSync(keyDestination)
+            ? statSync(keyDestination).mode & 0o777
+            : null
+        };
+      };
+
+      return {
+        verifyFailure: run(7, 0),
+        validationFailure: run(0, 8),
+        success: run(0, 0),
+        sameFileKeySuccess: run(0, 0, workDir)
+      };
+    } finally {
+      rmSync(workDir, { recursive: true, force: true });
+    }
+  })();
 
   check("§39 ReadingText gates the fallback notice behind showFallbackNotice",
     rtSrc.includes("showFallbackNotice") &&
@@ -4916,6 +5080,75 @@ console.log("");
   check("§39 App Store and TestFlight metadata follow the package version",
     appStoreSrc39.includes(`## Version\n\n\`\`\`\n${packageVersion39}\n\`\`\``) &&
       appStoreSrc39.includes(`What's New (${packageVersion39})`));
+  check("§39 the committed Capacitor package preserves the app's iOS 15 floor",
+    iosPackageSrc39.includes("platforms: [.iOS(.v15)]") &&
+      !iosPackageSrc39.includes("platforms: [.iOS(.v17)]"));
+  check("§39 the TestFlight sync restores the release-pinned Capacitor package",
+    /npx cap sync ios[\s\S]*git (?:checkout --|restore) ios\/App\/CapApp-SPM\/Package\.swift/.test(
+      testFlightScriptSrc39
+    ) &&
+      !testFlightScriptSrc39.includes("2>/dev/null || true") &&
+      testFlightScriptSrc39.includes("could not restore the release-pinned") &&
+      testFlightScriptSrc39.includes("platforms: [.iOS(.v15)]"));
+  check("§39 signed iOS contracts accept the exact shared App Group",
+    validReleaseContractAccepted39);
+  check("§39 signed iOS contracts reject a substring-only App Group",
+    releaseContractRejects39(suffixOnlyContract39));
+  check("§39 signed iOS contracts reject a missing widget App Group",
+    releaseContractRejects39(missingWidgetGroupContract39));
+  check("§39 signed iOS contracts reject app/widget version drift",
+    releaseContractRejects39(mismatchedVersionContract39));
+  check("§39 signed iOS contracts reject app/widget build drift",
+    releaseContractRejects39(mismatchedBuildContract39));
+  check("§39 signed iOS contracts reject bundle-identifier drift",
+    releaseContractRejects39(mismatchedBundleContract39));
+  check("§39 the signed-IPA verifier parses DER entitlements structurally",
+    iosExportVerifierSrc39.includes('"--der"') &&
+      iosExportVerifierSrc39.includes('"/usr/bin/derq"') &&
+      iosExportVerifierSrc39.includes("assertIosReleaseContract"));
+  check("§39 the release entry point delegates the irreversible dispatch pipeline",
+    testFlightScriptSrc39.includes(
+      'bash scripts/ios-testflight-dispatch.sh "$IPA" "$EXPECTED_VERSION" "$BUILD_NUMBER"'
+    ) &&
+      !testFlightScriptSrc39.includes("altool --upload-app"));
+  check("§39 a failed signed-IPA verification prevents validation and upload",
+    releaseDispatchRuns39.verifyFailure.status === 7 &&
+      isDeepStrictEqual(releaseDispatchRuns39.verifyFailure.log, ["verify"]));
+  const validationFailureStopsUpload39 =
+    releaseDispatchRuns39.validationFailure.status === 8 &&
+      isDeepStrictEqual(
+        releaseDispatchRuns39.validationFailure.log,
+        ["verify", "validate"]
+      );
+  check("§39 a failed App Store validation prevents upload",
+    validationFailureStopsUpload39,
+    validationFailureStopsUpload39
+      ? ""
+      : JSON.stringify(releaseDispatchRuns39.validationFailure));
+  const successfulDispatchOrder39 =
+    releaseDispatchRuns39.success.status === 0 &&
+      isDeepStrictEqual(
+        releaseDispatchRuns39.success.log,
+        ["verify", "validate", "upload"]
+      ) &&
+      /verify-ios-export\.ts[\s\S]*altool --validate-app[\s\S]*altool --upload-app/.test(
+        testFlightDispatchSrc39
+      );
+  check("§39 TestFlight dispatch orders verification, validation, then upload",
+    successfulDispatchOrder39,
+    successfulDispatchOrder39 ? "" : JSON.stringify(releaseDispatchRuns39.success));
+  const sameFileKeyDispatch39 =
+    releaseDispatchRuns39.sameFileKeySuccess.status === 0 &&
+      releaseDispatchRuns39.sameFileKeySuccess.keyMode === 0o600 &&
+      isDeepStrictEqual(
+        releaseDispatchRuns39.sameFileKeySuccess.log,
+        ["verify", "validate", "upload"]
+      );
+  check("§39 a key already in App Store Connect's directory does not abort dispatch",
+    sameFileKeyDispatch39,
+    sameFileKeyDispatch39
+      ? ""
+      : JSON.stringify(releaseDispatchRuns39.sameFileKeySuccess));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

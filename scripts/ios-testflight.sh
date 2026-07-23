@@ -44,14 +44,19 @@ BUILD_NUMBER="$(git rev-list --count HEAD)"
 echo "==> Fidelis -> TestFlight   (build $BUILD_NUMBER, team $TEAM_ID)"
 echo "    work dir: $WORK"
 
-echo "==> [1/5] Build web bundle + sync into the iOS shell"
+echo "==> [1/6] Build web bundle + sync into the iOS shell"
 npm run build
 npx cap sync ios
 # Capacitor 8's CLI rewrites this to .v17 on every sync; our plugins only need
 # .v15 and the App target is iOS 15, so revert to keep the tree clean and SPM happy.
-git checkout -- ios/App/CapApp-SPM/Package.swift 2>/dev/null || true
+git checkout -- ios/App/CapApp-SPM/Package.swift || {
+  echo "ERROR: could not restore the release-pinned Capacitor Package.swift"; exit 1;
+}
+grep -Fq 'platforms: [.iOS(.v15)]' ios/App/CapApp-SPM/Package.swift || {
+  echo "ERROR: Capacitor Package.swift no longer preserves the iOS 15 app floor"; exit 1;
+}
 
-echo "==> [2/5] Archive (UNSIGNED --- signing happens at export)"
+echo "==> [2/6] Archive (UNSIGNED --- signing happens at export)"
 xcodebuild archive \
   -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" \
@@ -61,7 +66,7 @@ xcodebuild archive \
   || { echo "ERROR: archive failed --- last 25 lines:"; tail -25 "$WORK/archive.log"; exit 1; }
 echo "    archived"
 
-echo "==> [3/5] Export a distribution-signed .ipa (creates the App Store profile)"
+echo "==> [3/6] Export a distribution-signed .ipa (creates the App Store profile)"
 cat > "$EXPORT_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -92,13 +97,10 @@ IPA="$(ls "$EXPORT_DIR"/*.ipa 2>/dev/null | head -1)"
 [ -n "$IPA" ] || { echo "ERROR: no .ipa produced in $EXPORT_DIR"; exit 1; }
 echo "    signed: $IPA"
 
-echo "==> [4/5] Upload to App Store Connect / TestFlight"
-mkdir -p "$HOME/.appstoreconnect/private_keys"
-cp "$ASC_KEY_PATH" "$HOME/.appstoreconnect/private_keys/" 2>/dev/null || true
-xcrun altool --upload-app -f "$IPA" -t ios \
-  --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+EXPECTED_VERSION="$(node -p "require('./package.json').version")"
+bash scripts/ios-testflight-dispatch.sh "$IPA" "$EXPECTED_VERSION" "$BUILD_NUMBER"
 
-echo "==> [5/5] Build $BUILD_NUMBER uploaded. Check processing state with:"
+echo "==> Build $BUILD_NUMBER uploaded. Check processing state with:"
 echo "          node scripts/asc-build-status.mjs"
 echo ""
 echo "Then: App Store Connect -> Fidelis -> TestFlight -> Internal Testing -> add the build."
