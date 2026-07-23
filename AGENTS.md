@@ -8,7 +8,7 @@ release ledger, standing rules); this file is the practical summary.
 
 ## Project overview
 
-**Fidelis** (`fidelis-catholic-bible`, currently v1.23.2) is a Catholic Bible
+**Fidelis** (`fidelis-catholic-bible`, currently v1.24.0) is a Catholic Bible
 app — the full 73-book canon in three unaltered public-domain texts
 (Douay-Rheims Challoner `drc`, Catholic Public Domain Version `cpdv`, Clementine
 Latin Vulgate `vulgate`) — with a liturgical calendar engine, daily Mass
@@ -55,17 +55,20 @@ npm run golden      # re-bless golden-year snapshots after a DELIBERATE engine c
 npm run verify-data # re-walk public/data against the SHA-256 manifest
 ```
 
-Before a PR, `npm test`, `npm run build`, and `npm run check-docs` must all be
-green (that is exactly what the Linux `CI` workflow runs).
+Before a PR, `npm test`, `npm run build`, `npm run check-docs`,
+`npm audit --omit=dev`, and `npm audit` must all be green (the Linux `CI`
+workflow enforces the same gates).
 
 **`npm test` is custom, not a test framework.** It chains:
 `tsx scripts/test-liturgical.ts` (computus, precedence, region acceptance) →
-`tsx scripts/test-data.ts` (reading resolution, parsers, pure helpers, both-region
-gospel sweep, golden-snapshot diff, manifest re-walk) →
-`node scripts/build-manifest.mjs --verify` → `eslint src scripts e2e`. Every
+`tsx scripts/test-data.ts` (reading resolution, parsers, pure helpers,
+profile-aware gospel sweeps, golden-snapshot diff, manifest re-walk) →
+`npm run verify-widgets` → `node scripts/build-manifest.mjs --verify` →
+`eslint src scripts e2e`. Every
 expectation is a hard assertion exiting non-zero; there are no print-only checks.
-Golden snapshots in `scripts/golden/{2024..2027}.json` pin the full computed
-calendar, day codes, and reading resolution per day for both regions — any
+Golden snapshots in `scripts/golden/{2024..2031}.json` pin the full computed
+calendar, readings, alternatives, and suppression/transfer receipts for
+General Roman plus both verified U.S. profiles — any
 engine change that silently moves a feast is a red `npm test`. Re-bless only
 after a *deliberate* liturgical-engine change with `npm run golden`, and review
 the diff.
@@ -188,11 +191,12 @@ These are binding; the harness enforces several of them:
 ## Testing strategy
 
 - **Harnesses** (`scripts/test-liturgical.ts`, `scripts/test-data.ts`): pure,
-  fast, hard-asserting; they cover the engines, parsers, pure helpers, both-region
+  fast, hard-asserting; they cover the engines, parsers, pure helpers, profile-aware
   gospel sweep, golden diffs, manifest seal, token contrast ratios, CSP hash,
   and many source-shape guards.
-- **Golden snapshots** (`scripts/golden/{2024..2027}.json`): pin the computed
-  calendar + readings per day for both regions.
+- **Golden snapshots** (`scripts/golden/{2024..2031}.json`): pin the computed
+  calendar, readings, alternatives, and receipts for General Roman plus both
+  verified U.S. Ascension profiles.
 - **E2E** (`e2e/`, `npm run e2e`): Playwright in real Chrome against the **built**
   app via `vite preview` (service worker included) — failure states, sheets,
   the verse-action bar, Search counts, import atomicity with injected IndexedDB

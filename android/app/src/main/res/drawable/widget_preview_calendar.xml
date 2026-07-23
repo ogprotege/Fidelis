@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static picker artwork for launchers below Android 12. Android 12+ uses
+     previewLayout, which renders the representative Mass data. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="133dp"
+    android:viewportWidth="240"
+    android:viewportHeight="160">
+    <path
+        android:fillColor="#242027"
+        android:pathData="M14,2 H226 C232.6,2 238,7.4 238,14 V146 C238,152.6 232.6,158 226,158 H14 C7.4,158 2,152.6 2,146 V14 C2,7.4 7.4,2 14,2 Z"
+        android:strokeColor="#514A55"
+        android:strokeWidth="2" />
+    <path
+        android:fillColor="#D6B85A"
+        android:pathData="M29,18 H37 V29 H48 V37 H37 V55 H29 V37 H18 V29 H29 Z" />
+    <path
+        android:fillColor="#B79AD6"
+        android:pathData="M59,24 H145 V30 H59 Z" />
+    <path
+        android:fillColor="#F4F2EE"
+        android:pathData="M20,70 H151 V78 H20 Z" />
+    <path
+        android:fillColor="#A8A0AB"
+        android:pathData="M20,92 H181 V98 H20 Z M20,108 H207 V114 H20 Z M20,124 H167 V130 H20 Z M20,140 H194 V146 H20 Z" />
+    <path
+        android:fillColor="#B79AD6"
+        android:pathData="M181,68 H220 V74 H181 Z M181,80 H220 V119 H181 Z" />
+    <path
+        android:fillColor="#242027"
+        android:pathData="M188,88 H196 V96 H188 Z M202,88 H210 V96 H202 Z M188,102 H196 V110 H188 Z M202,102 H210 V110 H202 Z" />
+</vector>

@@ -22,7 +22,7 @@ import {
   sundayCycle,
   weekdayCycle
 } from "../lib/lectionary";
-import { liturgicalDay, COLOR_HEX, currentRegion } from "../lib/liturgical";
+import { liturgicalDay, COLOR_HEX, currentCalendarProfile } from "../lib/liturgical";
 import { DailyQuote, loadQuotes, quoteOfTheDay } from "../lib/quotes";
 import { mysteriesForDate, Mystery } from "../lib/rosary";
 import { getLastRead, activePlan } from "../lib/storage";
@@ -58,10 +58,15 @@ export default function Home() {
   const today = useToday();
   const votd = verseOfTheDay(today);
   const votdBook = getBook(votd.book)!;
-  const lit = liturgicalDay(today);
+  const settings = useSettings();
+  const lit = liturgicalDay(
+    today,
+    settings.calendarProfile,
+    settings.individualChurchProper
+  );
   const rosary = mysteriesForDate(today);
   const lastRead = getLastRead();
-  const translation = useSettings().translation;
+  const translation = settings.translation;
   const plan = activePlan();
   const planPortion = plan && !isComplete(plan) ? todayPortion(plan) : [];
   const [mass, setMass] = useState<DayReadings | null>(null);
@@ -106,7 +111,12 @@ export default function Home() {
     let alive = true;
     setMass(null);
     setMassFailed(false);
-    readingsForDate(today)
+    readingsForDate(
+      today,
+      settings.calendarProfile,
+      settings.lectionaryPackId,
+      settings.individualChurchProper
+    )
       .then((m) => {
         if (!alive) return;
         if (m) setMass(m);
@@ -116,7 +126,13 @@ export default function Home() {
     return () => {
       alive = false;
     };
-  }, [today, massRetry]);
+  }, [
+    today,
+    massRetry,
+    settings.calendarProfile,
+    settings.individualChurchProper,
+    settings.lectionaryPackId
+  ]);
 
   useEffect(() => {
     let alive = true;
@@ -124,7 +140,9 @@ export default function Home() {
     loadQuotes()
       .then(
         (qs) =>
-          alive && setQuote(quoteOfTheDay(qs, today, (d) => liturgicalDay(d), currentRegion()))
+          alive && setQuote(
+            quoteOfTheDay(qs, today, (d) => liturgicalDay(d), currentCalendarProfile())
+          )
       )
       .catch(() => {
         if (alive) {
@@ -274,6 +292,32 @@ export default function Home() {
               </div>
             );
           })}
+          {lit.alternatives.map((c) => {
+            const s = saintDay ? saintForCelebration(saintDay.saints, [c.name]) : null;
+            const alternativeType = c.rank === "Commemoration" ? "Commemoration" : "Optional";
+            return s ? (
+              <Link
+                className="lit-celebration lit-celebration-link lit-alternative"
+                key={`alternative-${c.id}`}
+                to={`/saint/${dayToday}/${s.id}`}
+              >
+                <span className="rank">{alternativeType}</span>
+                {c.name}
+                <span className="lit-celebration-go" aria-hidden="true">›</span>
+                <span className="sr-only">
+                  {c.rank === "Commemoration"
+                    ? " — permitted commemoration; read the life of "
+                    : " — lawful optional memorial; read the life of "}
+                  {s.name}
+                </span>
+              </Link>
+            ) : (
+              <div className="lit-celebration lit-alternative" key={`alternative-${c.id}`}>
+                <span className="rank">{alternativeType}</span>
+                {c.name}
+              </div>
+            );
+          })}
           {!mass && !massFailed && <Skeleton lines={4} className="mass-skeleton" />}
           {!mass && massFailed && (
             <p className="muted small sans" role="status">
@@ -283,7 +327,14 @@ export default function Home() {
               </button>
             </p>
           )}
-          {mass && (
+          {mass?.formularyState && (
+            <p className="notice small sans" role="status">
+              The selected calendar observes {mass.formularyState.celebrationName}, but this
+              citation table does not contain its mapped proper. Fidelis does not label the
+              seasonal readings as that celebration&rsquo;s proper.
+            </p>
+          )}
+          {mass && !mass.formularyState && (
             <ul className="mass-list">
               {Object.entries(
                 mass.rows.reduce<Record<number, typeof mass.rows>>((acc, row) => {
@@ -416,7 +467,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="card" id="votd">
+        <div className="card" id="votd" tabIndex={-1}>
           <h2><span className="cross"><Icon name="cross" /></span> Verse of the Day</h2>
           <VerseQuote
             translation={translation}
@@ -439,7 +490,7 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="card" id="qotd">
+        <div className="card" id="qotd" tabIndex={-1}>
           <h2>Quote of the Day</h2>
           {!quote && !quoteFailed && <Skeleton lines={4} className="qotd-skeleton" />}
           {!quote && quoteFailed && (

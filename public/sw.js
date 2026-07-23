@@ -3,7 +3,7 @@
  * Note: service workers do not run inside Capacitor's iOS webview; offline
  * behavior there comes from dist/ shipping in the app bundle (see docs/IOS.md).
  */
-const SHELL_CACHE = "fidelis-shell-v6";
+const SHELL_CACHE = "fidelis-shell-v7";
 // Cache-first store for the bulk corpus. Bump ONLY when an existing cache-first
 // file's bytes change (a deliberate pin bump to scripture/lectionary). On
 // activate the prior data cache is migrated forward first, so a bump never

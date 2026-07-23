@@ -10,6 +10,20 @@ import { DEFAULT_THEME, ThemeChoice, isThemeChoice } from "./theme";
 import { DEFAULT_TRENT_EDITION, isTrentEdition, type TrentEditionId } from "./catechism";
 import type { ReadingState } from "./reading";
 import type { ReadingPlan } from "./plans";
+import {
+  DEFAULT_CALENDAR_PROFILE_ID,
+  DEFAULT_LECTIONARY_PACK_ID,
+  EMPTY_INDIVIDUAL_CHURCH_PROPER,
+  calendarProfile,
+  normalizeCalendarProfile,
+  normalizeIndividualChurchProper,
+  normalizeLectionaryPackId,
+  type CalendarProfileId,
+  type IndividualChurchProper,
+  type LectionaryPackId
+} from "./calendarProfile";
+
+export type { CalendarProfileId } from "./calendarProfile";
 
 export interface VerseRef {
   book: string;
@@ -40,11 +54,6 @@ export interface LastRead {
   chapter: number;
 }
 
-/** Liturgical calendar region: the GRC as such, or with the U.S. transfers
- *  (Epiphany to the Sunday of Jan 2–8, Ascension to the Seventh Sunday of
- *  Easter) and the U.S. proper memorials. */
-export type CalendarRegion = "universal" | "usa";
-
 export interface Settings {
   translation: string;
   parallel: string | null;
@@ -59,7 +68,16 @@ export interface Settings {
   /** Appearance (spec §2.2): System follows the OS; Day/Night pin the palette. */
   theme: ThemeChoice;
   showVerseNumbers: boolean;
-  calendarRegion: CalendarRegion;
+  /** Versioned, independently sourced calendar jurisdiction/profile. */
+  calendarProfile: CalendarProfileId;
+  /** Manual jurisdiction fields. Unsupported codes retain an explicit General fallback. */
+  calendarCountryCode: string;
+  calendarEcclesiasticalProvince: string;
+  calendarDiocese: string;
+  /** Constrained title, dedication, and patron solemnities for one church. */
+  individualChurchProper: IndividualChurchProper;
+  /** Citation/formulary edition, independent from jurisdiction and displayed text. */
+  lectionaryPackId: LectionaryPackId;
   /** Tint the act accent (--purple) with the day's liturgical color (spec §1.3). */
   followLiturgicalYear: boolean;
   /** Show the §6.1 reading-time indulgence line in the Reader. */
@@ -81,13 +99,9 @@ export interface Settings {
    *  Today only McHugh-Callan 1923 ships; the field is the seam for a future
    *  Donovan 1829 edition. */
   trentEdition: TrentEditionId;
-  /** Preferred translation for the Mass / Daily-Readings surfaces. Defaults to
-   *  the NABRE — the translation of the U.S. lectionary — so the Daily Readings
-   *  prefer it out of the box. "" = auto (match the calendar region: the NABRE
-   *  for the USA region, otherwise the general reading translation). The NABRE is
-   *  import-only (it is under copyright and never bundled), so when it is the
-   *  preference but not yet imported the readings fall back to a bundled
-   *  public-domain text (the Douay-Rheims). */
+  /** Displayed text for Mass / Daily Readings. This is independent from both
+   *  calendar jurisdiction and lectionary edition. The NABRE is import-only,
+   *  so a missing licensed import falls back visibly to the Douay-Rheims. */
   massTranslation: string;
 }
 
@@ -184,7 +198,15 @@ export function dismissStorageWarning(): void {
 export const refKey = (r: VerseRef) => `${r.book}/${r.chapter}/${r.verse}`;
 
 export function getSettings(): Settings {
-  const stored = read<Partial<Settings>>("settings", {});
+  const storedValue = read<unknown>("settings", {});
+  const raw =
+    storedValue && typeof storedValue === "object" && !Array.isArray(storedValue)
+      ? (storedValue as Partial<Settings> & { calendarRegion?: unknown })
+      : {};
+  // `calendarRegion` was the pre-v1.24 persisted key. Remove it from the live
+  // object after deriving its profile so the next settings write completes the
+  // migration instead of carrying two competing sources of truth.
+  const { calendarRegion: legacyRegion, ...stored } = raw;
   const settings: Settings = {
     translation: "drc",
     parallel: null,
@@ -193,12 +215,15 @@ export function getSettings(): Settings {
     scriptureFont: DEFAULT_SCRIPTURE_FONT,
     theme: DEFAULT_THEME,
     showVerseNumbers: true,
-    // Default to the U.S. (USCCB) calendar so the liturgical day and the Daily
-    // Readings stay consistent with the NABRE U.S. lectionary default below
-    // (Epiphany on the Sunday of Jan 2–8, Ascension on the Seventh Sunday of
-    // Easter, and the U.S. proper memorials). A user can switch to Universal in
-    // Settings → Calendar.
-    calendarRegion: "usa",
+    // Default to the U.S. Sunday-Ascension profile. The independently selected
+    // derived citation table and NABRE Mass-text preference do not set jurisdiction.
+    // Boston, Hartford, New York, Omaha, and Philadelphia.
+    calendarProfile: DEFAULT_CALENDAR_PROFILE_ID,
+    calendarCountryCode: "US",
+    calendarEcclesiasticalProvince: "",
+    calendarDiocese: "",
+    individualChurchProper: EMPTY_INDIVIDUAL_CHURCH_PROPER,
+    lectionaryPackId: DEFAULT_LECTIONARY_PACK_ID,
     followLiturgicalYear: true,
     showIndulgence: true,
     commentaryEnabled: true,
@@ -232,11 +257,31 @@ export function getSettings(): Settings {
   if (!isScriptureFont(settings.scriptureFont)) settings.scriptureFont = DEFAULT_SCRIPTURE_FONT;
   // Guard the stored Trent edition so an unknown/legacy value falls back cleanly.
   if (!isTrentEdition(settings.trentEdition)) settings.trentEdition = DEFAULT_TRENT_EDITION;
-  // Guard the stored region: a corrupt value would silently behave as Universal
-  // in every `region === "usa"` check while claiming otherwise. Fall back to the
-  // documented default (USA) explicitly instead.
-  if (settings.calendarRegion !== "usa" && settings.calendarRegion !== "universal") {
-    settings.calendarRegion = "usa";
+  // Migrate the two legacy region values and reject unknown/future corruption.
+  settings.calendarProfile = normalizeCalendarProfile(stored.calendarProfile ?? legacyRegion);
+  settings.lectionaryPackId = normalizeLectionaryPackId(stored.lectionaryPackId);
+  const profile = calendarProfile(settings.calendarProfile);
+  const countryWasStored = typeof stored.calendarCountryCode === "string";
+  const storedCountry = countryWasStored ? stored.calendarCountryCode!.trim().toUpperCase() : "";
+  settings.calendarCountryCode = /^[A-Z]{2}$/.test(storedCountry)
+    ? storedCountry
+    : countryWasStored
+      ? ""
+      : profile.countryCode ?? "";
+  settings.calendarEcclesiasticalProvince =
+    typeof stored.calendarEcclesiasticalProvince === "string"
+      ? stored.calendarEcclesiasticalProvince.trim().slice(0, 120)
+      : "";
+  settings.calendarDiocese =
+    typeof stored.calendarDiocese === "string" ? stored.calendarDiocese.trim().slice(0, 120) : "";
+  settings.individualChurchProper = normalizeIndividualChurchProper(
+    stored.individualChurchProper
+  );
+  // `""` meant "match region" before jurisdiction, lectionary, and displayed
+  // text became independent. Resolve it once during migration so the user's
+  // visible reading text does not change, then persist only an explicit id.
+  if (stored.massTranslation === "") {
+    settings.massTranslation = profile.countryCode === "US" ? "nabre" : settings.translation;
   }
   return settings;
 }
@@ -247,13 +292,9 @@ export function saveSettings(patch: Partial<Settings>): Settings {
   return next;
 }
 
-/** The translation the Mass / Daily-Readings surfaces should use. An explicit
- *  `massTranslation` wins; otherwise it is the NABRE for the USA region (the
- *  translation of the U.S. lectionary) and the general reading translation
- *  elsewhere. Pure — the caller handles the import-not-present fallback. */
+/** Displayed Mass text is independent from calendar and lectionary settings. */
 export function massTranslationFor(s: Settings): string {
-  if (s.massTranslation) return s.massTranslation;
-  return s.calendarRegion === "usa" ? "nabre" : s.translation;
+  return s.massTranslation || s.translation;
 }
 
 /** Which bundles the user has explicitly saved for offline reading (spec §2.2

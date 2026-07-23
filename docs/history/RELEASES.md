@@ -2096,6 +2096,137 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
+## The doors shall not be shut (v1.24.0)
+
+*“And the gates thereof shall not be shut by day.” (Apocalypse 21:25)*
+
+The widget, UI, and Roman-calendar repair release. It closes the defects that
+made a home-screen widget act like a second, less reliable entrance to the app,
+then establishes the profile boundary needed for sourced local calendars. It
+does **not** claim worldwide local-calendar coverage, and it is **not
+store-ready** until the physical-device matrix passes.
+
+**One door into the app.** `src/lib/widgetLinks.ts` is the strict coordinator
+for `today`, `mass`, `verse`, and `quote`. A cold launch replaces the incidental
+shell entry. A warm launch pushes only when the destination differs. A repeat
+tap at the same target scrolls and focuses without adding history. Concurrent
+launch and `appUrlOpen` delivery coalesce. Before any route change, the app
+dismisses every registered overlay, lets React complete its exit, and heals a
+stranded body lock. Verse and Quote anchors are programmatically focusable, so
+VoiceOver/TalkBack can follow the visual destination. Scroll restoration remains
+mounted across the standalone embed route, and About shows an inline preview
+instead of abandoning its own scroll position. On iOS, a native left-edge
+recognizer accepts only rightward, horizontal-dominant motion and forwards only
+committed swipes to React Router's same-document history while WebView scrolling
+remains simultaneous; the app-root cursor is a hard stop. A versioned return
+contract records the caller's router cursor, so the coordinator safely discards
+the same-hash duplicate WKWebView can retain around native activation instead of
+leaving a dead Back step.
+
+**A truthful Widgets page.** More now includes `/widgets`. Android reports the
+real instance count for each of the three allowlisted providers and, on API 26+
+with a supporting launcher, calls `requestPinAppWidget()`. The immediate result
+means only that Android opened a request. Fidelis says “added” only after the
+explicit one-shot success callback returns and survives a killed web process by
+storing one consumable confirmation. API 24–25 and unsupported launchers get
+manual instructions. iOS uses `WidgetCenter.getCurrentConfigurations()` to list
+families already configured, then gives the Home Screen steps Apple requires;
+there is no invented install or gallery API.
+
+**Native widgets tell the truth about time and data.** Android's single
+`WidgetRefreshCoordinator` handles boot, package replacement, date change,
+manual time change, and time-zone change, refreshing every instance and
+rearming the inexact midnight alarms Android clears at reboot. The app syncs
+profile and Day/Night/System appearance into Android private preferences.
+System appearance retains the layout's day/night resource aliases so the
+launcher can re-inflate the current palette while Fidelis is stopped. The
+iOS app and extension carry the corresponding App Group entitlement and reload
+WidgetKit timelines after a successful write. `group.app.fidelis.bible` must
+still be registered for both identifiers and present in both distribution
+profiles. Until the signed container is available, the UI says calendar settings
+cannot be shared and calendar-derived widgets show **Open Fidelis to update**.
+They never substitute a plausible jurisdiction.
+
+`calendar.json` is no longer a flat U.S.-only, near-horizon object. The atomic
+schema-v1 snapshot contains General Roman, U.S. Sunday Ascension, and U.S.
+Thursday Ascension profiles for the previous civil year through five future
+years. It records generation time, expiry, source-checked profile fingerprints,
+the manifest-sealed lectionary-pack fingerprint, stable celebration/formulary
+IDs, and a complete date map. The web overlay and native base share one
+release-pinned epoch, so a settings sync after New Year cannot produce a
+different seven-year window. Swift and Java
+reject a bad schema, expired file, unknown profile, fingerprint mismatch, or
+missing day. The visible result is **Open Fidelis to update**, never a generic
+feast or quotation that looks authoritative. Decorative gold remains on sacred
+marks; small native labels use the separate readable-gold token. Picker labels,
+populated previews, and accessibility descriptions distinguish all three
+providers.
+
+**The page moves only when it should.** Library's view tabs and transfer actions
+split into responsive groups. Calendar settings and the Mass toolbar also keep
+their compound controls inside 320px, with 44px targets. Reader verses form a
+roving-tabindex group: arrows move verse focus,
+keyboard selection enters the first action, and Close returns to the verse.
+Phone and tablet controls reach 44px. Section links re-read reduced motion at
+activation and never animate a keyboard action. The sheet's false drag handle
+is gone; backdrop and panel have paired, interruptible transitions, with phone
+entry from below, desktop entry from the right, and an instant reduced-motion
+path. Hover effects now require hover hardware; the skip link appears instantly;
+the switch moves with `transform`; theme-token replacement suppresses incidental
+transitions.
+
+**The embed belongs to its host.** The iframe root and body are transparent
+before first paint and its typeface is fixed to Garamond. A versioned
+`ResizeObserver` message replaces the 16rem guess. About accepts a height only
+from its own frame window and expected origin, clamps it, and resizes without a
+route jump.
+
+**A calendar profile, not a country toggle.** `CalendarRegion = universal |
+usa` is retired from persistence. `CalendarProfile` composes versioned General,
+territorial, subterritorial, diocesan, religious-family, and individual-church
+pack types, with authority, approval status, effective dates, typed rules,
+source loci, and content hashes. The precedence vocabulary now names all
+thirteen classes. Celebrations carry stable IDs; resolution preserves lawful
+alternatives, suppression reasons, and transfer receipts. Legacy values migrate
+to `roman.general` and `roman.us.ascension-sunday`. The separate
+`roman.us.ascension-thursday` profile covers Boston, Hartford, New York, Omaha,
+and Philadelphia. Calendar jurisdiction, lectionary edition, and displayed
+Bible translation remain distinct. Unsupported countries and dioceses receive
+an explicit General Roman fallback; more local packs ship only after official
+episcopal, provincial, diocesan, or Holy See evidence is encoded and verified.
+The UI distinguishes the 2024–2031 deterministic golden window from the 2026
+annual official-ordo cross-check; other years are identified as current-law
+projections, not complete published ordos. Christmas exposes Vigil, Night,
+Dawn, and Day Masses. Easter Sunday retains its Day Mass while exposing the
+Year C `Luke 24:1-12` option and afternoon/evening Emmaus Gospel.
+
+**Release integrity.** `npm run verify-widgets` regenerates both widget outputs
+in memory and requires byte-for-byte parity; `npm test` includes it. Calendar
+tests exercise all 169 precedence pairs, legacy migration, U.S. transfer rules,
+pack sources/fingerprints, alternatives, suppression and cross-year transfers,
+goldens, snapshot horizon, and iOS/Android parity. Android CI now uses JDK 21
+and runs `lintDebug`, host unit tests, and an instrumentation contract before
+the APK build instead of carrying Capacitor template tests. Lockfile-only
+updates move `tar`, `js-yaml`, and `brace-expansion` to patched releases; both
+production and full `npm audit` are release gates. Versions move together to
+1.24.0 / 12400; the PWA shell cache moves to v7.
+
+At handoff, the hard Node gate, manifest and widget verification, docs checker,
+31 Playwright scenarios, Android app lint/unit/APK/instrumentation-APK build,
+unsigned iOS Release build, and 13 native tests on each iOS 17.5 and iOS 26.5
+simulator are green. The Android workflow carries the required API 24, 26, 31,
+and 36 connected-test matrix; those hosted jobs still require a GitHub run.
+
+**The open gate is physical.** The automated Node, browser, Android, and iOS
+gates are necessary but do not prove launcher callbacks, signed App Groups,
+VoiceOver/TalkBack destination focus, rollover after a real reboot, or the
+terminated/suspended/warm widget paths. `docs/guides/DEVICE_ACCEPTANCE.md`
+requires iPhone plus Pixel and Samsung coverage, every widget family and
+appearance, add/deny/remove/duplicate flows, midnight/DST/manual-time/time-zone
+changes, Back/edge-Back, Dynamic Type/200% font scaling, and assistive
+technologies. That matrix remains uncompleted at this handoff, so no
+release-ready claim is made.
+
 ## Honour to whom honour (v1.23.2)
 
 *"Render therefore to all men their dues. Tribute, to whom tribute is due:

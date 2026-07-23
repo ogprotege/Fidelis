@@ -49,40 +49,55 @@ public class VotdWidget extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         if (ACTION_MIDNIGHT.equals(intent.getAction())) {
-            AppWidgetManager manager = AppWidgetManager.getInstance(context);
-            ComponentName self = new ComponentName(context, VotdWidget.class);
-            for (int id : manager.getAppWidgetIds(self)) {
-                updateWidget(context, manager, id);
-            }
-            scheduleNextMidnight(context);
+            refreshAll(context);
         }
     }
 
     @Override
     public void onDisabled(Context context) {
         // Last widget removed -- stop the daily alarm.
+        cancelMidnight(context);
+    }
+
+    static void refreshAll(Context context) {
+        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        ComponentName self = new ComponentName(context, VotdWidget.class);
+        int[] ids = manager.getAppWidgetIds(self);
+        if (ids.length == 0) {
+            cancelMidnight(context);
+            return;
+        }
+        for (int id : ids) updateWidget(context, manager, id);
+        scheduleNextMidnight(context);
+    }
+
+    private static void cancelMidnight(Context context) {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am != null) am.cancel(midnightIntent(context));
     }
 
-    private void updateWidget(Context context, AppWidgetManager manager, int id) {
-        // Bundled fallback (matches the iOS widget) if the cycle can't be read.
-        String reference = "John 8:12";
-        String text = "I am the light of the world: he that followeth me, walketh "
-                + "not in darkness, but shall have the light of life.";
+    private static void updateWidget(Context context, AppWidgetManager manager, int id) {
+        String reference = "";
+        String text = context.getString(R.string.widget_update_required);
+        boolean available = false;
         try {
             JSONArray cycle = loadCycle(context);
-            if (cycle.length() > 0) {
-                Calendar cal = new GregorianCalendar(); // device time zone, Gregorian
-                int dayOfYear = cal.get(Calendar.DAY_OF_YEAR);
-                int year = cal.get(Calendar.YEAR);
-                int index = Math.floorMod(dayOfYear + year, cycle.length());
-                JSONObject item = cycle.getJSONObject(index);
-                reference = item.optString("reference", reference);
-                text = item.optString("text", text);
+            if (cycle.length() == 0) throw new IllegalStateException("Verse cycle is empty.");
+            Calendar cal = new GregorianCalendar(); // device time zone, Gregorian
+            int dayOfYear = cal.get(Calendar.DAY_OF_YEAR);
+            int year = cal.get(Calendar.YEAR);
+            int index = Math.floorMod(dayOfYear + year, cycle.length());
+            JSONObject item = cycle.getJSONObject(index);
+            String candidateReference = item.optString("reference", "").trim();
+            String candidateText = item.optString("text", "").trim();
+            if (candidateReference.isEmpty() || candidateText.isEmpty()) {
+                throw new IllegalStateException("Verse cycle entry is incomplete.");
             }
+            reference = candidateReference;
+            text = candidateText;
+            available = true;
         } catch (Exception ignored) {
-            // keep the fallback verse
+            // Fail closed. A generic verse must never masquerade as today's selection.
         }
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_votd);
@@ -90,8 +105,23 @@ public class VotdWidget extends AppWidgetProvider {
         // so there is no non-ASCII in this source file regardless of compiler encoding.
         String q1 = String.valueOf((char) 0x201C);
         String q2 = String.valueOf((char) 0x201D);
-        views.setTextViewText(R.id.votd_text, q1 + text + q2);
+        views.setTextViewText(R.id.votd_text, available ? q1 + text + q2 : text);
         views.setTextViewText(R.id.votd_reference, reference);
+        views.setContentDescription(
+                R.id.votd_root,
+                available
+                        ? context.getString(R.string.widget_votd_accessibility, text, reference)
+                        : context.getString(R.string.widget_update_accessibility)
+        );
+        WidgetAppearance.apply(
+                context,
+                views,
+                R.id.votd_root,
+                R.id.votd_cross,
+                R.id.votd_label,
+                R.id.votd_text,
+                R.id.votd_reference
+        );
 
         // FID-NATIVE-002: tapping the widget opens Today scrolled to the verse
         // card, via the explicit fidelis://verse deep link so all three
@@ -106,7 +136,7 @@ public class VotdWidget extends AppWidgetProvider {
         manager.updateAppWidget(id, views);
     }
 
-    private JSONArray loadCycle(Context context) throws Exception {
+    private static JSONArray loadCycle(Context context) throws Exception {
         try (InputStream in = context.getResources().openRawResource(R.raw.votd);
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             byte[] buf = new byte[8192];
@@ -116,7 +146,7 @@ public class VotdWidget extends AppWidgetProvider {
         }
     }
 
-    private void scheduleNextMidnight(Context context) {
+    private static void scheduleNextMidnight(Context context) {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
         Calendar next = new GregorianCalendar();
@@ -131,7 +161,7 @@ public class VotdWidget extends AppWidgetProvider {
         am.set(AlarmManager.RTC, next.getTimeInMillis(), midnightIntent(context));
     }
 
-    private PendingIntent midnightIntent(Context context) {
+    private static PendingIntent midnightIntent(Context context) {
         Intent intent = new Intent(context, VotdWidget.class).setAction(ACTION_MIDNIGHT);
         return PendingIntent.getBroadcast(context, 1, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

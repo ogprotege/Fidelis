@@ -1,3 +1,5 @@
+import type { MouseEvent } from "react";
+
 interface Section {
   /** The id of the heading/section element to jump to. */
   id: string;
@@ -17,14 +19,25 @@ interface Props {
  * need a matching id. Sits just under the sticky header (--header-h).
  */
 export default function SectionNav({ sections }: Props) {
-  const reduce =
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const behavior: ScrollBehavior = reduce ? "auto" : "smooth";
+  const behaviorFor = (event: MouseEvent<HTMLButtonElement>): ScrollBehavior => {
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Keyboard activation has detail 0. It should be immediate even when the
+    // pointer treatment uses a restrained smooth scroll.
+    return reduce || event.detail === 0 ? "auto" : "smooth";
+  };
 
-  const jump = (id: string) => {
+  const jump = (id: string, event: MouseEvent<HTMLButtonElement>) => {
+    const behavior = behaviorFor(event);
     document.getElementById(id)?.scrollIntoView({ behavior, block: "start" });
+    if (event.detail === 0) {
+      const target = document.getElementById(id);
+      if (target) {
+        if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+        target.focus({ preventScroll: true });
+      }
+    }
   };
 
   if (sections.length === 0) return null;
@@ -32,14 +45,22 @@ export default function SectionNav({ sections }: Props) {
   return (
     <nav className="section-nav" aria-label="On this page">
       {sections.map((s) => (
-        <button key={s.id} type="button" className="section-nav-link" onClick={() => jump(s.id)}>
+        <button
+          key={s.id}
+          type="button"
+          className="section-nav-link"
+          onClick={(event) => jump(s.id, event)}
+        >
           {s.label}
         </button>
       ))}
       <button
         type="button"
         className="section-nav-link section-nav-top"
-        onClick={() => window.scrollTo({ top: 0, behavior })}
+        onClick={(event) => {
+          window.scrollTo({ top: 0, behavior: behaviorFor(event) });
+          if (event.detail === 0) document.getElementById("main")?.focus({ preventScroll: true });
+        }}
       >
         Top
       </button>

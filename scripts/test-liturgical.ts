@@ -4,11 +4,29 @@ import {
   accentFor,
   adventStart,
   baptismOfTheLord,
+  calendarDateForRule,
   easterDate,
   epiphanyDate,
-  liturgicalDay
+  liturgicalDay,
+  resolveCalendarOccurrence
 } from "../src/lib/liturgical";
 import { dayCodeCandidates } from "../src/lib/lectionary";
+import {
+  CALENDAR_PRECEDENCE,
+  CALENDAR_PACKS,
+  GENERAL_ROMAN_PACK,
+  US_ECCLESIASTICAL_PROVINCES,
+  UNITED_STATES_PACK,
+  calendarCelebrationRules,
+  calendarProfile,
+  compareCalendarPrecedence,
+  individualChurchProperDateConflicts,
+  normalizeIndividualChurchProper,
+  normalizeCalendarProfile,
+  profileForJurisdiction,
+  validateIndividualChurchProper,
+  type CalendarPrecedence
+} from "../src/lib/calendarProfile";
 import { readFileSync } from "node:fs";
 
 const d = (y: number, m: number, day: number) => new Date(y, m - 1, day);
@@ -106,6 +124,12 @@ expect("Candidates keep the ferial group before memorials", cand(d(2026, 6, 11))
 // 5. P1-5 acceptance — calendar region (Universal / United States)
 const namesR = (x: Date, r: CalendarRegion) => liturgicalDay(x, r).celebrations.map((c) => c.name);
 const hasR = (x: Date, r: CalendarRegion, frag: string) => namesR(x, r).some((n) => n.includes(frag));
+const allCalendarItems = (x: Date, r: CalendarRegion) => {
+  const day = liturgicalDay(x, r);
+  return [...day.celebrations, ...day.alternatives, ...day.suppressed];
+};
+const hasCalendarId = (x: Date, r: CalendarRegion, id: string) =>
+  allCalendarItems(x, r).some((item) => item.id === id);
 const candR = (x: Date, r: CalendarRegion) => JSON.stringify(dayCodeCandidates(x, r));
 
 console.log("\n== P1-5 acceptance (calendar region) ==");
@@ -185,12 +209,467 @@ expect(
   candR(d(2026, 10, 19), "usa").startsWith('[["OW') && candR(d(2026, 10, 19), "usa").includes("Brébeuf")
 );
 expect("St. Frances Xavier Cabrini Nov 13 2026 (USA)", hasR(d(2026, 11, 13), "usa", "Cabrini"));
-expect("No Claver in the universal calendar", !hasR(d(2026, 9, 9), "universal", "Claver"));
+expect(
+  "Claver remains a General optional memorial and is upgraded by the U.S. proper",
+  liturgicalDay(d(2026, 9, 9), "universal").alternatives.some(
+    (item) => item.name.includes("Claver") && item.optional
+  ) &&
+    liturgicalDay(d(2026, 9, 9), "usa").celebrations.some(
+      (item) => item.name.includes("Claver") && !item.optional
+    )
+);
 expect("Our Lady of Guadalupe Feast Dec 12 2025 (USA)", hasR(d(2025, 12, 12), "usa", "Guadalupe"));
 expect(
-  "Dec 12 2025 (universal) stays a violet Advent feria",
+  "Dec 12 2025 General remains an Advent feria with Guadalupe as a lawful alternative",
   !hasR(d(2025, 12, 12), "universal", "Guadalupe") &&
-    liturgicalDay(d(2025, 12, 12), "universal").color === "violet"
+    liturgicalDay(d(2025, 12, 12), "universal").color === "violet" &&
+    liturgicalDay(d(2025, 12, 12), "universal").alternatives.some((item) =>
+      item.name.includes("Guadalupe")
+    )
+);
+
+// Decree-specific occurrence rules that a generic forward-only transfer loses.
+expect(
+  "St. Joseph impeded by Holy Week in 2008 is anticipated on Saturday March 15",
+  has(d(2008, 3, 15), "St. Joseph") && !has(d(2008, 3, 19), "St. Joseph")
+);
+expect(
+  "Sacred Heart prevails June 24 2022 and the Nativity of John is anticipated June 23",
+  has(d(2022, 6, 23), "Nativity of St. John") &&
+    has(d(2022, 6, 24), "Sacred Heart") &&
+    !has(d(2022, 6, 24), "Nativity of St. John") &&
+    has(d(2022, 6, 25), "Immaculate Heart")
+);
+const maryMother2020 = liturgicalDay(d(2020, 6, 1), "roman.general");
+expect(
+  "Mary, Mother of the Church prevails over a concurrent memorial after the 2018 decree",
+  maryMother2020.celebrations.some((item) => item.id === "grc.mary-mother-church") &&
+    !maryMother2020.celebrations.some((item) => item.id === "grc.justin") &&
+    maryMother2020.suppressed.some((item) => item.id === "grc.justin")
+);
+
+console.log("\n== promulgation boundaries and historical forms ==");
+expect(
+  "Mary Mother of the Church is absent before 2018 and present after its decree",
+  !hasCalendarId(d(2017, 6, 5), "roman.general", "grc.mary-mother-church") &&
+    hasCalendarId(d(2018, 5, 21), "roman.general", "grc.mary-mother-church")
+);
+expect(
+  "Mary Magdalene changes from Memorial through 2015 to Feast from 2016",
+  liturgicalDay(d(2015, 7, 22), "roman.general").celebrations.some(
+    (item) => item.id === "grc.fixed.07-22" && item.rank === "Memorial"
+  ) && liturgicalDay(d(2016, 7, 22), "roman.general").celebrations.some(
+    (item) => item.id === "grc.fixed.07-22" && item.rank === "Feast"
+  )
+);
+for (const [id, before, after] of [
+  ["grc.fixed.05-29", d(2018, 5, 29), d(2019, 5, 29)],
+  ["grc.fixed.10-05", d(2019, 10, 5), d(2020, 10, 5)],
+  ["grc.fixed.10-11", d(2013, 10, 11), d(2014, 10, 11)],
+  ["grc.fixed.10-22", d(2013, 10, 22), d(2014, 10, 22)],
+  ["grc.fixed.12-10", d(2018, 12, 10), d(2019, 12, 10)],
+  ["grc.fixed.02-27", d(2020, 2, 27), d(2021, 2, 27)],
+  ["grc.fixed.05-10", d(2020, 5, 10), d(2021, 5, 10)],
+  ["grc.fixed.09-17", d(2020, 9, 17), d(2021, 9, 17)]
+] as const) {
+  expect(
+    `${id} is absent before and present after its Holy See inscription`,
+    !hasCalendarId(before, "roman.general", id) && hasCalendarId(after, "roman.general", id)
+  );
+}
+expect(
+  "29 July retains St. Martha through 2020 and gains Mary and Lazarus in 2021",
+  liturgicalDay(d(2020, 7, 29), "roman.general").celebrations.some(
+    (item) => item.id === "grc.fixed.07-29" && item.name === "St. Martha"
+  ) && liturgicalDay(d(2021, 7, 29), "roman.general").celebrations.some(
+    (item) => item.id === "grc.fixed.07-29" && item.name.includes("Martha, Mary and Lazarus")
+  )
+);
+expect(
+  "Irenaeus gains the Doctor title only from the 2022 decree",
+  allCalendarItems(d(2021, 6, 28), "roman.general").some(
+    (item) => item.id === "grc.fixed.06-28" && !item.name.includes("Doctor")
+  ) && allCalendarItems(d(2022, 6, 28), "roman.general").some(
+    (item) => item.id === "grc.fixed.06-28" && item.name.includes("Doctor")
+  )
+);
+expect(
+  "Jane Frances de Chantal keeps one identity across General and U.S. historical relocations",
+  hasCalendarId(d(2001, 12, 12), "roman.general", "grc.jane-frances-de-chantal") &&
+    !hasCalendarId(d(2001, 8, 12), "roman.general", "grc.jane-frances-de-chantal") &&
+    hasCalendarId(d(2001, 8, 18), "roman.us.ascension-sunday", "grc.jane-frances-de-chantal") &&
+    !hasCalendarId(d(2001, 12, 12), "roman.us.ascension-sunday", "grc.jane-frances-de-chantal") &&
+    hasCalendarId(d(2002, 8, 12), "roman.general", "grc.jane-frances-de-chantal")
+);
+
+console.log("\n== temporal display types and lawful alternatives ==");
+const holySaturday2026 = liturgicalDay(d(2026, 4, 4), "roman.general");
+expect(
+  "Holy Saturday is white Sacred Triduum and exposes no Isidore alternative",
+  holySaturday2026.color === "white" &&
+    holySaturday2026.celebrations[0]?.rank === "Sacred Triduum" &&
+    !holySaturday2026.alternatives.some((item) => item.id === "grc.isidore-seville")
+);
+expect(
+  "Good Friday, Divine Mercy, and All Souls display their actual liturgical types",
+  liturgicalDay(d(2026, 4, 3), "roman.general").celebrations[0]?.rank === "Sacred Triduum" &&
+    liturgicalDay(d(2026, 4, 12), "roman.general").celebrations[0]?.rank === "Sunday" &&
+    liturgicalDay(d(2025, 11, 2), "roman.general").celebrations[0]?.rank === "Commemoration" &&
+    liturgicalDay(d(2025, 11, 2), "roman.general").celebrations[0]?.precedence ===
+      CALENDAR_PRECEDENCE.generalSolemnity
+);
+expect(
+  "All Souls keeps its proper readings on both Sunday and weekday occurrences",
+  candR(d(2025, 11, 2), "roman.general").startsWith('[["All Souls') &&
+    candR(d(2026, 11, 2), "roman.general").startsWith('[["All Souls')
+);
+expect(
+  "a Sunday never exposes an impeded optional memorial",
+  !liturgicalDay(d(2017, 5, 21), "roman.general").alternatives.some(
+    (item) => item.id === "grc.christopher-magallanes"
+  )
+);
+const may25 = liturgicalDay(d(2026, 5, 25), "roman.us.ascension-sunday");
+expect(
+  "a mandatory governor suppresses every weaker optional memorial with a receipt",
+  may25.celebrations.some((item) => item.id === "grc.mary-mother-church") &&
+    may25.alternatives.length === 0 &&
+    ["grc.bede", "grc.gregory-vii", "grc.mary-magdalene-de-pazzi"].every((id) =>
+      may25.suppressed.some(
+        (item) => item.id === id && item.suppressionReason === "celebration-precedence"
+      )
+    )
+);
+for (const [date, id] of [
+  [d(2026, 3, 7), "grc.perpetua-felicity"],
+  [d(2026, 12, 21), "grc.peter-canisius"]
+] as const) {
+  expect(
+    `${id} is typed as a commemoration on a privileged weekday`,
+    liturgicalDay(date, "roman.general").alternatives.some(
+      (item) => item.id === id && item.rank === "Commemoration" && item.optional
+    )
+  );
+}
+expect(
+  "a Lenten St. Patrick commemoration does not offer full memorial readings",
+  liturgicalDay(d(2026, 3, 17), "roman.general").alternatives.some(
+    (item) => item.id === "grc.fixed.03-17" && item.rank === "Commemoration"
+  ) && !candR(d(2026, 3, 17), "roman.general").includes("Saint Patrick")
+);
+expect(
+  "an unimpeded optional memorial remains available with its formulary",
+  liturgicalDay(d(2026, 2, 11), "roman.general").alternatives.some(
+    (item) => item.id === "grc.fixed.02-11" && item.rank === "Memorial"
+  ) && candR(d(2026, 2, 11), "roman.general").includes("Our Lady of Lourdes")
+);
+expect(
+  "Vincent has one stable identity on General 22 January and the U.S. 23 January",
+  hasCalendarId(d(2026, 1, 22), "roman.general", "grc.vincent") &&
+    !hasCalendarId(d(2026, 1, 22), "roman.us.ascension-sunday", "grc.vincent") &&
+    hasCalendarId(d(2026, 1, 23), "roman.us.ascension-sunday", "grc.vincent") &&
+    candR(d(2026, 1, 23), "roman.us.ascension-sunday").includes("Saint Vincent")
+);
+
+console.log("\n== v1 calendar profiles and full precedence table ==");
+expect(
+  "legacy universal migrates to General Roman",
+  normalizeCalendarProfile("universal") === "roman.general"
+);
+expect(
+  "legacy usa migrates without changing its Sunday-Ascension behavior",
+  normalizeCalendarProfile("usa") === "roman.us.ascension-sunday" &&
+    iso(epiphanyDate(2026, "usa")) === iso(epiphanyDate(2026, "roman.us.ascension-sunday"))
+);
+expect(
+  "the five named U.S. provinces keep Ascension Thursday",
+  hasR(d(2026, 5, 14), "roman.us.ascension-thursday", "Ascension") &&
+    !hasR(d(2026, 5, 17), "roman.us.ascension-thursday", "Ascension")
+);
+expect(
+  "U.S. Corpus Christi is Sunday while General Roman remains Thursday",
+  hasR(d(2026, 6, 7), "roman.us.ascension-sunday", "Corpus Christi") &&
+    hasR(d(2026, 6, 4), "roman.general", "Corpus Christi")
+);
+expect(
+  "the current General pack includes the 2024 Teresa of Calcutta inscription",
+  !liturgicalDay(d(2024, 9, 5), "roman.general").alternatives.some(
+    (item) => item.name.includes("Teresa of Calcutta")
+  ) && liturgicalDay(d(2025, 9, 5), "roman.general").alternatives.some(
+    (item) => item.name.includes("Teresa of Calcutta") && item.optional
+  )
+);
+expect(
+  "the current General pack includes the 2025 John Henry Newman inscription",
+  !liturgicalDay(d(2025, 10, 9), "roman.general").alternatives.some(
+    (item) => item.name.includes("John Henry Newman")
+  ) && liturgicalDay(d(2026, 10, 9), "roman.general").alternatives.some(
+    (item) => item.name.includes("John Henry Newman") && item.optional
+  )
+);
+expect(
+  "profiles are composed from ordered General, territorial, and subterritorial layers",
+  calendarProfile("roman.general").packs.map((pack) => pack.id).join("|") ===
+    "roman.general.pack" &&
+    calendarProfile("roman.us.ascension-sunday").packs.map((pack) => pack.id).join("|") ===
+      "roman.general.pack|roman.us.pack|roman.us.ascension-sunday.pack" &&
+    calendarProfile("roman.us.ascension-thursday").packs.map((pack) => pack.id).join("|") ===
+      "roman.general.pack|roman.us.pack|roman.us.ascension-thursday.pack"
+);
+expect(
+  "pack metadata carries the typed General calendar and complete U.S. proper table",
+  GENERAL_ROMAN_PACK.celebrations.length === 238 &&
+    UNITED_STATES_PACK.celebrations.length === 26 &&
+    CALENDAR_PACKS.every((pack) =>
+      pack.celebrations.every((item) => item.dateRule.kind.length > 0 && item.id.length > 0) &&
+      new Set(pack.celebrations.map((item) => item.id)).size === pack.celebrations.length
+    )
+);
+expect(
+  "last-pack-wins composition relocates the same stable U.S. celebration IDs",
+  calendarCelebrationRules("roman.general").find((item) => item.id === "grc.st-camillus")
+    ?.dateRule.kind === "fixed" &&
+    calendarCelebrationRules("roman.us.ascension-sunday").find(
+      (item) => item.id === "grc.st-camillus"
+    )?.packId === "roman.us.pack"
+);
+expect(
+  "typed fourth-Thursday and Sunday-contingency rules resolve without templates",
+  iso(
+    calendarDateForRule(
+      2026,
+      { kind: "nth-weekday", month: 11, weekday: 4, occurrence: 4 },
+      "roman.us.ascension-sunday"
+    )
+  ) === "2026-11-26" &&
+    iso(
+      calendarDateForRule(
+        2023,
+        { kind: "fixed-next-day-if-sunday", month: 1, day: 22 },
+        "roman.us.ascension-sunday"
+      )
+    ) === "2023-01-23"
+);
+expect(
+  "the January 22 U.S. day of prayer moves from Sunday and preserves both official Mass choices",
+  liturgicalDay(d(2026, 1, 22), "roman.us.ascension-sunday").celebrations[0]
+    ?.formularyOptions?.map((option) => `${option.color}:${option.lectionaryReference}`).join("|") ===
+      "white:947A–947E|violet:887–891" &&
+    liturgicalDay(d(2023, 1, 23), "roman.us.ascension-sunday").celebrations[0]?.id ===
+      "us.prayer-unborn"
+);
+expect(
+  "an unimpeded Ordinary-Time Saturday offers the BVM memorial without suppressing civil choices",
+  liturgicalDay(d(2026, 2, 7), "roman.general").alternatives.some(
+    (item) => item.id === "grc.saturday-bvm" && item.formularyOptions?.length === 3
+  ) &&
+    ["grc.saturday-bvm", "us.independence-day"].every((id) =>
+      liturgicalDay(d(2026, 7, 4), "roman.us.ascension-sunday").alternatives.some(
+        (item) => item.id === id
+      )
+    )
+);
+expect(
+  "U.S. Thanksgiving keeps its typed fourth-Thursday formulary receipt",
+  liturgicalDay(d(2026, 11, 26), "roman.us.ascension-sunday").alternatives.some(
+    (item) =>
+      item.id === "us.thanksgiving" &&
+      item.formularyOptions?.[0]?.lectionaryReference === "943–947"
+  )
+);
+expect(
+  "Ascension-Sunday rules apply only after the official 1999 effective date",
+  hasR(d(1998, 5, 21), "roman.us.ascension-sunday", "Ascension") &&
+    !hasR(d(1998, 5, 24), "roman.us.ascension-sunday", "Ascension") &&
+    !hasR(d(2000, 6, 1), "roman.us.ascension-sunday", "Ascension") &&
+    hasR(d(2000, 6, 4), "roman.us.ascension-sunday", "Ascension")
+);
+expect(
+  "unsupported jurisdictions return an explicit General Roman fallback receipt",
+  profileForJurisdiction("GB").profile.id === "roman.general" &&
+    profileForJurisdiction("GB").exact === false &&
+    profileForJurisdiction("GB").notice?.includes("No verified local pack") === true
+);
+expect(
+  "a U.S. selection without a province never claims exact Ascension jurisdiction",
+  profileForJurisdiction("US", "").exact === false &&
+    profileForJurisdiction("US", "").notice?.includes("province") === true
+);
+expect(
+  "manual province selection resolves the official Ascension exception exactly",
+  profileForJurisdiction("US", "Boston").profile.id === "roman.us.ascension-thursday" &&
+    profileForJurisdiction("US", "Seattle").profile.id === "roman.us.ascension-sunday" &&
+    US_ECCLESIASTICAL_PROVINCES.includes("Las Vegas")
+);
+expect(
+  "individual-church propers accept only constrained title, dedication, and patron dates",
+  validateIndividualChurchProper({
+    churchTitle: "St. Joseph",
+    titleDate: { month: 3, day: 19 },
+    titleColor: "white",
+    dedicationAnniversary: { month: 5, day: 1 },
+    principalPatronTitle: "St. Thomas Aquinas",
+    principalPatronDate: { month: 1, day: 28 },
+    principalPatronColor: "white"
+  }) &&
+    !validateIndividualChurchProper({
+      ...normalizeIndividualChurchProper({}),
+      dedicationAnniversary: { month: 2, day: 31 }
+    }) &&
+    !validateIndividualChurchProper({
+      ...normalizeIndividualChurchProper({}),
+      rank: "Solemnity"
+    })
+);
+const duplicateLocalDates = {
+  churchTitle: "St. Joseph",
+  titleDate: { month: 3, day: 19 },
+  titleColor: "white" as const,
+  dedicationAnniversary: { month: 3, day: 19 },
+  principalPatronTitle: "St. Joseph",
+  principalPatronDate: { month: 3, day: 19 },
+  principalPatronColor: "white" as const
+};
+expect(
+  "pairwise and all-three individual-church duplicate dates are rejected",
+  !validateIndividualChurchProper(duplicateLocalDates) &&
+    !validateIndividualChurchProper({
+      ...duplicateLocalDates,
+      principalPatronDate: { month: 5, day: 1 }
+    }) &&
+    individualChurchProperDateConflicts(duplicateLocalDates).length === 2
+);
+const normalizedCorruptProper = normalizeIndividualChurchProper(duplicateLocalDates);
+expect(
+  "a corrupt persisted local proper fails closed to one governor per date",
+  normalizedCorruptProper.titleDate?.month === 3 &&
+    normalizedCorruptProper.dedicationAnniversary === null &&
+    normalizedCorruptProper.principalPatronDate === null &&
+    validateIndividualChurchProper(normalizedCorruptProper)
+);
+const localProper = normalizeIndividualChurchProper({
+  churchTitle: "St. Mary Magdalene",
+  titleDate: { month: 7, day: 20 },
+  titleColor: "white",
+  dedicationAnniversary: { month: 10, day: 18 },
+  principalPatronTitle: "St. Thomas Aquinas",
+  principalPatronDate: { month: 2, day: 10 },
+  principalPatronColor: "white"
+});
+const localTitleDay = liturgicalDay(d(2026, 7, 20), "roman.general", localProper);
+expect(
+  "a complete individual-church title is generated as a class-4 solemnity with no invented formulary",
+  localTitleDay.celebrations.some(
+    (item) =>
+      item.id === "local.individual-church.title" &&
+      item.precedence === CALENDAR_PRECEDENCE.properSolemnity &&
+      item.formularyId === null
+  )
+);
+const leapProper = normalizeIndividualChurchProper({
+  churchTitle: "Leap Day Chapel",
+  titleDate: { month: 2, day: 29 },
+  titleColor: "white"
+});
+expect(
+  "a 29 February local proper occurs only in leap years and never rolls to 1 March",
+  liturgicalDay(d(2028, 2, 29), "roman.general", leapProper).celebrations.some(
+    (item) => item.id === "local.individual-church.title"
+  ) &&
+    !liturgicalDay(d(2027, 3, 1), "roman.general", leapProper).celebrations.some(
+      (item) => item.id === "local.individual-church.title"
+    )
+);
+
+const precedenceValues = Object.values(CALENDAR_PRECEDENCE) as CalendarPrecedence[];
+let precedencePairsCorrect = true;
+for (const left of precedenceValues) {
+  for (const right of precedenceValues) {
+    const want = left === right ? 0 : left < right ? -1 : 1;
+    const rankFor = (precedence: CalendarPrecedence) =>
+      precedence === CALENDAR_PRECEDENCE.generalMemorial ||
+      precedence === CALENDAR_PRECEDENCE.properMemorial ||
+      precedence === CALENDAR_PRECEDENCE.optionalMemorial
+        ? "Memorial" as const
+        : "Solemnity" as const;
+    const candidates = [
+      {
+        id: "left",
+        formularyId: null,
+        packId: "test",
+        name: "Left",
+        rank: rankFor(left),
+        precedence: left,
+        ...(left === CALENDAR_PRECEDENCE.optionalMemorial ? { optional: true } : {})
+      },
+      {
+        id: "right",
+        formularyId: null,
+        packId: "test",
+        name: "Right",
+        rank: rankFor(right),
+        precedence: right,
+        ...(right === CALENDAR_PRECEDENCE.optionalMemorial ? { optional: true } : {})
+      }
+    ];
+    const resolution = resolveCalendarOccurrence(candidates);
+    const selected = [...resolution.observed, ...resolution.alternatives]
+      .map((item) => item.id)
+      .sort();
+    const expected = left === right
+      ? ["left", "right"]
+      : [left < right ? "left" : "right"];
+    if (
+      compareCalendarPrecedence(left, right) !== want ||
+      JSON.stringify(selected) !== JSON.stringify(expected)
+    ) {
+      precedencePairsCorrect = false;
+    }
+  }
+}
+expect(
+  "all 169 precedence pairs resolve through the production occurrence authority",
+  precedenceValues.length === 13 && precedencePairsCorrect
+);
+const collision = liturgicalDay(d(2026, 6, 13), "roman.us.ascension-sunday");
+expect(
+  "an obligatory-memorial collision preserves both lawful alternatives and its reason",
+  collision.alternatives.length >= 2 &&
+    collision.suppressed.filter((item) => item.suppressionReason === "memorial-collision").length >= 2
+);
+const transferred = liturgicalDay(d(2024, 3, 25), "roman.general");
+expect(
+  "a transferred solemnity records its source and target instead of disappearing",
+  transferred.suppressed.some(
+    (item) => item.id === "grc.fixed.03-25" && item.transferredTo === "2024-04-08"
+  )
+);
+const crossYearProper = normalizeIndividualChurchProper({
+  churchTitle: "Holy Family Church",
+  titleDate: { month: 12, day: 25 },
+  titleColor: "white",
+  dedicationAnniversary: { month: 12, day: 30 },
+  principalPatronTitle: "St. Sylvester",
+  principalPatronDate: { month: 12, day: 31 },
+  principalPatronColor: "white"
+});
+const crossYearSource = liturgicalDay(d(2024, 12, 25), "roman.general", crossYearProper);
+const crossYearTarget = liturgicalDay(d(2025, 1, 2), "roman.general", crossYearProper);
+expect(
+  "a crowded individual-church solemnity transfer crosses New Year with reciprocal receipts",
+  crossYearSource.suppressed.some(
+    (item) =>
+      item.id === "local.individual-church.title" && item.transferredTo === "2025-01-02"
+  ) &&
+    crossYearTarget.celebrations.some(
+      (item) =>
+        item.id === "local.individual-church.title" && item.transferredFrom === "2024-12-25"
+    )
+);
+expect(
+  "stable celebration and formulary IDs survive legacy/profile selection aliases",
+  liturgicalDay(d(2026, 1, 4), "usa").celebrations[0]?.id ===
+    liturgicalDay(d(2026, 1, 4), "roman.us.ascension-sunday").celebrations[0]?.id
 );
 
 // 6. §1.3 acceptance — "Follow the liturgical year" accent.

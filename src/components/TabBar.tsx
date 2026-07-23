@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { pushOverlay, removeOverlay } from "../lib/overlays";
+import { isTopOverlay, pushOverlay, removeOverlay } from "../lib/overlays";
 
 /**
  * Spec §2.1 — the five-tab navigation.
@@ -11,8 +11,8 @@ import { pushOverlay, removeOverlay } from "../lib/overlays";
  * the header row on wide viewports; on phones its own full-width sticky row
  * beneath the brand — the collapsing masthead (v1.16.0): the brand scrolls
  * away, this row pins below the status bar (`.tabbar` in styles.css). "More"
- * is a popover over the four secondary destinations — Library, Translations,
- * Settings, About — not a route of its own, so the URL space is unchanged.
+ * is a popover over the secondary destinations — Library, Widgets,
+ * Translations, Settings, About — not a route of its own.
  * The popover drops down under the More button at every width.
  *
  * Purple acts (§1.2): the active tab — and the More button while you are on one
@@ -21,6 +21,7 @@ import { pushOverlay, removeOverlay } from "../lib/overlays";
 
 const MORE = [
   { to: "/library", label: "Library" },
+  { to: "/widgets", label: "Widgets" },
   { to: "/translations", label: "Translations" },
   { to: "/settings", label: "Settings" },
   { to: "/about", label: "About" }
@@ -52,7 +53,9 @@ export default function TabBar() {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && isTopOverlay(overlayId)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
         setOpen(false);
         btnRef.current?.focus();
       }

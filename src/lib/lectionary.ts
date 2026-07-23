@@ -9,14 +9,26 @@
  * tables of jayarathina/Tamil-Catholic-Lectionary (see scripts/build-lectionary.mjs).
  */
 import {
-  CalendarRegion,
+  Celebration,
   adventStart,
-  currentRegion,
+  currentCalendarProfile,
   easterDate,
   epiphanyDate,
   liturgicalDay
 } from "./liturgical";
+import {
+  CALENDAR_PRECEDENCE,
+  DEFAULT_LECTIONARY_PACK_ID,
+  EMPTY_INDIVIDUAL_CHURCH_PROPER,
+  lectionaryPack,
+  normalizeLectionaryPackId,
+  type CalendarColor,
+  type CalendarSelection,
+  type IndividualChurchProper,
+  type LectionaryPackId
+} from "./calendarProfile";
 import { Book } from "./canon";
+import { getSettings } from "./storage";
 
 export interface LectionaryRow {
   /** 1 first reading · 2 responsorial psalm · 3 second reading · 6 gospel
@@ -46,22 +58,68 @@ export interface DayReadings {
    *  behind a memorial's prescribed propers (P1-6), or the Chrism Mass on
    *  Holy Thursday morning (P2-7). */
   secondary?: { label: string; code: string; rows: LectionaryRow[] };
+  /** Lawful optional memorial formularies offered after the ferial readings. */
+  optionalMemorials?: { label: string; code: string; rows: LectionaryRow[] }[];
+  /** Obligatory memorial formularies that the source table carries but does
+   *  not mark as prescribed in place of the weekday cycle. */
+  memorialFormularies?: { label: string; code: string; rows: LectionaryRow[] }[];
+  /** Other complete Masses assigned to the same civil day. */
+  massAlternatives?: { label: string; code: string; rows: LectionaryRow[] }[];
+  /** Permitted formularies whose reading tables are identified but not bundled. */
+  formularyOptions?: {
+    id: string;
+    label: string;
+    color: CalendarColor;
+    lectionaryReference: string;
+  }[];
+  /** Explicit receipt when the selected local calendar governs with a feast
+   *  or solemnity whose proper is not present in the selected lectionary pack.
+   *  `rows` then contain the seasonal fallback and must not be represented as
+   *  the local celebration's proper readings. */
+  formularyState?: MissingLocalFormularyState;
+  /** Calendar choices with no mapped table in this derived corpus. */
+  unavailableFormularies?: MissingFormularyState[];
 }
 
-let cache: Promise<LectionaryData> | null = null;
-export function loadLectionary(): Promise<LectionaryData> {
-  if (!cache) {
-    cache = fetch(`${import.meta.env.BASE_URL}data/lectionary.json`).then((r) => {
+export interface MissingLocalFormularyState {
+  kind: "missing-local-formulary";
+  celebrationId: string;
+  celebrationName: string;
+  formularyId: string | null;
+  calendarPackId: string;
+  fallback: "seasonal-readings";
+  lectionaryPackId: LectionaryPackId;
+}
+
+export interface MissingFormularyState {
+  kind: "unavailable-formulary";
+  celebrationId: string;
+  celebrationName: string;
+  formularyId: string | null;
+  calendarPackId: string;
+  lectionaryPackId: LectionaryPackId;
+}
+
+const cache = new Map<LectionaryPackId, Promise<LectionaryData>>();
+export function loadLectionary(
+  packId: LectionaryPackId = getSettings().lectionaryPackId
+): Promise<LectionaryData> {
+  const normalized = normalizeLectionaryPackId(packId);
+  let request = cache.get(normalized);
+  if (!request) {
+    const pack = lectionaryPack(normalized);
+    request = fetch(`${import.meta.env.BASE_URL}${pack.dataPath}`).then((r) => {
       if (!r.ok) throw new Error(`lectionary data: HTTP ${r.status}`);
       return r.json();
     });
+    cache.set(normalized, request);
     // Never memoize a failure: a transient offline blip must not pin every
     // future readings load to the same rejection until a full reload.
-    cache.catch(() => {
-      cache = null;
+    request.catch(() => {
+      cache.delete(normalized);
     });
   }
-  return cache;
+  return request;
 }
 
 export type SundayCycle = "A" | "B" | "C";
@@ -84,112 +142,435 @@ export function weekdayCycle(date: Date): "1" | "2" {
 
 const DAY_CODE = ["0Sun", "1Mon", "2Tue", "3Wed", "4Thu", "5Fri", "6Sat"];
 
-/** Our liturgical engine's celebration names -> lectionary dayIDs. */
-const NAMED: Record<string, string> = {
-  "Mary, the Holy Mother of God": "Blessed Virgin Mary, the Mother of God",
-  "Sts. Basil the Great and Gregory Nazianzen, Doctors":
-    "Saints Basil the Great and Gregory Nazianzen, bishops and doctors",
-  "St. Agnes, Virgin and Martyr": "Saint Agnes, virgin and martyr",
-  "The Conversion of St. Paul, Apostle": "The Conversion of Saint Paul, apostle",
-  "Sts. Timothy and Titus, Bishops": "Saints Timothy and Titus, bishops",
-  "St. Thomas Aquinas, Priest and Doctor": "Saint Thomas Aquinas, priest and doctor",
-  "St. John Bosco, Priest": "Saint John Bosco, priest",
-  "The Presentation of the Lord (Candlemas)": "Presentation of the Lord",
-  "Our Lady of Lourdes": "Our Lady of Lourdes",
-  "Sts. Cyril and Methodius": "Saints Cyril, monk, and Methodius, bishop",
-  "The Chair of St. Peter, Apostle": "Chair of Saint Peter, apostle",
-  "St. Patrick, Bishop": "Saint Patrick, bishop",
-  "St. Joseph, Spouse of the Blessed Virgin Mary":
-    "Saint Joseph Husband of the Blessed Virgin Mary",
-  "The Annunciation of the Lord": "Annunciation of the Lord",
-  "St. Mark, Evangelist": "Saint Mark the Evangelist",
-  "St. Catherine of Siena, Virgin and Doctor":
-    "Saint Catherine of Siena, virgin and doctor of the Church",
-  "St. Athanasius, Bishop and Doctor": "Saint Athanasius, bishop and doctor",
-  "St. Joseph the Worker": "Saint Joseph the Worker",
-  "Sts. Philip and James, Apostles": "Saints Philip and James, Apostles",
-  "St. Matthias, Apostle": "Saint Matthias the Apostle",
-  "The Visitation of the Blessed Virgin Mary": "Visitation of the Blessed Virgin Mary",
-  "St. Boniface, Bishop and Martyr": "Saint Boniface, bishop and martyr",
-  "St. Barnabas, Apostle": "Saint Barnabas the Apostle",
-  "St. Anthony of Padua, Priest and Doctor": "Saint Anthony of Padua, priest and doctor",
-  "The Nativity of St. John the Baptist": "Birth of Saint John the Baptist",
-  "St. Irenaeus, Bishop, Martyr and Doctor": "Saint Irenaeus, bishop and martyr",
-  "Sts. Peter and Paul, Apostles": "Saints Peter and Paul, Apostles",
-  "St. Thomas, Apostle": "Saint Thomas the Apostle",
-  "St. Benedict, Abbot": "Saint Benedict, abbot",
-  "Our Lady of Mount Carmel": "Our Lady of Mount Carmel",
-  "St. Mary Magdalene": "Saint Mary Magdalene",
-  "St. James, Apostle": "Saint James, apostle",
-  "Sts. Joachim and Anne, Parents of the BVM": "Saints Joachim and Anne",
-  "Sts. Martha, Mary and Lazarus": "Saints Martha, Mary and Lazarus",
-  "St. Ignatius of Loyola, Priest": "Saint Ignatius of Loyola, priest",
-  "St. Alphonsus Liguori, Bishop and Doctor":
-    "Saint Alphonsus Maria de Liguori, bishop and doctor of the Church",
-  "St. John Vianney, Priest": "Saint Jean Vianney (the Curé of Ars), priest",
-  "The Transfiguration of the Lord": "Transfiguration of the Lord",
-  "St. Dominic, Priest": "Saint Dominic, priest",
-  "St. Lawrence, Deacon and Martyr": "Saint Lawrence, deacon and martyr",
-  "St. Clare, Virgin": "Saint Clare, virgin",
-  "St. Maximilian Kolbe, Priest and Martyr": "Saint Maximilian Mary Kolbe, priest and martyr",
-  "The Assumption of the Blessed Virgin Mary": "Assumption of the Blessed Virgin Mary",
-  "The Queenship of the Blessed Virgin Mary": "Queenship of Blessed Virgin Mary",
-  "St. Bartholomew, Apostle": "Saint Bartholomew the Apostle",
-  "St. Monica": "Saint Monica",
-  "St. Augustine, Bishop and Doctor": "Saint Augustine of Hippo, bishop and doctor of the Church",
-  "The Passion of St. John the Baptist": "The Beheading of Saint John the Baptist, martyr",
-  "The Nativity of the Blessed Virgin Mary": "Birth of the Blessed Virgin Mary",
-  "The Exaltation of the Holy Cross": "Exaltation of the Holy Cross",
-  "Our Lady of Sorrows": "Our Lady of Sorrows",
-  "St. Matthew, Apostle and Evangelist": "Saint Matthew the Evangelist, Apostle, Evangelist",
-  "Sts. Michael, Gabriel and Raphael, Archangels":
-    "Saints Michael, Gabriel and Raphael, Archangels",
-  "St. Jerome, Priest and Doctor": "Saint Jerome, priest and doctor",
-  "St. Thérèse of the Child Jesus, Virgin and Doctor":
-    "Saint Thérèse of the Child Jesus, virgin and doctor",
-  "The Holy Guardian Angels": "Guardian Angels",
-  "St. Francis of Assisi": "Saint Francis of Assisi",
-  "Our Lady of the Rosary": "Our Lady of the Rosary",
-  "St. Teresa of Jesus (Ávila), Virgin and Doctor": "Saint Teresa of Jesus, virgin and doctor",
-  "St. Ignatius of Antioch, Bishop and Martyr": "Saint Ignatius of Antioch, bishop and martyr",
-  "St. Luke, Evangelist": "Saint Luke the Evangelist",
-  "Sts. John de Brébeuf and Isaac Jogues, Priests, and Companions, Martyrs":
-    "Saints Jean de Brébeuf, Isaac Jogues, priests and martyrs; and their companions, martyrs",
-  "Sts. Simon and Jude, Apostles": "Saint Simon and Saint Jude, apostles",
-  "All Saints": "All Saints",
-  "The Commemoration of All the Faithful Departed (All Souls)": "All Souls",
-  "The Dedication of the Lateran Basilica": "Dedication of the Lateran basilica",
-  "St. Martin of Tours, Bishop": "Saint Martin of Tours, bishop",
-  "The Presentation of the Blessed Virgin Mary": "Presentation of the Blessed Virgin Mary",
-  "St. Cecilia, Virgin and Martyr": "Saint Cecilia",
-  "St. Andrew, Apostle": "Saint Andrew the Apostle",
-  "The Immaculate Conception of the Blessed Virgin Mary":
-    "Immaculate Conception of the Blessed Virgin Mary",
-  "St. Lucy, Virgin and Martyr": "Saint Lucy of Syracuse, virgin and martyr",
-  "St. John of the Cross, Priest and Doctor": "Saint John of the Cross, priest and doctor",
-  "St. Ambrose, Bishop and Doctor": "Saint Ambrose, bishop and doctor",
-  "The Nativity of the Lord (Christmas)": "Nativity of the Lord 4",
-  "St. Stephen, the First Martyr": "Saint Stephen, the first martyr",
-  "St. John, Apostle and Evangelist": "Saint John the Apostle and evangelist",
-  "The Holy Innocents, Martyrs": "Holy Innocents, martyrs",
-  // movable (the Epiphany and Ascension dates depend on the calendar region)
-  "The Epiphany of the Lord": "CW03-Epiphany",
-  "The Ascension of the Lord": "EW07-Ascension",
-  "Pentecost Sunday": "EW08-Pentecost",
-  "Mary, Mother of the Church": "OW00-MaryMotherofChurch",
-  "The Most Holy Trinity": "OW00-Trinity",
-  "The Most Holy Body and Blood of Christ (Corpus Christi)": "OW00-CorpusChristi",
-  "The Most Sacred Heart of Jesus": "OW00-SacredHeart",
-  "The Immaculate Heart of the Blessed Virgin Mary": "OW00-ImmaculateHeart",
-  "The Holy Family of Jesus, Mary and Joseph": "CW01-HolyFamily",
-  "The Baptism of the Lord": "CW04-Baptism"
+/**
+ * Stable CalendarCelebrationRule.formularyId -> keys in the selected
+ * lectionary corpus. Display names are intentionally absent from this map so
+ * localization and copy edits cannot disconnect a celebration from readings.
+ */
+export const LECTIONARY_CODE_BY_FORMULARY_ID: Readonly<Record<string, string>> = {
+  "grc.fixed.01-01": "Blessed Virgin Mary, the Mother of God",
+  "grc.fixed.01-02": "Saints Basil the Great and Gregory Nazianzen, bishops and doctors",
+  "grc.fixed.01-21": "Saint Agnes, virgin and martyr",
+  "grc.vincent": "Saint Vincent, deacon and martyr",
+  "grc.saturday-bvm": "_Mary",
+  "grc.fixed.01-25": "The Conversion of Saint Paul, apostle",
+  "grc.fixed.01-26": "Saints Timothy and Titus, bishops",
+  "grc.fixed.01-28": "Saint Thomas Aquinas, priest and doctor",
+  "grc.fixed.01-31": "Saint John Bosco, priest",
+  "grc.fixed.02-02": "Presentation of the Lord",
+  "grc.fixed.02-11": "Our Lady of Lourdes",
+  "grc.fixed.02-14": "Saints Cyril, monk, and Methodius, bishop",
+  "grc.fixed.02-22": "Chair of Saint Peter, apostle",
+  "grc.fixed.03-17": "Saint Patrick, bishop",
+  "grc.fixed.03-19": "Saint Joseph Husband of the Blessed Virgin Mary",
+  "grc.fixed.03-25": "Annunciation of the Lord",
+  "grc.fixed.04-25": "Saint Mark the Evangelist",
+  "grc.fixed.04-29": "Saint Catherine of Siena, virgin and doctor of the Church",
+  "grc.fixed.05-01": "Saint Joseph the Worker",
+  "grc.fixed.05-02": "Saint Athanasius, bishop and doctor",
+  "grc.fixed.05-03": "Saints Philip and James, Apostles",
+  "grc.fixed.05-14": "Saint Matthias the Apostle",
+  "grc.fixed.05-31": "Visitation of the Blessed Virgin Mary",
+  "grc.fixed.06-05": "Saint Boniface, bishop and martyr",
+  "grc.fixed.06-11": "Saint Barnabas the Apostle",
+  "grc.fixed.06-13": "Saint Anthony of Padua, priest and doctor",
+  "grc.fixed.06-24": "Birth of Saint John the Baptist",
+  "grc.fixed.06-28": "Saint Irenaeus, bishop and martyr",
+  "grc.fixed.06-29": "Saints Peter and Paul, Apostles",
+  "grc.fixed.07-03": "Saint Thomas the Apostle",
+  "grc.fixed.07-11": "Saint Benedict, abbot",
+  "grc.fixed.07-16": "Our Lady of Mount Carmel",
+  "grc.fixed.07-22": "Saint Mary Magdalene",
+  "grc.fixed.07-25": "Saint James, apostle",
+  "grc.fixed.07-26": "Saints Joachim and Anne",
+  "grc.fixed.07-29": "Saints Martha, Mary and Lazarus",
+  "grc.fixed.07-31": "Saint Ignatius of Loyola, priest",
+  "grc.fixed.08-01": "Saint Alphonsus Maria de Liguori, bishop and doctor of the Church",
+  "grc.fixed.08-04": "Saint Jean Vianney (the Curé of Ars), priest",
+  "grc.fixed.08-06": "Transfiguration of the Lord",
+  "grc.fixed.08-08": "Saint Dominic, priest",
+  "grc.fixed.08-10": "Saint Lawrence, deacon and martyr",
+  "grc.fixed.08-11": "Saint Clare, virgin",
+  "grc.fixed.08-14": "Saint Maximilian Mary Kolbe, priest and martyr",
+  "grc.fixed.08-15": "Assumption of the Blessed Virgin Mary",
+  "grc.fixed.08-22": "Queenship of Blessed Virgin Mary",
+  "grc.fixed.08-24": "Saint Bartholomew the Apostle",
+  "grc.fixed.08-27": "Saint Monica",
+  "grc.fixed.08-28": "Saint Augustine of Hippo, bishop and doctor of the Church",
+  "grc.fixed.08-29": "The Beheading of Saint John the Baptist, martyr",
+  "grc.fixed.09-08": "Birth of the Blessed Virgin Mary",
+  "grc.fixed.09-14": "Exaltation of the Holy Cross",
+  "grc.fixed.09-15": "Our Lady of Sorrows",
+  "grc.fixed.09-21": "Saint Matthew the Evangelist, Apostle, Evangelist",
+  "grc.fixed.09-29": "Saints Michael, Gabriel and Raphael, Archangels",
+  "grc.fixed.09-30": "Saint Jerome, priest and doctor",
+  "grc.fixed.10-01": "Saint Thérèse of the Child Jesus, virgin and doctor",
+  "grc.fixed.10-02": "Guardian Angels",
+  "grc.fixed.10-04": "Saint Francis of Assisi",
+  "grc.fixed.10-07": "Our Lady of the Rosary",
+  "grc.fixed.10-09": "OLM655bis-Newman",
+  "grc.fixed.10-15": "Saint Teresa of Jesus, virgin and doctor",
+  "grc.fixed.10-17": "Saint Ignatius of Antioch, bishop and martyr",
+  "grc.fixed.10-18": "Saint Luke the Evangelist",
+  "grc.fixed.10-28": "Saint Simon and Saint Jude, apostles",
+  "grc.fixed.11-01": "All Saints",
+  "grc.fixed.11-02": "All Souls",
+  "grc.fixed.11-09": "Dedication of the Lateran basilica",
+  "grc.fixed.11-11": "Saint Martin of Tours, bishop",
+  "grc.fixed.11-21": "Presentation of the Blessed Virgin Mary",
+  "grc.fixed.11-22": "Saint Cecilia",
+  "grc.fixed.11-30": "Saint Andrew the Apostle",
+  "grc.fixed.12-07": "Saint Ambrose, bishop and doctor",
+  "grc.fixed.12-08": "Immaculate Conception of the Blessed Virgin Mary",
+  "grc.fixed.12-13": "Saint Lucy of Syracuse, virgin and martyr",
+  "grc.fixed.12-14": "Saint John of the Cross, priest and doctor",
+  "grc.fixed.12-25": "Nativity of the Lord 4",
+  "grc.fixed.12-26": "Saint Stephen, the first martyr",
+  "grc.fixed.12-27": "Saint John the Apostle and evangelist",
+  "grc.fixed.12-28": "Holy Innocents, martyrs",
+  "grc.epiphany": "CW03-Epiphany",
+  "grc.ascension": "EW07-Ascension",
+  "grc.pentecost": "EW08-Pentecost",
+  "grc.mary-mother-church": "OW00-MaryMotherofChurch",
+  "grc.trinity": "OW00-Trinity",
+  "grc.corpus-christi": "OW00-CorpusChristi",
+  "grc.sacred-heart": "OW00-SacredHeart",
+  "grc.immaculate-heart": "OW00-ImmaculateHeart",
+  "grc.holy-family": "CW01-HolyFamily",
+  "grc.baptism-lord": "CW04-Baptism",
+  "grc.raymond-penyafort": "Saint Raymond of Penyafort, priest",
+  "grc.hilary": "Saint Hilary of Poitiers, bishop and doctor",
+  "grc.anthony-abbot": "Saint Anthony of Egypt, abbot",
+  "grc.fabian": "Saint Fabian, pope and martyr",
+  "grc.sebastian": "Saint Sebastian, martyr",
+  "grc.francis-de-sales": "Saint Francis de Sales, bishop and doctor",
+  "grc.angela-merici": "Saint Angela Merici, virgin",
+  "grc.ansgar": "Saint Ansgar, bishop",
+  "grc.blaise": "Saint Blase, bishop and martyr",
+  "grc.agatha": "Saint Agatha, virgin and martyr",
+  "grc.paul-miki": "Saints Paul Miki and companions, martyrs",
+  "grc.jerome-emiliani": "Saint Jerome Emiliani, priest",
+  "grc.scholastica": "Saint Scholastica, virgin",
+  "grc.servite-founders": "Seven Holy Founders of the Servite Order",
+  "grc.peter-damian": "Saint Peter Damian, bishop and doctor of the Church",
+  "grc.polycarp": "Saint Polycarp, bishop and martyr",
+  "grc.casimir": "Saint Casimir",
+  "grc.perpetua-felicity": "Saints Perpetua and Felicity, martyrs",
+  "grc.john-of-god": "Saint John of God, religious",
+  "grc.frances-of-rome": "Saint Frances of Rome, religious",
+  "grc.cyril-jerusalem": "Saint Cyril of Jerusalem, bishop and doctor",
+  "grc.turibius": "Saint Turibius of Mogrovejo, bishop",
+  "grc.francis-paola": "Saint Francis of Paola, hermit",
+  "grc.isidore-seville": "Saint Isidore, bishop and doctor of the Church",
+  "grc.vincent-ferrer": "Saint Vincent Ferrer, priest",
+  "grc.john-baptist-de-la-salle": "Saint John Baptist de la Salle, priest",
+  "grc.stanislaus": "Saint Stanislaus, bishop and martyr",
+  "grc.martin-i": "Saint Martin I, pope and martyr",
+  "grc.anselm": "Saint Anselm of Canterbury, bishop and doctor of the Church",
+  "grc.george": "Saint George, martyr",
+  "grc.fidelis-sigmaringen": "Saint Fidelis of Sigmaringen, priest and martyr",
+  "grc.peter-chanel": "Saint Peter Chanel, priest and martyr",
+  "grc.pius-v": "Saint Pius V, pope",
+  "grc.nereus-achilleus": "Saints Nereus and Achilleus, martyrs",
+  "grc.pancras": "Saint Pancras, martyr",
+  "grc.john-i": "Saint John I, pope and martyr",
+  "grc.bernardine-siena": "Saint Bernardine of Siena, priest",
+  "grc.bede": "Saint Bede the Venerable, priest and doctor",
+  "grc.gregory-vii": "Saint Gregory VII, pope",
+  "grc.mary-magdalene-de-pazzi": "Saint Mary Magdalene de Pazzi, virgin",
+  "grc.philip-neri": "Saint Philip Neri, priest",
+  "grc.augustine-canterbury": "Saint Augustine (Austin) of Canterbury, bishop",
+  "grc.fixed.05-29": "Saint Paul VI, pope",
+  "grc.justin": "Saint Justin Martyr",
+  "grc.marcellinus-peter": "Saints Marcellinus and Peter, martyrs",
+  "grc.charles-lwanga": "Saints Charles Lwanga and companions, martyrs",
+  "grc.norbert": "Saint Norbert, bishop",
+  "grc.ephrem": "Saint Ephrem, deacon and doctor",
+  "grc.romuald": "Saint Romuald, abbot",
+  "grc.aloysius-gonzaga": "Saint Aloysius Gonzaga, religious",
+  "grc.paulinus-nola": "Saint Paulinus of Nola, bishop",
+  "grc.fisher-more": "Saints John Fisher, bishop and martyr and Thomas More, martyr",
+  "grc.cyril-alexandria": "Saint Cyril of Alexandria, bishop and doctor",
+  "grc.first-martyrs-rome": "First Martyrs of the Church of Rome",
+  "grc.st-elizabeth-portugal": "Saint Elizabeth of Portugal",
+  "grc.anthony-mary-zaccaria": "Saint Anthony Zaccaria, priest",
+  "grc.maria-goretti": "Saint Maria Goretti, virgin and martyr",
+  "grc.henry": "Saint Henry",
+  "grc.st-camillus": "Saint Camillus de Lellis, priest",
+  "grc.fixed.07-15": "Saint Bonaventure, bishop and doctor",
+  "grc.lawrence-brindisi": "Saint Lawrence of Brindisi, priest and doctor",
+  "grc.bridget": "Saint Birgitta, religious",
+  "grc.peter-chrysologus": "Saint Peter Chrysologus, bishop and doctor",
+  "grc.eusebius-vercelli": "Saint Eusebius of Vercelli, bishop",
+  "grc.mary-major": "Dedication of the Basilica of Saint Mary Major",
+  "grc.sixtus-ii": "Saint Sixtus II, pope, and companions, martyrs",
+  "grc.cajetan": "Saint Cajetan, priest",
+  "grc.jane-frances-de-chantal": "Saint Jane Frances de Chantal, religious",
+  "grc.pontian-hippolytus": "Saints Pontian, pope, and Hippolytus, priest, martyrs",
+  "grc.stephen-hungary": "Saint Stephen of Hungary",
+  "grc.john-eudes": "Saint John Eudes, priest",
+  "grc.bernard": "Saint Bernard of Clairvaux, abbot and doctor of the Church",
+  "grc.pius-x": "Saint Pius X, pope",
+  "grc.rose-lima": "Saint Rose of Lima, virgin",
+  "grc.louis": "Saint Louis",
+  "grc.joseph-calasanz": "Saint Joseph of Calasanz, priest",
+  "grc.gregory-great": "Saint Gregory the Great, pope and doctor",
+  "grc.fixed.09-05": "IN Saint Teresa of Calcutta, virgin",
+  "grc.john-chrysostom": "Saint John Chrysostom, bishop and doctor",
+  "grc.cornelius-cyprian": "Saints Cornelius, pope, and Cyprian, bishop, martyrs",
+  "grc.robert-bellarmine": "Saint Robert Bellarmine, bishop and doctor",
+  "grc.januarius": "Saint Januarius, bishop and martyr",
+  "grc.cosmas-damian": "Saints Cosmas and Damian, martyrs",
+  "grc.vincent-de-paul": "Saint Vincent de Paul, priest",
+  "grc.wenceslaus": "Saint Wenceslaus, martyr",
+  "grc.fixed.10-05": "Saint Maria Faustina Kowalska, virgin",
+  "grc.bruno": "Saint Bruno, priest",
+  "grc.denis": "Saint Denis and companions, martyrs",
+  "grc.john-leonardi": "Saint John Leonardi, priest",
+  "grc.callistus": "Saint Callistus I, pope and martyr",
+  "grc.hedwig": "Saint Hedwig, religious",
+  "grc.margaret-mary": "Saint Margaret Mary Alacoque, virgin",
+  "grc.st-paul-cross": "Saint Paul of the Cross, priest",
+  "grc.john-capistrano": "Saint John of Capistrano, priest",
+  "grc.anthony-mary-claret": "Saint Anthony Mary Claret, bishop",
+  "grc.martin-de-porres": "Saint Martin de Porres, religious",
+  "grc.charles-borromeo": "Saint Charles Borromeo, bishop",
+  "grc.leo-great": "Saint Leo the Great, pope and doctor",
+  "grc.josaphat": "Saint Josaphat, bishop and martyr",
+  "grc.albert-great": "Saint Albert the Great, bishop and doctor",
+  "grc.margaret-scotland": "Saint Margaret of Scotland",
+  "grc.gertrude": "Saint Gertrude the Great, virgin",
+  "grc.elizabeth-hungary": "Saint Elizabeth of Hungary, religious",
+  "grc.dedication-peter-paul": "Dedication of the basilicas of Saints Peter and Paul, Apostles",
+  "grc.clement-i": "Saint Clement I, pope and martyr",
+  "grc.columban": "Saint Columban, religious",
+  "grc.francis-xavier": "Saint Francis Xavier, priest",
+  "grc.john-damascene": "Saint John Damascene, priest and doctor",
+  "grc.nicholas": "Saint Nicholas, bishop",
+  "grc.damasus-i": "Saint Damasus I, pope",
+  "grc.peter-canisius": "Saint Peter Canisius, priest and doctor",
+  "grc.john-kanty": "Saint John of Kanty, priest",
+  "grc.thomas-becket": "Saint Thomas Becket, bishop and martyr",
+  "grc.sylvester-i": "Saint Sylvester I, pope",
+  "us.brebeuf-jogues":
+    "Saints Jean de Brébeuf, Isaac Jogues, priests and martyrs; and their companions, martyrs"
 };
+
+/**
+ * Small, sourced supplements absent from the pinned community table. Newman
+ * was inserted into the General Roman Calendar after that table's source
+ * commit. The Holy See promulgated these exact citations as OLM 655bis on
+ * 3 February 2026; no scripture text is copied here.
+ */
+export const LECTIONARY_SUPPLEMENTS: Readonly<LectionaryData> = {
+  "OLM655bis-Newman": [
+    { t: 1, b: "sirach", s: [[39, 8, 14]] },
+    {
+      t: 2,
+      b: "psalms",
+      s: [[40, 2, 2], [40, 4, 4], [40, 7, 10]],
+      partial: true
+    },
+    { t: 6, b: "matthew", s: [[13, 47, 52]] }
+  ]
+};
+
+/** Return the effective citation catalog without mutating the loaded corpus. */
+export function lectionaryDataForPack(
+  data: LectionaryData,
+  packId: LectionaryPackId = DEFAULT_LECTIONARY_PACK_ID
+): LectionaryData {
+  return normalizeLectionaryPackId(packId) === DEFAULT_LECTIONARY_PACK_ID
+    ? { ...data, ...LECTIONARY_SUPPLEMENTS }
+    : data;
+}
+
+function formularyCode(
+  formularyId: string | null,
+  packId: LectionaryPackId
+): string | undefined {
+  if (!formularyId || normalizeLectionaryPackId(packId) !== DEFAULT_LECTIONARY_PACK_ID) {
+    return undefined;
+  }
+  return LECTIONARY_CODE_BY_FORMULARY_ID[formularyId];
+}
+
+export interface MassSetDefinition {
+  primaryCode: string;
+  primaryLabel: string;
+  alternatives: readonly {
+    /** Existing source-table code that supplies either the complete Mass or
+     *  the replacement reading identified by `replaceReadingType`. */
+    code: string;
+    label: string;
+    /** A lawful option confined to one Sunday cycle. */
+    cycle?: SundayCycle;
+    /** Compose a complete Mass by replacing this reading type in the primary
+     *  set with rows from `code`. */
+    replaceReadingType?: 1 | 2 | 3 | 6;
+    /** Stable derived identity when `code` is only a replacement-row source. */
+    resultCode?: string;
+  }[];
+}
+
+/** Multiple complete Masses lawfully assigned to one civil day. */
+export const MASS_SETS_BY_CELEBRATION_ID: Readonly<Record<string, MassSetDefinition>> = {
+  "grc.fixed.11-02": {
+    primaryCode: "All Souls A",
+    primaryLabel: "First selection for All Souls",
+    alternatives: [
+      { code: "All Souls B", label: "Second selection for All Souls" },
+      { code: "All Souls C", label: "Third selection for All Souls" }
+    ]
+  },
+  "grc.fixed.12-25": {
+    primaryCode: "Nativity of the Lord 4",
+    primaryLabel: "Mass during the Day",
+    alternatives: [
+      { code: "Nativity of the Lord 1", label: "Vigil Mass" },
+      { code: "Nativity of the Lord 2", label: "Mass during the Night" },
+      { code: "Nativity of the Lord 3", label: "Mass at Dawn" }
+    ]
+  },
+  // The source corpus already carries both lawful Easter Gospel substitutes:
+  // Luke 24:1-12 in the Year C Vigil row and Luke 24:13-35 on Easter Wednesday.
+  // Reuse only those Gospel rows while retaining Easter Sunday's other readings.
+  "grc.easter-sunday": {
+    primaryCode: "EW01-0Sun",
+    primaryLabel: "Mass during the Day",
+    alternatives: [
+      {
+        code: "LW06-6Sat C",
+        label: "Mass during the Day (Year C Gospel option)",
+        cycle: "C",
+        replaceReadingType: 6,
+        resultCode: "EW01-0Sun C-Gospel"
+      },
+      {
+        code: "EW01-3Wed",
+        label: "Afternoon or evening Mass",
+        replaceReadingType: 6,
+        resultCode: "EW01-0Sun Afternoon-Evening"
+      }
+    ]
+  },
+  "grc.pentecost": {
+    primaryCode: "EW08-Pentecost",
+    primaryLabel: "Mass during the Day",
+    alternatives: [{ code: "EW08-Pentecost - Vigil", label: "Vigil Mass" }]
+  },
+  "grc.fixed.06-24": {
+    primaryCode: "Birth of Saint John the Baptist",
+    primaryLabel: "Mass during the Day",
+    alternatives: [{ code: "Birth of Saint John the Baptist - Vigil", label: "Vigil Mass" }]
+  },
+  "grc.fixed.06-29": {
+    primaryCode: "Saints Peter and Paul, Apostles",
+    primaryLabel: "Mass during the Day",
+    alternatives: [{ code: "Saints Peter and Paul, Apostles - Vigil", label: "Vigil Mass" }]
+  },
+  "grc.fixed.08-15": {
+    primaryCode: "Assumption of the Blessed Virgin Mary",
+    primaryLabel: "Mass during the Day",
+    alternatives: [{ code: "Assumption of the Blessed Virgin Mary - Vigil", label: "Vigil Mass" }]
+  }
+};
+
+function canonicalLectionaryValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalLectionaryValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, child]) => [key, canonicalLectionaryValue(child)])
+    );
+  }
+  return value;
+}
+
+/** Canonical input for the code-backed portion of the installed citation pack.
+ * Native snapshot invalidation must change when a stable-ID mapping, bundled
+ * supplement, or complete-Mass composition changes, even if the raw generated
+ * citation table itself is byte-identical. */
+export function lectionaryResolverCatalogInput(): string {
+  return JSON.stringify(canonicalLectionaryValue({
+    formularyCodes: LECTIONARY_CODE_BY_FORMULARY_ID,
+    massSets: MASS_SETS_BY_CELEBRATION_ID,
+    supplements: LECTIONARY_SUPPLEMENTS
+  }));
+}
+
+/** Resolve a celebration without consulting its mutable display name. */
+export function celebrationFormularyCodes(
+  celebration: Pick<Celebration, "formularyId">,
+  cycle: SundayCycle,
+  packId: LectionaryPackId = DEFAULT_LECTIONARY_PACK_ID
+): string[] | null {
+  const code = formularyCode(celebration.formularyId, packId);
+  if (celebration.formularyId === "grc.fixed.11-02" && code) return [`${code} A`];
+  return code ? [`${code} ${cycle}`, code] : null;
+}
+
+export function missingLocalFormularyStateForCelebration(
+  celebration: Celebration,
+  packId: LectionaryPackId = DEFAULT_LECTIONARY_PACK_ID
+): MissingLocalFormularyState | undefined {
+  if (
+    celebration.precedence > CALENDAR_PRECEDENCE.properFeast ||
+    celebration.packId === "roman.general.pack" ||
+    formularyCode(celebration.formularyId, packId) !== undefined
+  ) {
+    return undefined;
+  }
+  return {
+    kind: "missing-local-formulary",
+    celebrationId: celebration.id,
+    celebrationName: celebration.name,
+    formularyId: celebration.formularyId,
+    calendarPackId: celebration.packId,
+    fallback: "seasonal-readings",
+    lectionaryPackId: normalizeLectionaryPackId(packId)
+  };
+}
+
+function unavailableFormulary(
+  celebration: Celebration,
+  packId: LectionaryPackId
+): MissingFormularyState | undefined {
+  const seasonalResolutionIds = new Set([
+    "grc.ash-wednesday",
+    "grc.palm-sunday",
+    "grc.holy-thursday",
+    "grc.good-friday",
+    "grc.holy-saturday",
+    "grc.easter-sunday",
+    "grc.divine-mercy-sunday",
+    "grc.christ-king"
+  ]);
+  // Typed formulary choices (national days of prayer/thanksgiving) already
+  // carry their exact official references and are reported separately.
+  if (
+    seasonalResolutionIds.has(celebration.id) ||
+    celebration.formularyOptions?.length ||
+    formularyCode(celebration.formularyId, packId)
+  ) {
+    return undefined;
+  }
+  return {
+    kind: "unavailable-formulary",
+    celebrationId: celebration.id,
+    celebrationName: celebration.name,
+    formularyId: celebration.formularyId,
+    calendarPackId: celebration.packId,
+    lectionaryPackId: normalizeLectionaryPackId(packId)
+  };
+}
 
 const ww = (n: number) => String(n).padStart(2, "0");
 
 export interface CandidateGroup {
   codes: string[];
-  /** proper = governing solemnity/feast Mass · seasonal = the ferial cycle
+  /** proper = mapped formulary of a high-precedence governing day · seasonal = the ferial cycle
    *  · memorial = an observed memorial's own formulary */
   kind: "proper" | "seasonal" | "memorial";
   /** celebration name for sanctoral groups */
@@ -206,9 +587,11 @@ export interface CandidateGroup {
  */
 export function dayCodeGroups(
   date: Date,
-  region: CalendarRegion = currentRegion()
+  region: CalendarSelection = currentCalendarProfile(),
+  packId: LectionaryPackId = DEFAULT_LECTIONARY_PACK_ID,
+  individualChurchProper: IndividualChurchProper = getSettings().individualChurchProper
 ): CandidateGroup[] {
-  const lit = liturgicalDay(date, region);
+  const lit = liturgicalDay(date, region, individualChurchProper);
   const dow = date.getDay();
   const cyc = sundayCycle(date);
   const wd = weekdayCycle(date);
@@ -220,14 +603,18 @@ export function dayCodeGroups(
   // The calendar engine resolves precedence, transfer and suppression, so
   // lit.celebrations holds only what is observed today, the governing
   // celebration first. Day codes are a consequence of that resolution, not
-  // a parallel reimplementation of it: a governing solemnity or feast brings
+  // a parallel reimplementation of it: a mapped governing day above memorial rank brings
   // its proper Mass, the seasonal cycle follows as fallback, and memorial
   // formularies trail the ferial readings (resolveReadings promotes the
   // marked, prescribed ones — see below).
   const governing = lit.celebrations[0];
-  if (governing && (governing.rank === "Solemnity" || governing.rank === "Feast")) {
-    const id = NAMED[governing.name];
-    if (id) groups.push({ codes: [`${id} ${cyc}`, id], kind: "proper", name: governing.name });
+  if (governing && governing.precedence <= CALENDAR_PRECEDENCE.properFeast) {
+    const codes = celebrationFormularyCodes(governing, cyc, packId);
+    if (codes) groups.push({ codes, kind: "proper", name: governing.name });
+    for (const option of MASS_SETS_BY_CELEBRATION_ID[governing.id]?.alternatives ?? []) {
+      if (option.cycle && option.cycle !== cyc) continue;
+      groups.push({ codes: [option.code], kind: "proper", name: option.label });
+    }
   }
 
   const day = DAY_CODE[dow];
@@ -247,12 +634,9 @@ export function dayCodeGroups(
       break;
     case "Christmastide": {
       if (m === 12) {
-        if (d === 25)
-          seasonal(
-            ["Nativity of the Lord 4"],
-            ["Nativity of the Lord 2"],
-            ["Nativity of the Lord 1"]
-          );
+        if (d === 25) {
+          if (!governing) seasonal(["Nativity of the Lord 4"]);
+        }
         else if (d >= 29) seasonal([`CW01-Dec${d}`]);
         // Dec 26–28 are covered by the named feast map above
       } else {
@@ -297,14 +681,15 @@ export function dayCodeGroups(
       break;
   }
 
-  // After the ferial cycle, offer proper readings of observed memorials as a
-  // fallback (suppressed memorials never reach this point).
-  for (const c of lit.celebrations) {
+  // After the ferial cycle, offer both observed memorial propers and lawful
+  // optional alternatives. The latter never govern automatically, but their
+  // formularies must remain visible and selectable.
+  for (const c of [...lit.celebrations, ...lit.alternatives]) {
     if (c.rank !== "Memorial") continue;
-    const id = NAMED[c.name];
-    if (id)
+    const codes = celebrationFormularyCodes(c, cyc, packId);
+    if (codes)
       groups.push({
-        codes: [`${id} ${cyc}`, id],
+        codes,
         kind: "memorial",
         name: c.name,
         optional: c.optional
@@ -319,9 +704,11 @@ export function dayCodeGroups(
 /** The candidate groups as bare code lists (provenance dropped). */
 export function dayCodeCandidates(
   date: Date,
-  region: CalendarRegion = currentRegion()
+  region: CalendarSelection = currentCalendarProfile(),
+  packId: LectionaryPackId = DEFAULT_LECTIONARY_PACK_ID,
+  individualChurchProper: IndividualChurchProper = getSettings().individualChurchProper
 ): string[][] {
-  return dayCodeGroups(date, region).map((g) => g.codes);
+  return dayCodeGroups(date, region, packId, individualChurchProper).map((g) => g.codes);
 }
 
 function mergeGroup(data: LectionaryData, codes: string[]): { code: string; rows: LectionaryRow[] } {
@@ -350,15 +737,54 @@ function mergeGroup(data: LectionaryData, codes: string[]): { code: string; rows
  */
 const hasProperMarker = (r: LectionaryRow) => Math.round(r.t * 1000) % 10 !== 0;
 
+function missingLocalFormularyState(
+  date: Date,
+  region: CalendarSelection,
+  packId: LectionaryPackId,
+  individualChurchProper: IndividualChurchProper
+): MissingLocalFormularyState | undefined {
+  const governing = liturgicalDay(date, region, individualChurchProper).celebrations[0];
+  return governing ? missingLocalFormularyStateForCelebration(governing, packId) : undefined;
+}
+
 /** Resolve the Mass readings for a date against loaded lectionary data. */
 export function resolveReadings(
   data: LectionaryData,
   date: Date,
-  region: CalendarRegion = currentRegion()
+  region: CalendarSelection = currentCalendarProfile(),
+  packId: LectionaryPackId = DEFAULT_LECTIONARY_PACK_ID,
+  individualChurchProper: IndividualChurchProper = getSettings().individualChurchProper
 ): DayReadings | null {
-  const merged = dayCodeGroups(date, region).map((g) => ({
+  const normalizedPackId = normalizeLectionaryPackId(packId);
+  const effectiveData = lectionaryDataForPack(data, normalizedPackId);
+  const lit = liturgicalDay(date, region, individualChurchProper);
+  const governing = lit.celebrations[0];
+  const formularyState = missingLocalFormularyState(
+    date,
+    region,
+    normalizedPackId,
+    individualChurchProper
+  );
+  const calendarChoices = [...lit.celebrations, ...lit.alternatives];
+  const formularyOptions = [...new Map(
+    calendarChoices
+      .flatMap((celebration) => celebration.formularyOptions ?? [])
+      .map((option) => [option.id, { ...option }])
+  ).values()];
+  const formularyOptionReceipt = formularyOptions.length ? { formularyOptions } : {};
+  const unavailableFormularies = calendarChoices.flatMap((celebration) => {
+    const unavailable = unavailableFormulary(celebration, normalizedPackId);
+    return unavailable ? [unavailable] : [];
+  });
+  const unavailableReceipt = unavailableFormularies.length ? { unavailableFormularies } : {};
+  const merged = dayCodeGroups(
+    date,
+    region,
+    normalizedPackId,
+    individualChurchProper
+  ).map((g) => ({
     group: g,
-    ...mergeGroup(data, g.codes)
+    ...mergeGroup(effectiveData, g.codes)
   }));
   const withGospel = merged.filter((m) => m.rows.some((r) => Math.floor(r.t) === 6));
   const best = withGospel[0];
@@ -376,6 +802,67 @@ export function resolveReadings(
       target.rows.sort((a, b) => a.t - b.t);
     }
   };
+  const optionalMemorials = withGospel
+    .filter((candidate) => candidate.group.kind === "memorial" && candidate.group.optional)
+    .map((candidate) => {
+      supplement(candidate);
+      return {
+        label: candidate.group.name ?? "Optional Memorial",
+        code: candidate.code,
+        rows: candidate.rows
+      };
+    });
+  const optionalReceipt = optionalMemorials.length ? { optionalMemorials } : {};
+  const memorialFormularies = withGospel
+    .filter((candidate) => candidate.group.kind === "memorial" && !candidate.group.optional)
+    .map((candidate) => {
+      supplement(candidate);
+      return {
+        label: candidate.group.name ?? "Memorial",
+        code: candidate.code,
+        rows: candidate.rows
+      };
+    });
+  const memorialReceipt = memorialFormularies.length ? { memorialFormularies } : {};
+
+  const massSet = governing ? MASS_SETS_BY_CELEBRATION_ID[governing.id] : undefined;
+  if (massSet) {
+    const primary = merged.find((candidate) => candidate.group.codes.includes(massSet.primaryCode));
+    if (!primary) return null;
+    const alternatives = massSet.alternatives
+      .filter((option) => !option.cycle || option.cycle === sundayCycle(date))
+      .flatMap((option) => {
+        const candidate = merged.find((item) => item.group.codes.includes(option.code));
+        if (!candidate?.rows.length) return [];
+        if (!option.replaceReadingType) {
+          return [{ label: option.label, code: candidate.code, rows: candidate.rows }];
+        }
+        const replacementRows = candidate.rows.filter(
+          (row) => Math.floor(row.t) === option.replaceReadingType
+        );
+        if (!replacementRows.length) return [];
+        const rows = [
+          ...primary.rows.filter((row) => Math.floor(row.t) !== option.replaceReadingType),
+          ...replacementRows
+        ].sort((a, b) => a.t - b.t);
+        return [{
+          label: option.label,
+          code: option.resultCode ?? `${massSet.primaryCode} ${option.label}`,
+          rows
+        }];
+      });
+    return {
+      code: primary.code,
+      rows: primary.rows,
+      primaryLabel: massSet.primaryLabel,
+      massAlternatives: alternatives,
+      ...optionalReceipt,
+      ...memorialReceipt,
+      ...formularyOptionReceipt,
+      ...unavailableReceipt,
+      ...(formularyState ? { formularyState } : {})
+    };
+  }
 
   // P1-6: an observed OBLIGATORY memorial whose formulary carries the proper
   // marker has prescribed readings — it takes the day, with the ferial cycle
@@ -392,7 +879,11 @@ export function resolveReadings(
         code: memorial.code,
         rows: memorial.rows,
         primaryLabel: "Proper of the Memorial",
-        secondary: { label: "Ferial readings of the day", code: best.code, rows: best.rows }
+        secondary: { label: "Ferial readings of the day", code: best.code, rows: best.rows },
+        ...optionalReceipt,
+        ...formularyOptionReceipt,
+        ...unavailableReceipt,
+        ...(formularyState ? { formularyState } : {})
       };
     }
   }
@@ -400,7 +891,7 @@ export function resolveReadings(
 
   // P2-7: Holy Thursday carries two Masses — the evening Mass of the Lord's
   // Supper governs the day; the morning Chrism Mass is offered alongside.
-  if (best.group.codes.includes("LW06-4Thu") && data["LW06-4Thu~Chrism"]?.length) {
+  if (best.group.codes.includes("LW06-4Thu") && effectiveData["LW06-4Thu~Chrism"]?.length) {
     return {
       code: best.code,
       rows: best.rows,
@@ -408,16 +899,44 @@ export function resolveReadings(
       secondary: {
         label: "Chrism Mass (morning)",
         code: "LW06-4Thu~Chrism",
-        rows: data["LW06-4Thu~Chrism"]
-      }
+        rows: effectiveData["LW06-4Thu~Chrism"]
+      },
+      ...optionalReceipt,
+      ...memorialReceipt,
+      ...formularyOptionReceipt,
+      ...unavailableReceipt,
+      ...(formularyState ? { formularyState } : {})
     };
   }
-  return { code: best.code, rows: best.rows };
+  return {
+    code: best.code,
+    rows: best.rows,
+    ...(formularyOptions.length ? { primaryLabel: "Weekday readings" } : {}),
+    ...optionalReceipt,
+    ...memorialReceipt,
+    ...formularyOptionReceipt,
+    ...unavailableReceipt,
+    ...(formularyState ? { formularyState } : {})
+  };
 }
 
-export async function readingsForDate(date: Date): Promise<DayReadings | null> {
-  return resolveReadings(await loadLectionary(), date);
+export async function readingsForDate(
+  date: Date,
+  region: CalendarSelection = currentCalendarProfile(),
+  packId: LectionaryPackId = getSettings().lectionaryPackId,
+  individualChurchProper: IndividualChurchProper = getSettings().individualChurchProper
+): Promise<DayReadings | null> {
+  return resolveReadings(
+    await loadLectionary(packId),
+    date,
+    region,
+    packId,
+    individualChurchProper
+  );
 }
+
+/** Explicit empty layer for build-time callers that must never read localStorage. */
+export const NO_INDIVIDUAL_CHURCH_PROPER = EMPTY_INDIVIDUAL_CHURCH_PROPER;
 
 /**
  * Verses the bundled Vulgate-versified text spends on each psalm's

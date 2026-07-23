@@ -74,7 +74,7 @@ export default function Library() {
   return (
     <div className="page-narrow" style={{ margin: "0 auto" }}>
       <h1 className="page-title">My Library</h1>
-      <div className="tabs">
+      <div className="tabs library-toolbar">
         <div className="tab-group" role="group" aria-label="Library view">
           {(["bookmarks", "highlights", "notes"] as Tab[]).map((t) => (
             <button
@@ -87,17 +87,18 @@ export default function Library() {
             </button>
           ))}
         </div>
-        <span className="spacer" />
-        <button className="icon-btn" onClick={doExport} title="Download bookmarks, highlights, and notes as JSON">
-          <Icon name="download" /> Export
-        </button>
-        <button
-          className="icon-btn"
-          onClick={() => fileRef.current?.click()}
-          title="Merge a previously exported Fidelis library file"
-        >
-          <Icon name="upload" /> Import
-        </button>
+        <div className="library-transfer-actions">
+          <button className="icon-btn" onClick={doExport} title="Download bookmarks, highlights, and notes as JSON">
+            <Icon name="download" /> Export
+          </button>
+          <button
+            className="icon-btn"
+            onClick={() => fileRef.current?.click()}
+            title="Merge a previously exported Fidelis library file"
+          >
+            <Icon name="upload" /> Import
+          </button>
+        </div>
         <input
           ref={fileRef}
           type="file"

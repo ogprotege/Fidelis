@@ -17,8 +17,11 @@
           // The embeddable widget is self-contained: theme from its own ?theme
           // param (default day), never the visitor's saved settings.
           var hash = location.hash || "";
-          if (hash.indexOf("/widget/") !== -1) {
-            document.documentElement.dataset.theme = hash.indexOf("theme=night") !== -1 ? "night" : "day";
+          if (/^#\/widget\//.test(hash)) {
+            var queryAt = hash.indexOf("?");
+            var widgetParams = new URLSearchParams(queryAt === -1 ? "" : hash.slice(queryAt + 1));
+            document.documentElement.dataset.widget = "";
+            document.documentElement.dataset.theme = widgetParams.get("theme") === "night" ? "night" : "day";
             document.documentElement.dataset.font = "garamond";
             return;
           }

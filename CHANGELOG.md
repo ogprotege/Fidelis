@@ -6,6 +6,107 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.24.0] — 2026-07-23 — the doors shall not be shut
+
+*"And the gates thereof shall not be shut by day." (Apocalypse 21:25)*
+
+A widget, navigation, accessibility, motion, and Roman-calendar repair release.
+
+### Fixed
+
+- **Widget entry is deterministic.** Cold links replace history, warm links push
+  only when the destination changes, duplicate delivery is coalesced, and every
+  live overlay is dismissed before navigation. Verse and Quote links scroll and
+  move focus to their cards. Back now returns to the caller instead of revisiting
+  a synthetic launch entry. The iOS shell bridges a committed left-edge gesture
+  into React Router's same-document history, so edge-Back consumes that same
+  warm-entry history without letting WebKit leave the app at its root. If
+  WKWebView retains a duplicate same-hash entry around native activation, the
+  coordinator uses the versioned router cursor to discard the duplicate before
+  returning to the caller. A rightward-horizontal begin gate and simultaneous
+  WebView recognition keep vertical or diagonal edge scrolling available.
+- **Native widgets fail closed and refresh at civil-time boundaries.** Android
+  rearms all instances on boot, package replacement, date, manual-time, and
+  time-zone broadcasts. Both platforms validate the calendar schema, expiry,
+  selected profile, fingerprint, exact lectionary-corpus fingerprint, and date
+  before displaying data. iOS does not cache clock-invalid snapshots and does
+  not substitute a default jurisdiction when its App Group is unavailable.
+  Invalid data says "Open Fidelis to update" instead of showing plausible
+  generic content.
+- **Native settings survive the edge cases they describe.** The containing app
+  and its sparse individual-church overlay use one release-pinned seven-year
+  window, so an installed build remains valid across New Year. Android System
+  appearance retains day/night resource aliases instead of freezing the current
+  palette into `RemoteViews`; explicit Day and Night choices remain pinned.
+  Persisted local overlays bind to the exact lectionary content fingerprint, so
+  an app update rejects old overlays until the app regenerates current data.
+- **Responsive and keyboard paths are repaired.** Library controls no longer
+  force page overflow at phone widths. Calendar settings and the Mass date
+  toolbar stay inside a 320 px viewport with 44 px controls. Reader verses use
+  roving tabindex, keyboard selection enters the action bar, and closing returns
+  focus. Touch controls meet the 44 px target at phone and tablet widths.
+- **Motion now follows input and user preference.** Keyboard and reduced-motion
+  section jumps are instant. Sheets use paired, interruptible panel/backdrop
+  transitions, enter from the right on desktop, and carry no false drag handle.
+  Hover motion is limited to hover-capable pointers; the switch knob uses a
+  transform; theme-token replacement suppresses incidental transitions.
+- **The embed is isolated and resizes safely.** Its root is transparent before
+  first paint, typography is pinned to Garamond, and a versioned ResizeObserver
+  message replaces the fixed-height assumption. The host validates window and
+  origin and clamps the reported height.
+- **Corpus-backed memorial readings are not misreported as absent.** Stable
+  formulary IDs now connect St. Blaise, St. Bridget, and the First Martyrs of
+  the Holy Roman Church to their existing citation rows, with date-level
+  regression coverage. The lectionary fingerprint now seals those mappings,
+  bundled supplements, and composed Mass sets as well as the generated table.
+  Regeneration also restores the source em dash in one 2030 native quote.
+
+### Added
+
+- **More → Widgets** reports configured native widgets, gives accurate iOS Home
+  Screen instructions, and lets supported Android launchers request Verse,
+  Mass, or Quote widget pinning. A pin prompt is never reported as installation;
+  only the one-shot callback records confirmation.
+- **Versioned Ordinary Form calendar profiles** separate calendar jurisdiction,
+  lectionary edition, and displayed Bible translation. Legacy `universal` and
+  `usa` settings migrate to General Roman and U.S. Sunday-Ascension profiles.
+  A distinct U.S. Thursday-Ascension profile covers Boston, Hartford, New York,
+  Omaha, and Philadelphia. Unsupported jurisdictions receive an explicit
+  General Roman fallback notice.
+- **All thirteen precedence classes, stable celebration/formulary IDs, profile
+  fingerprints, alternatives, suppression receipts, and cross-year transfer
+  resolution** now form the extensible calendar boundary. The General pack
+  includes Holy See inscriptions through St. John Henry Newman’s 2025 decree.
+- **Lawful Mass choices are explicit.** Christmas exposes Vigil, Night, Dawn,
+  and Day. Easter Sunday exposes the Year C `Luke 24:1-12` Gospel option and the
+  afternoon/evening Emmaus Gospel while retaining the complete Day Mass.
+- **Native calendar snapshots now cover three profiles from the previous year
+  through five future years.** Generation is atomic; both widget builders have
+  no-write byte-verification modes, enforced by `npm test`.
+
+### Security
+
+- Non-major lockfile updates move `tar` to 7.5.21, `js-yaml` to 4.3.0, and
+  `brace-expansion` to patched releases. Production and full audits report zero
+  known vulnerabilities.
+
+### Verification
+
+- Calendar tests exercise all 169 precedence pairs, profile migration, U.S.
+  province rules, source hashes, suppression/transfer receipts, full-year
+  General snapshots, both U.S. profile deltas, Christmas, and every Easter
+  cycle. Web tests cover widget Back
+  behavior, overflow, keyboard focus, live reduced motion, touch geometry,
+  sheets, embeds, and accessibility (**31/31 Playwright**). Android app lint,
+  host unit tests, APK, and instrumentation APK build pass. iOS compiles the app
+  and widget extension together, and its native suite passes **13/13** on both
+  iOS 17.5 and iOS 26.5 simulators. CI carries the Android API 24/26/31/36
+  instrumentation matrix. Both npm audits report zero known vulnerabilities.
+- Native shells are 1.24.0 (`versionCode` 12400); the PWA shell cache is v7.
+  This code is not a store-ready release until the committed iPhone and
+  Pixel/Samsung physical-device matrix in `docs/guides/DEVICE_ACCEPTANCE.md`
+  passes.
+
 ## [1.23.2] — 2026-07-22 — honour to whom honour
 
 *"Render therefore to all men their dues. Tribute, to whom tribute is due:

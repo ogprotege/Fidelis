@@ -87,8 +87,9 @@ ruby scripts/add-ios-widget-target.rb
 ```
 
 This adds the `FidelisWidgetExtension` app-extension target to `App.xcodeproj`,
-compiles `FidelisWidget.swift` + `CalendarWidgets.swift`, bundles `votd.json` +
-`calendar.json` + `Info.plist` (extension point `com.apple.widgetkit-extension`),
+compiles `FidelisWidget.swift` + `CalendarWidgets.swift` +
+`WidgetSharedSettings.swift`, bundles `votd.json` + `calendar.json` + `Info.plist`
+(extension point `com.apple.widgetkit-extension`),
 and embeds the `.appex` in the `App` target. It is idempotent — re-running once
 the target exists is a no-op. Then build/run the `App` scheme and add a widget
 from the home screen (long-press ▸ ➕ ▸ Fidelis): Verse of the Day, Today at Mass,
@@ -109,6 +110,27 @@ bundled data with:
 ```bash
 node scripts/build-votd-widget.mjs
 ```
+
+Fidelis cannot install an iOS widget or open Apple's widget gallery. **More ▸
+Widgets** therefore gives numbered Home Screen instructions and uses the
+`WidgetStatus` bridge only to report configurations already known to
+`WidgetCenter`, including each family. An empty successful result means none are
+configured; a bridge error is reported as unavailable, never as “not added.”
+
+The app and extension contain an App Group settings seam for calendar profile,
+theme, and translation. Both committed targets request
+`group.app.fidelis.bible`. Register that group for both signed identifiers and
+verify that both distribution profiles grant it. If the signed container is not
+available, the bridge returns `sharedSettingsAvailable: false`, the Widgets page
+says calendar widgets cannot read the app's selection, and calendar-derived
+WidgetKit surfaces show **Open Fidelis to update**. They never substitute a
+plausible bundled-default jurisdiction. System appearance remains a harmless
+visual fallback for the Verse widget.
+
+The app's custom `fidelis` URL scheme is registered in `Info.plist`. Verse,
+Mass, and Quote widgets open `fidelis://verse`, `fidelis://mass`, and
+`fidelis://quote`; `src/App.tsx` owns the cold/warm history and destination-focus
+rules.
 
 ## 3. Updating the web content
 
@@ -144,11 +166,15 @@ ships in the same `FidelisWidgetExtension` target, added by
 **Shared data — already generated.** `scripts/build-calendar-widget.ts`
 (`npm run calendar-widget`, also part of `npm run widgets`) pre-resolves, from
 the *same* `resolveReadings()` / `liturgicalDay()` / `quoteOfTheDay()` the web
-app uses, a rolling ~2-year window to:
+app uses, every supported profile from the previous civil year through five
+future years to:
 
 - `ios/WidgetExtension/calendar.json`
 
-It is a JSON **object keyed by local ISO date** (`"YYYY-MM-DD"`), each value:
+It is an atomic, versioned snapshot. The root carries `schemaVersion`,
+`generatedAt`, `expiresAt`, the covered window, and the default profile. Each
+profile carries its exact engine fingerprint and an object keyed by local ISO
+date (`"YYYY-MM-DD"`); each day value has this shape:
 
 ```json
 {
@@ -156,14 +182,23 @@ It is a JSON **object keyed by local ISO date** (`"YYYY-MM-DD"`), each value:
   "seasonLabel": "Tuesday of the Eleventh Week in Ordinary Time",
   "colorHex": "#2e7d32",
   "celebration": "",
+  "celebrationId": null,
+  "formularyId": null,
   "readings": [{ "label": "First Reading", "cite": "3 Kings 21:17-29" }, … ],
   "quote": { "text": "…", "author": "St. Polycarp of Smyrna" }
 }
 ```
 
-So no engine is ported: the widget reads the device's local date, looks up that
-key, and renders it (falling back calmly past the window's end). Regenerate
-after any calendar/lectionary/quote change with `npm run calendar-widget`.
+So no engine is ported: the widget reads the selected profile and device-local
+date, validates schema, expiry, fingerprint, and day, then renders. Any invalid
+or out-of-window data shows **Open Fidelis to update**, never plausible generic
+content. Regenerate after a calendar, lectionary, or quote change, then run the
+no-write parity check:
+
+```bash
+npm run calendar-widget
+npm run verify-widgets
+```
 
 **Two new widgets (in the existing `FidelisWidget` extension) — Swift now written.**
 The `MassWidget` and `QuoteWidget` are implemented in
@@ -182,9 +217,9 @@ What the implemented Swift does (for reference): it loads `calendar.json`, keys
 it by `DateFormatter` (`yyyy-MM-dd`, `Calendar(identifier: .gregorian)`, device
 `TimeZone.current` — matching the Android `GregorianCalendar` key exactly), shows
 `celebration` (else `seasonLabel`) plus the `readings` citations for Mass and the
-`quote.text` / `quote.author` for the Quote, in the day tokens (`#F4F2EE` /
-`#26241F` / `#6E6A61` / `#A8862C`) with the gold cross. Timelines emit one entry
-per day for the next week (`.atEnd`), fully offline.
+`quote.text` / `quote.author` for the Quote. Decorative gold remains the sacred
+mark; small gold text uses the darker readable token that clears 4.5:1. Timelines
+emit one entry per day for the next week (`.atEnd`), fully offline.
 
 **App Intent — "What's today's Gospel?" (Siri / Shortcuts):**
 
@@ -205,12 +240,21 @@ All three remain offline and pin `Calendar(identifier: .gregorian)` so a
 non-Gregorian device calendar can never skew the date key the widgets, Siri,
 and Android all look up.
 
-**Region policy:** `calendar.json` is generated for the **USCCB (USA) calendar**
-— the app's default region — so the widgets, Siri, and the app agree out of the
-box. The generated data is fixed to that region: a user who switches the app to
-the **Universal** calendar in Settings will still see USCCB celebrations,
-readings, and quotes on the widgets and from Siri. Region-configurable widgets
-are deliberately deferred (see `scripts/build-calendar-widget.ts`).
+**Calendar-profile policy:** the verified catalog is exact and deliberately
+small: **General Roman**, **United States with Ascension on Sunday**, and
+**United States with Ascension on Thursday** for Boston, Hartford, New York,
+Omaha, and Philadelphia. The snapshot contains all three. Legacy `universal`
+and `usa` settings migrate to General Roman and U.S. Sunday Ascension without
+changing their behavior. Unsupported countries and dioceses receive an
+explicit General Roman fallback notice; Fidelis does not claim a local proper
+that has not been sourced and verified.
+
+The app, widget, and Siri settings paths keep calendar jurisdiction, lectionary
+edition, and displayed Bible translation distinct. Once the requested App Group
+is granted by both signed profiles, WidgetKit reads the selected profile and
+reloads timelines after a settings change. Without a usable signed container,
+calendar-derived WidgetKit surfaces fail closed with **Open Fidelis to update**;
+this limitation must be called out during TestFlight acceptance.
 
 ## 6. macOS CI (builds the iOS App target)
 
@@ -230,6 +274,14 @@ The `FidelisWidgetExtension` target now lives in the committed project (added by
 `scripts/add-ios-widget-target.rb`, §2) and is embedded in the `App` target, so
 the App-target CI build compiles and embeds the widgets as a dependency — the App
 build is the gate for the widgets too.
+
+The shared **App** scheme is committed at
+`ios/App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme`; do not archive an
+auto-selected widget-extension scheme. The Node harness separately exercises the
+widget-link coordinator and profile/snapshot contracts. The physical iOS 17 and
+current iOS 26 widget-navigation and VoiceOver matrix remains mandatory because
+an unsigned simulator compile cannot prove WidgetCenter, signing entitlements,
+timeline rollover, or assistive-technology behavior.
 
 ## 7. Shipping to TestFlight
 

@@ -1,5 +1,12 @@
-import { ReactNode, useLayoutEffect, useRef } from "react";
-import { pushOverlay, removeOverlay } from "../lib/overlays";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState
+} from "react";
+import { isTopOverlay, pushOverlay, removeOverlay } from "../lib/overlays";
 import { lockScroll, unlockScroll } from "../lib/scrollLock";
 import Icon from "./Icon";
 
@@ -18,18 +25,52 @@ interface Props {
  * A bottom-sheet modal: dimmed backdrop, Escape / backdrop-click / close button
  * to dismiss, focus moved into the panel and returned to the opener on close,
  * the body pinned (iOS-safe) so the page behind can't rubber-band, focus trapped
- * within. A single restrained entrance and an iOS grabber handle on phones (both
- * in styles.css, reduced-motion-gated) — a prayer book, not a toy (standing rule
- * 3). The "panel" variant becomes a desktop side panel; all dialog/focus
- * behavior is identical (§4 commentary).
+ * within. Paired restrained enter/exit transitions live in styles.css and honor
+ * reduced motion. There is no drag handle because this dialog is not draggable.
+ * The "panel" variant becomes a desktop side panel; all dialog/focus behavior
+ * is identical (§4 commentary).
  */
 export default function Sheet({ titleId, onClose, children, variant = "sheet" }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const opener = useRef<HTMLElement | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const closingRef = useRef(false);
+  const [phase, setPhase] = useState<"entering" | "open" | "closing">("entering");
   // Keep the latest onClose without re-running the lock effect — re-running it
   // would re-pin the body and lose the saved scroll position on a parent render.
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+
+  const requestClose = useCallback(() => {
+    // State commits on the next React turn. The ref closes the small interval
+    // in which two taps, Escape, or hardware Back could otherwise schedule two
+    // teardown timers and advance the route beneath the dialog.
+    if (closingRef.current || phase === "closing") return;
+    closingRef.current = true;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      onCloseRef.current();
+      return;
+    }
+    setPhase("closing");
+    closeTimer.current = setTimeout(() => onCloseRef.current(), 150);
+  }, [phase]);
+  const requestCloseRef = useRef(requestClose);
+  requestCloseRef.current = requestClose;
+
+  // Mount in the starting pose, then cross the frame boundary so both the
+  // backdrop and panel receive a real CSS transition. Reduced motion collapses
+  // the same state change to an effectively instant one in styles.css.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      // A close can be requested between mount and this first frame. Do not
+      // let the delayed entrance state overwrite the already-started exit.
+      if (!closingRef.current) setPhase("open");
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   // A LAYOUT effect, deliberately: its cleanup (unlockScroll, which restores the
   // pre-lock scroll offset) must run in React's mutation phase, BEFORE
@@ -40,7 +81,7 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
     opener.current = document.activeElement as HTMLElement | null;
     // Register with the overlay stack so the Android hardware Back button (and the
     // app-root exit decision) closes this sheet first, before touching navigation.
-    const overlayId = pushOverlay(() => onCloseRef.current());
+    const overlayId = pushOverlay(() => requestCloseRef.current());
     // Freeze the page behind the scrim. The lock is shared and reference-counted
     // (lib/scrollLock): stacking sheets pin the body once and unpin it only when
     // the last one closes, so no open/close order can leave `position: fixed`
@@ -52,7 +93,10 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onCloseRef.current();
+        if (!isTopOverlay(overlayId)) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        requestCloseRef.current();
         return;
       }
       if (e.key !== "Tab") return;
@@ -76,6 +120,7 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
     return () => {
       removeOverlay(overlayId);
       document.removeEventListener("keydown", onKey);
+      if (closeTimer.current) clearTimeout(closeTimer.current);
       unlockScroll();
       opener.current?.focus();
     };
@@ -84,7 +129,10 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
   }, []);
 
   return (
-    <div className={variant === "panel" ? "sheet-backdrop panel" : "sheet-backdrop"} onClick={onClose}>
+    <div
+      className={`sheet-backdrop ${variant === "panel" ? "panel " : ""}${phase}`}
+      onClick={requestClose}
+    >
       <div
         className={variant === "panel" ? "sheet panel" : "sheet"}
         role="dialog"
@@ -96,7 +144,7 @@ export default function Sheet({ titleId, onClose, children, variant = "sheet" }:
         <button
           type="button"
           className="sheet-close"
-          onClick={onClose}
+          onClick={requestClose}
           aria-label="Close"
           title="Close"
         >

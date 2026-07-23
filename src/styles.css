@@ -208,6 +208,14 @@
 
 * { box-sizing: border-box; }
 
+/* A root palette swap should not fan out through every component transition.
+   App holds this attribute for two frames while Day/Night tokens settle. */
+html[data-theme-switching] *,
+html[data-theme-switching] *::before,
+html[data-theme-switching] *::after {
+  transition: none !important;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -223,6 +231,11 @@ html, body {
      deliberate press feedback is the :active states below. */
   -webkit-tap-highlight-color: transparent;
 }
+
+/* The iframe owns no page-colored canvas. Set on <html> before first paint by
+   index.html, then maintained by App, so neither edge can flash opaque. */
+html[data-widget],
+html[data-widget] body { background: transparent; }
 
 /* Drop the ~300ms double-tap-zoom delay on the things you act on, while leaving
    pinch-zoom of the page itself untouched (accessibility — never disable zoom). */
@@ -241,7 +254,7 @@ a, button, summary,
 }
 
 /* Skip-to-content: hidden off-screen until a keyboard/SR user focuses it, then
-   slides in as the first stop on every page (nav/IA). */
+   appears immediately as the first stop on every page (nav/IA). */
 .skip-link {
   position: fixed;
   left: 0.5rem;
@@ -255,14 +268,13 @@ a, button, summary,
   font-family: var(--sans);
   font-size: 0.9rem;
   text-decoration: none;
-  transition: top 0.15s ease;
 }
 .skip-link:focus { top: calc(0.5rem + env(safe-area-inset-top)); }
 /* <main> is a programmatic focus target on route change, not a control. */
 #main:focus { outline: none; }
 
 a { color: var(--purple); text-decoration: none; }
-a:hover { text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) { a:hover { text-decoration: underline; } }
 /* A link INSIDE PROSE underlines by default (v1.17.1, audit FID-A11Y-004): on a
    liturgical day whose accent runs close to the muted copy around it, the Mass
    card's import link measured 1.07:1 against --text-muted — color alone cannot
@@ -331,7 +343,8 @@ option { background: var(--bg-1); color: var(--text); }
   z-index: 29;
 }
 /* The brand link (Header.tsx) — the wordmark never underlines. */
-.brand-link, .brand-link:hover { text-decoration: none; }
+.brand-link { text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .brand-link:hover { text-decoration: none; } }
 /* Brand is gold — a fixed identity constant (spec §1.3), the masthead, not a
    generic action; cross and wordmark read as one gold mark. */
 .brand {
@@ -354,19 +367,22 @@ option { background: var(--bg-1); color: var(--text); }
 }
 .nav { display: flex; gap: 0.25rem; flex-wrap: wrap; margin-left: auto; font-family: var(--sans); font-size: 0.9rem; }
 .nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   padding: 0.35rem 0.7rem;
   border-radius: 0.5rem;
   color: var(--text-muted);
 }
 .nav a.active { color: var(--purple); font-weight: 600; }
-.nav a:hover { text-decoration: none; color: var(--purple); }
+@media (hover: hover) and (pointer: fine) { .nav a:hover { text-decoration: none; color: var(--purple); } }
 
 /* ── Tab bar (spec §2.1, v1.16.0 masthead) ───────────────────────────────────
    <TabBar> wears the .nav look on wide viewports — Today · Read · Search · Mass
    · More as the header row. The phone layout — its own slim sticky row beneath
    the brand, the collapsing masthead — lives in the media query at the foot of
    this file (CSS-only swap, no router changes). "More" is a popover over
-   Library/Translations/Settings/About — a dropdown below the row at every
+   Library/Widgets/Translations/Settings/About — a dropdown below the row at every
    width — not a route, so the URL space is unchanged. */
 .tabbar .more { position: relative; display: flex; }
 .tabbar .more-btn {
@@ -380,12 +396,13 @@ option { background: var(--bg-1); color: var(--text); }
   color: var(--text-muted);
   display: inline-flex;
   align-items: center;
+  min-height: 44px;
   gap: 0.2rem;
 }
-.tabbar .more-btn:hover { color: var(--purple); }
+@media (hover: hover) and (pointer: fine) { .tabbar .more-btn:hover { color: var(--purple); } }
 /* Purple acts (§1.2): More colors active while you are on one of its routes. */
 .tabbar .more-btn.active { color: var(--purple); font-weight: 600; }
-.more-caret { transition: transform 0.15s ease; }
+.more-caret { transform: rotate(0); }
 .more-btn[aria-expanded="true"] .more-caret { transform: rotate(180deg); }
 
 /* The popover of secondary destinations. */
@@ -404,12 +421,17 @@ option { background: var(--bg-1); color: var(--text); }
   z-index: 50;
 }
 .more-menu a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   padding: 0.5rem 0.7rem;
   border-radius: 0.4rem;
   color: var(--text-muted);
   white-space: nowrap;
 }
-.more-menu a:hover { color: var(--purple); background: var(--bg-2); text-decoration: none; }
+@media (hover: hover) and (pointer: fine) {
+  .more-menu a:hover { color: var(--purple); background: var(--bg-2); text-decoration: none; }
+}
 .more-menu a.active { color: var(--purple); font-weight: 600; }
 
 .icon-btn {
@@ -431,7 +453,7 @@ option { background: var(--bg-1); color: var(--text); }
   gap: 0.25rem;
   min-height: 44px;
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .icon-btn:hover { border-color: var(--purple); text-decoration: none; }
 }
 .icon-btn:active { background: var(--bg-2); }
@@ -513,7 +535,7 @@ option { background: var(--bg-1); color: var(--text); }
 .section-nav-link:active { border-color: var(--purple); color: var(--purple); }
 .section-nav-link:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .section-nav-top { color: var(--text-muted); }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .section-nav-link:hover { border-color: var(--purple); color: var(--purple); }
 }
 
@@ -611,7 +633,7 @@ h1.page-title {
   color: var(--purple);
   font-weight: 700;
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .lit-celebration-link:hover { border-color: var(--purple); }
 }
 .lit-celebration-link:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
@@ -635,7 +657,7 @@ h1.page-title {
   font-weight: 600;
   text-decoration: none;
 }
-.continue-cta:hover { text-decoration: none; filter: brightness(1.1); }
+@media (hover: hover) and (pointer: fine) { .continue-cta:hover { text-decoration: none; filter: brightness(1.1); } }
 
 /* ---------- Book grid ---------- */
 .testament-title {
@@ -666,7 +688,7 @@ h1.page-title {
   font-size: 0.95rem;
   color: var(--text);
 }
-@media (hover: hover) { .book-grid a:hover { border-color: var(--purple); text-decoration: none; } }
+@media (hover: hover) and (pointer: fine) { .book-grid a:hover { border-color: var(--purple); text-decoration: none; } }
 /* v1.17.1 (FID-UX-002): the ~33px book chips — the grid's and the picker
    sheet's — carry a 44px+ tap target without growing their visible box. */
 .book-grid a::after,
@@ -712,13 +734,18 @@ h1.page-title {
   cursor: pointer;
 }
 .folio-pick .folio-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (hover: hover) { .folio-pick:hover { color: var(--purple); } }
+@media (hover: hover) and (pointer: fine) { .folio-pick:hover { color: var(--purple); } }
 .folio-pick:active { color: var(--purple); }
 .folio-caret { color: var(--text-muted); flex-shrink: 0; }
 /* Aa sits at the row's end; the serif face makes it read as a type specimen. */
 .folio-type { margin-left: auto; font-family: var(--serif); }
 
 .chapter-pick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   padding: 0 0.1rem;
@@ -727,7 +754,7 @@ h1.page-title {
   cursor: pointer;
   border-bottom: 1px dashed var(--purple);
 }
-.chapter-pick:hover { color: var(--purple); }
+@media (hover: hover) and (pointer: fine) { .chapter-pick:hover { color: var(--purple); } }
 .chapter-pick:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .chapter-grid-title { margin: 0 3rem 0.7rem 0; }
 .chapter-grid {
@@ -749,7 +776,7 @@ h1.page-title {
   cursor: pointer;
   transition: border-color 120ms ease, background 120ms ease;
 }
-@media (hover: hover) { .chapter-cell:hover { border-color: var(--purple); } }
+@media (hover: hover) and (pointer: fine) { .chapter-cell:hover { border-color: var(--purple); } }
 .chapter-cell:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .chapter-cell.current { border-color: var(--gold); color: var(--gold-text); font-weight: 600; }
 /* v1.16.0: the picker sheet's book list (spec §4) — one tap re-targets the
@@ -775,7 +802,7 @@ h1.page-title {
   color: var(--text);
   cursor: pointer;
 }
-@media (hover: hover) { .picker-book:hover { border-color: var(--purple); } }
+@media (hover: hover) and (pointer: fine) { .picker-book:hover { border-color: var(--purple); } }
 .picker-book:active { background: var(--bg-2); }
 .picker-book:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .picker-book.current { border-color: var(--gold); color: var(--gold-text); font-weight: 600; }
@@ -808,7 +835,7 @@ h1.page-title {
   scroll-margin-top: var(--anchor-offset);
   scroll-margin-bottom: calc(var(--verse-actions-h, 0px) + 0.75rem);
 }
-.verse:hover { background: var(--bg-2); }
+@media (hover: hover) and (pointer: fine) { .verse:hover { background: var(--bg-2); } }
 /* The rule beside a selected verse — gold honors. */
 .verse.selected { outline: 2px solid var(--gold); }
 /* A deep-linked (?v=) verse lands lit: a transient gold wash + rule for ~3s so
@@ -849,7 +876,7 @@ h1.page-title {
   min-height: 44px;
   padding: 0 0.15rem;
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .ccc-ref:hover { text-decoration: underline; }
 }
 .ccc-ref:active { text-decoration: underline; }
@@ -940,7 +967,7 @@ h1.page-title {
   padding: 0.4rem 0;
   min-height: 44px;
 }
-@media (hover: hover) { .ccc-toc-sec:hover { text-decoration: underline; } }
+@media (hover: hover) and (pointer: fine) { .ccc-toc-sec:hover { text-decoration: underline; } }
 .ccc-toc-sec:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .ccc-back {
   background: none;
@@ -1010,13 +1037,16 @@ h1.page-title {
   font-size: 0.9rem;
 }
 .chapter-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   padding: 0.5rem 1rem;
   border: var(--hairline) solid var(--border);
   border-radius: 0.6rem;
   background: var(--bg-1);
   color: var(--text);
 }
-@media (hover: hover) { .chapter-nav a:hover { border-color: var(--purple); text-decoration: none; } }
+@media (hover: hover) and (pointer: fine) { .chapter-nav a:hover { border-color: var(--purple); text-decoration: none; } }
 
 /* verse action bar */
 .verse-actions {
@@ -1073,7 +1103,7 @@ h1.page-title {
   top: -11px;
   bottom: -11px;
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .hl-dot:hover { transform: translateY(-1px); }
 }
 .hl-dot:active { transform: translateY(-1px); }
@@ -1223,7 +1253,7 @@ h1.page-title {
   position: absolute;
   inset: -0.6rem 0;
 }
-@media (hover: hover) { .chip:hover { border-color: var(--purple); } }
+@media (hover: hover) and (pointer: fine) { .chip:hover { border-color: var(--purple); } }
 .chip:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .chip.active { background: var(--bg-2); border-color: var(--purple); color: var(--text); box-shadow: inset 0 0 0 1px var(--purple); }
 .chip-count { opacity: 0.7; font-variant-numeric: tabular-nums; }
@@ -1239,6 +1269,7 @@ h1.page-title {
 /* ---------- Library ---------- */
 .tabs { display: flex; gap: 0.4rem; font-family: var(--sans); font-size: 0.9rem; margin-bottom: 1rem; }
 .tabs button {
+  min-height: 44px;
   padding: 0.45rem 0.9rem;
   border: var(--hairline) solid var(--border);
   background: var(--bg-1);
@@ -1250,6 +1281,16 @@ h1.page-title {
    flex box (not display: contents, which can strip the group role from the
    accessibility tree). Same gap as .tabs — visually identical. */
 .tabs .tab-group { display: flex; gap: 0.4rem; }
+.library-toolbar { align-items: center; flex-wrap: wrap; }
+.library-toolbar .tab-group { flex: 1 1 auto; }
+.library-transfer-actions { display: flex; gap: 0.4rem; margin-left: auto; }
+@media (max-width: 560px) {
+  .library-toolbar .tab-group,
+  .library-transfer-actions { flex: 1 1 100%; }
+  .library-toolbar .tab-group > button,
+  .library-transfer-actions > button { flex: 1 1 0; min-width: 0; }
+  .library-transfer-actions { margin-left: 0; }
+}
 .lib-item { padding: 0.75rem 0; border-bottom: var(--hairline) solid var(--border); }
 .lib-item .when { font-family: var(--sans); font-size: 0.75rem; color: var(--text-muted); }
 .lib-item .actions { margin-top: 0.3rem; }
@@ -1296,13 +1337,25 @@ h1.page-title {
 /* ---------- Widget embed page ---------- */
 body.widget-mode { background: transparent; }
 .widget-votd {
-  font-family: var(--serif);
+  font-family: var(--scripture);
   background: var(--bg-1);
   border: var(--hairline) solid var(--border);
   border-radius: 0.8rem;
   padding: 1rem 1.2rem;
   max-width: 28rem;
   margin: 0.5rem auto;
+}
+
+.embed-preview-shell {
+  max-width: 30rem;
+  margin: 0.8rem 0 1rem;
+  background: transparent;
+}
+.embed-preview {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
 }
 .widget-votd .w-title {
   font-family: var(--sans);
@@ -1324,6 +1377,38 @@ body.widget-mode { background: transparent; }
   word-break: break-all;
 }
 
+/* Native Home Screen widget gallery. The mark honors; every installation
+   action remains purple, keeping the two-accent rule intact. */
+.widget-gallery { display: grid; gap: 0.8rem; margin: 1rem 0; }
+.widget-choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem;
+  background: var(--bg-1);
+  border: var(--hairline) solid var(--border);
+  border-radius: 0.8rem;
+  box-shadow: var(--shadow-soft);
+}
+.widget-choice-mark {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.65rem;
+  background: var(--bg-2);
+  color: var(--gold-text);
+  font-size: 1.25rem;
+}
+.widget-choice h2 { margin: 0; font-size: 1.08rem; }
+.widget-choice p { margin: 0.2rem 0 0; }
+.widget-add { margin: 0; white-space: nowrap; }
+@media (max-width: 600px) {
+  .widget-choice { grid-template-columns: auto minmax(0, 1fr); }
+  .widget-add { grid-column: 1 / -1; width: 100%; }
+}
+
 /* ---------- Daily readings ---------- */
 /* v1.16.0 one-row Mass controls (spec §5): ‹ · date ▾ · › [Today] … NABRE ▾.
    Same functions, half the chrome; the day card moves up. The visible date is
@@ -1336,9 +1421,23 @@ body.widget-mode { background: transparent; }
   flex-wrap: nowrap;
   align-items: center;
 }
-.readings-toolbar select { margin-left: auto; font-size: 0.9rem; max-width: 8rem; }
+.readings-toolbar select {
+  flex: 0 1 8rem;
+  min-width: 44px;
+  min-height: 44px;
+  margin-left: auto;
+  font-size: 0.9rem;
+  max-width: 8rem;
+}
 .readings-toolbar .icon-btn { min-width: 44px; font-size: 1.15rem; line-height: 1; padding: 0.3rem 0.6rem; }
-.date-pick { position: relative; display: inline-flex; align-items: center; min-height: 44px; min-width: 0; }
+.date-pick {
+  position: relative;
+  display: inline-flex;
+  flex: 1 1 7rem;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+}
 .date-pick-input {
   position: absolute;
   inset: 0;
@@ -1357,6 +1456,7 @@ body.widget-mode { background: transparent; }
 }
 .date-pick-label {
   display: inline-flex;
+  width: 100%;
   align-items: center;
   gap: 0.3rem;
   font-weight: 600;
@@ -1370,12 +1470,23 @@ body.widget-mode { background: transparent; }
    chip appears. The ellipsis is the never-overlap safety net for long locales.
    (The clip lives on the inner spans, not .date-pick — clipping there would
    truncate the focus ring drawn on the label.) */
-.date-pick-label > span { overflow: hidden; text-overflow: ellipsis; }
+.date-pick-label > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 /* The caret never compresses — the date text ellipsizes first. */
 .date-pick-label .icon { flex-shrink: 0; }
 .date-short { display: none; }
 @media (max-width: 480px) {
-  .readings-toolbar { gap: 0.35rem; }
+  .readings-toolbar { gap: 0.3rem; }
+  .readings-toolbar select {
+    flex-basis: 4.5rem;
+    width: 4.5rem;
+    padding-inline: 0.3rem;
+  }
+  .readings-toolbar .chip { flex: none; padding-inline: 0.5rem; }
   .date-long { display: none; }
   .date-short { display: inline; }
 }
@@ -1478,7 +1589,7 @@ body.widget-mode { background: transparent; }
   position: absolute;
   inset: -0.3rem 0;
 }
-@media (hover: hover) { .pill:hover { border-color: var(--purple); } }
+@media (hover: hover) and (pointer: fine) { .pill:hover { border-color: var(--purple); } }
 /* Selected = a liturgical-colored outline (the day's --purple: green in Ordinary
    Time, violet in Advent/Lent, rose on Gaudete/Laetare, gold for white feasts),
    with readable text — the "color outlining follows the proper liturgy" intent. */
@@ -1513,10 +1624,12 @@ body.widget-mode { background: transparent; }
   padding: 0.7rem 0.85rem;
   cursor: pointer;
 }
-@media (hover: hover) { .version-card:hover { border-color: var(--purple); } }
+@media (hover: hover) and (pointer: fine) {
+  .version-card:hover { border-color: var(--purple); }
+  .version-card.locked:hover { border-color: var(--border); }
+}
 .version-card.active { border-color: var(--purple); box-shadow: inset 0 0 0 1px var(--purple); }
 .version-card.locked { cursor: default; opacity: 0.82; }
-.version-card.locked:hover { border-color: var(--border); }
 .version-card:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 .version-abbrev {
   font-family: var(--sans);
@@ -1553,8 +1666,52 @@ body.widget-mode { background: transparent; }
    guide and the dropped top rule make a switch chain read as one block. */
 .setting-row.nested { margin-inline-start: 1rem; padding-inline-start: 0.75rem; border-inline-start: var(--hairline) solid var(--border); }
 .setting-row + .setting-row.nested { border-top: none; padding-top: 0.35rem; }
+.month-day-select,
+.church-proper-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+.month-day-select > select { min-width: 0; }
+.church-proper-controls { flex-wrap: wrap; }
 .setting-label { font-family: var(--sans); font-weight: 600; font-size: 0.92rem; }
 .catechesis { margin: 0.15rem 0 0; max-width: 34rem; }
+
+/* Calendar profiles have several compound controls. At phone width, stack the
+   explanatory copy over each control and let every native field use the card's
+   bounded content width. This keeps long lectionary labels and local-proper
+   month/day/color groups from creating page-level horizontal overflow. */
+@media (max-width: 480px) {
+  #calendar .setting-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+  }
+  #calendar .setting-row > * { min-width: 0; }
+  #calendar .setting-row > select,
+  #calendar .setting-row > input,
+  #calendar .setting-row select,
+  #calendar .setting-row input {
+    max-width: 100%;
+    min-height: 44px;
+  }
+  #calendar .setting-row > select,
+  #calendar .setting-row > input { width: 100%; }
+  #calendar .month-day-select {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(4.25rem, 0.55fr);
+    width: 100%;
+  }
+  #calendar .month-day-select > select { width: 100%; }
+  #calendar .church-proper-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+    width: 100%;
+  }
+  #calendar .church-proper-controls > select { width: 100%; }
+}
 
 /* §2.2 toggle switch (Follow the liturgical year): a role="switch" button. */
 .switch {
@@ -1578,9 +1735,9 @@ body.widget-mode { background: transparent; }
   height: 1.15rem;
   border-radius: 50%;
   background: var(--bg-1);
-  transform: translateY(-50%);
+  transform: translate(0, -50%);
   box-shadow: var(--shadow-soft);
-  transition: left 0.15s, background 0.15s;
+  transition: transform 0.15s, background 0.15s;
 }
 /* v1.17.1 (FID-UX-002): the 43×25px switch taps at 44px+ — ::before carries the
    slop because ::after above IS the knob. The row's own separation (border +
@@ -1591,7 +1748,10 @@ body.widget-mode { background: transparent; }
   inset: -0.65rem -1px;
 }
 .switch[aria-checked="true"] { background: var(--purple-strong); border-color: var(--purple-strong); }
-.switch[aria-checked="true"]::after { left: calc(100% - 1.33rem); background: var(--on-accent); }
+.switch[aria-checked="true"]::after {
+  transform: translate(calc(2.7rem - 1.33rem - 0.18rem), -50%);
+  background: var(--on-accent);
+}
 .switch:disabled { opacity: 0.4; cursor: not-allowed; }
 .switch:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 
@@ -1845,18 +2005,26 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   line-height: 1.5;
 }
 .rosary-list .rosary-title { flex: 1; }
-.rosary-list .rosary-mystery:hover .rosary-title,
 .rosary-list .rosary-mystery:focus-visible .rosary-title { text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) {
+  .rosary-list .rosary-mystery:hover .rosary-title { text-decoration: underline; }
+}
 .rosary-list .rosary-mystery .mref { margin-left: 0; }
 
 .sheet-backdrop {
   position: fixed;
   inset: 0;
-  background: var(--scrim);
+  background: transparent;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   z-index: 60;
+  transition: background-color 180ms ease;
+}
+.sheet-backdrop.open { background: var(--scrim); }
+.sheet-backdrop.closing {
+  background: transparent;
+  transition-duration: 140ms;
 }
 .sheet {
   position: relative;
@@ -1873,28 +2041,18 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   border: var(--hairline) solid var(--border);
   border-radius: 0.9rem 0.9rem 0 0;
   box-shadow: var(--shadow);
-  padding: 1.5rem 1.3rem calc(1.3rem + env(safe-area-inset-bottom));
-  animation: sheet-in 110ms ease-out;
+  padding: 1.3rem 1.3rem calc(1.3rem + env(safe-area-inset-bottom));
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 160ms ease;
 }
-/* The iOS grabber pill — the universal "drag/dismiss" cue. Phones only (where the
-   sheet is bottom-anchored); hidden once it becomes a centered/side panel ≥640px.
-   Decoration-of-affordance, not ornament; aria-hidden by being a pseudo-element. */
-.sheet::before {
-  content: "";
-  position: absolute;
-  top: 0.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2.25rem;
-  height: 0.25rem;
-  border-radius: 999px;
-  background: var(--border);
-}
-/* A single restrained entrance so the sheet doesn't pop in on phones; the
-   global prefers-reduced-motion block neutralizes it to ~instant. */
-@keyframes sheet-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
+.sheet-backdrop.open .sheet { opacity: 1; transform: translateY(0); }
+.sheet-backdrop.closing .sheet {
+  opacity: 0;
+  transform: translateY(8px);
+  transition-duration: 140ms;
 }
 .sheet-close {
   position: absolute;
@@ -1951,7 +2109,7 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
 .share-actions { display: flex; gap: 0.6rem; align-items: center; justify-content: center; }
 .share-actions .continue-cta { margin-top: 0; }
 .icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.icon-btn:disabled:hover { border-color: var(--border); }
+@media (hover: hover) and (pointer: fine) { .icon-btn:disabled:hover { border-color: var(--border); } }
 .share-note { text-align: center; margin: 0.7rem 0 0; min-height: 1.1rem; }
 /* The share affordance on the Today cards — purple acts (§1.2). */
 .card-share {
@@ -1968,7 +2126,7 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   font-size: 0.82rem;
   color: var(--purple);
 }
-.card-share:hover { text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) { .card-share:hover { text-decoration: underline; } }
 /* v1.17.1 (FID-UX-002): the 16px-tall Share line taps at 44px+ — asymmetric
    slop that exactly fills the button's own 0.7rem top margin and the card's
    1.1rem bottom padding, so it never covers the card text above it. */
@@ -1981,8 +2139,6 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
 @media (min-width: 640px) {
   .sheet-backdrop { align-items: center; }
   .sheet { border-radius: 0.9rem; max-height: 80vh; max-height: 80dvh; padding-top: 1.3rem; }
-  /* Centered/side-docked at this width — the bottom-sheet grabber no longer reads. */
-  .sheet::before { display: none; }
   /* §4.2 panel variant: a right-docked, full-height study panel on desktop. On
      phones it stays the plain bottom sheet (the base rules above 640px). */
   .sheet-backdrop.panel { align-items: stretch; justify-content: flex-end; }
@@ -1998,6 +2154,9 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
     border-right: none;
     border-bottom: none;
   }
+  .sheet-backdrop.panel .sheet { transform: translateX(16px); }
+  .sheet-backdrop.panel.open .sheet { transform: translateX(0); }
+  .sheet-backdrop.panel.closing .sheet { transform: translateX(12px); }
 }
 
 /* §4.2 commentary sheet. Tabs and chips ACT (purple); the source credit and the
@@ -2028,7 +2187,7 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   position: absolute;
   inset: -0.4rem 0;
 }
-@media (hover: hover) { .cmt-tab:hover { color: var(--purple); } }
+@media (hover: hover) and (pointer: fine) { .cmt-tab:hover { color: var(--purple); } }
 .cmt-tab.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 600; }
 .cmt-credit {
   font-family: var(--sans);
@@ -2057,7 +2216,7 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   background: var(--bg-1);
   color: var(--text);
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .cmt-chip:hover,
   .cmt-doctors:hover { border-color: var(--purple); }
 }
@@ -2116,8 +2275,8 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   line-height: 1.5;
   color: var(--gold-text);
 }
-.indulgence-line:hover,
 .indulgence-line:focus-visible { text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) { .indulgence-line:hover { text-decoration: underline; } }
 
 .conditions-list { margin: 0.5rem 0; padding-left: 1.3rem; }
 .conditions-list li { margin: 0.25rem 0; line-height: 1.5; }
@@ -2148,7 +2307,7 @@ hr.rule { border: none; border-top: var(--hairline) solid var(--border); margin:
   font: inherit;
   color: var(--text);
 }
-@media (hover: hover) { .preset-btn:hover { border-color: var(--purple); } }
+@media (hover: hover) and (pointer: fine) { .preset-btn:hover { border-color: var(--purple); } }
 .plan-book-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));

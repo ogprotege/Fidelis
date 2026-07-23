@@ -26,7 +26,18 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      # npm 10 falls back to the retired quick-audit endpoint whenever the
+      # bulk advisory request fails, which can turn a clean tree into a false
+      # 400 "Invalid package tree" failure. npm 11 removed that fallback.
+      - name: Pin npm audit client
+        run: |
+          npm install --global npm@11.17.0 --no-audit --no-fund
+          npm --version
       - run: npm ci
+      - name: Audit production dependency graph
+        run: npm audit --omit=dev
+      - name: Audit complete dependency graph
+        run: npm audit
       - run: npm run lint
       - run: npm test
       - run: npm run build
@@ -46,6 +57,10 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - name: Pin npm install client
+        run: |
+          npm install --global npm@11.17.0 --no-audit --no-fund
+          npm --version
       - run: npm ci
       - run: npm run build
       - name: Browser suite (Playwright)

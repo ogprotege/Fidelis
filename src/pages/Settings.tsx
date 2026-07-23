@@ -17,12 +17,22 @@ import {
 } from "../lib/data";
 import { parseCccText } from "../lib/import-formats";
 import {
-  CalendarRegion,
   exportMarginalia,
   getOfflineTranslations,
   importMarginalia,
   markOfflineTranslation
 } from "../lib/storage";
+import {
+  SUPPORTED_LECTIONARY_PACKS,
+  US_ECCLESIASTICAL_PROVINCES,
+  calendarProfile,
+  individualChurchProperDateConflicts,
+  normalizeIndividualChurchProper,
+  profileForJurisdiction,
+  type IndividualChurchColor,
+  type IndividualChurchProper,
+  type MonthDay
+} from "../lib/calendarProfile";
 import { TRANSLATIONS, getTranslation, languageLabel } from "../lib/translations";
 import { FONT_SIZE_PRESETS, SCRIPTURE_FONTS } from "../lib/typography";
 import { THEME_OPTIONS } from "../lib/theme";
@@ -41,10 +51,147 @@ import { useSettings, useUpdateSettings } from "../SettingsContext";
 const SAMPLE =
   "In principio creavit Deus cælum et terram. Terra autem erat inanis et vacua, et tenebræ erant super faciem abyssi.";
 
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+] as const;
+const COMMON_MONTH_DAYS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
+
+const sameMonthDay = (left: MonthDay, right: MonthDay) =>
+  left.month === right.month && left.day === right.day;
+
+function MonthDaySelect({
+  label,
+  value,
+  blockedDates = [],
+  onChange
+}: {
+  label: string;
+  value: MonthDay | null;
+  blockedDates?: readonly MonthDay[];
+  onChange: (value: MonthDay | null) => void;
+}) {
+  const month = value?.month ?? 0;
+  const maxDay = month ? COMMON_MONTH_DAYS[month - 1] : 31;
+  const blocked = (candidate: MonthDay) =>
+    blockedDates.some((date) => sameMonthDay(date, candidate));
+  return (
+    <span className="month-day-select" role="group" aria-label={label}>
+      <select
+        aria-label={`${label} month`}
+        value={month || ""}
+        onChange={(event) => {
+          const nextMonth = Number(event.target.value);
+          if (!nextMonth) onChange(null);
+          else {
+            const preferredDay = Math.min(value?.day ?? 1, COMMON_MONTH_DAYS[nextMonth - 1]);
+            const availableDay = [
+              preferredDay,
+              ...Array.from({ length: COMMON_MONTH_DAYS[nextMonth - 1] }, (_, index) => index + 1)
+            ].find((day) => !blocked({ month: nextMonth, day }));
+            onChange(availableDay ? { month: nextMonth, day: availableDay } : null);
+          }
+        }}
+      >
+        <option value="">Month</option>
+        {MONTHS.map((name, index) => (
+          <option key={name} value={index + 1}>{name}</option>
+        ))}
+      </select>{" "}
+      <select
+        aria-label={`${label} day`}
+        value={value?.day ?? ""}
+        disabled={!month}
+        onChange={(event) => {
+          if (month) onChange({ month, day: Number(event.target.value) });
+        }}
+      >
+        <option value="">Day</option>
+        {Array.from({ length: maxDay }, (_, index) => index + 1).map((day) => (
+          <option key={day} value={day} disabled={blocked({ month, day })}>{day}</option>
+        ))}
+      </select>
+    </span>
+  );
+}
+
 export default function Settings() {
   const settings = useSettings();
   const update = useUpdateSettings();
   const trans = getTranslation(settings.translation);
+  const [choosingUnsupportedCountry, setChoosingUnsupportedCountry] = useState(
+    settings.calendarCountryCode !== "" && settings.calendarCountryCode !== "US"
+  );
+  const [churchProperNotice, setChurchProperNotice] = useState<string | null>(null);
+  const jurisdiction = profileForJurisdiction(
+    settings.calendarCountryCode,
+    settings.calendarEcclesiasticalProvince
+  );
+  const updateChurchProper = (patch: Partial<IndividualChurchProper>) => {
+    const candidate = { ...settings.individualChurchProper, ...patch };
+    const conflicts = individualChurchProperDateConflicts(candidate);
+    if (conflicts.length) {
+      setChurchProperNotice(
+        `Each local solemnity needs a different date. ${conflicts.join("; ")}.`
+      );
+      return;
+    }
+    setChurchProperNotice(null);
+    update({
+      individualChurchProper: normalizeIndividualChurchProper(candidate)
+    });
+  };
+  const colorSelect = (
+    label: string,
+    value: IndividualChurchColor,
+    onChange: (value: IndividualChurchColor) => void
+  ) => (
+    <select
+      aria-label={label}
+      value={value}
+      onChange={(event) => onChange(event.target.value as IndividualChurchColor)}
+    >
+      <option value="white">White</option>
+      <option value="red">Red, for a martyr or the Lord&apos;s Passion</option>
+    </select>
+  );
+
+  const selectCountry = (value: string) => {
+    if (value === "other") {
+      setChoosingUnsupportedCountry(true);
+      update({
+        calendarCountryCode: "",
+        calendarEcclesiasticalProvince: "",
+        calendarProfile: profileForJurisdiction(null).profile.id
+      });
+      return;
+    }
+    setChoosingUnsupportedCountry(false);
+    const resolved = profileForJurisdiction(value || null);
+    update({
+      calendarCountryCode: value,
+      calendarEcclesiasticalProvince: "",
+      calendarProfile: resolved.profile.id
+    });
+  };
+
+  const selectProvince = (province: string) => {
+    const resolved = profileForJurisdiction("US", province);
+    update({
+      calendarCountryCode: "US",
+      calendarEcclesiasticalProvince: province,
+      calendarProfile: resolved.profile.id
+    });
+  };
+
+  const setUnsupportedCountry = (value: string) => {
+    const code = value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2);
+    update({
+      calendarCountryCode: code,
+      calendarEcclesiasticalProvince: "",
+      calendarProfile: profileForJurisdiction(code || null).profile.id
+    });
+  };
 
   // ── Live preview: Genesis 1:1–2 in the current translation (spec §2.2) ──────
   const [preview, setPreview] = useState<string | null>(null);
@@ -422,49 +569,235 @@ export default function Settings() {
         </div>
       </section>
 
-      {/* 6 ── Calendar (region moved here from the Readings toolbar, spec §2.2) */}
+      {/* 6 ── Calendar jurisdiction, lectionary edition, and displayed text */}
       <section className="card" id="calendar">
         <h2>Calendar</h2>
         <div className="setting-row">
           <div>
-            <div className="setting-label">Region</div>
+            <div className="setting-label">Country calendar</div>
             <p className="catechesis muted small">
-              Governs the dates of Epiphany and the Ascension and the U.S. proper days. The default
-              is the <strong>United States</strong> (USCCB), to match the NABRE U.S.-lectionary
-              readings. (Boston, Hartford, New York, Omaha, and Philadelphia keep Ascension
-              Thursday.)
+              Choose the lawful territorial calendar. The verified catalog currently contains the
+              General Roman Calendar and the U.S. proper only.
             </p>
           </div>
           <select
-            value={settings.calendarRegion}
-            aria-label="Calendar region"
-            onChange={(e) => update({ calendarRegion: e.target.value as CalendarRegion })}
+            value={choosingUnsupportedCountry ? "other" : settings.calendarCountryCode}
+            aria-label="Calendar country"
+            onChange={(event) => selectCountry(event.target.value)}
           >
-            <option value="universal">Universal</option>
-            <option value="usa">United States</option>
+            <option value="">General Roman only</option>
+            <option value="US">United States</option>
+            <option value="other">Another country</option>
+          </select>
+        </div>
+        {choosingUnsupportedCountry && (
+          <div className="setting-row nested">
+            <div>
+              <label className="setting-label" htmlFor="calendar-country-code">
+                Country code
+              </label>
+              <p className="catechesis muted small">
+                Enter the two-letter code. Unsupported countries use General Roman explicitly.
+              </p>
+            </div>
+            <input
+              id="calendar-country-code"
+              aria-label="Unsupported calendar country code"
+              inputMode="text"
+              maxLength={2}
+              value={settings.calendarCountryCode}
+              onChange={(event) => setUnsupportedCountry(event.target.value)}
+              placeholder="GB"
+            />
+          </div>
+        )}
+        {settings.calendarCountryCode === "US" && (
+          <div className="setting-row nested">
+            <div>
+              <label className="setting-label" htmlFor="calendar-province">
+                Ecclesiastical province
+              </label>
+              <p className="catechesis muted small">
+                Boston, Hartford, New York, Omaha, and Philadelphia keep Ascension Thursday.
+              </p>
+            </div>
+            <select
+              id="calendar-province"
+              value={settings.calendarEcclesiasticalProvince}
+              aria-label="Ecclesiastical province"
+              onChange={(event) => selectProvince(event.target.value)}
+            >
+              <option value="">Select a province</option>
+              {US_ECCLESIASTICAL_PROVINCES.map((province) => (
+                <option key={province} value={province}>
+                  {province}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="setting-row nested">
+          <div>
+            <label className="setting-label" htmlFor="calendar-diocese">
+              Diocese
+            </label>
+            <p className="catechesis muted small">
+              Optional reference only. Fidelis does not invent a diocesan proper from this name.
+            </p>
+          </div>
+          <input
+            id="calendar-diocese"
+            aria-label="Diocese"
+            maxLength={120}
+            value={settings.calendarDiocese}
+            onChange={(event) => update({ calendarDiocese: event.target.value.slice(0, 120) })}
+            placeholder="Your diocese"
+          />
+        </div>
+        <p className="muted small calendar-support-notice" role="status">
+          {jurisdiction.notice ??
+            `Using ${calendarProfile(settings.calendarProfile).jurisdictionLabel}.`}{" "}
+          Fidelis will not claim a local proper until its official calendar is sourced and verified.
+        </p>
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">Individual church proper</div>
+            <p className="catechesis muted small">
+              Add only the title, dedication anniversary, and principal patron of the church where
+              you worship. Complete entries are proper solemnities on this device. Fidelis cannot
+              supply their local Mass formulary, so it will say so plainly on that day.
+            </p>
+          </div>
+        </div>
+        <div className="setting-row nested">
+          <div>
+            <label className="setting-label" htmlFor="church-title">Title of the church</label>
+            <p className="catechesis muted small">Enter the saint, mystery, or sacred title.</p>
+          </div>
+          <input
+            id="church-title"
+            maxLength={120}
+            value={settings.individualChurchProper.churchTitle}
+            onChange={(event) => updateChurchProper({ churchTitle: event.target.value.slice(0, 120) })}
+            placeholder="St. Joseph"
+          />
+        </div>
+        <div className="setting-row nested">
+          <div className="setting-label">Title celebration</div>
+          <div className="church-proper-controls">
+            <MonthDaySelect
+              label="Title celebration"
+              value={settings.individualChurchProper.titleDate}
+              blockedDates={[
+                settings.individualChurchProper.dedicationAnniversary,
+                settings.individualChurchProper.principalPatronDate
+              ].filter((date): date is MonthDay => date !== null)}
+              onChange={(titleDate) => updateChurchProper({ titleDate })}
+            />{" "}
+            {colorSelect(
+              "Title celebration color",
+              settings.individualChurchProper.titleColor,
+              (titleColor) => updateChurchProper({ titleColor })
+            )}
+          </div>
+        </div>
+        <div className="setting-row nested">
+          <div>
+            <div className="setting-label">Dedication anniversary</div>
+            <p className="catechesis muted small">Use the anniversary of this church&apos;s dedication.</p>
+          </div>
+          <MonthDaySelect
+            label="Dedication anniversary"
+            value={settings.individualChurchProper.dedicationAnniversary}
+            blockedDates={[
+              settings.individualChurchProper.titleDate,
+              settings.individualChurchProper.principalPatronDate
+            ].filter((date): date is MonthDay => date !== null)}
+            onChange={(dedicationAnniversary) => updateChurchProper({ dedicationAnniversary })}
+          />
+        </div>
+        <div className="setting-row nested">
+          <div>
+            <label className="setting-label" htmlFor="principal-patron">Principal patron</label>
+            <p className="catechesis muted small">Leave blank unless the church has one.</p>
+          </div>
+          <input
+            id="principal-patron"
+            maxLength={120}
+            value={settings.individualChurchProper.principalPatronTitle}
+            onChange={(event) => updateChurchProper({
+              principalPatronTitle: event.target.value.slice(0, 120)
+            })}
+            placeholder="St. Thomas Aquinas"
+          />
+        </div>
+        <div className="setting-row nested">
+          <div className="setting-label">Principal patron celebration</div>
+          <div className="church-proper-controls">
+            <MonthDaySelect
+              label="Principal patron celebration"
+              value={settings.individualChurchProper.principalPatronDate}
+              blockedDates={[
+                settings.individualChurchProper.titleDate,
+                settings.individualChurchProper.dedicationAnniversary
+              ].filter((date): date is MonthDay => date !== null)}
+              onChange={(principalPatronDate) => updateChurchProper({ principalPatronDate })}
+            />{" "}
+            {colorSelect(
+              "Principal patron celebration color",
+              settings.individualChurchProper.principalPatronColor,
+              (principalPatronColor) => updateChurchProper({ principalPatronColor })
+            )}
+          </div>
+        </div>
+        {churchProperNotice && (
+          <p className="notice small sans" role="status">{churchProperNotice}</p>
+        )}
+        <div className="setting-row">
+          <div>
+            <div className="setting-label">Lectionary edition</div>
+            <p className="catechesis muted small">
+              This selects citation and formulary data, independently from the calendar and the Bible
+              text shown below. The installed table is derived from a pinned public-domain community
+              dataset. It is not a licensed transcription of an official national Lectionary edition.
+            </p>
+          </div>
+          <select
+            value={settings.lectionaryPackId}
+            aria-label="Lectionary edition"
+            onChange={(event) =>
+              update({
+                lectionaryPackId: event.target.value as typeof settings.lectionaryPackId
+              })
+            }
+          >
+            {SUPPORTED_LECTIONARY_PACKS.map((pack) => (
+              <option key={pack.id} value={pack.id}>
+                {pack.title}
+              </option>
+            ))}
           </select>
         </div>
         <div className="setting-row">
           <div>
-            <div className="setting-label">Mass readings</div>
+            <div className="setting-label">Displayed Mass Bible</div>
             <p className="catechesis muted small">
-              The translation the Daily Readings screen shows. The default is the{" "}
-              <strong>NABRE</strong> — the translation of the U.S. lectionary. <strong>Match
-              region</strong> instead follows your calendar region (the NABRE for the United States,
-              the Douay-Rheims elsewhere). The NABRE is under copyright and not bundled; import your
-              licensed copy on the <Link to="/translations">Translations</Link> page and it appears
-              here automatically. Until then the readings fall back to the bundled Douay-Rheims.
+              This changes only the text shown for Daily Readings. The NABRE is under copyright and
+              not bundled. Import a licensed copy on the <Link to="/translations">Translations</Link>{" "}
+              page. Until then Fidelis shows the bundled Douay-Rheims fallback clearly.
             </p>
           </div>
           <select
             value={settings.massTranslation}
-            aria-label="Mass readings translation"
-            onChange={(e) => update({ massTranslation: e.target.value })}
+            aria-label="Displayed Mass Bible translation"
+            onChange={(event) => update({ massTranslation: event.target.value })}
           >
-            <option value="">Match region</option>
-            {TRANSLATIONS.filter((t) => t.bundled || t.id === "nabre" || t.id === "rsv2ce").map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.abbrev}
+            {TRANSLATIONS.filter(
+              (translation) =>
+                translation.bundled || translation.id === "nabre" || translation.id === "rsv2ce"
+            ).map((translation) => (
+              <option key={translation.id} value={translation.id}>
+                {translation.abbrev}
               </option>
             ))}
           </select>

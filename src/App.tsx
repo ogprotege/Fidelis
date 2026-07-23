@@ -1,4 +1,12 @@
-import { Suspense, lazy, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore
+} from "react";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Header from "./components/Header";
 import ScrollManager from "./components/ScrollManager";
@@ -23,10 +31,11 @@ const Settings = lazy(() => import("./pages/Settings"));
 const About = lazy(() => import("./pages/About"));
 const Saint = lazy(() => import("./pages/Saint"));
 const History = lazy(() => import("./pages/History"));
+const Widgets = lazy(() => import("./pages/Widgets"));
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { App as CapApp } from "@capacitor/app";
-import { closeTopOverlay } from "./lib/overlays";
+import { closeTopOverlay, dismissAllOverlays } from "./lib/overlays";
 import { healStrandedScrollLock } from "./lib/scrollLock";
 import { useSettings, useUpdateSettings } from "./SettingsContext";
 import { useToday } from "./useToday";
@@ -38,6 +47,47 @@ import {
   isStorageWarned,
   subscribeStorageWarning
 } from "./lib/storage";
+import {
+  type WidgetLinkDelivery,
+  type WidgetLinkTarget,
+  type WidgetReturnContract,
+  acceptWidgetLinkDelivery,
+  appHistoryIndex,
+  canDiscardDuplicateWidgetEntry,
+  canConsumeAppHistory,
+  isSameWidgetTarget,
+  widgetLinkDestination,
+  widgetLinkHistoryMode,
+  widgetLinkStartupActivations,
+  widgetLinkTarget,
+  widgetReturnContractFromHistoryState,
+  widgetReturnNavigationState
+} from "./lib/widgetLinks";
+import { syncAndroidWidgetSettings } from "./lib/widgetPin";
+import { syncIOSWidgetSettings } from "./lib/widgetStatus";
+import { individualChurchCalendarLayer } from "./lib/calendarProfile";
+import { buildLocalWidgetCalendarOverlay } from "./lib/widgetCalendarOverlay";
+
+const NATIVE_EDGE_BACK_EVENT = "fidelis-native-edge-back";
+
+function locationDestination(location: { pathname: string; search: string; hash: string }): string {
+  return `${location.pathname}${location.search}${location.hash}`;
+}
+
+/** Scroll and focus a widget destination after its page exists. Focus is part
+ * of the contract: a screen-reader user should land on the requested card,
+ * not merely hear that the page changed somewhere beneath the cursor. */
+function focusWidgetDestination(target: WidgetLinkTarget, delay = 0): void {
+  window.setTimeout(() => {
+    requestAnimationFrame(() => {
+      const el = document.getElementById(target.focusId);
+      if (!el) return;
+      if (target.hash) el.scrollIntoView({ block: "start", behavior: "auto" });
+      else window.scrollTo(0, 0);
+      el.focus({ preventScroll: true });
+    });
+  }, delay);
+}
 
 /** The ONE quiet storage warning (v1.18.0, audit FID-STOR-001): the first
  *  localStorage write the browser refuses raises it — deduplicated for the
@@ -73,10 +123,28 @@ export default function App() {
   const update = useUpdateSettings();
   const location = useLocation();
   const navigate = useNavigate();
+  const locationRef = useRef(location);
+  locationRef.current = location;
+  const pendingWidgetFocus = useRef<WidgetLinkTarget | null>(null);
+  const lastWidgetDeliveries = useRef(new Map<string, WidgetLinkDelivery>());
+  const widgetNavigationQueue = useRef<Promise<void>>(Promise.resolve());
+  const widgetNavigationTimers = useRef(new Set<ReturnType<typeof window.setTimeout>>());
+  const widgetCoordinatorActive = useRef(true);
+  const nativeWidgetReturn = useRef<WidgetReturnContract | null>(null);
   const widgetMode = location.pathname.startsWith("/widget/");
   // Live "today" (midnight + foreground-resume aware) so the liturgical accent
   // below never wears yesterday's color in the resident native shell.
   const today = useToday();
+
+  useEffect(() => {
+    const timers = widgetNavigationTimers.current;
+    widgetCoordinatorActive.current = true;
+    return () => {
+      widgetCoordinatorActive.current = false;
+      for (const timer of timers) window.clearTimeout(timer);
+      timers.clear();
+    };
+  }, []);
 
   // Track the OS color scheme so theme "System" (spec §2.2) stays live: a user
   // who flips their device to dark while Fidelis is open sees it follow.
@@ -103,11 +171,31 @@ export default function App() {
   // keep the browser-chrome color in step, reading the token so the hex lives
   // only in styles.css.
   useEffect(() => {
-    document.documentElement.dataset.theme = effectiveTheme;
+    const root = document.documentElement;
+    let firstFrame = 0;
+    let secondFrame = 0;
+    // Theme tokens feed many otherwise-useful component transitions. Suppress
+    // those transitions only for the root palette swap so changing Day/Night
+    // does not animate dozens of unrelated borders and backgrounds.
+    if (root.dataset.theme !== effectiveTheme) {
+      root.dataset.themeSwitching = "";
+      root.dataset.theme = effectiveTheme;
+      firstFrame = requestAnimationFrame(() => {
+        secondFrame = requestAnimationFrame(() => {
+          delete root.dataset.themeSwitching;
+        });
+      });
+    }
+    root.toggleAttribute("data-widget", widgetMode);
     document.body.classList.toggle("widget-mode", widgetMode);
-    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg-0").trim();
+    const bg = getComputedStyle(root).getPropertyValue("--bg-0").trim();
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta && bg) meta.setAttribute("content", bg);
+    return () => {
+      if (firstFrame) cancelAnimationFrame(firstFrame);
+      if (secondFrame) cancelAnimationFrame(secondFrame);
+      delete root.dataset.themeSwitching;
+    };
   }, [effectiveTheme, widgetMode]);
 
   // Native status bar (iOS especially): iOS ignores the theme-color meta, so the
@@ -121,60 +209,268 @@ export default function App() {
     });
   }, [effectiveTheme]);
 
+  // Keep native widget processes aligned with the app's canonical settings.
+  // Both bridges fail quietly when an optional platform capability is absent;
+  // the Widgets page reports what each OS can actually confirm.
+  useEffect(() => {
+    const platform = Capacitor.getPlatform();
+    if (platform !== "android" && platform !== "ios") return;
+    let cancelled = false;
+    let timer = 0;
+    let syncGeneration = 0;
+    const layer = individualChurchCalendarLayer(settings.individualChurchProper);
+    const hasIndividualChurchProper = layer.celebrations.length > 0;
+    const sync = async () => {
+      const generation = ++syncGeneration;
+      let localCalendarOverlay: Awaited<ReturnType<typeof buildLocalWidgetCalendarOverlay>> | null = null;
+      if (hasIndividualChurchProper) {
+        try {
+          localCalendarOverlay = await buildLocalWidgetCalendarOverlay({
+            profileId: settings.calendarProfile,
+            lectionaryPackId: settings.lectionaryPackId,
+            individualChurchProper: settings.individualChurchProper
+          });
+        } catch {
+          // Native receives the current fingerprint without an overlay and fails
+          // closed instead of continuing to show a plausible base-calendar day.
+          // A corrected manual clock is retried by the activation listeners below.
+        }
+      }
+      if (cancelled || generation !== syncGeneration) return;
+      if (platform === "android") {
+        await syncAndroidWidgetSettings({
+          calendarProfile: settings.calendarProfile,
+          appearance: settings.theme,
+          lectionaryPackId: settings.lectionaryPackId,
+          hasIndividualChurchProper,
+          localProperFingerprint: layer.fingerprint,
+          localCalendarOverlay
+        });
+      } else {
+        await syncIOSWidgetSettings({
+          calendarProfile: settings.calendarProfile,
+          theme: settings.theme,
+          translation: settings.translation,
+          lectionaryPackId: settings.lectionaryPackId,
+          hasIndividualChurchProper,
+          localProperFingerprint: layer.fingerprint,
+          localCalendarOverlay
+        });
+      }
+    };
+    const scheduleSync = (delay = 0) => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => void sync().catch(() => {}), delay);
+    };
+    // Settings fields update on each keystroke. Generate one atomic overlay
+    // after the edit settles instead of exposing intermediate local calendars.
+    scheduleSync(300);
+    // A user can correct a manual clock without changing any Fidelis setting.
+    // Retry when the shell becomes active so an invalid future-clock attempt is
+    // replaced immediately instead of remaining failed closed until restart.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") scheduleSync();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const activeHandle = CapApp.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) scheduleSync();
+    });
+    return () => {
+      cancelled = true;
+      syncGeneration += 1;
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      void activeHandle.then((handle) => handle.remove());
+    };
+  }, [
+    settings.calendarProfile,
+    settings.individualChurchProper,
+    settings.lectionaryPackId,
+    settings.theme,
+    settings.translation
+  ]);
+
+  const consumeNativeWidgetReturn = useCallback((): boolean => {
+    const expected =
+      widgetReturnContractFromHistoryState(window.history.state) ?? nativeWidgetReturn.current;
+    if (
+      !expected ||
+      locationDestination(locationRef.current) !== expected.widgetDestination
+    ) {
+      return false;
+    }
+    nativeWidgetReturn.current = null;
+
+    // Prefer the real History API entry. WKWebView can retain a same-hash
+    // duplicate around a native activation, so verify the route after each pop.
+    // The return contract's router cursor proves whether another traversal is
+    // safe. This collapses the duplicate instead of replacing it with a second,
+    // visually identical caller entry that would consume a dead Back gesture.
+    if (canConsumeAppHistory(window.history.state)) {
+      window.history.back();
+      const verifyReturn = (discardAttempts: number) => {
+        const timer = window.setTimeout(() => {
+          widgetNavigationTimers.current.delete(timer);
+          const currentDestination = locationDestination(locationRef.current);
+          if (currentDestination !== expected.widgetDestination) return;
+          if (
+            discardAttempts < 2 &&
+            canDiscardDuplicateWidgetEntry(window.history.state, expected, currentDestination)
+          ) {
+            window.history.back();
+            verifyReturn(discardAttempts + 1);
+            return;
+          }
+          void navigate(expected.callerDestination, { replace: true, state: null });
+        }, 180);
+        widgetNavigationTimers.current.add(timer);
+      };
+      verifyReturn(0);
+    } else {
+      void navigate(expected.callerDestination, { replace: true, state: null });
+    }
+    return true;
+  }, [navigate]);
+
   // Native hardware Back (Android): close the topmost open overlay first, else go
   // back in history, else (at the app root) exit — never strand or surprise the user.
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const handle = CapApp.addListener("backButton", ({ canGoBack }) => {
       if (closeTopOverlay()) return;
+      if (consumeNativeWidgetReturn()) return;
       if (canGoBack) window.history.back();
       else void CapApp.exitApp();
     });
     return () => {
       void handle.then((h) => h.remove());
     };
-  }, []);
+  }, [consumeNativeWidgetReturn]);
 
-  // Widget deep links (FID-NATIVE-002): the home-screen widgets open the app on a
-  // fidelis:// URL — fidelis://mass → the Mass readings; fidelis://verse / quote
-  // → Today scrolled to the verse / quote card; fidelis://today → Today (the
-  // first widgets' link, kept for installs that still carry it). Both a cold
-  // launch (getLaunchUrl) and a tap while running (appUrlOpen) are handled;
-  // only our own scheme routes, so an ordinary launch is untouched.
+  // iOS has no hardware Back button. MainViewController translates a committed
+  // left-edge pan into this event because WKWebView's built-in gesture does not
+  // consume HashRouter's same-document entries. Sheets still close first, and
+  // an idx of zero is a hard stop so the gesture can never leave Fidelis.
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== "ios") return;
+    const handleEdgeBack = () => {
+      if (closeTopOverlay()) return;
+      if (consumeNativeWidgetReturn()) return;
+      if (canConsumeAppHistory(window.history.state)) window.history.back();
+    };
+    window.addEventListener(NATIVE_EDGE_BACK_EVENT, handleEdgeBack);
+    return () => window.removeEventListener(NATIVE_EDGE_BACK_EVENT, handleEdgeBack);
+  }, [consumeNativeWidgetReturn]);
+
+  const openWidgetLink = useCallback(
+    (url: string | null | undefined, source: "cold" | "warm") => {
+      const target = url ? widgetLinkTarget(url) : null;
+      if (!target) return;
+      const destination = widgetLinkDestination(target);
+      const receivedAt = performance.now();
+      if (!acceptWidgetLinkDelivery(lastWidgetDeliveries.current, target, receivedAt)) return;
+
+      // Serialize accepted activations. Capacitor can synchronously deliver a
+      // cold launch and a distinct buffered warm tap; cancelling a shared timer
+      // would lose the first destination, while running both in the same task
+      // can compute the second history action against stale React location.
+      widgetNavigationQueue.current = widgetNavigationQueue.current
+        .then(async () => {
+          if (!widgetCoordinatorActive.current) return;
+
+          // A widget tap is a new top-level intent. Dismiss every sheet/popover,
+          // then yield through React cleanup before healing the scroll lock and
+          // routing. An animated sheet gets its short paired exit interval.
+          const dismissed = dismissAllOverlays();
+          await new Promise<void>((resolve) => {
+            const timer = window.setTimeout(() => {
+              widgetNavigationTimers.current.delete(timer);
+              resolve();
+            }, dismissed ? 160 : 0);
+            widgetNavigationTimers.current.add(timer);
+          });
+          if (!widgetCoordinatorActive.current) return;
+
+          healStrandedScrollLock({ restoreScroll: false });
+          const sameTarget = isSameWidgetTarget(locationRef.current, target);
+          const mode = widgetLinkHistoryMode(source, sameTarget);
+          if (mode === "focus") {
+            focusWidgetDestination(target);
+            return;
+          }
+          if (mode === "push") {
+            const returnContract: WidgetReturnContract = {
+              version: 1,
+              widgetDestination: destination,
+              callerDestination: locationDestination(locationRef.current),
+              callerHistoryIndex: appHistoryIndex(window.history.state)
+            };
+            nativeWidgetReturn.current = returnContract;
+            pendingWidgetFocus.current = target;
+            void navigate(destination, {
+              state: widgetReturnNavigationState(returnContract)
+            });
+          } else {
+            nativeWidgetReturn.current = null;
+            pendingWidgetFocus.current = target;
+            void navigate(destination, { replace: true, state: null });
+          }
+
+          // Do not evaluate a following activation until the routed location
+          // has committed. Two frames also give the destination focus effect a
+          // chance to run before another accepted intent replaces its target.
+          await new Promise<void>((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          });
+        })
+        .catch(() => {
+          // Keep the coordinator usable if a platform/router callback throws.
+          // The native shell can deliver another activation without a restart.
+        });
+    },
+    [navigate]
+  );
+
+  // Widget deep links (FID-NATIVE-002): cold launch replaces the incidental
+  // shell entry; a warm tap pushes one destination so Back returns to the page
+  // in use; a repeat tap on that destination only scrolls/focuses it.
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    const routeFor = (url: string): string | null => {
-      const m = /^fidelis:\/\/([a-z]+)/i.exec(url);
-      switch (m?.[1].toLowerCase()) {
-        case "mass":
-          return "/readings";
-        case "verse":
-          return "/#votd";
-        case "quote":
-          return "/#qotd";
-        case "today":
-          return "/";
-        default:
-          return null;
+    let cancelled = false;
+    let launchLookupSettled = false;
+    const bufferedWarmUrls: string[] = [];
+    const handle = CapApp.addListener("appUrlOpen", (event) => {
+      if (cancelled) return;
+      if (!launchLookupSettled) {
+        bufferedWarmUrls.push(event.url);
+        return;
+      }
+      openWidgetLink(event.url, "warm");
+    });
+    const flushStartup = (launchUrl: string | null | undefined) => {
+      if (cancelled) return;
+      launchLookupSettled = true;
+      for (const activation of widgetLinkStartupActivations(launchUrl, bufferedWarmUrls.splice(0))) {
+        openWidgetLink(activation.url, activation.source);
       }
     };
-    const open = (url?: string | null) => {
-      const route = url ? routeFor(url) : null;
-      if (!route) return;
-      // Widget entry is exactly the resume-into-navigation moment a stranded
-      // scroll lock would surface as a frozen app; heal before the new page
-      // lands (a no-op when nothing is stranded).
-      healStrandedScrollLock({ restoreScroll: false });
-      void navigate(route);
-    };
-    const handle = CapApp.addListener("appUrlOpen", (e) => open(e.url));
     void CapApp.getLaunchUrl()
-      .then((r) => open(r?.url))
-      .catch(() => {});
+      .then((result) => flushStartup(result?.url))
+      .catch(() => flushStartup(null));
     return () => {
+      cancelled = true;
       void handle.then((h) => h.remove());
     };
-  }, [navigate]);
+  }, [openWidgetLink]);
+
+  // The destination DOM lands in the same commit as the new location. Focus it
+  // after that commit; ScrollManager remains the sole owner of route scrolling.
+  useEffect(() => {
+    const target = pendingWidgetFocus.current;
+    if (!target || !isSameWidgetTarget(location, target)) return;
+    pendingWidgetFocus.current = null;
+    focusWidgetDestination(target);
+  }, [location]);
 
   // Self-heal a stranded body scroll-lock (lib/scrollLock healStrandedScrollLock):
   // if the body is still pinned (position: fixed) but NO sheet is actually
@@ -223,12 +519,14 @@ export default function App() {
   useEffect(() => {
     if (widgetMode) return;
     if (new URLSearchParams(location.search).has("v")) return; // the Reader owns ?v=
-    // Don't steal focus the new page already placed (e.g. Search's autofocused
-    // box) or a control the user just operated on an in-place param update — only
-    // pull focus to the content when nothing meaningful holds it.
+    // Preserve focus that the new page already placed (for example Search's
+    // autofocused box). Controls in the persistent masthead/tab bar belong to
+    // the departed page context, so a direct tab activation moves to main.
+    const main = document.getElementById("main");
+    if (!main) return;
     const active = document.activeElement;
-    if (active && active !== document.body && active !== document.documentElement) return;
-    document.getElementById("main")?.focus({ preventScroll: true });
+    if (active instanceof HTMLElement && main.contains(active)) return;
+    main.focus({ preventScroll: true });
     // Fire on a genuine route change (location.key); search/widgetMode are read
     // from the current render's closure.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -238,8 +536,8 @@ export default function App() {
   // saved choice by naming it in <html data-font>. Reactive now, so a change on
   // the Settings screen reskins the preview and the Reader instantly.
   useEffect(() => {
-    document.documentElement.dataset.font = settings.scriptureFont;
-  }, [settings.scriptureFont]);
+    document.documentElement.dataset.font = widgetMode ? "garamond" : settings.scriptureFont;
+  }, [settings.scriptureFont, widgetMode]);
 
   // Dynamic Type (spec §9): let the native iOS shell drive the reading size from
   // the device text-size setting while "follow system size" is on. The bridge is
@@ -259,21 +557,26 @@ export default function App() {
       : accentFor(settings.followLiturgicalYear, liturgicalDay(today).color);
     if (accent) root.dataset.accent = accent;
     else delete root.dataset.accent;
-    // calendarRegion is a dep because today's governing color can differ by
-    // region (e.g. a U.S. proper memorial), so the tint must re-derive live.
+    // calendarProfile is a dep because today's governing color can differ by
+    // a verified particular calendar, so the tint must re-derive live.
     // `today` is a dep so the color rolls at midnight / foreground resume.
-  }, [settings.followLiturgicalYear, settings.calendarRegion, widgetMode, today]);
+  }, [settings.followLiturgicalYear, settings.calendarProfile, widgetMode, today]);
 
   if (widgetMode) {
     return (
-      <Routes>
-        <Route path="/widget/votd" element={<WidgetVotd />} />
-      </Routes>
+      <>
+        <ScrollManager />
+        <Routes>
+          <Route path="/widget/votd" element={<WidgetVotd />} />
+        </Routes>
+      </>
     );
   }
 
   return (
-    <div className="app">
+    <>
+      <ScrollManager />
+      <div className="app">
       <a
         className="skip-link"
         href="#main"
@@ -284,7 +587,6 @@ export default function App() {
       >
         Skip to content
       </a>
-      <ScrollManager />
       {/* v1.16.0: fixed status-bar backdrop (spec §3) — keeps the notch area
           painted after the brand row scrolls away and during rubber-band
           overscroll. Zero-height off-notch and on desktop. Decorative. */}
@@ -306,6 +608,7 @@ export default function App() {
           <Route path="/readings" element={<Readings />} />
           <Route path="/search" element={<Search />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/widgets" element={<Widgets />} />
           <Route path="/translations" element={<Translations />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/about" element={<About />} />
@@ -320,6 +623,7 @@ export default function App() {
         <div className="motto" lang="la">Verbum Domini manet in æternum.</div>
         <div>The Word of the Lord endures for ever. — 1 Peter 1:25</div>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }

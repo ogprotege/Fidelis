@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SectionNav from "../components/SectionNav";
 import { ManifestDoc, loadManifest } from "../lib/data";
@@ -12,19 +12,65 @@ const SECTIONS = [
 ];
 
 const WIDGET_SNIPPET = `<iframe
+  id="fidelis-votd"
   src="https://YOUR-DOMAIN/#/widget/votd"
-  style="border:none;width:100%;max-width:30rem;height:16rem"
+  style="border:0;width:100%;max-width:30rem;height:12rem"
   title="Verse of the Day"
 ></iframe>`;
 
+const WIDGET_HEIGHT_MIN = 120;
+const WIDGET_HEIGHT_MAX = 1600;
+
+const RESIZE_SNIPPET = `<script>
+  const frame = document.getElementById("fidelis-votd");
+  const widgetOrigin = new URL(frame.src, window.location.href).origin;
+  window.addEventListener("message", (event) => {
+    if (event.origin !== widgetOrigin || event.source !== frame.contentWindow) return;
+    if (event.data?.type !== "fidelis:widget-resize") return;
+    if (event.data?.version !== 1) return;
+    const height = Number(event.data.height);
+    if (!Number.isFinite(height) || height <= 0) return;
+    frame.style.height = Math.min(${WIDGET_HEIGHT_MAX}, Math.max(${WIDGET_HEIGHT_MIN}, Math.ceil(height))) + "px";
+  });
+</script>`;
+
 export default function About() {
   const [integrity, setIntegrity] = useState<ManifestDoc | null>(null);
+  const previewRef = useRef<HTMLIFrameElement>(null);
+  const [previewHeight, setPreviewHeight] = useState(220);
   useEffect(() => {
     loadManifest()
       .then((m) => {
         if (m?.rootHash && m?.sources) setIntegrity(m);
       })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent<unknown>) => {
+      const frame = previewRef.current;
+      if (
+        !frame ||
+        event.origin !== window.location.origin ||
+        event.source !== frame.contentWindow ||
+        typeof event.data !== "object" ||
+        event.data === null ||
+        !("type" in event.data) ||
+        event.data.type !== "fidelis:widget-resize" ||
+        !("version" in event.data) ||
+        event.data.version !== 1 ||
+        !("height" in event.data)
+      ) {
+        return;
+      }
+      const height = Number(event.data.height);
+      if (!Number.isFinite(height) || height <= 0) return;
+      setPreviewHeight(
+        Math.min(WIDGET_HEIGHT_MAX, Math.max(WIDGET_HEIGHT_MIN, Math.ceil(height)))
+      );
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
   }, []);
 
   return (
@@ -72,11 +118,12 @@ export default function About() {
         <li>
           <strong>RSV-2CE and NABRE</strong> — supported, but under copyright; see{" "}
           <Link to="/translations">Translations</Link> for how to import a licensed
-          copy. The NABRE is the translation of the U.S. lectionary, and out of the
-          box the calendar region is the United States (the USCCB calendar), so the
-          Daily Readings default to the NABRE — falling back to the Douay-Rheims until
-          you import it. You can change the region or the readings translation under
-          Settings.
+          copy. The NABRE is the translation used by the U.S. lectionary. Fidelis
+          keeps three choices separate: the calendar jurisdiction, the lectionary
+          edition, and the Bible text used to display each reading. A new install
+          selects the verified U.S. calendar profile, the derived Roman Mass citation table, and NABRE display
+          preference. Until you import a licensed NABRE copy, reading text falls
+          back visibly to the Douay-Rheims. Each choice can be changed in Settings.
         </li>
       </ul>
       <p className="muted small">
@@ -96,10 +143,25 @@ export default function About() {
 
       <h2 className="testament-title" id="embed">Embed the Verse of the Day</h2>
       <p>
-        Every install of Fidelis exposes an embeddable Verse-of-the-Day widget at{" "}
-        <Link to="/widget/votd">/#/widget/votd</Link>. Drop it into any site:
+        Every web install of Fidelis exposes an embeddable Verse-of-the-Day widget at{" "}
+        <code>/#/widget/votd</code>. This live preview stays inside the About page:
+      </p>
+      <div className="embed-preview-shell">
+        <iframe
+          ref={previewRef}
+          className="embed-preview"
+          src="#/widget/votd?theme=day"
+          style={{ height: `${previewHeight}px` }}
+          title="Verse of the Day widget preview"
+        />
+      </div>
+      <p className="small muted">
+        The resize listener verifies both the widget's origin and its window before
+        applying the reported height, so longer passages are not clipped. You can also{" "}
+        <Link className="embed-standalone-link" to="/widget/votd">open the standalone view</Link>.
       </p>
       <pre className="embed-snippet">{WIDGET_SNIPPET}</pre>
+      <pre className="embed-snippet">{RESIZE_SNIPPET}</pre>
 
       <h2 className="testament-title" id="privacy">Privacy &amp; Offline</h2>
       <p>
@@ -118,25 +180,38 @@ export default function About() {
         </a>{" "}
         project (DRC, CPDV, VulgClementine) and reproduced exactly as that corpus
         carries them, with no editorial changes; its shared verse grid and its few
-        gaps are described in the note on numbering above. The
-        liturgical calendar follows the General Roman Calendar (all solemnities
-        and feasts, with a representative selection of memorials); movable feasts
-        are computed from the date of Easter. The calendar-region setting in
-        Settings defaults to the United States (the USCCB calendar) and applies the
-        U.S. transfers — Epiphany to the Sunday of Jan 2–8, and the Ascension to the
-        Seventh Sunday of Easter, as observed in most U.S. ecclesiastical provinces
-        (Boston, Hartford, New York, Omaha, and Philadelphia keep Ascension
-        Thursday) — and the U.S. proper days; you can switch it to Universal. Daily Mass reading citations follow the
-        Roman Lectionary cycles (Sundays A/B/C, weekdays I/II), derived from the
-        public-domain tables of{" "}
+        gaps are described in the note on numbering above. The calendar engine
+        composes versioned Ordinary Form packs with stable celebration and
+        formulary identifiers. Its exact verified catalog is the General Roman
+        Calendar and the U.S. particular calendar, with separate profiles for
+        provinces that observe Ascension on Sunday or Thursday. Boston, Hartford,
+        New York, Omaha, and Philadelphia keep Ascension Thursday. Other countries
+        and dioceses receive an explicit General Roman fallback notice, not a claim
+        of verified local coverage. The source catalog cites the{" "}
+        <a
+          href="https://www.vatican.va/content/romancuria/en/dicasteri/dicastero-culto-divino-e-disciplina-sacramenti/documenti.html"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Holy See
+        </a>{" "}
+        and the{" "}
+        <a
+          href="https://www.usccb.org/prayer-and-worship/liturgical-year-and-calendar/proper-calendar"
+          target="_blank"
+          rel="noreferrer"
+        >
+          USCCB proper calendar
+        </a>. Daily Mass reading citations use the independently selected lectionary
+        pack. The bundled derived Roman citation pack follows Roman Lectionary cycles
+        (Sundays A/B/C, weekdays I/II), from the public-domain tables of{" "}
         <a
           href="https://github.com/jayarathina/Tamil-Catholic-Lectionary"
           target="_blank"
           rel="noreferrer"
         >
           jayarathina/Tamil-Catholic-Lectionary
-        </a>
-        .
+        </a>.
       </p>
       <p className="small">
         The Quote of the Day is drawn from a curated corpus of the Fathers,

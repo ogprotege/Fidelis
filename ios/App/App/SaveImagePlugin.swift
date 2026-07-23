@@ -10,10 +10,10 @@
 //  can never read the photo library back — matching the app's "Scripture goes out;
 //  nothing comes back" ethos. No third-party dependency.
 //
-//  Registered automatically by Capacitor's runtime via CAPBridgedPlugin (the same
-//  mechanism packaged plugins use); the web side reaches it with
-//  registerPlugin("SaveImage") in src/lib/saveImage.ts. Wired into the App target's
-//  sources by scripts/configure-ios-app-target.rb.
+//  CAPBridgedPlugin describes its JavaScript surface, while MainViewController
+//  registers this loose app-target plugin explicitly in capacitorDidLoad(). The
+//  web side reaches it with registerPlugin("SaveImage") in src/lib/saveImage.ts;
+//  scripts/configure-ios-app-target.rb wires the source into the App target.
 //
 
 import Foundation

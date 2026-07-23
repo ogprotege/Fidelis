@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import VerseQuote from "../components/VerseQuote";
@@ -12,6 +12,7 @@ import { useToday } from "../useToday";
  * <iframe> on any site. Options: ?t=drc|cpdv|vulgate &theme=night
  */
 export default function WidgetVotd() {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [params] = useSearchParams();
   const tParam = params.get("t") ?? "drc";
   const translation = getTranslation(tParam)?.bundled ? tParam : "drc";
@@ -29,8 +30,37 @@ export default function WidgetVotd() {
   // text VerseQuote actually rendered (FID-FUNC-004).
   const [shown, setShown] = useState(translation);
 
+  // The host owns the iframe height. Report the rendered document whenever the
+  // asynchronous verse or responsive wrapping changes it. The message carries
+  // only a bounded geometry fact; hosts must still validate origin + source as
+  // the About-page example does.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || window.parent === window) return;
+    let parentOrigin = "*";
+    if (document.referrer) {
+      try {
+        parentOrigin = new URL(document.referrer).origin;
+      } catch {
+        // An embed may suppress or provide an opaque referrer. Height is not
+        // sensitive, so the sender can fall back while the receiver validates.
+      }
+    }
+    const report = () => {
+      const height = Math.ceil(document.documentElement.scrollHeight);
+      window.parent.postMessage(
+        { type: "fidelis:widget-resize", version: 1, height },
+        parentOrigin
+      );
+    };
+    const observer = new ResizeObserver(report);
+    observer.observe(root);
+    report();
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="widget-votd">
+    <div className="widget-votd" ref={rootRef}>
       <div className="w-title"><span className="cross"><Icon name="cross" /></span> Verse of the Day</div>
       <VerseQuote
         translation={translation}

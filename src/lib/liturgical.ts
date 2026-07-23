@@ -1,48 +1,49 @@
 /**
- * Liturgical calendar engine (General Roman Calendar, ordinary form dates).
- * Computes the season, its color, and major celebrations for any date.
- * Movable feasts derive from the Easter computus (Meeus/Jones/Butcher).
+ * Ordinary-Form Roman calendar engine.
  *
- * Occurrence is resolved by an abbreviated Table of Liturgical Days
- * (Universal Norms on the Liturgical Year and the Calendar, nn. 59–61),
- * expressed as a numeric precedence — lower wins:
- *   1  the Paschal Triduum
- *   2  Christmas, Epiphany, Ascension, Pentecost; Sundays of Advent, Lent
- *      and Easter; Ash Wednesday; Holy Week Mon–Thu; the Easter Octave
- *   3  solemnities of the General Calendar; All Souls
- *   5  feasts of the Lord
- *   6  Sundays of Christmastide and Ordinary Time
- *   7  feasts of the General Calendar
- *   9  privileged weekdays (Dec 17–24, the Christmas Octave, Lenten ferias)
- *   10 obligatory memorials
- *   13 ferias
- * An impeded solemnity transfers to the nearest following free day
- * (GNLYC 60); impeded feasts and memorials are omitted for the year.
- * Transfer is a whole-year operation, so the calendar is computed and
- * cached per year; liturgicalDay(date) reads the year map.
+ * Calendar data comes from the ordered CalendarPacks in calendarProfile.ts.
+ * This module supplies Gregorian date arithmetic, the temporal cycle, all
+ * thirteen precedence classes, occurrence, alternatives, and cross-year
+ * transfers. Lower precedence numbers win (GNLYC 59).
  */
 
-import { CalendarRegion, getSettings } from "./storage";
+import { getSettings } from "./storage";
+import {
+  CALENDAR_PRECEDENCE,
+  calendarCelebrationRules,
+  calendarProfile,
+  calendarProfileRulesForDate,
+  calendarTemporalAlternativeRules,
+  individualChurchCelebrationRules,
+  individualChurchProperFingerprint,
+  normalizeCalendarProfile,
+  type CalendarColor,
+  type CalendarDateRule,
+  type CalendarFormularyOption,
+  type CalendarPrecedence,
+  type CalendarProfileId,
+  type CalendarRank,
+  type CalendarSelection,
+  type CalendarTransferPolicy,
+  type IndividualChurchProper
+} from "./calendarProfile";
 
-export type { CalendarRegion };
+/** @deprecated Migration-only alias for pre-v1.24 callers and tests. */
+export type CalendarRegion = CalendarSelection;
+export type { CalendarProfileId } from "./calendarProfile";
 
-/** The region every engine entry point defaults to — read lazily from the
- *  persisted setting so the calendar and lectionary engines always agree. */
-export function currentRegion(): CalendarRegion {
-  return getSettings().calendarRegion;
+/** Read lazily so the calendar and lectionary engines always agree. */
+export function currentCalendarProfile(): CalendarProfileId {
+  return getSettings().calendarProfile;
 }
 
-export type LiturgicalColor = "green" | "violet" | "white" | "red" | "rose" | "black";
+/** @deprecated Use currentCalendarProfile; retained for migration compatibility. */
+export const currentRegion = currentCalendarProfile;
 
-/**
- * "Follow the liturgical year" (spec §1.3). When the setting is on, the
- * governing day's color names the accent written to `<html data-accent>`, and
- * CSS remaps `--purple` to that color — white borrows the gold token, so the
- * great white feasts read in gold ("gold stands for white"). When off, returns
- * `null`: no attribute is written and the app keeps its brand purple. Pure and
- * total, so the catechetical mapping (rose on Gaudete and Laetare) is asserted
- * in the harness, not only observed in the DOM.
- */
+export type LiturgicalColor = CalendarColor;
+export type Rank = CalendarRank;
+
+/** Return the active liturgical accent or the brand-default sentinel. */
 export function accentFor(
   followLiturgicalYear: boolean,
   color: LiturgicalColor
@@ -58,46 +59,60 @@ export type Season =
   | "Sacred Triduum"
   | "Eastertide";
 
-export type Rank = "Solemnity" | "Feast" | "Memorial" | "Sunday" | "Feria";
-
 export interface Celebration {
+  /** Stable pack identity; display names and dates may change independently. */
+  id: string;
+  /** Stable key used by a separately selected LectionaryPack. */
+  formularyId: string | null;
+  packId: string;
   name: string;
   rank: Rank;
   color?: LiturgicalColor;
-  /** Numeric rank in the Table of Liturgical Days (1 = highest; see header). */
-  precedence?: number;
-  /** ISO date of the nominal day, set when the celebration was transferred. */
+  precedence: CalendarPrecedence;
   transferredFrom?: string;
-  /** Optional memorial (memoria ad libitum) — its readings never displace
-   *  the ferial cycle. */
   optional?: boolean;
+  formularyOptions?: readonly CalendarFormularyOption[];
+}
+
+export interface SuppressedCelebration extends Celebration {
+  suppressionReason:
+    | "temporal-precedence"
+    | "celebration-precedence"
+    | "memorial-collision"
+    | "transferred";
+  transferredTo?: string;
 }
 
 export interface LiturgicalDay {
   date: Date;
+  profileId: CalendarProfileId;
+  /** Base, officially sourced profile fingerprint. */
+  profileFingerprint: string;
+  /** Base profile plus the versioned user-supplied individual-church layer. */
+  resolvedCalendarFingerprint: string;
   season: Season;
-  /** e.g. "Third Sunday of Advent", "Friday of the 4th Week of Lent" */
   seasonLabel: string;
-  /** Week within the season (0 = days after Ash Wednesday; OT weeks 1–34). */
   week: number;
   color: LiturgicalColor;
   celebrations: Celebration[];
+  alternatives: Celebration[];
+  suppressed: SuppressedCelebration[];
 }
 
 const DAY = 86_400_000;
 
-function ymd(y: number, m: number, d: number): Date {
-  return new Date(y, m - 1, d);
+function ymd(year: number, month: number, day: number): Date {
+  return new Date(year, month - 1, day);
 }
 
-function addDays(d: Date, n: number): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+function addDays(date: Date, days: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
 }
 
-function daysBetween(a: Date, b: Date): number {
-  const a0 = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime();
-  const b0 = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime();
-  return Math.round((b0 - a0) / DAY);
+function daysBetween(left: Date, right: Date): number {
+  const leftMidnight = new Date(left.getFullYear(), left.getMonth(), left.getDate()).getTime();
+  const rightMidnight = new Date(right.getFullYear(), right.getMonth(), right.getDate()).getTime();
+  return Math.round((rightMidnight - leftMidnight) / DAY);
 }
 
 /** Anonymous Gregorian computus (Meeus/Jones/Butcher). */
@@ -119,34 +134,108 @@ export function easterDate(year: number): Date {
   return ymd(year, month, day);
 }
 
-/** First Sunday of Advent: the Sunday between Nov 27 and Dec 3. */
+/** First Sunday of Advent: the Sunday between Nov. 27 and Dec. 3. */
 export function adventStart(year: number): Date {
   const christmas = ymd(year, 12, 25);
-  const dow = christmas.getDay(); // 0 = Sunday
-  const fourthSundayBefore = addDays(christmas, -(dow === 0 ? 7 : dow) - 21);
-  return fourthSundayBefore;
+  const weekday = christmas.getDay();
+  return addDays(christmas, -(weekday === 0 ? 7 : weekday) - 21);
 }
 
-/** Epiphany: Jan 6, or in the United States the Sunday between Jan 2 and 8. */
-export function epiphanyDate(year: number, region: CalendarRegion = currentRegion()): Date {
-  if (region === "usa") {
-    const jan2 = ymd(year, 1, 2);
-    const dow = jan2.getDay();
-    return addDays(jan2, dow === 0 ? 0 : 7 - dow);
+/** Epiphany: Jan. 6, or the Sunday from Jan. 2 through Jan. 8. */
+export function epiphanyDate(
+  year: number,
+  region: CalendarSelection = currentCalendarProfile()
+): Date {
+  if (calendarProfileRulesForDate(region, ymd(year, 1, 6)).epiphany === "sunday-january-2-8") {
+    const january2 = ymd(year, 1, 2);
+    const weekday = january2.getDay();
+    return addDays(january2, weekday === 0 ? 0 : 7 - weekday);
   }
   return ymd(year, 1, 6);
 }
 
-/**
- * The Baptism of the Lord (ends Christmastide): the Sunday after Jan 6 — but
- * in the United States, when Epiphany lands on Jan 7 or 8, the Monday
- * immediately following it.
- */
-export function baptismOfTheLord(year: number, region: CalendarRegion = currentRegion()): Date {
+/** Baptism is Sunday after Jan. 6, or Monday after a U.S. Jan. 7/8 Epiphany. */
+export function baptismOfTheLord(
+  year: number,
+  region: CalendarSelection = currentCalendarProfile()
+): Date {
   const epiphany = epiphanyDate(year, region);
-  if (region === "usa" && epiphany.getDate() >= 7) return addDays(epiphany, 1);
-  const dow = epiphany.getDay();
-  return addDays(epiphany, dow === 0 ? 7 : 7 - dow);
+  if (
+    calendarProfileRulesForDate(region, epiphany).epiphany === "sunday-january-2-8" &&
+    epiphany.getDate() >= 7
+  ) {
+    return addDays(epiphany, 1);
+  }
+  const weekday = epiphany.getDay();
+  return addDays(epiphany, weekday === 0 ? 7 : 7 - weekday);
+}
+
+function holyFamilyDate(year: number): Date {
+  const christmas = ymd(year, 12, 25);
+  for (let offset = 1; offset <= 6; offset++) {
+    const candidate = addDays(christmas, offset);
+    if (candidate.getDay() === 0) return candidate;
+  }
+  return ymd(year, 12, 30);
+}
+
+/** Resolve every typed CalendarDateRule through one Gregorian authority. */
+export function calendarDateForRule(
+  year: number,
+  rule: CalendarDateRule,
+  region: CalendarSelection
+): Date {
+  switch (rule.kind) {
+    case "fixed":
+      return ymd(year, rule.month, rule.day);
+    case "fixed-next-day-if-sunday": {
+      const date = ymd(year, rule.month, rule.day);
+      return date.getDay() === 0 ? addDays(date, 1) : date;
+    }
+    case "easter-offset":
+      return addDays(easterDate(year), rule.days);
+    case "sunday-between": {
+      const start = ymd(year, rule.month, rule.fromDay);
+      const weekday = start.getDay();
+      const date = addDays(start, weekday === 0 ? 0 : 7 - weekday);
+      if (date.getDate() > rule.throughDay) {
+        throw new Error(`calendar rule has no Sunday in ${rule.month}/${rule.fromDay}-${rule.throughDay}`);
+      }
+      return date;
+    }
+    case "advent-offset":
+      return addDays(adventStart(year), rule.days);
+    case "nth-weekday": {
+      const first = ymd(year, rule.month, 1);
+      const offset = (rule.weekday - first.getDay() + 7) % 7;
+      return addDays(first, offset + (rule.occurrence - 1) * 7);
+    }
+    case "profile-date": {
+      const easter = easterDate(year);
+      switch (rule.name) {
+        case "epiphany":
+          return epiphanyDate(year, region);
+        case "ascension":
+          return addDays(
+            easter,
+            calendarProfileRulesForDate(region, addDays(easter, 39)).ascension === "sunday"
+              ? 42
+              : 39
+          );
+        case "corpus-christi":
+          return addDays(
+            easter,
+            calendarProfileRulesForDate(region, addDays(easter, 60)).corpusChristi === "sunday"
+              ? 63
+              : 60
+          );
+        case "baptism":
+          return baptismOfTheLord(year, region);
+        case "holy-family":
+          return holyFamilyDate(year);
+      }
+    }
+  }
 }
 
 const ORDINALS = [
@@ -162,309 +251,371 @@ const WEEKDAYS = [
   "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 ];
 
-// Fixed-date celebrations of the General Roman Calendar (month, day).
-// A representative selection: all solemnities/feasts plus well-loved memorials.
-// `p` overrides the default precedence of the rank (feasts of the Lord rank 5,
-// and Christmas/Epiphany sit among the rank-2 privileged days).
-// `opt` marks optional memorials (memoria ad libitum): kept at Memorial
-// precedence for occurrence (pre-existing model), but their formularies are
-// never promoted over the ferial readings (P1-6).
-const FIXED: { m: number; d: number; name: string; rank: Rank; color?: LiturgicalColor; p?: number; opt?: boolean }[] = [
-  { m: 1, d: 1, name: "Mary, the Holy Mother of God", rank: "Solemnity", color: "white" },
-  // The Epiphany is region-movable and is added in movableDefs().
-  { m: 1, d: 2, name: "Sts. Basil the Great and Gregory Nazianzen, Doctors", rank: "Memorial", color: "white" },
-  { m: 1, d: 21, name: "St. Agnes, Virgin and Martyr", rank: "Memorial", color: "red" },
-  { m: 1, d: 25, name: "The Conversion of St. Paul, Apostle", rank: "Feast", color: "white" },
-  { m: 1, d: 26, name: "Sts. Timothy and Titus, Bishops", rank: "Memorial", color: "white" },
-  { m: 1, d: 28, name: "St. Thomas Aquinas, Priest and Doctor", rank: "Memorial", color: "white" },
-  { m: 1, d: 31, name: "St. John Bosco, Priest", rank: "Memorial", color: "white" },
-  { m: 2, d: 2, name: "The Presentation of the Lord (Candlemas)", rank: "Feast", color: "white", p: 5 },
-  { m: 2, d: 11, name: "Our Lady of Lourdes", rank: "Memorial", color: "white", opt: true },
-  { m: 2, d: 14, name: "Sts. Cyril and Methodius", rank: "Memorial", color: "white" },
-  { m: 2, d: 22, name: "The Chair of St. Peter, Apostle", rank: "Feast", color: "white" },
-  // Patrick is memoria ad libitum in the GRC (a solemnity only in Ireland);
-  // invisible in practice — 17 March always falls in Lent — but the record
-  // should not disagree with the calendar (v1.21.0 audit sweep).
-  { m: 3, d: 17, name: "St. Patrick, Bishop", rank: "Memorial", color: "white", opt: true },
-  { m: 3, d: 19, name: "St. Joseph, Spouse of the Blessed Virgin Mary", rank: "Solemnity", color: "white" },
-  { m: 3, d: 25, name: "The Annunciation of the Lord", rank: "Solemnity", color: "white" },
-  { m: 4, d: 25, name: "St. Mark, Evangelist", rank: "Feast", color: "red" },
-  { m: 4, d: 29, name: "St. Catherine of Siena, Virgin and Doctor", rank: "Memorial", color: "white" },
-  { m: 5, d: 1, name: "St. Joseph the Worker", rank: "Memorial", color: "white", opt: true },
-  { m: 5, d: 3, name: "Sts. Philip and James, Apostles", rank: "Feast", color: "red" },
-  { m: 5, d: 13, name: "Our Lady of Fatima", rank: "Memorial", color: "white", opt: true },
-  { m: 5, d: 14, name: "St. Matthias, Apostle", rank: "Feast", color: "red" },
-  { m: 5, d: 31, name: "The Visitation of the Blessed Virgin Mary", rank: "Feast", color: "white" },
-  { m: 5, d: 2, name: "St. Athanasius, Bishop and Doctor", rank: "Memorial", color: "white" },
-  { m: 6, d: 5, name: "St. Boniface, Bishop and Martyr", rank: "Memorial", color: "red" },
-  { m: 6, d: 11, name: "St. Barnabas, Apostle", rank: "Memorial", color: "red" },
-  { m: 6, d: 13, name: "St. Anthony of Padua, Priest and Doctor", rank: "Memorial", color: "white" },
-  { m: 6, d: 28, name: "St. Irenaeus, Bishop, Martyr and Doctor", rank: "Memorial", color: "red" },
-  { m: 6, d: 24, name: "The Nativity of St. John the Baptist", rank: "Solemnity", color: "white" },
-  { m: 6, d: 29, name: "Sts. Peter and Paul, Apostles", rank: "Solemnity", color: "red" },
-  { m: 7, d: 3, name: "St. Thomas, Apostle", rank: "Feast", color: "red" },
-  { m: 7, d: 11, name: "St. Benedict, Abbot", rank: "Memorial", color: "white" },
-  { m: 7, d: 15, name: "St. Bonaventure, Bishop and Doctor", rank: "Memorial", color: "white" },
-  { m: 7, d: 16, name: "Our Lady of Mount Carmel", rank: "Memorial", color: "white", opt: true },
-  { m: 7, d: 22, name: "St. Mary Magdalene", rank: "Feast", color: "white" },
-  { m: 7, d: 25, name: "St. James, Apostle", rank: "Feast", color: "red" },
-  { m: 7, d: 26, name: "Sts. Joachim and Anne, Parents of the BVM", rank: "Memorial", color: "white" },
-  { m: 7, d: 29, name: "Sts. Martha, Mary and Lazarus", rank: "Memorial", color: "white" },
-  { m: 7, d: 31, name: "St. Ignatius of Loyola, Priest", rank: "Memorial", color: "white" },
-  { m: 8, d: 1, name: "St. Alphonsus Liguori, Bishop and Doctor", rank: "Memorial", color: "white" },
-  { m: 8, d: 4, name: "St. John Vianney, Priest", rank: "Memorial", color: "white" },
-  { m: 8, d: 6, name: "The Transfiguration of the Lord", rank: "Feast", color: "white", p: 5 },
-  { m: 8, d: 8, name: "St. Dominic, Priest", rank: "Memorial", color: "white" },
-  { m: 8, d: 10, name: "St. Lawrence, Deacon and Martyr", rank: "Feast", color: "red" },
-  { m: 8, d: 11, name: "St. Clare, Virgin", rank: "Memorial", color: "white" },
-  { m: 8, d: 14, name: "St. Maximilian Kolbe, Priest and Martyr", rank: "Memorial", color: "red" },
-  { m: 8, d: 15, name: "The Assumption of the Blessed Virgin Mary", rank: "Solemnity", color: "white" },
-  { m: 8, d: 22, name: "The Queenship of the Blessed Virgin Mary", rank: "Memorial", color: "white" },
-  { m: 8, d: 24, name: "St. Bartholomew, Apostle", rank: "Feast", color: "red" },
-  { m: 8, d: 27, name: "St. Monica", rank: "Memorial", color: "white" },
-  { m: 8, d: 28, name: "St. Augustine, Bishop and Doctor", rank: "Memorial", color: "white" },
-  { m: 8, d: 29, name: "The Passion of St. John the Baptist", rank: "Memorial", color: "red" },
-  { m: 9, d: 8, name: "The Nativity of the Blessed Virgin Mary", rank: "Feast", color: "white" },
-  { m: 9, d: 14, name: "The Exaltation of the Holy Cross", rank: "Feast", color: "red", p: 5 },
-  { m: 9, d: 15, name: "Our Lady of Sorrows", rank: "Memorial", color: "white" },
-  { m: 9, d: 21, name: "St. Matthew, Apostle and Evangelist", rank: "Feast", color: "red" },
-  { m: 9, d: 23, name: "St. Pius of Pietrelcina (Padre Pio), Priest", rank: "Memorial", color: "white" },
-  { m: 9, d: 29, name: "Sts. Michael, Gabriel and Raphael, Archangels", rank: "Feast", color: "white" },
-  { m: 9, d: 30, name: "St. Jerome, Priest and Doctor", rank: "Memorial", color: "white" },
-  { m: 10, d: 1, name: "St. Thérèse of the Child Jesus, Virgin and Doctor", rank: "Memorial", color: "white" },
-  { m: 10, d: 2, name: "The Holy Guardian Angels", rank: "Memorial", color: "white" },
-  { m: 10, d: 4, name: "St. Francis of Assisi", rank: "Memorial", color: "white" },
-  { m: 10, d: 7, name: "Our Lady of the Rosary", rank: "Memorial", color: "white" },
-  { m: 10, d: 15, name: "St. Teresa of Jesus (Ávila), Virgin and Doctor", rank: "Memorial", color: "white" },
-  { m: 10, d: 17, name: "St. Ignatius of Antioch, Bishop and Martyr", rank: "Memorial", color: "red" },
-  { m: 10, d: 18, name: "St. Luke, Evangelist", rank: "Feast", color: "red" },
-  { m: 10, d: 22, name: "St. John Paul II, Pope", rank: "Memorial", color: "white", opt: true },
-  { m: 10, d: 28, name: "Sts. Simon and Jude, Apostles", rank: "Feast", color: "red" },
-  { m: 11, d: 1, name: "All Saints", rank: "Solemnity", color: "white" },
-  { m: 11, d: 2, name: "The Commemoration of All the Faithful Departed (All Souls)", rank: "Solemnity", color: "violet" },
-  { m: 11, d: 9, name: "The Dedication of the Lateran Basilica", rank: "Feast", color: "white", p: 5 },
-  { m: 11, d: 11, name: "St. Martin of Tours, Bishop", rank: "Memorial", color: "white" },
-  { m: 11, d: 21, name: "The Presentation of the Blessed Virgin Mary", rank: "Memorial", color: "white" },
-  { m: 11, d: 22, name: "St. Cecilia, Virgin and Martyr", rank: "Memorial", color: "red" },
-  { m: 11, d: 30, name: "St. Andrew, Apostle", rank: "Feast", color: "red" },
-  { m: 12, d: 7, name: "St. Ambrose, Bishop and Doctor", rank: "Memorial", color: "white" },
-  { m: 12, d: 8, name: "The Immaculate Conception of the Blessed Virgin Mary", rank: "Solemnity", color: "white" },
-  // Our Lady of Guadalupe is a Feast of the USA proper calendar (USA_FIXED);
-  // in the General Calendar it is an optional memorial, outside this model.
-  { m: 12, d: 13, name: "St. Lucy, Virgin and Martyr", rank: "Memorial", color: "red" },
-  { m: 12, d: 14, name: "St. John of the Cross, Priest and Doctor", rank: "Memorial", color: "white" },
-  { m: 12, d: 25, name: "The Nativity of the Lord (Christmas)", rank: "Solemnity", color: "white", p: 2 },
-  { m: 12, d: 26, name: "St. Stephen, the First Martyr", rank: "Feast", color: "red" },
-  { m: 12, d: 27, name: "St. John, Apostle and Evangelist", rank: "Feast", color: "white" },
-  { m: 12, d: 28, name: "The Holy Innocents, Martyrs", rank: "Feast", color: "red" }
-];
-
-// Proper calendar of the United States: its Feast and all six obligatory
-// memorials (optional memorials and the Thanksgiving votive are outside the
-// engine's model).
-const USA_FIXED: typeof FIXED = [
-  { m: 1, d: 4, name: "St. Elizabeth Ann Seton, Religious", rank: "Memorial", color: "white" },
-  { m: 1, d: 5, name: "St. John Neumann, Bishop", rank: "Memorial", color: "white" },
-  { m: 7, d: 14, name: "St. Kateri Tekakwitha, Virgin", rank: "Memorial", color: "white" },
-  { m: 9, d: 9, name: "St. Peter Claver, Priest", rank: "Memorial", color: "white" },
-  { m: 10, d: 19, name: "Sts. John de Brébeuf and Isaac Jogues, Priests, and Companions, Martyrs", rank: "Memorial", color: "red" },
-  { m: 11, d: 13, name: "St. Frances Xavier Cabrini, Virgin", rank: "Memorial", color: "white" },
-  { m: 12, d: 12, name: "Our Lady of Guadalupe", rank: "Feast", color: "white" }
-];
-
-const RANK_PRECEDENCE: Record<Rank, number> = {
-  Solemnity: 3,
-  Feast: 7,
-  Memorial: 10,
-  Sunday: 6,
-  Feria: 13
-};
-
-interface CelebrationDef {
-  name: string;
-  rank: Rank;
-  color?: LiturgicalColor;
-  precedence: number;
-  transferredFrom?: string;
-  optional?: boolean;
+interface CelebrationDef extends Celebration {
+  transferPolicy: CalendarTransferPolicy;
+  occurrencePriority: number;
 }
 
-/** The year's movable celebrations with their Table precedence. */
-function movableDefs(year: number, region: CalendarRegion): [Date, CelebrationDef][] {
-  const easter = easterDate(year);
-  const out: [Date, CelebrationDef][] = [];
-  const at = (date: Date, name: string, rank: Rank, color: LiturgicalColor, precedence: number) =>
-    out.push([date, { name, rank, color, precedence }]);
-  const e = (offset: number) => addDays(easter, offset);
-
-  at(epiphanyDate(year, region), "The Epiphany of the Lord", "Solemnity", "white", 2);
-  at(e(-46), "Ash Wednesday", "Feria", "violet", 2);
-  at(e(-7), "Palm Sunday of the Passion of the Lord", "Sunday", "red", 2);
-  at(e(-3), "Holy Thursday — Mass of the Lord's Supper", "Solemnity", "white", 1);
-  at(e(-2), "Good Friday of the Passion of the Lord", "Solemnity", "red", 1);
-  at(e(-1), "Holy Saturday", "Solemnity", "violet", 1);
-  at(e(0), "Easter Sunday of the Resurrection of the Lord", "Solemnity", "white", 1);
-  at(e(7), "Divine Mercy Sunday (Second Sunday of Easter)", "Solemnity", "white", 2);
-  // USA: Ascension Thursday transfers to the Seventh Sunday of Easter.
-  at(e(region === "usa" ? 42 : 39), "The Ascension of the Lord", "Solemnity", "white", 2);
-  at(e(49), "Pentecost Sunday", "Solemnity", "red", 2);
-  at(e(50), "Mary, Mother of the Church", "Memorial", "white", 10);
-  at(e(56), "The Most Holy Trinity", "Solemnity", "white", 3);
-  at(e(60), "The Most Holy Body and Blood of Christ (Corpus Christi)", "Solemnity", "white", 3);
-  at(e(68), "The Most Sacred Heart of Jesus", "Solemnity", "white", 3);
-  at(e(69), "The Immaculate Heart of the Blessed Virgin Mary", "Memorial", "white", 10);
-
-  // Christ the King: the Sunday before the First Sunday of Advent.
-  at(addDays(adventStart(year), -7), "Our Lord Jesus Christ, King of the Universe", "Solemnity", "white", 3);
-
-  // Holy Family: Sunday within the Christmas octave (or Dec 30 if none).
-  const christmas = ymd(year, 12, 25);
-  let holyFamily = ymd(year, 12, 30);
-  for (let i = 1; i <= 6; i++) {
-    const d = addDays(christmas, i);
-    if (d.getDay() === 0) {
-      holyFamily = d;
-      break;
+function celebrationDefs(
+  year: number,
+  region: CalendarSelection,
+  individualChurchProper: IndividualChurchProper
+): [Date, CelebrationDef][] {
+  const rules = [
+    // Compose the catalog without a representative-date sentinel. A pack may
+    // lawfully become effective on any civil day, so filtering the whole year
+    // through 1 July could discard a valid later occurrence. Each candidate is
+    // checked against its pack's effective interval after its actual date is
+    // computed below.
+    ...calendarCelebrationRules(region),
+    ...individualChurchCelebrationRules(individualChurchProper)
+  ];
+  return rules.flatMap((rule) => {
+    const dateFor = (dateRule: CalendarDateRule) =>
+      calendarDateForRule(year, dateRule, region);
+    const occursOnIntendedFixedDate = (date: Date, dateRule: CalendarDateRule) =>
+      dateRule.kind !== "fixed" ||
+      (date.getMonth() + 1 === dateRule.month && date.getDate() === dateRule.day);
+    const occurrenceFor = (date: Date) =>
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const applies = (candidate: { effectiveFrom?: string; effectiveThrough?: string }) =>
+      (occurrence: string) =>
+        (!candidate.effectiveFrom || occurrence >= candidate.effectiveFrom) &&
+        (!candidate.effectiveThrough || occurrence <= candidate.effectiveThrough);
+    let activeRule = rule;
+    let activeDate = dateFor(rule.dateRule);
+    const activeOccurrence = occurrenceFor(activeDate);
+    if (
+      "packEffectiveFrom" in rule &&
+      (activeOccurrence < rule.packEffectiveFrom ||
+        (rule.packEffectiveThrough !== undefined && activeOccurrence > rule.packEffectiveThrough))
+    ) {
+      return [];
     }
-  }
-  at(holyFamily, "The Holy Family of Jesus, Mary and Joseph", "Feast", "white", 5);
-  at(baptismOfTheLord(year, region), "The Baptism of the Lord", "Feast", "white", 5);
-  return out;
+    if (!applies(rule)(occurrenceFor(activeDate))) {
+      const historical = rule.historicalVariants?.find((variant) => {
+        const variantDate = dateFor(variant.dateRule ?? rule.dateRule);
+        return applies(variant)(occurrenceFor(variantDate));
+      });
+      if (!historical) return [];
+      activeRule = { ...rule, ...historical };
+      activeDate = dateFor(historical.dateRule ?? rule.dateRule);
+    }
+    if (!occursOnIntendedFixedDate(activeDate, activeRule.dateRule)) return [];
+    return [[activeDate, {
+      id: activeRule.id,
+      formularyId: activeRule.formularyId,
+      packId: activeRule.packId,
+      name: activeRule.name,
+      rank: activeRule.rank,
+      color: activeRule.color,
+      precedence: activeRule.precedence,
+      ...(activeRule.optional ? { optional: true } : {}),
+      ...(activeRule.formularyOptions ? { formularyOptions: activeRule.formularyOptions } : {}),
+      transferPolicy: activeRule.transferPolicy ??
+        (activeRule.rank === "Solemnity" ? "next-free-day" : "none"),
+      occurrencePriority: activeRule.occurrencePriority ?? 0
+    }] as [Date, CelebrationDef]];
+  });
 }
 
-/**
- * Precedence of the temporal office a date carries of itself (its Sunday,
- * privileged day, or feria), independent of any celebration falling on it.
- */
-function temporalPrecedence(date: Date): number {
+/** Precedence carried by the temporal day before sanctoral occurrence. */
+function temporalPrecedence(date: Date): CalendarPrecedence {
   const year = date.getFullYear();
-  const fe = daysBetween(easterDate(year), date);
-  // The Triduum: Good Friday through Easter Sunday.
-  if (fe >= -2 && fe <= 0) return 1;
-  // Ash Wednesday; Palm Sunday and Holy Week Mon–Thu; the Easter Octave; Pentecost.
-  if (fe === -46 || (fe >= -7 && fe <= -3) || (fe >= 1 && fe <= 7) || fe === 49) return 2;
-  const dow = date.getDay();
-  if (dow === 0) {
+  const easterOffset = daysBetween(easterDate(year), date);
+  if (easterOffset >= -2 && easterOffset <= 0) return CALENDAR_PRECEDENCE.paschalTriduum;
+  if (
+    easterOffset === -46 ||
+    (easterOffset >= -7 && easterOffset <= -3) ||
+    (easterOffset >= 1 && easterOffset <= 7) ||
+    easterOffset === 49
+  ) {
+    return CALENDAR_PRECEDENCE.primaryTemporalDays;
+  }
+  const weekday = date.getDay();
+  if (weekday === 0) {
     const advent1 = adventStart(year);
     const christmas = ymd(year, 12, 25);
     const adventSunday = daysBetween(advent1, date) >= 0 && daysBetween(date, christmas) > 0;
-    const lentSunday = fe > -46 && fe < 0;
-    const easterSunday = fe > 0 && fe < 49;
-    if (adventSunday || lentSunday || easterSunday) return 2;
-    return 6; // Sundays of Christmastide and Ordinary Time
+    const lentSunday = easterOffset > -46 && easterOffset < 0;
+    const easterSunday = easterOffset > 0 && easterOffset < 49;
+    return adventSunday || lentSunday || easterSunday
+      ? CALENDAR_PRECEDENCE.primaryTemporalDays
+      : CALENDAR_PRECEDENCE.ordinarySunday;
   }
-  if (fe >= -45 && fe <= -8) return 9; // Lenten ferias
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-  if (m === 12 && ((d >= 17 && d <= 24) || d >= 26)) return 9; // Dec 17–24, Christmas Octave
-  return 13;
+  if (easterOffset >= -45 && easterOffset <= -8) {
+    return CALENDAR_PRECEDENCE.privilegedWeekday;
+  }
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  if (month === 12 && ((day >= 17 && day <= 24) || day >= 26)) {
+    return CALENDAR_PRECEDENCE.privilegedWeekday;
+  }
+  return CALENDAR_PRECEDENCE.feria;
 }
 
-const isoKey = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const isoKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 const fromKey = (key: string) => {
-  const [y, m, d] = key.split("-").map(Number);
-  return ymd(y, m, d);
+  const [year, month, day] = key.split("-").map(Number);
+  return ymd(year, month, day);
 };
 
-const yearCache = new Map<string, Map<string, Celebration[]>>();
+export interface CalendarDayResolution {
+  observed: Celebration[];
+  alternatives: Celebration[];
+  suppressed: SuppressedCelebration[];
+}
 
-/**
- * Resolve the whole year's observed celebrations: occurrence (the highest
- * rank takes the day), transfer of impeded solemnities, and omission of
- * impeded feasts and memorials. Transfer is inherently a whole-year
- * operation, hence the per-year computation and cache (keyed by region,
- * since the regional transfers reshape the year).
- */
-function resolveYear(year: number, region: CalendarRegion): Map<string, Celebration[]> {
-  const cacheKey = `${region}:${year}`;
+const stripDefinition = ({
+  transferPolicy: _transferPolicy,
+  occurrencePriority: _occurrencePriority,
+  ...celebration
+}: CelebrationDef): Celebration => celebration;
+
+/** Shared occurrence authority used by the year engine and exhaustive tests. */
+function resolveOccurrenceDefinitions(
+  candidates: readonly CelebrationDef[],
+  temporal: CalendarPrecedence,
+  carriedSuppressed: readonly SuppressedCelebration[] = []
+): CalendarDayResolution {
+  const list = [...candidates].sort(
+    (left, right) =>
+      left.precedence - right.precedence ||
+      right.occurrencePriority - left.occurrencePriority ||
+      left.id.localeCompare(right.id)
+  );
+  if (!list.length) return { observed: [], alternatives: [], suppressed: [...carriedSuppressed] };
+  const best = list[0].precedence;
+  const suppressed = [...carriedSuppressed];
+  if (best > temporal) {
+    const alternatives = temporal === CALENDAR_PRECEDENCE.privilegedWeekday
+      ? list
+          .filter((definition) => definition.rank === "Memorial")
+          .map((definition) => ({
+            ...stripDefinition(definition),
+            rank: "Commemoration" as const,
+            precedence: CALENDAR_PRECEDENCE.optionalMemorial,
+            optional: true
+          }))
+      : [];
+    suppressed.push(
+      ...list.map((definition) => ({
+        ...stripDefinition(definition),
+        suppressionReason: "temporal-precedence" as const
+      }))
+    );
+    return { observed: [], alternatives, suppressed };
+  }
+  if (best === CALENDAR_PRECEDENCE.optionalMemorial) {
+    return {
+      observed: [],
+      alternatives: list.filter((definition) => definition.optional).map(stripDefinition),
+      suppressed
+    };
+  }
+  const sameClass = list.filter((definition) => definition.precedence === best);
+  const bestOccurrencePriority = Math.max(
+    ...sameClass.map((definition) => definition.occurrencePriority)
+  );
+  const winners = sameClass.filter(
+    (definition) => definition.occurrencePriority === bestOccurrencePriority
+  );
+  if (
+    (best === CALENDAR_PRECEDENCE.generalMemorial ||
+      best === CALENDAR_PRECEDENCE.properMemorial) &&
+    winners.length > 1
+  ) {
+    const alternatives = winners.map((definition) => ({
+      ...stripDefinition(definition),
+      precedence: CALENDAR_PRECEDENCE.optionalMemorial,
+      optional: true
+    }));
+    suppressed.push(
+      ...winners.map((definition) => ({
+        ...stripDefinition(definition),
+        suppressionReason: "memorial-collision" as const
+      }))
+    );
+    return { observed: [], alternatives, suppressed };
+  }
+  const winnerSet = new Set(winners);
+  suppressed.push(
+    ...list
+      .filter((definition) => !winnerSet.has(definition))
+      .map((definition) => ({
+        ...stripDefinition(definition),
+        suppressionReason: "celebration-precedence" as const
+      }))
+  );
+  return {
+    observed: winners.map(stripDefinition),
+    alternatives: [],
+    suppressed
+  };
+}
+
+export interface CalendarOccurrenceCandidate extends Celebration {
+  occurrencePriority?: number;
+}
+
+/** Public pure seam for validating arbitrary precedence collisions. */
+export function resolveCalendarOccurrence(
+  candidates: readonly CalendarOccurrenceCandidate[],
+  temporal: CalendarPrecedence = CALENDAR_PRECEDENCE.feria
+): CalendarDayResolution {
+  return resolveOccurrenceDefinitions(
+    candidates.map((candidate) => ({
+      ...candidate,
+      transferPolicy: "none",
+      occurrencePriority: candidate.occurrencePriority ?? 0
+    })),
+    temporal
+  );
+}
+
+const yearCache = new Map<string, Map<string, CalendarDayResolution>>();
+
+/** Resolve occurrence and transfers in a three-civil-year window. */
+function resolveYear(
+  year: number,
+  region: CalendarSelection,
+  individualChurchProper: IndividualChurchProper
+): Map<string, CalendarDayResolution> {
+  const profile = calendarProfile(region);
+  const cacheKey = `${profile.fingerprint}:${individualChurchProperFingerprint(individualChurchProper)}:${year}`;
   const cached = yearCache.get(cacheKey);
   if (cached) return cached;
 
-  // Candidates per day. Movables go in first so that within an equal
-  // precedence the temporal cycle outranks the sanctoral (stable sort).
   const candidates = new Map<string, CelebrationDef[]>();
-  const addDef = (date: Date, def: CelebrationDef) => {
+  const addDef = (date: Date, definition: CelebrationDef) => {
     const key = isoKey(date);
     const list = candidates.get(key);
-    if (list) list.push(def);
-    else candidates.set(key, [def]);
+    if (list) list.push(definition);
+    else candidates.set(key, [definition]);
   };
-  for (const [date, def] of movableDefs(year, region)) addDef(date, def);
-  const fixed = region === "usa" ? [...FIXED, ...USA_FIXED] : FIXED;
-  for (const { m, d, name, rank, color, p, opt } of fixed) {
-    addDef(ymd(year, m, d), {
-      name,
-      rank,
-      color,
-      precedence: p ?? RANK_PRECEDENCE[rank],
-      ...(opt ? { optional: true } : {})
-    });
+  for (let sourceYear = year - 1; sourceYear <= year + 1; sourceYear++) {
+    for (const [date, definition] of celebrationDefs(
+      sourceYear,
+      profile.id,
+      individualChurchProper
+    )) {
+      addDef(date, definition);
+    }
   }
 
-  // Transfer pass, in date order: a solemnity (rank 3) impeded by a rank-1/2
-  // day or by a higher-placed solemnity moves to the nearest following day
-  // free of anything ranked 8 or better (GNLYC 60). The codified modern
-  // cases fall out of the forward scan: the Annunciation impeded by Holy
-  // Week or the Easter Octave lands on the Monday after the Second Sunday
-  // of Easter, the Immaculate Conception impeded by an Advent Sunday on
-  // Dec 9. Transfers only ever move forward, so mutating the candidate map
-  // while walking the year is safe.
-  for (let date = ymd(year, 1, 1); date.getFullYear() === year; date = addDays(date, 1)) {
+  const carriedSuppressed = new Map<string, SuppressedCelebration[]>();
+  const suppress = (
+    key: string,
+    celebration: CelebrationDef,
+    suppressionReason: SuppressedCelebration["suppressionReason"],
+    transferredTo?: string
+  ) => {
+    const {
+      transferPolicy: _transferPolicy,
+      occurrencePriority: _occurrencePriority,
+      ...publicCelebration
+    } = celebration;
+    const item: SuppressedCelebration = {
+      ...publicCelebration,
+      suppressionReason,
+      ...(transferredTo ? { transferredTo } : {})
+    };
+    const list = carriedSuppressed.get(key);
+    if (list) list.push(item);
+    else carriedSuppressed.set(key, [item]);
+  };
+
+  const scanStart = ymd(year - 1, 1, 1);
+  const scanEnd = ymd(year + 1, 12, 31);
+  for (let date = scanStart; date <= scanEnd; date = addDays(date, 1)) {
     const list = candidates.get(isoKey(date));
     if (!list) continue;
-    list.sort((a, b) => a.precedence - b.precedence);
-    const T = temporalPrecedence(date);
+    list.sort(
+      (left, right) =>
+        left.precedence - right.precedence ||
+        right.occurrencePriority - left.occurrencePriority ||
+        left.id.localeCompare(right.id)
+    );
+    const temporal = temporalPrecedence(date);
     let governorSeen = false;
-    for (const def of [...list]) {
-      if (def.precedence < 3) {
+    for (const definition of [...list]) {
+      if (definition.precedence < CALENDAR_PRECEDENCE.generalSolemnity) {
         governorSeen = true;
         continue;
       }
-      if (def.precedence > 3) continue;
-      if (T <= 2 || governorSeen) {
-        list.splice(list.indexOf(def), 1);
-        let target = addDays(date, 1);
-        for (let i = 0; i < 366; i++) {
-          const occupied = (candidates.get(isoKey(target)) ?? []).some((c) => c.precedence <= 8);
-          if (temporalPrecedence(target) > 8 && !occupied) break;
-          target = addDays(target, 1);
+      if (
+        definition.rank !== "Solemnity" ||
+        definition.precedence > CALENDAR_PRECEDENCE.properSolemnity ||
+        definition.transferPolicy === "none"
+      ) {
+        continue;
+      }
+      if (temporal < definition.precedence || governorSeen) {
+        list.splice(list.indexOf(definition), 1);
+        const easter = easterDate(date.getFullYear());
+        const easterOffset = daysBetween(easter, date);
+        const anticipatesHolyWeek =
+          definition.transferPolicy === "saturday-before-holy-week" &&
+          easterOffset >= -7 && easterOffset <= -1;
+        const backwards = definition.transferPolicy === "previous-free-day" ||
+          anticipatesHolyWeek;
+        let target = anticipatesHolyWeek
+          ? addDays(easter, -8)
+          : addDays(date, backwards ? -1 : 1);
+        for (let offset = 0; offset < 366; offset++) {
+          const occupied = (candidates.get(isoKey(target)) ?? []).some(
+            (candidate) => candidate.precedence <= CALENDAR_PRECEDENCE.properFeast
+          );
+          if (temporalPrecedence(target) > CALENDAR_PRECEDENCE.properFeast && !occupied) break;
+          target = addDays(target, backwards ? -1 : 1);
         }
-        addDef(target, { ...def, transferredFrom: isoKey(date) });
+        suppress(isoKey(date), definition, "transferred", isoKey(target));
+        addDef(target, { ...definition, transferredFrom: isoKey(date) });
       } else {
         governorSeen = true;
       }
     }
   }
 
-  // Resolution pass: on each day the best precedence wins; celebrations it
-  // beats — and any beaten by the temporal day itself — are omitted.
-  const resolved = new Map<string, Celebration[]>();
+  const resolved = new Map<string, CalendarDayResolution>();
   for (const [key, list] of candidates) {
     if (!list.length) continue;
-    list.sort((a, b) => a.precedence - b.precedence);
-    const best = list[0].precedence;
-    if (best > temporalPrecedence(fromKey(key))) continue;
-    const winners = list.filter((c) => c.precedence === best);
-    // Two obligatory memorials can only collide when a movable one (the
-    // Immaculate Heart, Mary Mother of the Church) lands on a fixed one;
-    // the rubric (CDW Notification, Prot. 2671/98/L) demotes both to
-    // optional for that year, so the feria keeps the day.
-    if (best === RANK_PRECEDENCE.Memorial && winners.length > 1) continue;
+    const temporal = temporalPrecedence(fromKey(key));
     resolved.set(
       key,
-      winners.map((c) => ({ ...c }))
+      resolveOccurrenceDefinitions(list, temporal, carriedSuppressed.get(key) ?? [])
     );
+  }
+  for (const [key, suppressed] of carriedSuppressed) {
+    if (!resolved.has(key)) resolved.set(key, { observed: [], alternatives: [], suppressed });
   }
   yearCache.set(cacheKey, resolved);
   return resolved;
 }
 
+export function calendarResolution(
+  date: Date,
+  region: CalendarSelection = currentCalendarProfile(),
+  individualChurchProper: IndividualChurchProper = getSettings().individualChurchProper
+): CalendarDayResolution {
+  return (
+    resolveYear(date.getFullYear(), region, individualChurchProper).get(isoKey(date)) ?? {
+      observed: [],
+      alternatives: [],
+      suppressed: []
+    }
+  );
+}
+
 export function liturgicalDay(
   date: Date = new Date(),
-  region: CalendarRegion = currentRegion()
+  region: CalendarSelection = currentCalendarProfile(),
+  individualChurchProper: IndividualChurchProper = getSettings().individualChurchProper
 ): LiturgicalDay {
+  const profileId = normalizeCalendarProfile(region);
+  const profile = calendarProfile(profileId);
   const year = date.getFullYear();
   const easter = easterDate(year);
   const ashWednesday = addDays(easter, -46);
@@ -472,22 +623,24 @@ export function liturgicalDay(
   const pentecost = addDays(easter, 49);
   const advent1 = adventStart(year);
   const christmas = ymd(year, 12, 25);
-  const baptism = baptismOfTheLord(year, region);
-  const dow = date.getDay();
-  const weekday = WEEKDAYS[dow];
+  const baptism = baptismOfTheLord(year, profileId);
+  const weekdayNumber = date.getDay();
+  const weekday = WEEKDAYS[weekdayNumber];
 
   let season: Season;
   let seasonLabel: string;
   let color: LiturgicalColor;
-  let weekNum = 0;
+  let weekNumber = 0;
 
   if (daysBetween(advent1, date) >= 0 && daysBetween(date, christmas) > 0) {
     season = "Advent";
     const week = Math.floor(daysBetween(advent1, date) / 7) + 1;
-    weekNum = week;
+    weekNumber = week;
     seasonLabel =
-      dow === 0 ? `${ORDINALS[week - 1]} Sunday of Advent` : `${weekday} of the ${ORDINALS[week - 1]} Week of Advent`;
-    color = dow === 0 && week === 3 ? "rose" : "violet";
+      weekdayNumber === 0
+        ? `${ORDINALS[week - 1]} Sunday of Advent`
+        : `${weekday} of the ${ORDINALS[week - 1]} Week of Advent`;
+    color = weekdayNumber === 0 && week === 3 ? "rose" : "violet";
   } else if (daysBetween(date, christmas) <= 0 || daysBetween(date, baptism) >= 0) {
     season = "Christmastide";
     seasonLabel =
@@ -499,67 +652,93 @@ export function liturgicalDay(
     color = "white";
   } else if (daysBetween(ashWednesday, date) >= 0 && daysBetween(date, holyThursday) > 0) {
     season = "Lent";
-    const lent1 = addDays(ashWednesday, 4); // First Sunday of Lent
-    const week = Math.floor(daysBetween(lent1, date) / 7) + 1;
-    weekNum = daysBetween(ashWednesday, date) < 4 ? 0 : week;
-    if (daysBetween(ashWednesday, date) === 0) {
-      seasonLabel = "Ash Wednesday";
-    } else if (daysBetween(ashWednesday, date) < 4) {
-      seasonLabel = `${weekday} after Ash Wednesday`;
-    } else if (week === 6) {
-      seasonLabel = dow === 0 ? "Palm Sunday" : `${weekday} of Holy Week`;
-    } else {
+    const firstSunday = addDays(ashWednesday, 4);
+    const week = Math.floor(daysBetween(firstSunday, date) / 7) + 1;
+    weekNumber = daysBetween(ashWednesday, date) < 4 ? 0 : week;
+    if (daysBetween(ashWednesday, date) === 0) seasonLabel = "Ash Wednesday";
+    else if (daysBetween(ashWednesday, date) < 4) seasonLabel = `${weekday} after Ash Wednesday`;
+    else if (week === 6) seasonLabel = weekdayNumber === 0 ? "Palm Sunday" : `${weekday} of Holy Week`;
+    else {
       seasonLabel =
-        dow === 0 ? `${ORDINALS[week - 1]} Sunday of Lent` : `${weekday} of the ${ORDINALS[week - 1]} Week of Lent`;
+        weekdayNumber === 0
+          ? `${ORDINALS[week - 1]} Sunday of Lent`
+          : `${weekday} of the ${ORDINALS[week - 1]} Week of Lent`;
     }
-    color = dow === 0 && week === 4 ? "rose" : "violet";
+    color = weekdayNumber === 0 && week === 4 ? "rose" : "violet";
   } else if (daysBetween(holyThursday, date) >= 0 && daysBetween(date, easter) > 0) {
     season = "Sacred Triduum";
-    seasonLabel = ["Holy Thursday", "Good Friday", "Holy Saturday"][daysBetween(holyThursday, date)] ?? weekday;
+    seasonLabel =
+      ["Holy Thursday", "Good Friday", "Holy Saturday"][daysBetween(holyThursday, date)] ?? weekday;
     color = daysBetween(date, easter) === 2 ? "red" : "violet";
   } else if (daysBetween(easter, date) >= 0 && daysBetween(date, pentecost) >= 0) {
     season = "Eastertide";
     const week = Math.floor(daysBetween(easter, date) / 7) + 1;
-    weekNum = week;
+    weekNumber = week;
     if (daysBetween(easter, date) === 0) seasonLabel = "Easter Sunday";
     else if (daysBetween(date, pentecost) === 0) seasonLabel = "Pentecost Sunday";
     else if (daysBetween(easter, date) < 7) seasonLabel = `${weekday} within the Octave of Easter`;
-    else
+    else {
       seasonLabel =
-        dow === 0 ? `${ORDINALS[week - 1]} Sunday of Easter` : `${weekday} of the ${ORDINALS[week - 1]} Week of Easter`;
+        weekdayNumber === 0
+          ? `${ORDINALS[week - 1]} Sunday of Easter`
+          : `${weekday} of the ${ORDINALS[week - 1]} Week of Easter`;
+    }
     color = daysBetween(date, pentecost) === 0 ? "red" : "white";
   } else {
     season = "Ordinary Time";
     let week: number;
     if (daysBetween(date, ashWednesday) > 0) {
-      // Ordinary Time I: counted from the Baptism of the Lord (week 1). When
-      // the Baptism falls on Monday (USA, Epiphany on Jan 7/8), the count
-      // anchors on the Epiphany Sunday so the next Sunday is still the Second
-      // Sunday in Ordinary Time.
       const anchor = baptism.getDay() === 0 ? baptism : addDays(baptism, -1);
       week = Math.floor(daysBetween(anchor, date) / 7) + 1;
     } else {
-      // Ordinary Time II: counted backwards from Christ the King (week 34).
       const christKing = addDays(advent1, -7);
       week = 34 - Math.floor(daysBetween(date, addDays(christKing, 6)) / 7);
     }
     week = Math.min(Math.max(week, 1), 34);
-    weekNum = week;
+    weekNumber = week;
     seasonLabel =
-      dow === 0
+      weekdayNumber === 0
         ? `${ORDINALS[week - 1]} Sunday in Ordinary Time`
         : `${weekday} of the ${ORDINALS[week - 1]} Week in Ordinary Time`;
     color = "green";
   }
 
-  // Only celebrations actually observed this day survive resolution; the
-  // governing one comes first and, when it takes the day, takes its color.
-  // Suppressed and transferred celebrations do not appear here at all.
-  const celebrations = resolveYear(year, region).get(isoKey(date)) ?? [];
-  const top = celebrations[0];
-  if (top?.color) color = top.color;
+  const resolution = calendarResolution(date, profileId, individualChurchProper);
+  const celebrations = resolution.observed;
+  const alternatives = [...resolution.alternatives];
+  if (season === "Ordinary Time" && weekdayNumber === 6 && celebrations.length === 0) {
+    for (const rule of calendarTemporalAlternativeRules(profileId, date)) {
+      if (rule.trigger.kind !== "ordinary-time-saturday") continue;
+      alternatives.push({
+        id: rule.id,
+        formularyId: rule.formularyId,
+        packId: rule.packId,
+        name: rule.name,
+        rank: rule.rank,
+        color: rule.color,
+        precedence: rule.precedence,
+        optional: true,
+        ...(rule.formularyOptions ? { formularyOptions: rule.formularyOptions } : {})
+      });
+    }
+  }
+  const governing = celebrations[0];
+  if (governing?.color) color = governing.color;
 
-  return { date, season, seasonLabel, week: weekNum, color, celebrations };
+  return {
+    date,
+    profileId,
+    profileFingerprint: profile.fingerprint,
+    resolvedCalendarFingerprint:
+      `${profile.fingerprint}+${individualChurchProperFingerprint(individualChurchProper)}`,
+    season,
+    seasonLabel,
+    week: weekNumber,
+    color,
+    celebrations,
+    alternatives,
+    suppressed: resolution.suppressed
+  };
 }
 
 export const COLOR_HEX: Record<LiturgicalColor, string> = {
