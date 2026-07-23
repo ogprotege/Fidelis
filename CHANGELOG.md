@@ -56,7 +56,9 @@ A widget, navigation, accessibility, motion, and Roman-calendar repair release.
   origin and clamps the reported height.
 - **The iOS 15 deployment floor is consistent through archive export.** The
   committed Capacitor Swift package now matches the app target's iOS 15 floor,
-  and the release harness rejects a future sync-generated iOS 17 mismatch.
+  and the release harness rejects a future sync-generated iOS 17 mismatch. The
+  TestFlight preflight also rejects a signed app or widget that loses the shared
+  App Group, checks version/build parity, and validates the IPA before upload.
 - **Corpus-backed memorial readings are not misreported as absent.** Stable
   formulary IDs now connect St. Blaise, St. Bridget, and the First Martyrs of
   the Holy Roman Church to their existing citation rows, with date-level

@@ -127,6 +127,11 @@ container, record the explicit **Open Fidelis to update** fail-closed state in
 device acceptance. The widget must not substitute the bundled default
 jurisdiction when shared settings are unavailable.
 
+The TestFlight script unpacks the signed IPA and requires that exact App Group
+in both signed entitlement blobs. It also verifies app/widget version parity and
+validates the IPA with App Store Connect before upload. A profile that strips the
+shared container therefore stops the release instead of producing a broken beta.
+
 ## 7. Tag + push
 
 ```sh

@@ -4931,6 +4931,13 @@ console.log("");
     /npx cap sync ios[\s\S]*git (?:checkout --|restore) ios\/App\/CapApp-SPM\/Package\.swift/.test(
       testFlightScriptSrc39
     ));
+  check("§39 TestFlight rejects a signed app or widget that loses the shared App Group",
+    testFlightScriptSrc39.includes('require_app_group "app" "$SIGNED_APP"') &&
+      testFlightScriptSrc39.includes('require_app_group "widget" "$SIGNED_WIDGET"') &&
+      testFlightScriptSrc39.includes("com.apple.security.application-groups") &&
+      testFlightScriptSrc39.includes("group.app.fidelis.bible"));
+  check("§39 TestFlight validates the signed IPA before upload",
+    /altool --validate-app[\s\S]*altool --upload-app/.test(testFlightScriptSrc39));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

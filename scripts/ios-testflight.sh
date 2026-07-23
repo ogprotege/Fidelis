@@ -44,14 +44,14 @@ BUILD_NUMBER="$(git rev-list --count HEAD)"
 echo "==> Fidelis -> TestFlight   (build $BUILD_NUMBER, team $TEAM_ID)"
 echo "    work dir: $WORK"
 
-echo "==> [1/5] Build web bundle + sync into the iOS shell"
+echo "==> [1/6] Build web bundle + sync into the iOS shell"
 npm run build
 npx cap sync ios
 # Capacitor 8's CLI rewrites this to .v17 on every sync; our plugins only need
 # .v15 and the App target is iOS 15, so revert to keep the tree clean and SPM happy.
 git checkout -- ios/App/CapApp-SPM/Package.swift 2>/dev/null || true
 
-echo "==> [2/5] Archive (UNSIGNED --- signing happens at export)"
+echo "==> [2/6] Archive (UNSIGNED --- signing happens at export)"
 xcodebuild archive \
   -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" \
@@ -61,7 +61,7 @@ xcodebuild archive \
   || { echo "ERROR: archive failed --- last 25 lines:"; tail -25 "$WORK/archive.log"; exit 1; }
 echo "    archived"
 
-echo "==> [3/5] Export a distribution-signed .ipa (creates the App Store profile)"
+echo "==> [3/6] Export a distribution-signed .ipa (creates the App Store profile)"
 cat > "$EXPORT_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -92,13 +92,60 @@ IPA="$(ls "$EXPORT_DIR"/*.ipa 2>/dev/null | head -1)"
 [ -n "$IPA" ] || { echo "ERROR: no .ipa produced in $EXPORT_DIR"; exit 1; }
 echo "    signed: $IPA"
 
-echo "==> [4/5] Upload to App Store Connect / TestFlight"
+echo "==> [4/6] Verify signed app + widget contracts"
+IPA_INSPECT_DIR="$WORK/ipa-inspect"
+ditto -x -k "$IPA" "$IPA_INSPECT_DIR"
+SIGNED_APP="$IPA_INSPECT_DIR/Payload/App.app"
+SIGNED_WIDGET="$SIGNED_APP/PlugIns/FidelisWidgetExtension.appex"
+[ -d "$SIGNED_APP" ] || { echo "ERROR: signed app bundle is missing from the IPA"; exit 1; }
+[ -d "$SIGNED_WIDGET" ] || { echo "ERROR: signed widget extension is missing from the IPA"; exit 1; }
+
+EXPECTED_VERSION="$(node -p "require('./package.json').version")"
+APP_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$SIGNED_APP/Info.plist")"
+APP_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$SIGNED_APP/Info.plist")"
+WIDGET_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$SIGNED_WIDGET/Info.plist")"
+WIDGET_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$SIGNED_WIDGET/Info.plist")"
+[ "$APP_VERSION" = "$EXPECTED_VERSION" ] || {
+  echo "ERROR: signed app version $APP_VERSION does not match package $EXPECTED_VERSION"; exit 1;
+}
+[ "$WIDGET_VERSION" = "$EXPECTED_VERSION" ] || {
+  echo "ERROR: signed widget version $WIDGET_VERSION does not match package $EXPECTED_VERSION"; exit 1;
+}
+[ "$APP_BUILD" = "$BUILD_NUMBER" ] || {
+  echo "ERROR: signed app build $APP_BUILD does not match requested build $BUILD_NUMBER"; exit 1;
+}
+[ "$WIDGET_BUILD" = "$BUILD_NUMBER" ] || {
+  echo "ERROR: signed widget build $WIDGET_BUILD does not match requested build $BUILD_NUMBER"; exit 1;
+}
+
+require_app_group() {
+  local label="$1"
+  local bundle="$2"
+  local entitlements
+  entitlements="$(codesign -d --entitlements - "$bundle" 2>&1)" || {
+    echo "ERROR: could not read signed $label entitlements"; exit 1;
+  }
+  if ! grep -Fq "com.apple.security.application-groups" <<<"$entitlements" ||
+     ! grep -Fq "group.app.fidelis.bible" <<<"$entitlements"; then
+    echo "ERROR: signed $label lost group.app.fidelis.bible; register and provision the App Group on both identifiers"
+    exit 1
+  fi
+}
+require_app_group "app" "$SIGNED_APP"
+require_app_group "widget" "$SIGNED_WIDGET"
+echo "    versions, build numbers, widget embedding, and App Group entitlements verified"
+
+echo "==> [5/6] Validate the signed IPA with App Store Connect"
 mkdir -p "$HOME/.appstoreconnect/private_keys"
 cp "$ASC_KEY_PATH" "$HOME/.appstoreconnect/private_keys/" 2>/dev/null || true
+xcrun altool --validate-app -f "$IPA" -t ios \
+  --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+
+echo "==> [6/6] Upload to App Store Connect / TestFlight"
 xcrun altool --upload-app -f "$IPA" -t ios \
   --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
 
-echo "==> [5/5] Build $BUILD_NUMBER uploaded. Check processing state with:"
+echo "==> Build $BUILD_NUMBER uploaded. Check processing state with:"
 echo "          node scripts/asc-build-status.mjs"
 echo ""
 echo "Then: App Store Connect -> Fidelis -> TestFlight -> Internal Testing -> add the build."
