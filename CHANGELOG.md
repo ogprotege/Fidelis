@@ -54,6 +54,9 @@ A widget, navigation, accessibility, motion, and Roman-calendar repair release.
   first paint, typography is pinned to Garamond, and a versioned ResizeObserver
   message replaces the fixed-height assumption. The host validates window and
   origin and clamps the reported height.
+- **The iOS 15 deployment floor is consistent through archive export.** The
+  committed Capacitor Swift package now matches the app target's iOS 15 floor,
+  and the release harness rejects a future sync-generated iOS 17 mismatch.
 - **Corpus-backed memorial readings are not misreported as absent.** Stable
   formulary IDs now connect St. Blaise, St. Bridget, and the First Martyrs of
   the Holy Roman Church to their existing citation rows, with date-level

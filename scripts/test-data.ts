@@ -4876,6 +4876,14 @@ console.log("");
   const homeSrc39 = readFileSync(join(ROOT, "src/pages/Home.tsx"), "utf8");
   const cssSrc39 = readFileSync(join(ROOT, "src/styles.css"), "utf8");
   const appStoreSrc39 = readFileSync(join(ROOT, "docs/guides/APP_STORE.md"), "utf8");
+  const iosPackageSrc39 = readFileSync(
+    join(ROOT, "ios/App/CapApp-SPM/Package.swift"),
+    "utf8"
+  );
+  const testFlightScriptSrc39 = readFileSync(
+    join(ROOT, "scripts/ios-testflight.sh"),
+    "utf8"
+  );
   const packageVersion39 = (JSON.parse(
     readFileSync(join(ROOT, "package.json"), "utf8")
   ) as { version: string }).version;
@@ -4916,6 +4924,13 @@ console.log("");
   check("§39 App Store and TestFlight metadata follow the package version",
     appStoreSrc39.includes(`## Version\n\n\`\`\`\n${packageVersion39}\n\`\`\``) &&
       appStoreSrc39.includes(`What's New (${packageVersion39})`));
+  check("§39 the committed Capacitor package preserves the app's iOS 15 floor",
+    iosPackageSrc39.includes("platforms: [.iOS(.v15)]") &&
+      !iosPackageSrc39.includes("platforms: [.iOS(.v17)]"));
+  check("§39 the TestFlight sync restores the release-pinned Capacitor package",
+    /npx cap sync ios[\s\S]*git (?:checkout --|restore) ios\/App\/CapApp-SPM\/Package\.swift/.test(
+      testFlightScriptSrc39
+    ));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
