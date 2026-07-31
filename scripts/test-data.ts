@@ -90,6 +90,7 @@ import {
   SUPPORTED_LECTIONARY_PACKS,
   UNITED_STATES_PACK,
   calendarProfile,
+  individualChurchProperFingerprint,
   normalizeIndividualChurchProper
 } from "../src/lib/calendarProfile";
 import {
@@ -102,6 +103,8 @@ import {
   isSameWidgetTarget,
   widgetLinkDestination,
   widgetLinkHistoryMode,
+  claimStartupLaunchUrl,
+  createWidgetStartupGate,
   widgetLinkStartupActivations,
   widgetLinkTarget,
   widgetReturnContractFromHistoryState,
@@ -4458,6 +4461,72 @@ console.log("");
         { pathname: "/readings", search: "?date=2026-12-25", hash: "" },
         massTarget
       ));
+  // ---- The widget-entry navigation freeze (v1.18.3 → v1.24.0) ----
+  // iOS latches the launch URL in ApplicationDelegateProxy.lastURL and Android
+  // in Bridge.intentUri; neither is ever cleared, so getLaunchUrl() answers with
+  // the same widget URL for the whole process. The listener effect used to
+  // depend on `openWidgetLink` → `navigate`, whose identity react-router
+  // re-creates on every pathname change, so every tab tap re-read that latch,
+  // re-classified it as a fresh COLD activation and replace-navigated the user
+  // back to the widget's destination: the app opened from a widget could not be
+  // navigated at all. Both halves of the repair are pinned here.
+  const startupGate = createWidgetStartupGate();
+  check("§36 widget freeze: the OS launch URL is claimable exactly once per process",
+    claimStartupLaunchUrl(startupGate, "fidelis://verse") === "fidelis://verse" &&
+      claimStartupLaunchUrl(startupGate, "fidelis://verse") === null &&
+      claimStartupLaunchUrl(startupGate, "fidelis://mass") === null);
+  const emptyGate = createWidgetStartupGate();
+  check("§36 widget freeze: an icon launch claims its empty latch and stays empty",
+    claimStartupLaunchUrl(emptyGate, undefined) === null &&
+      claimStartupLaunchUrl(emptyGate, "fidelis://verse") === null);
+  // A re-read yields null, and a null launch URL with no buffered warm taps
+  // produces NO activation at all — the replay is structurally impossible.
+  const replayGate = createWidgetStartupGate();
+  claimStartupLaunchUrl(replayGate, "fidelis://verse");
+  check("§36 widget freeze: a re-read of the latch produces no activation to replay",
+    widgetLinkStartupActivations(claimStartupLaunchUrl(replayGate, "fidelis://verse"), []).length === 0);
+  // The listener effect must mount ONCE. A dependency array that names the
+  // handler (or `navigate`) re-runs it on every route change and re-opens the
+  // freeze, so the shape is pinned: dispatch through the ref, deps empty.
+  check("§36 widget freeze: the native widget listener effect mounts once and dispatches through a ref",
+    app.includes("openWidgetLinkRef.current(event.url, \"warm\")") &&
+      app.includes("openWidgetLinkRef.current(activation.url, activation.source)") &&
+      app.includes("claimStartupLaunchUrl(gate, launchUrl)") &&
+      !app.includes("}, [openWidgetLink]);"));
+  // ---- The widget-sync effect must key on content, not object identity ----
+  // getSettings() rebuilds individualChurchProper on every read and
+  // saveSettings() spreads that fresh read, so an unrelated settings write (a
+  // theme flip) used to hand back an identical-but-new object and re-run the
+  // native widget sync: its appStateChange listener dropped and re-added, the
+  // debounce restarted, the whole multi-year local calendar overlay rebuilt.
+  // The canonical fingerprint is the stable key that repair depends on.
+  const properReadA = normalizeIndividualChurchProper({
+    title: "Saint Mary of the Angels",
+    titleDate: { month: 8, day: 2 },
+    dedicationAnniversary: { month: 10, day: 17 }
+  });
+  const properReadB = normalizeIndividualChurchProper({
+    title: "Saint Mary of the Angels",
+    titleDate: { month: 8, day: 2 },
+    dedicationAnniversary: { month: 10, day: 17 }
+  });
+  check("§36 widget sync: two reads of one stored proper are separate objects with one fingerprint",
+    properReadA !== properReadB &&
+      individualChurchProperFingerprint(properReadA) ===
+        individualChurchProperFingerprint(properReadB));
+  check("§36 widget sync: a genuine change to the proper does move the fingerprint",
+    individualChurchProperFingerprint(properReadA) !==
+      individualChurchProperFingerprint(
+        normalizeIndividualChurchProper({
+          title: "Saint Mary of the Angels",
+          titleDate: { month: 8, day: 5 },
+          dedicationAnniversary: { month: 10, day: 17 }
+        })
+      ));
+  check("§36 widget sync: App keys the native sync on the fingerprint-memoised proper",
+    app.includes("individualChurchProperFingerprint(") &&
+      app.includes("const individualChurchProper = useMemo(") &&
+      !app.includes("settings.individualChurchProper,\n    settings.lectionaryPackId"));
   const bufferedCold = widgetLinkStartupActivations(null, ["fidelis://verse"]);
   check("§36 NATIVE-002 (web): a first buffered URL becomes cold when getLaunchUrl is empty",
     bufferedCold.length === 1 &&

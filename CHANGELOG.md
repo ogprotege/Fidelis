@@ -6,6 +6,71 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.24.1] — 2026-07-31 — a spacious place
+
+*"Thou hast not shut me up in the hands of the enemy: thou hast set my feet in a
+spacious place." (Psalm 30:9)*
+
+A bug-fix release for a TestFlight report: entering Fidelis from a home-screen
+widget landed on the right card every time, but the app then could not be
+navigated at all.
+
+### Fixed
+
+- **The app can be navigated after entering from a widget.** Tapping a Verse,
+  Quote, or Mass widget opened its destination correctly, but every later tab or
+  link then flashed the requested page and snapped straight back, with no way out
+  short of force-quitting. Launching from the app icon was unaffected — the tell
+  that the fault lay in widget entry, not in routing.
+
+  The OS launch URL is a **latch, not an event**. iOS stores it in
+  `ApplicationDelegateProxy.lastURL` (written on every `openURL`, cleared never)
+  and Android in `Bridge.intentUri` (captured once in the Bridge constructor and
+  never refreshed), so `getLaunchUrl()` keeps answering with the same widget URL
+  for the whole process, and neither latch can be cleared from the web layer.
+  Meanwhile React Router's `useNavigate()` returns a function memoised on
+  `location.pathname`, so `navigate` — and therefore `openWidgetLink` — took a new
+  identity on every route change, and the widget listener effect that depended on
+  it tore down and re-ran each time, re-reading the latch. Each re-read was
+  classified as a fresh **cold** activation and `replace`-navigated the person
+  back to the widget's destination, `replace` erasing the page they had asked for
+  so Back could not recover it either.
+
+  The listener now mounts **once** and dispatches through a latest-callback ref,
+  and the launch URL passes a one-shot gate (`claimStartupLaunchUrl`) that yields
+  it exactly once per process and null on every re-read — the app doing the
+  clearing the platforms will not do. Cold-replace, warm-push, same-target focus,
+  the Back contract, and the Mass → `/readings` destination are unchanged. The
+  defect had shipped since v1.18.3; v1.24.0 did not introduce it but made it
+  unrecoverable by changing the bounce from `push` to `replace`. Both platforms
+  were affected.
+
+### Changed
+
+- **The native widget sync no longer re-runs on unrelated settings.**
+  `getSettings()` rebuilds `individualChurchProper` on every read and
+  `saveSettings()` spreads that fresh read, so any settings write — a theme flip,
+  a font change — handed back an identical-but-new object. The widget-sync effect
+  depended on that identity, so it dropped and re-added its native
+  `appStateChange` listener, restarted its debounce, and rebuilt the entire
+  multi-year local calendar overlay for changes that could not affect it. It now
+  keys on the canonical content fingerprint the layer already publishes.
+
+### Tests
+
+- Harness **§36** gains seven checks, each proved red against the pre-fix source:
+  the launch URL is claimable once per process, an icon launch's empty latch stays
+  empty, a re-read yields no activation to replay, the listener effect's shape is
+  pinned (ref dispatch, empty dependency array), two independent reads of one
+  stored proper carry one fingerprint while a real change moves it, and App keys
+  the sync on the memoised proper.
+- The freeze was first reproduced outside the harness in real Chrome, driving the
+  app's own `widgetLinks` policy under the repo's React Router: a cold
+  `fidelis://verse` launch followed by a tab tap returned to `/#votd`, while an
+  identical run with no launch URL navigated normally.
+
+No engine, data, golden-snapshot, or service-worker change. Shells 1.24.1/12401.
+
 ## [1.24.0] — 2026-07-23 — the doors shall not be shut
 
 *"And the gates thereof shall not be shut by day." (Apocalypse 21:25)*

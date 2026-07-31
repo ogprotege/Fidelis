@@ -13,7 +13,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.24.0%20·%20the%20doors%20shall%20not%20be%20shut-5B3A8E)
+![version](https://img.shields.io/badge/version-1.24.1%20·%20a%20spacious%20place-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
