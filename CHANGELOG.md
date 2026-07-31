@@ -62,14 +62,16 @@ navigated at all.
   added a fail-closed assertion that the signed app and widget both carry
   `group.app.fidelis.bible`. It blocked this release — and investigation showed
   it was asserting an invariant the pipeline has never satisfied.
+  Apple's side is entirely correct — verified 2026-07-31 that both App IDs carry
+  the `APP_GROUPS` capability and that each Xcode-managed provisioning profile
+  grants `group.app.fidelis.bible`. The loss is ours:
   `scripts/ios-testflight.sh` archives **unsigned** (the documented way past a
   device-less account being unable to mint a development profile at archive
-  time), so the archive declares no entitlements; export-time automatic signing
-  then requests a profile from an archive that asks for nothing, Apple mints a
-  minimal one, and re-signing drops the group. Enabling `APP_GROUPS` on the App
-  IDs does not help: verified 2026-07-31 that both identifiers carry the
-  capability and that freshly minted profiles still omit the group. So no build
-  this pipeline has produced ever carried it, build 293 included, and
+  time), so the archived binary carries no entitlement blob;
+  `xcodebuild -exportArchive` re-signs from what the archive declares, and an
+  archive that declares nothing yields a binary that claims nothing. The App
+  Group the profile freely grants is never asked for. So no build this pipeline
+  has produced ever carried it, build 293 included, and
   `WidgetSharedSettings` has been inert in distribution since v1.24.0 — the
   widgets run from bundled `votd.json` / `calendar.json`. The check now reports
   and continues. **Bundle-identifier, marketing-version, and build-number drift
