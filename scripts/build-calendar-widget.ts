@@ -111,6 +111,7 @@ interface WidgetCalendarSnapshot {
     fingerprint: typeof DEFAULT_LECTIONARY_PACK_FINGERPRINT;
   };
   defaultProfileId: CalendarProfileId;
+  unanimity: { mass: string[]; quote: string[] };
   profiles: Record<CalendarProfileId, WidgetProfileSnapshot>;
 }
 
@@ -283,6 +284,48 @@ for (const profile of SUPPORTED_CALENDAR_PROFILES) {
   };
 }
 
+/**
+ * The days on which the answer does not depend on the jurisdiction.
+ *
+ * The Widget Extension can only learn the app's selected calendar profile
+ * through the App Group. Until that container is readable — a fresh install
+ * whose app has never run, or a build whose entitlements did not ship — the
+ * extension genuinely does not know which supported calendar to speak for.
+ * Guessing one would look authoritative and could be wrong; going blank on
+ * every day is what v1.24.0 shipped, and it emptied the home screen. So the
+ * native readers serve the days on which EVERY supported profile resolves the
+ * same answer, and say "Open Fidelis to update" only on the days they diverge.
+ *
+ * The two surfaces are gated separately because they read different fields.
+ * The Mass widget and the Siri intent render the celebration, the season label,
+ * the reading citations, and the proper-formulary state; the Quote widget
+ * renders only the quotation. Anything not listed here is either not decoded
+ * natively or not drawn, so a difference in it cannot reach a reader.
+ */
+const massSignature = (entry: WidgetCalendarEntry): string =>
+  JSON.stringify([
+    entry.celebration,
+    entry.seasonLabel,
+    entry.readings,
+    entry.formularyState ?? null
+  ]);
+
+const quoteSignature = (entry: WidgetCalendarEntry): string =>
+  JSON.stringify(entry.quote ?? null);
+
+function unanimousDays(signature: (entry: WidgetCalendarEntry) => string): string[] {
+  const [first, ...rest] = SUPPORTED_CALENDAR_PROFILES.map((profile) => profile.id);
+  return Object.keys(profiles[first].days)
+    .sort()
+    .filter((key) => {
+      const expected = signature(profiles[first].days[key]);
+      return rest.every((id) => {
+        const entry = profiles[id].days[key];
+        return entry !== undefined && signature(entry) === expected;
+      });
+    });
+}
+
 const snapshot: WidgetCalendarSnapshot = {
   schemaVersion: CALENDAR_PROFILE_SCHEMA_VERSION,
   generatedAt,
@@ -298,6 +341,7 @@ const snapshot: WidgetCalendarSnapshot = {
     fingerprint: DEFAULT_LECTIONARY_PACK_FINGERPRINT
   },
   defaultProfileId: DEFAULT_CALENDAR_PROFILE_ID,
+  unanimity: { mass: unanimousDays(massSignature), quote: unanimousDays(quoteSignature) },
   profiles
 };
 const json = JSON.stringify(snapshot);

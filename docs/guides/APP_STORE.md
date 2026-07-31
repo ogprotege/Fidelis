@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.24.1
+1.24.2
 ```
 
 The store version string always equals the uploaded build's
@@ -23,7 +23,7 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-Opening Fidelis from a Verse, Quote, or Mass widget no longer leaves the app stuck on that page. Every tab and link works normally again after a widget tap, and Back returns where you expect. Changing a setting such as the theme no longer causes the home-screen widgets to rebuild their calendar data unnecessarily.
+The Today at Mass and Quote of the Day home-screen widgets show their content again. They had been stuck on "Open Fidelis to update" no matter how often the app was opened, because the widgets could not read the app's calendar setting. They can now, so they also follow the calendar you have chosen, and "Hey Siri, what's today's Gospel?" answers again. On the few days of the year when the answer genuinely depends on which calendar you follow, a widget that cannot tell will still ask you to open Fidelis rather than show you another jurisdiction's readings.
 ```
 
 (ASC shows What's New only for updates after the first released version. The
@@ -208,4 +208,4 @@ repository's metadata guard after any edit:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 2,414 / 4,000 ✓
-- What's New (1.24.1): 315 / 4,000 ✓
+- What's New (1.24.2): 560 / 4,000 ✓

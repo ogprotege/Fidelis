@@ -38,11 +38,18 @@ private let calendarCacheLock = NSLock()
 private var calendarCache: CalendarCacheEntry?
 
 private func loadCalendar() -> FidelisLoadedCalendar? {
-    // A missing App Group means the extension cannot know the containing
-    // app's selected jurisdiction. Showing the bundled default would look
-    // authoritative but could be wrong, so calendar-derived widgets fail
-    // closed until the signed targets share their configured container.
-    guard WidgetSharedSettings.isAvailable else { return nil }
+    // A missing App Group means the extension cannot know the containing app's
+    // selected jurisdiction — and neither can a container that exists but has
+    // never been written, on an install whose app has not yet run. Both arrive
+    // here as a nil profile identifier, and both are handled the same way: the
+    // snapshot's default profile stands in, but `jurisdictionIsKnown` is false,
+    // so a day is served only where every supported profile agrees on it.
+    //
+    // v1.24.0 instead refused to render at all without the App Group. Since the
+    // signing pipeline had never actually shipped that entitlement, that check
+    // was always false in distribution and it emptied the Mass and Quote
+    // widgets on every device. Fail closed per DAY, on the days that genuinely
+    // depend on the answer — not per widget, forever.
     let requestedProfile = WidgetSharedSettings.calendarProfileIdentifier
     let lectionaryPack = WidgetSharedSettings.lectionaryPackIdentifier
     guard lectionaryPack == FidelisWidgetContract.derivedRomanLectionary else { return nil }
@@ -109,7 +116,10 @@ private func loadCalendar() -> FidelisLoadedCalendar? {
             exactCatalogWindow: baseCalendar.exactCatalogWindow,
             lectionaryPackFingerprint: baseCalendar.lectionaryPackFingerprint,
             profile: baseCalendar.profile,
-            localDays: overlay.days
+            localDays: overlay.days,
+            jurisdictionIsKnown: baseCalendar.jurisdictionIsKnown,
+            unanimousMassDays: baseCalendar.unanimousMassDays,
+            unanimousQuoteDays: baseCalendar.unanimousQuoteDays
         )
     } else {
         loaded = baseCalendar
@@ -138,14 +148,19 @@ private func dayKey(for date: Date) -> String {
     return f.string(from: date)
 }
 
-private func calendarDay(for date: Date, in calendar: FidelisLoadedCalendar?) -> CalendarDay? {
+private func calendarDay(
+    for date: Date,
+    in calendar: FidelisLoadedCalendar?,
+    on surface: FidelisCalendarSurface
+) -> CalendarDay? {
     guard let calendar, date < calendar.expiresAt else { return nil }
     let key = dayKey(for: date)
     guard
         key >= calendar.window.from,
         key <= calendar.window.through,
         key >= calendar.exactCatalogWindow.from,
-        key <= calendar.exactCatalogWindow.through
+        key <= calendar.exactCatalogWindow.through,
+        calendar.speaksFor(key, on: surface)
     else {
         return nil
     }
@@ -196,7 +211,7 @@ struct MassEntry: TimelineEntry {
 }
 
 private func massEntry(for date: Date, calendar: FidelisLoadedCalendar?) -> MassEntry {
-    guard let day = calendarDay(for: date, in: calendar) else {
+    guard let day = calendarDay(for: date, in: calendar, on: .mass) else {
         return MassEntry(
             date: date,
             title: calendarUpdateMessage,
@@ -359,7 +374,7 @@ struct QuoteEntry: TimelineEntry {
 
 private func quoteEntry(for date: Date, calendar: FidelisLoadedCalendar?) -> QuoteEntry {
     guard
-        let quote = calendarDay(for: date, in: calendar)?.quote,
+        let quote = calendarDay(for: date, in: calendar, on: .quote)?.quote,
         !quote.text.isEmpty,
         !quote.author.isEmpty
     else {

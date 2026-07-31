@@ -17,38 +17,42 @@ export interface IosReleaseContract {
 }
 
 /**
- * The App Group is reported, not enforced (v1.24.1).
+ * The App Group is enforced again (v1.24.2) — and is now enforceable.
  *
- * The account and the profiles are BOTH correct — verified 2026-07-31: the App
- * Store Connect API reports APP_GROUPS on `app.fidelis.bible` and
+ * Apple's side was always correct, verified 2026-07-31: the App Store Connect
+ * API reports APP_GROUPS on `app.fidelis.bible` and
  * `app.fidelis.bible.FidelisWidget`, and decoding the Xcode-managed profiles
- * shows each one granting `group.app.fidelis.bible`. Nothing is missing on
- * Apple's side, so nothing on Apple's side can be changed to satisfy this.
+ * shows each one granting `group.app.fidelis.bible`.
  *
- * The loss happens in our own pipeline. `scripts/ios-testflight.sh` archives
- * UNSIGNED — the documented way past a device-less account being unable to mint
- * a development profile at archive time — so the archived binary carries no
- * entitlement blob at all. `xcodebuild -exportArchive` re-signs from what the
- * archive declares, and an archive that declares nothing yields a binary that
- * claims nothing: the App Group the profile freely grants is simply never
- * asked for. A capability can be granted and still go unclaimed.
+ * The loss happened in our own pipeline. `scripts/ios-testflight.sh` archives
+ * UNSIGNED — the way past a device-less account being unable to mint a
+ * development profile at archive time — so the archived binary carried no
+ * entitlement blob, and `xcodebuild -exportArchive` re-signs from what the
+ * archive declares. An archive that declares nothing yields a binary that
+ * claims nothing: the App Group both profiles freely granted was never asked
+ * for. A capability can be granted and still go unclaimed.
  *
- * So no build this pipeline has ever produced carried the App Group — build 293
- * included. `WidgetSharedSettings` has been inert in distribution since v1.24.0,
- * with the widgets running from bundled votd.json / calendar.json. Failing the
- * release closed on it therefore blocked shipping without protecting anything
- * that has ever worked. It is a warning until the signing pipeline is repaired
- * so the archive carries its entitlements; the identity assertions below —
- * bundle identifier, marketing version, build number — stay hard, because those
- * genuinely can drift between the app and its widget and would ship a wrong or
- * unsalvageable binary.
+ * v1.24.1 downgraded this to a warning because failing closed blocked shipping
+ * while protecting something that had never once worked — no build this
+ * pipeline produced carried the group, 293 and 304 included. That was the right
+ * call then and the wrong state to stay in: it also meant nothing noticed when
+ * v1.24.0 made `WidgetSharedSettings` load-bearing, and the Mass and Quote
+ * home-screen widgets went blank on every device.
+ *
+ * `ios-testflight.sh` step [2b/6] now ad-hoc signs the archive with each
+ * target's entitlements before export, so the group survives into the exported
+ * IPA — proved against a real export before this was flipped back. A build that
+ * loses it again is a build whose widgets cannot read the app's calendar
+ * selection, so it fails here instead of shipping.
  */
-function appGroupWarning(label: "app" | "widget", target: SignedIosTarget): string | null {
+function assertAppGroup(label: "app" | "widget", target: SignedIosTarget): void {
   const groups = target.entitlements["com.apple.security.application-groups"];
   if (Array.isArray(groups) && groups.some(group => group === REQUIRED_IOS_APP_GROUP)) {
-    return null;
+    return;
   }
-  return `${label} entitlements do not contain the exact App Group ${REQUIRED_IOS_APP_GROUP} — shared settings stay unavailable to the widgets in this build`;
+  throw new Error(
+    `${label} entitlements do not contain the exact App Group ${REQUIRED_IOS_APP_GROUP} — the widgets in this build could not read the app's calendar selection (see scripts/ios-testflight.sh step 2b)`
+  );
 }
 
 function assertTarget(
@@ -75,8 +79,9 @@ function assertTarget(
   }
 }
 
-/** Throws on any identity drift; returns the non-fatal App Group warnings so
- *  the caller can report them without failing an otherwise shippable build. */
+/** Throws on any identity drift, and on a signed binary that does not claim the
+ *  App Group its widgets need. Returns the (now always empty) warning list so
+ *  callers that report warnings keep compiling. */
 export function assertIosReleaseContract(contract: IosReleaseContract): string[] {
   assertTarget(
     "app",
@@ -92,8 +97,7 @@ export function assertIosReleaseContract(contract: IosReleaseContract): string[]
     contract.expectedVersion,
     contract.expectedBuild
   );
-  return [
-    appGroupWarning("app", contract.app),
-    appGroupWarning("widget", contract.widget)
-  ].filter((warning): warning is string => warning !== null);
+  assertAppGroup("app", contract.app);
+  assertAppGroup("widget", contract.widget);
+  return [];
 }

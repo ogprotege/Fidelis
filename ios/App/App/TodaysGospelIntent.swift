@@ -18,8 +18,12 @@ import AppIntents
 import Foundation
 
 private func loadGospelForIntent(at date: Date) -> FidelisGospelSelection? {
+    // No App Group check here. A nil profile identifier already tells the
+    // resolver the jurisdiction is unknown, and it then answers only for days
+    // every supported calendar resolves identically. Refusing outright — which
+    // is what v1.24.0 did — silenced Siri on every build, because the App Group
+    // entitlement had never actually shipped.
     guard
-        WidgetSharedSettings.isAvailable,
         let url = Bundle.main.url(forResource: "calendar", withExtension: "json"),
         let data = try? Data(contentsOf: url)
     else {
