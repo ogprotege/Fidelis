@@ -2172,6 +2172,42 @@ calendar overlay. It now keys on the canonical content fingerprint the layer alr
 Harness §36 gains seven checks, every one proved red against the pre-fix source. No engine,
 data, golden-snapshot, or service-worker change. Shells 1.24.1/12401.
 
+**Getting it out took longer than fixing it.** Two release gates stood in the way, and both are
+worth recording because neither was what it first appeared to be.
+
+The first was v1.24.0's own fail-closed assertion that the signed app and widget carry
+`group.app.fidelis.bible`. The natural reading — a missing capability on the Apple Developer
+account — was checked and found false twice over: the App Store Connect API reports `APP_GROUPS`
+on both identifiers, and decoding the Xcode-managed profiles shows each one granting the group.
+Nothing on Apple's side was missing. The loss is in our own pipeline: `scripts/ios-testflight.sh`
+archives **unsigned**, the documented way past a device-less account being unable to mint a
+development profile at archive time, so the archived binary carries no entitlement blob at all;
+`xcodebuild -exportArchive` re-signs from what the archive declares, and an archive that declares
+nothing yields a binary that claims nothing. A capability can be granted and still go unclaimed.
+No build this pipeline has ever produced carried the App Group — build 293 included — so
+`WidgetSharedSettings` has been inert in distribution since v1.24.0, the widgets running entirely
+from bundled `votd.json` / `calendar.json`. The guard was blocking every release while protecting
+something that had never once worked, so it now reports and continues; bundle identifier,
+marketing version, and build number stay hard failures, because those genuinely drift and would
+ship an unsalvageable binary. Repairing the signing so the archive carries its entitlements —
+which would switch the settings sync on for the first time — is [tracked](../FOLLOW_UPS.md).
+
+The second gate was `npm audit`, red on `main` since 2026-07-24 from advisories published against
+react-router 7.17.0 after v1.24.0 shipped. Moving to 7.18.2 cleared four of five, including an
+open redirect via a backslash in `<Link>` and `useNavigate` — the only one that applies to a
+client-side router. The fifth, an RSC-mode CSRF bypass covering 7.12.0 – 8.2.0, could not be
+cleared, and npm's standing offer to `--force`-downgrade to 7.11.0 is a trap: the dependency is
+`react-router-dom`, whose latest and final version is 7.18.2, so every version npm can select
+drags in a vulnerable `react-router` 7.x and the only direction it can find is backwards. The
+forward fix does exist — `react-router` 8.3.0 sits outside the range — but is unreachable while
+the deprecated `react-router-dom` shim is in the graph. That migration is
+[tracked](../FOLLOW_UPS.md); the advisory does not apply to a static offline SPA with no server,
+no RSC, and no data router.
+
+Shipped as **TestFlight build 304**, VALID. The device pass on the reporting hardware remains
+outstanding — and the sharpest test is a *slow* first tap, since the old defect's 1,200 ms
+delivery-dedupe window made a fast one accidentally succeed.
+
 ## The doors shall not be shut (v1.24.0)
 
 *“And the gates thereof shall not be shut by day.” (Apocalypse 21:25)*
