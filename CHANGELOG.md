@@ -56,6 +56,26 @@ navigated at all.
   multi-year local calendar overlay for changes that could not affect it. It now
   keys on the canonical content fingerprint the layer already publishes.
 
+### Security
+
+- **react-router / react-router-dom 7.17.0 → 7.18.2.** Five advisories were
+  published against 7.17.0 after v1.24.0 shipped, turning `main`'s CI audit gate
+  red on 2026-07-24. The bump clears four of them, including
+  [GHSA-wrjc-x8rr-h8h6](https://github.com/advisories/GHSA-wrjc-x8rr-h8h6) (open
+  redirect via a backslash in `<Link>` and `useNavigate`), the only one of the
+  five that applies to a client-side router. Verified against the whole gate:
+  1,028 harness checks, 31 browser tests, build, lint. `useNavigate` is
+  semantically unchanged in 7.18.2 — still memoised on `location.pathname` — so
+  the fix above is neither obviated nor altered by the upgrade.
+- **One advisory remains and cannot currently be cleared.**
+  [GHSA-qwww-vcr4-c8h2](https://github.com/advisories/GHSA-qwww-vcr4-c8h2) (RSC
+  mode CSRF bypass) covers 7.12.0–8.2.0; no fixed version is published, so npm's
+  only remedy is a downgrade to 7.11.0. It concerns React Server Components mode
+  with server actions. Fidelis is a static, offline, client-only SPA on
+  `HashRouter` — no server, no RSC, no server actions, no data router — so the
+  vulnerable code path does not exist in this app. The CI audit gate therefore
+  stays red on this one item until upstream publishes a fix.
+
 ### Tests
 
 - Harness **§36** gains seven checks, each proved red against the pre-fix source:
