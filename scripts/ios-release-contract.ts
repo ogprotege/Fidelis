@@ -19,14 +19,19 @@ export interface IosReleaseContract {
 /**
  * The App Group is reported, not enforced (v1.24.1).
  *
- * `scripts/ios-testflight.sh` archives UNSIGNED — the documented way past a
- * device-less account being unable to mint a development profile at archive
- * time — so the archive carries no entitlements. Export-time automatic signing
- * therefore requests a profile from an archive that declares nothing, Apple
- * mints a minimal one, and re-signing yields a binary without the App Group.
- * Enabling APP_GROUPS on the App IDs cannot help: verified on 2026-07-31 that
- * both identifiers carry the capability and that freshly minted profiles STILL
- * omit the group, because nothing in the pipeline ever asks for it.
+ * The account and the profiles are BOTH correct — verified 2026-07-31: the App
+ * Store Connect API reports APP_GROUPS on `app.fidelis.bible` and
+ * `app.fidelis.bible.FidelisWidget`, and decoding the Xcode-managed profiles
+ * shows each one granting `group.app.fidelis.bible`. Nothing is missing on
+ * Apple's side, so nothing on Apple's side can be changed to satisfy this.
+ *
+ * The loss happens in our own pipeline. `scripts/ios-testflight.sh` archives
+ * UNSIGNED — the documented way past a device-less account being unable to mint
+ * a development profile at archive time — so the archived binary carries no
+ * entitlement blob at all. `xcodebuild -exportArchive` re-signs from what the
+ * archive declares, and an archive that declares nothing yields a binary that
+ * claims nothing: the App Group the profile freely grants is simply never
+ * asked for. A capability can be granted and still go unclaimed.
  *
  * So no build this pipeline has ever produced carried the App Group — build 293
  * included. `WidgetSharedSettings` has been inert in distribution since v1.24.0,

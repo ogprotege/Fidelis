@@ -30,3 +30,6 @@ scripts/ios-release.local.env
 
 # One-shot corpus-merge/expansion helper scripts (throwaway tooling) — never committed.
 /scripts/_*.mjs
+
+# Stray file from a plutil -extract diagnostic (needs -o -); never a real path.
+/-
