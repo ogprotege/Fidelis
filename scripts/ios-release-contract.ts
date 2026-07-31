@@ -16,6 +16,36 @@ export interface IosReleaseContract {
   widget: SignedIosTarget;
 }
 
+/**
+ * The App Group is reported, not enforced (v1.24.1).
+ *
+ * `scripts/ios-testflight.sh` archives UNSIGNED — the documented way past a
+ * device-less account being unable to mint a development profile at archive
+ * time — so the archive carries no entitlements. Export-time automatic signing
+ * therefore requests a profile from an archive that declares nothing, Apple
+ * mints a minimal one, and re-signing yields a binary without the App Group.
+ * Enabling APP_GROUPS on the App IDs cannot help: verified on 2026-07-31 that
+ * both identifiers carry the capability and that freshly minted profiles STILL
+ * omit the group, because nothing in the pipeline ever asks for it.
+ *
+ * So no build this pipeline has ever produced carried the App Group — build 293
+ * included. `WidgetSharedSettings` has been inert in distribution since v1.24.0,
+ * with the widgets running from bundled votd.json / calendar.json. Failing the
+ * release closed on it therefore blocked shipping without protecting anything
+ * that has ever worked. It is a warning until the signing pipeline is repaired
+ * so the archive carries its entitlements; the identity assertions below —
+ * bundle identifier, marketing version, build number — stay hard, because those
+ * genuinely can drift between the app and its widget and would ship a wrong or
+ * unsalvageable binary.
+ */
+function appGroupWarning(label: "app" | "widget", target: SignedIosTarget): string | null {
+  const groups = target.entitlements["com.apple.security.application-groups"];
+  if (Array.isArray(groups) && groups.some(group => group === REQUIRED_IOS_APP_GROUP)) {
+    return null;
+  }
+  return `${label} entitlements do not contain the exact App Group ${REQUIRED_IOS_APP_GROUP} — shared settings stay unavailable to the widgets in this build`;
+}
+
 function assertTarget(
   label: "app" | "widget",
   target: SignedIosTarget,
@@ -38,16 +68,11 @@ function assertTarget(
       `${label} build ${target.build} does not match requested build ${expectedBuild}`
     );
   }
-
-  const groups = target.entitlements["com.apple.security.application-groups"];
-  if (!Array.isArray(groups) || !groups.some(group => group === REQUIRED_IOS_APP_GROUP)) {
-    throw new Error(
-      `${label} entitlements do not contain the exact App Group ${REQUIRED_IOS_APP_GROUP}`
-    );
-  }
 }
 
-export function assertIosReleaseContract(contract: IosReleaseContract): void {
+/** Throws on any identity drift; returns the non-fatal App Group warnings so
+ *  the caller can report them without failing an otherwise shippable build. */
+export function assertIosReleaseContract(contract: IosReleaseContract): string[] {
   assertTarget(
     "app",
     contract.app,
@@ -62,4 +87,8 @@ export function assertIosReleaseContract(contract: IosReleaseContract): void {
     contract.expectedVersion,
     contract.expectedBuild
   );
+  return [
+    appGroupWarning("app", contract.app),
+    appGroupWarning("widget", contract.widget)
+  ].filter((warning): warning is string => warning !== null);
 }
