@@ -3,6 +3,7 @@ import {
   lazy,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore
@@ -54,6 +55,8 @@ import {
   acceptWidgetLinkDelivery,
   appHistoryIndex,
   canDiscardDuplicateWidgetEntry,
+  claimStartupLaunchUrl,
+  createWidgetStartupGate,
   canConsumeAppHistory,
   isSameWidgetTarget,
   widgetLinkDestination,
@@ -65,7 +68,10 @@ import {
 } from "./lib/widgetLinks";
 import { syncAndroidWidgetSettings } from "./lib/widgetPin";
 import { syncIOSWidgetSettings } from "./lib/widgetStatus";
-import { individualChurchCalendarLayer } from "./lib/calendarProfile";
+import {
+  individualChurchCalendarLayer,
+  individualChurchProperFingerprint
+} from "./lib/calendarProfile";
 import { buildLocalWidgetCalendarOverlay } from "./lib/widgetCalendarOverlay";
 
 const NATIVE_EDGE_BACK_EVENT = "fidelis-native-edge-back";
@@ -212,13 +218,33 @@ export default function App() {
   // Keep native widget processes aligned with the app's canonical settings.
   // Both bridges fail quietly when an optional platform capability is absent;
   // the Widgets page reports what each OS can actually confirm.
+  // `getSettings()` re-parses localStorage and rebuilds `individualChurchProper`
+  // on every read, and `saveSettings()` spreads that fresh read — so ANY settings
+  // write (theme, font, translation…) hands back a new object with identical
+  // content. Depending on that identity re-ran the widget sync below for changes
+  // that could not affect it: dropping and re-adding its native appStateChange
+  // listener, restarting the debounce, and rebuilding the whole multi-year local
+  // calendar overlay. Key on the content fingerprint — the same canonical hash
+  // the layer already publishes — so the effect re-runs only when the proper
+  // itself actually changes.
+  const individualChurchProperKey = individualChurchProperFingerprint(
+    settings.individualChurchProper
+  );
+  const individualChurchProper = useMemo(
+    () => settings.individualChurchProper,
+    // Content-keyed by the canonical fingerprint: an unchanged key proves the
+    // proper is deeply equal, so the identity churn is the thing to ignore.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [individualChurchProperKey]
+  );
+
   useEffect(() => {
     const platform = Capacitor.getPlatform();
     if (platform !== "android" && platform !== "ios") return;
     let cancelled = false;
     let timer = 0;
     let syncGeneration = 0;
-    const layer = individualChurchCalendarLayer(settings.individualChurchProper);
+    const layer = individualChurchCalendarLayer(individualChurchProper);
     const hasIndividualChurchProper = layer.celebrations.length > 0;
     const sync = async () => {
       const generation = ++syncGeneration;
@@ -228,7 +254,7 @@ export default function App() {
           localCalendarOverlay = await buildLocalWidgetCalendarOverlay({
             profileId: settings.calendarProfile,
             lectionaryPackId: settings.lectionaryPackId,
-            individualChurchProper: settings.individualChurchProper
+            individualChurchProper
           });
         } catch {
           // Native receives the current fingerprint without an overlay and fails
@@ -284,7 +310,7 @@ export default function App() {
     };
   }, [
     settings.calendarProfile,
-    settings.individualChurchProper,
+    individualChurchProper,
     settings.lectionaryPackId,
     settings.theme,
     settings.translation
@@ -431,11 +457,29 @@ export default function App() {
     [navigate]
   );
 
+  // The native listeners below must mount ONCE, so they read the current
+  // handler through a ref instead of depending on it. `openWidgetLink` depends
+  // on react-router's `navigate`, whose identity is a pure function of
+  // `location.pathname` (useNavigateUnstable) — so an effect that depended on
+  // it would tear down and re-run on EVERY route change. That is not merely
+  // wasteful: the effect body reads the OS launch URL, which is a latch neither
+  // platform ever clears, so each re-run re-consumed the widget URL as a fresh
+  // COLD activation and `replace`-navigated the person straight back to the
+  // widget's destination. Every tab tap flashed the requested page and snapped
+  // back, with `replace` erasing it from history so Back could not escape
+  // either — the reported "the app opens from the widget but then nothing
+  // works". Launching from the app icon left the latch empty, which is why only
+  // widget entry froze. Regression-guarded in scripts/test-data.ts §36.
+  const openWidgetLinkRef = useRef(openWidgetLink);
+  openWidgetLinkRef.current = openWidgetLink;
+  const widgetStartupGate = useRef(createWidgetStartupGate());
+
   // Widget deep links (FID-NATIVE-002): cold launch replaces the incidental
   // shell entry; a warm tap pushes one destination so Back returns to the page
   // in use; a repeat tap on that destination only scrolls/focuses it.
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
+    const gate = widgetStartupGate.current;
     let cancelled = false;
     let launchLookupSettled = false;
     const bufferedWarmUrls: string[] = [];
@@ -445,13 +489,16 @@ export default function App() {
         bufferedWarmUrls.push(event.url);
         return;
       }
-      openWidgetLink(event.url, "warm");
+      openWidgetLinkRef.current(event.url, "warm");
     });
     const flushStartup = (launchUrl: string | null | undefined) => {
       if (cancelled) return;
       launchLookupSettled = true;
-      for (const activation of widgetLinkStartupActivations(launchUrl, bufferedWarmUrls.splice(0))) {
-        openWidgetLink(activation.url, activation.source);
+      // One-shot: a re-read of the never-cleared launch latch yields null, so a
+      // stale widget URL can never be replayed as a second cold activation.
+      const startupUrl = claimStartupLaunchUrl(gate, launchUrl);
+      for (const activation of widgetLinkStartupActivations(startupUrl, bufferedWarmUrls.splice(0))) {
+        openWidgetLinkRef.current(activation.url, activation.source);
       }
     };
     void CapApp.getLaunchUrl()
@@ -461,7 +508,7 @@ export default function App() {
       cancelled = true;
       void handle.then((h) => h.remove());
     };
-  }, [openWidgetLink]);
+  }, []);
 
   // The destination DOM lands in the same commit as the new location. Focus it
   // after that commit; ScrollManager remains the sole owner of route scrolling.

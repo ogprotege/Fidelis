@@ -144,6 +144,40 @@ export function widgetLinkStartupActivations(
   return activations;
 }
 
+/**
+ * The OS launch URL is a LATCH, not an event, on both platforms: iOS stores it
+ * in `ApplicationDelegateProxy.lastURL` (set on every `openURL`, never cleared)
+ * and Android in `Bridge.intentUri` (captured once in the Bridge constructor,
+ * never refreshed). `getLaunchUrl()` therefore keeps answering with the same
+ * widget URL for the entire process, and neither latch can be cleared from JS.
+ *
+ * So the app must do the clearing. This gate makes the startup URL a one-shot:
+ * the first claim yields it, every later claim yields null. Without it, any
+ * re-read of the launch URL is re-classified as a fresh COLD activation and
+ * `replace`-navigates the person back to the widget destination — which is
+ * exactly the "I can't leave the page the widget opened" freeze that shipped
+ * from v1.18.3 through v1.24.0. Mounting the listener effect once removes the
+ * immediate cause; this gate is the standing guarantee that no future
+ * dependency churn can resurrect it.
+ */
+export interface WidgetStartupGate {
+  claimed: boolean;
+}
+
+export function createWidgetStartupGate(): WidgetStartupGate {
+  return { claimed: false };
+}
+
+/** Yield the launch URL exactly once per app process; null on every re-read. */
+export function claimStartupLaunchUrl(
+  gate: WidgetStartupGate,
+  launchUrl: string | null | undefined
+): string | null {
+  if (gate.claimed) return null;
+  gate.claimed = true;
+  return launchUrl ?? null;
+}
+
 export function widgetLinkTarget(url: string): WidgetLinkTarget | null {
   const match = /^fidelis:\/\/([a-z]+)(?:[/?#]|$)/i.exec(url.trim());
   const kind = match?.[1].toLowerCase() as WidgetLinkKind | undefined;

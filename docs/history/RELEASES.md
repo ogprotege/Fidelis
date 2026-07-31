@@ -2096,6 +2096,82 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
+## A spacious place (v1.24.1)
+
+*"Thou hast not shut me up in the hands of the enemy: thou hast set my feet in a spacious
+place." (Psalm 30:9)*
+
+A bug-fix release for a TestFlight report, and a clean example of a defect that no amount of
+reading the routing code would have found — because the fault was not in the routing code.
+
+**The report.** Tapping the Verse of the Day, Quote of the Day, or Today at Mass widget on the
+iPhone Home Screen opened Fidelis and landed on exactly the right card, every time, with the
+focus ring drawn around it. Flawless. And then the app could not be used: every tab, every "→",
+dimmed under the finger and *glitched* — the page seemed to begin arriving and then did not.
+Only a force-quit cleared it. Opening Fidelis from its icon behaved perfectly. Sheets opened and
+worked (Share, Save image) even while navigation was dead.
+
+**The cause: the OS launch URL is a latch, not an event.** iOS records it in
+`ApplicationDelegateProxy.lastURL`, assigned on every `openURL` and set back to nil nowhere in
+Capacitor; Android records it in `Bridge.intentUri`, captured once in the Bridge constructor and
+never refreshed by `onNewIntent`. `getLaunchUrl()` reads that field, so it keeps answering with
+the same widget URL for the entire process — and, being `private(set)` on iOS and a private
+field on Android, neither latch can be cleared from the web layer at all.
+
+That would be harmless if the app read it once. It did not. React Router's `useNavigate()`
+returns a function memoised on `location.pathname` (`useNavigateUnstable`; App renders directly
+under `<HashRouter>`, so every other dependency is provably constant). So `navigate` took a new
+identity on every pathname change, and with it `openWidgetLink`, whose `useCallback` named
+`navigate` — and with *that*, the widget listener effect, whose dependency array named
+`openWidgetLink`. Every route change tore the effect down and re-ran it, and its body called
+`getLaunchUrl()` again.
+
+Each re-read came back as the same `fidelis://verse`, was classified `source: "cold"` by
+`widgetLinkStartupActivations`, and `widgetLinkHistoryMode("cold", false)` resolved to
+`replace`. The tapped page painted, and one macrotask later it was replaced by the widget's
+destination — one to four frames on a 120 Hz phone, which reads as a glitch rather than a
+navigation. `replace` also erased the requested page from history, so Back offered no escape.
+The 1200 ms delivery dedupe was no protection: it refreshes only on *accept*, so it collapsed
+the launch-time self-replay while leaving every human-cadence tap seconds outside the window.
+
+Every detail of the report follows from this. Sheets kept working because a sheet is component
+state, not a route — no pathname change, no re-run. The icon launch was immune because its latch
+was empty, so `getLaunchUrl()` resolved to nothing and the handler was never called in that
+process at all.
+
+**Two earlier hypotheses were tested and refuted**, both by adversarial review of the actual
+code: that the focus ring was intercepting touches (it is a CSS `outline` from the global
+`:focus-visible` rule — zero hit-test area, and the tab's own press feedback *is* the flash the
+user saw), and that a stranded body scroll-lock was pinning the page (`lockScroll()` has exactly
+one call site, `Sheet.tsx`, with paired cleanup, and the capture-phase `pointerdown` heal fires
+before any click). The freeze was reproduced in real Chrome against the app's own `widgetLinks`
+policy under the repo's React Router: a cold `fidelis://verse` launch, then a tab tap, returned
+to `/#votd`; the same run with no launch URL — identical effect churn — navigated normally,
+which isolates the latch as the cause.
+
+**The repair, in two layers.** The listener effect now mounts **once** and dispatches through a
+latest-callback ref, so `navigate` churn cannot re-run it — the immediate cause removed. And the
+launch URL passes a one-shot gate, `claimStartupLaunchUrl`, which yields it exactly once per
+process and null on every re-read: the app performing the clearing that neither platform will
+do. That second layer is the standing guarantee — should a future refactor reintroduce an
+unstable dependency, the replay still cannot happen. Cold-replace, warm-push, same-target focus,
+the widget Back contract, and the Mass → `/readings` destination are all unchanged.
+
+**The defect was not new.** The trigger — a widget effect whose dependency chain bottoms out in
+`navigate`, with `getLaunchUrl()` called unconditionally in its body — originated in v1.18.3 and
+shipped continuously from there. v1.24.0 did not introduce it; it made it unrecoverable, by
+changing the bounce from `push` to `replace`.
+
+**A sibling, fixed in the same release.** `getSettings()` re-parses localStorage and rebuilds
+`individualChurchProper` on every read, and `saveSettings()` spreads that fresh read — so any
+settings write at all handed back an identical-but-new object. The native widget-sync effect
+depended on that identity, so flipping the theme dropped and re-added its native
+`appStateChange` listener, restarted its debounce, and rebuilt the whole multi-year local
+calendar overlay. It now keys on the canonical content fingerprint the layer already publishes.
+
+Harness §36 gains seven checks, every one proved red against the pre-fix source. No engine,
+data, golden-snapshot, or service-worker change. Shells 1.24.1/12401.
+
 ## The doors shall not be shut (v1.24.0)
 
 *“And the gates thereof shall not be shut by day.” (Apocalypse 21:25)*

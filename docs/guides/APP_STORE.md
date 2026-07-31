@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.24.0
+1.24.1
 ```
 
 The store version string always equals the uploaded build's
@@ -23,7 +23,7 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-Widgets now open the right place without trapping Back, report installation honestly, refresh after clock and time-zone changes, and fail safely when calendar data needs an update. More includes a Widgets guide, Android can request an add prompt, and iOS reports configured families. Reader keyboard access, responsive Library controls, reduced motion, touch targets, sheets, and embedded Verse cards are repaired. The calendar now uses versioned General Roman and verified U.S. profiles, including the five Ascension-Thursday provinces.
+Opening Fidelis from a Verse, Quote, or Mass widget no longer leaves the app stuck on that page. Every tab and link works normally again after a widget tap, and Back returns where you expect. Changing a setting such as the theme no longer causes the home-screen widgets to rebuild their calendar data unnecessarily.
 ```
 
 (ASC shows What's New only for updates after the first released version. The
@@ -208,4 +208,4 @@ repository's metadata guard after any edit:
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 2,414 / 4,000 ✓
-- What's New (1.24.0): 537 / 4,000 ✓
+- What's New (1.24.1): 315 / 4,000 ✓

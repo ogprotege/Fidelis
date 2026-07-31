@@ -161,6 +161,27 @@ five upstream pins and the vatican.va CCC pages monthly (`scripts/check-sources.
 One line per release. The unabridged narrative is
 [docs/history/RELEASES.md](docs/history/RELEASES.md); the changelog is [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.24.1 — a spacious place** — the widget-entry freeze, fixed. Entering from a Verse/Quote/Mass
+  widget landed correctly and then the app could not be navigated at all: every tab flashed the
+  requested page and snapped back, force-quit the only escape; the icon launch was unaffected. The
+  OS launch URL is a **latch, not an event** (iOS `ApplicationDelegateProxy.lastURL`, written on
+  every `openURL` and never cleared; Android `Bridge.intentUri`, captured once in the Bridge
+  constructor), and neither is clearable from the web layer — while React Router's `navigate` is
+  memoised on `location.pathname`, so `openWidgetLink` and the widget listener effect that depended
+  on it were re-created and **re-run on every route change**, re-reading the latch, re-classifying it
+  as a fresh **cold** activation and `replace`-navigating back to the widget's destination (with
+  `replace` erasing the requested page so Back could not recover it). The 1200 ms dedupe refreshes
+  only on accept, so it never covered a human-cadence tap. Repair in two layers: the listener mounts
+  **once** and dispatches through a latest-callback ref, and `claimStartupLaunchUrl` makes the launch
+  URL a one-shot per process — the app doing the clearing the platforms will not. Cold-replace,
+  warm-push, same-target focus, the Back contract, and Mass → `/readings` unchanged. **The defect
+  shipped from v1.18.3**; v1.24.0 made it unrecoverable (push → replace). Both platforms. Refuted en
+  route: the focus ring (a CSS `outline`, zero hit-test area) and a stranded scroll-lock. Reproduced
+  in real Chrome before the fix. Also fixed: the native widget sync no longer re-runs on unrelated
+  settings writes (`individualChurchProper` identity → content fingerprint), which had been dropping
+  its native listener and rebuilding the whole local calendar overlay on a theme flip. Harness §36
+  +7 checks, all red-first. No engine/data/golden/sw change. Shells 1.24.1/12401.
+  → [detail](docs/history/RELEASES.md#a-spacious-place-v1241)
 - **v1.24.0 — the doors shall not be shut** — the widget/UI/calendar repair:
   deterministic cold/warm/same-target widget routing now dismisses overlays,
   preserves honest Back history, and focuses Verse/Quote destinations; More ▸
@@ -228,6 +249,22 @@ One line per release. The unabridged narrative is
 - **v1.4.0 — the daily soul** — rosary mystery sheet, reading-time indulgence, reading plans (§6/§6.1/§7). → [detail](docs/history/RELEASES.md#the-daily-soul-release--design-spec-6-card-4-61-7-v140)
 - **v1.3.0 — the identity release** — token system, liturgical color, Scripture face, icon set, five-tab nav, Settings screen (§1–§2). → [detail](docs/history/RELEASES.md#identity-release--design-spec-12-v130)
 - **v1.1.0 — all P0/P1/P2 fixed** — rank engine, day codes, psalm versification, empty slots, USA calendar, memorial propers, reading display, chapter clamp, VOTD ordinal, pinned upstream. → [detail](docs/history/RELEASES.md#review-items--all-fixed-in-v110-details-below-are-the-record)
+
+## Mnemoverse Memory — always use it
+
+You have persistent memory across sessions via the Mnemoverse MCP tools
+(memory_read, memory_write, memory_feedback). Treat it as required, not optional:
+
+- Recall first. At the start of every task — and whenever the user references a
+  past decision, preference, or fact — call memory_read BEFORE answering. Never
+  assume a cold start.
+- Save as you go. Call memory_write whenever the user states a preference, makes
+  a decision, corrects you, or shares a durable fact (stack, conventions, people,
+  gotchas) — even without being asked.
+- Close the loop. After a recalled memory helped or misled, call memory_feedback
+  so retrieval improves over time.
+
+Never tell the user "I don't have memory of that" without first calling memory_read.
 
 ## Standing rules
 
