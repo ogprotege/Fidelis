@@ -180,7 +180,15 @@ One line per release. The unabridged narrative is
   in real Chrome before the fix. Also fixed: the native widget sync no longer re-runs on unrelated
   settings writes (`individualChurchProper` identity → content fingerprint), which had been dropping
   its native listener and rebuilding the whole local calendar overlay on a theme flip. Harness §36
-  +7 checks, all red-first. No engine/data/golden/sw change. Shells 1.24.1/12401.
+  +7 checks, all red-first. No engine/data/golden/sw change. Shells 1.24.1/12401. Two release
+  gates had to be cleared to ship it: v1.24.0's fail-closed App Group assertion now **reports**
+  instead of failing (Apple's side is correct — both App IDs carry `APP_GROUPS` and both profiles
+  grant the group; the pipeline archives UNSIGNED, so the archive declares no entitlements and
+  export-time re-signing claims none — no build has ever carried it, 293 included, leaving
+  `WidgetSharedSettings` inert in distribution; identity drift stays hard), and react-router went
+  7.17.0 → 7.18.2, clearing four of five advisories. Shipped as **TestFlight build 304**.
+  Outstanding: the device pass, the `npm audit` gate (see below), and the signing repair — all in
+  [docs/FOLLOW_UPS.md](docs/FOLLOW_UPS.md).
   → [detail](docs/history/RELEASES.md#a-spacious-place-v1241)
 - **v1.24.0 — the doors shall not be shut** — the widget/UI/calendar repair:
   deterministic cold/warm/same-target widget routing now dismisses overlays,
