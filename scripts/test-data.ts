@@ -5010,6 +5010,14 @@ console.log("");
       return true;
     }
   };
+  /** The non-fatal App Group findings; empty when both targets carry it. */
+  const releaseContractWarnings39 = (contract: IosReleaseContract): string[] => {
+    try {
+      return assertIosReleaseContract(contract);
+    } catch {
+      return [];
+    }
+  };
   const validReleaseContract39 = releaseContract39();
   let validReleaseContractAccepted39 = true;
   try {
@@ -5159,12 +5167,23 @@ exit 99
       !testFlightScriptSrc39.includes("2>/dev/null || true") &&
       testFlightScriptSrc39.includes("could not restore the release-pinned") &&
       testFlightScriptSrc39.includes("platforms: [.iOS(.v15)]"));
-  check("§39 signed iOS contracts accept the exact shared App Group",
-    validReleaseContractAccepted39);
-  check("§39 signed iOS contracts reject a substring-only App Group",
-    releaseContractRejects39(suffixOnlyContract39));
-  check("§39 signed iOS contracts reject a missing widget App Group",
-    releaseContractRejects39(missingWidgetGroupContract39));
+  // v1.24.1: the App Group is REPORTED, not enforced. The pipeline archives
+  // unsigned, so the archive declares no entitlements and export-time automatic
+  // signing gets a minimal profile — no build it has ever produced carried the
+  // group, build 293 included. Failing closed blocked every release while
+  // protecting nothing that had ever worked. The warning must still be precise
+  // (an exact match, both targets), and the identity assertions below stay hard.
+  check("§39 signed iOS contracts accept the exact shared App Group without warning",
+    validReleaseContractAccepted39 &&
+      releaseContractWarnings39(validReleaseContract39).length === 0);
+  check("§39 a substring-only App Group warns instead of shipping silently",
+    releaseContractWarnings39(suffixOnlyContract39).length > 0);
+  check("§39 a missing widget App Group warns and names the widget",
+    releaseContractWarnings39(missingWidgetGroupContract39).some((w) =>
+      w.startsWith("widget entitlements do not contain")));
+  check("§39 a missing App Group no longer fails the release closed",
+    !releaseContractRejects39(suffixOnlyContract39) &&
+      !releaseContractRejects39(missingWidgetGroupContract39));
   check("§39 signed iOS contracts reject app/widget version drift",
     releaseContractRejects39(mismatchedVersionContract39));
   check("§39 signed iOS contracts reject app/widget build drift",
