@@ -66,51 +66,18 @@ changes it, the explanatory comments in `src/App.tsx` and
 
 ---
 
-## 2. The iOS signing pipeline never claims its entitlements
-
-**Status:** open. Ships fine; leaves one feature inert.
-**Opened:** 2026-07-31.
-
-`scripts/ios-testflight.sh` archives **unsigned** (`CODE_SIGNING_ALLOWED=NO`) —
-the documented way past a device-less account being unable to mint a
-*development* profile at archive time. So the archived binary carries no
-entitlement blob, and `xcodebuild -exportArchive` re-signs from what the archive
-declares. An archive that declares nothing yields a binary that claims nothing.
-
-**Apple's side is correct; do not go looking there again.** Verified 2026-07-31:
-
-- App Store Connect API reports `APP_GROUPS` on both `app.fidelis.bible` and
-  `app.fidelis.bible.FidelisWidget`.
-- Decoding the Xcode-managed profiles shows each granting
-  `group.app.fidelis.bible`.
-
-A capability can be granted and still go unclaimed. That is what happens here.
-
-**Consequence.** No build this pipeline has produced has ever carried the App
-Group — build 293 included. `WidgetSharedSettings` (`ios/WidgetExtension/`) is
-therefore inert in distribution: `containerURL(...)` is nil, appearance falls back
-to the system default, and calendar-derived widgets and intents fail closed. The
-widgets run entirely from bundled `votd.json` / `calendar.json`, which is why they
-work and why nobody noticed.
-
-v1.24.0 added a fail-closed assertion on this; it blocked v1.24.1 while protecting
-something that had never worked, and is a **warning** as of v1.24.1
-(`scripts/ios-release-contract.ts`). Bundle-identifier, marketing-version, and
-build-number drift remain hard failures.
-
-**Closing it:** make the archive carry its entitlements — sign at archive time
-with the distribution identity, or pass an explicit entitlements plist to
-`-exportArchive`. Then restore the App Group check to fail-closed and delete the
-`appGroupWarning` seam. Doing so switches on the widget settings sync for the
-first time, so widgets would follow the app's theme and calendar profile — verify
-that on a device before claiming it.
-
----
-
-## 3. v1.24.1 has not been confirmed on physical hardware
+## 2. v1.24.2 has not been confirmed on physical hardware
 
 **Status:** awaiting device testing.
-**Opened:** 2026-07-31. Build **304** is VALID in TestFlight.
+**Opened:** 2026-07-31. Build 304 (v1.24.1) is VALID in TestFlight; v1.24.2 is not yet built.
+
+**New in v1.24.2 — test this first.** The Mass and Quote home-screen widgets were
+blank on every device (the App Group entitlement had never shipped; see
+CHANGELOG 1.24.2). Both the signing repair and the per-day fallback are
+unverified on hardware. Confirm: both widgets render real content; the app's
+calendar-profile setting is now actually followed by the widgets (switch
+General Roman <-> U.S. and check a day the two differ); and Siri "today's
+Gospel" answers again.
 
 The widget-entry navigation freeze was reproduced in real Chrome and fixed with
 red-first regression coverage, but the fix has not yet been exercised on the
@@ -133,7 +100,7 @@ hardware. See [Device acceptance](guides/DEVICE_ACCEPTANCE.md).
 
 ---
 
-## 4. Two false readings taken from unvalidated shell output
+## 3. Two false readings taken from unvalidated shell output
 
 **Status:** corrected in-repo; recorded as a method note.
 **Opened:** 2026-07-31.

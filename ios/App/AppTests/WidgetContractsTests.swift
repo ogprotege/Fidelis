@@ -161,6 +161,133 @@ final class WidgetContractsTests: XCTestCase {
         XCTAssertEqual(loaded.profile.days["2026-07-23"]?.celebration, "St. Bridget")
     }
 
+    // ── v1.24.2: a missing App Group must not blank the calendar widgets ──────
+    // v1.24.0 refused to render at all when the extension could not read the
+    // app's selected jurisdiction. That entitlement had never shipped, so the
+    // refusal was permanent on device. The rule is now per DAY: stand the
+    // snapshot's default profile in, and speak only for days on which every
+    // supported profile resolves the surface identically.
+
+    func testUnknownJurisdictionSpeaksOnlyForDaysEveryProfileAgreesOn() throws {
+        let loaded = try XCTUnwrap(
+            FidelisCalendarSnapshotValidator.decode(
+                try snapshotData(),
+                requestedProfile: nil,
+                now: now
+            )
+        )
+        XCTAssertFalse(loaded.jurisdictionIsKnown)
+        // Stands in with the snapshot's own default rather than refusing.
+        XCTAssertEqual(loaded.profile.id, "roman.us.ascension-sunday")
+        // 2026-07-23 resolves a different Gospel per profile — withheld.
+        XCTAssertFalse(loaded.speaksFor("2026-07-23", on: .mass))
+        // 2026-08-15 is identical across all three — safe to speak for.
+        XCTAssertTrue(loaded.speaksFor("2026-08-15", on: .mass))
+        // The quote agrees on all three days, so the Quote widget still draws
+        // on a day the Mass widget must withhold.
+        XCTAssertTrue(loaded.speaksFor("2026-07-23", on: .quote))
+        // A day outside the table is never invented.
+        XCTAssertFalse(loaded.speaksFor("2026-03-04", on: .mass))
+    }
+
+    func testKnownJurisdictionSpeaksForEveryDayInTheWindow() throws {
+        let loaded = try XCTUnwrap(
+            FidelisCalendarSnapshotValidator.decode(
+                try snapshotData(),
+                requestedProfile: "roman.general",
+                now: now
+            )
+        )
+        XCTAssertTrue(loaded.jurisdictionIsKnown)
+        // The profile IS the app's selection, so the unanimity table is moot.
+        XCTAssertTrue(loaded.speaksFor("2026-07-23", on: .mass))
+        XCTAssertTrue(loaded.speaksFor("2026-03-04", on: .quote))
+    }
+
+    func testSnapshotWithoutAUnanimityTableStaysFailClosedButStillDecodes() throws {
+        let data = try snapshotData(unanimity: nil)
+        // It must still decode — an older snapshot may not carry the table, and
+        // refusing to decode would blank a widget that had been working.
+        let unknown = try XCTUnwrap(
+            FidelisCalendarSnapshotValidator.decode(data, requestedProfile: nil, now: now)
+        )
+        XCTAssertFalse(unknown.speaksFor("2026-07-23", on: .mass))
+        XCTAssertFalse(unknown.speaksFor("2026-08-15", on: .mass))
+        XCTAssertFalse(unknown.speaksFor("2026-08-15", on: .quote))
+        // With a known jurisdiction the absent table changes nothing at all.
+        let known = try XCTUnwrap(
+            FidelisCalendarSnapshotValidator.decode(
+                data,
+                requestedProfile: "roman.general",
+                now: now
+            )
+        )
+        XCTAssertTrue(known.speaksFor("2026-07-23", on: .mass))
+    }
+
+    func testSiriWithoutAKnownJurisdictionAnswersOnlyUnanimousDays() throws {
+        let data = try snapshotData()
+        // Divergent day, no jurisdiction: Siri says nothing rather than picking.
+        XCTAssertNil(
+            FidelisGospelResolver.resolve(
+                data,
+                requestedProfile: nil,
+                dayKey: "2026-07-23",
+                now: now
+            )
+        )
+        // Unanimous day: the answer is the same under every profile, so it is
+        // safe to speak, and it must be the agreed citation.
+        let unanimous = try XCTUnwrap(
+            FidelisGospelResolver.resolve(
+                data,
+                requestedProfile: nil,
+                dayKey: "2026-08-15",
+                now: now
+            )
+        )
+        XCTAssertEqual(unanimous.citation, "Luke 1:39-56")
+        // A known jurisdiction still answers on a divergent day, from its own
+        // profile — the general calendar's Gospel, not the default profile's.
+        let known = try XCTUnwrap(
+            FidelisGospelResolver.resolve(
+                data,
+                requestedProfile: "roman.general",
+                dayKey: "2026-07-23",
+                now: now
+            )
+        )
+        XCTAssertEqual(known.citation, "Luke 9:1-6")
+    }
+
+    func testBundledSnapshotServesTodayWithoutAnyJurisdiction() throws {
+        // The regression the user saw: with no App Group, every calendar widget
+        // was empty. The bundled snapshot must be able to answer for today on
+        // both surfaces with nothing shared at all.
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "calendar", withExtension: "json"))
+        let loaded = try XCTUnwrap(
+            FidelisCalendarSnapshotValidator.decode(
+                try Data(contentsOf: url),
+                requestedProfile: nil,
+                now: Date()
+            )
+        )
+        XCTAssertFalse(loaded.jurisdictionIsKnown)
+        XCTAssertFalse(loaded.unanimousMassDays.isEmpty)
+        XCTAssertFalse(loaded.unanimousQuoteDays.isEmpty)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyy-MM-dd"
+        let today = formatter.string(from: Date())
+        XCTAssertTrue(
+            loaded.speaksFor(today, on: .mass),
+            "the Mass widget cannot speak for \(today) without a jurisdiction"
+        )
+        XCTAssertNotNil(loaded.profile.days[today])
+    }
+
     func testSnapshotRejectsExpiredOrChronologicallyInvalidEnvelopes() throws {
         XCTAssertTrue(
             FidelisCalendarSnapshotValidator.isChronologicallyValid(
@@ -465,7 +592,15 @@ final class WidgetContractsTests: XCTestCase {
         expiresAt: String = "2027-01-01T00:00:00.000Z",
         sourceCheckedAt: String = "2026-07-23",
         corruptFingerprintFor corruptIdentifier: String? = nil,
-        lectionaryFingerprint: String = FidelisWidgetContract.derivedRomanLectionaryFingerprint
+        lectionaryFingerprint: String = FidelisWidgetContract.derivedRomanLectionaryFingerprint,
+        // "2026-07-23" deliberately resolves a DIFFERENT Gospel per profile, so
+        // it is jurisdiction-dependent; "2026-08-15" and "2026-12-12" are
+        // identical across all three. nil omits the table entirely, standing in
+        // for a snapshot built before it existed.
+        unanimity: [String: [String]]? = [
+            "mass": ["2026-08-15", "2026-12-12"],
+            "quote": ["2026-07-23", "2026-08-15", "2026-12-12"]
+        ]
     ) throws -> Data {
         var profiles: [String: Any] = [:]
         for profile in FidelisCalendarProfile.allCases {
@@ -489,6 +624,15 @@ final class WidgetContractsTests: XCTestCase {
                         "readings": [["label": "Gospel", "cite": gospel]],
                         "quote": ["text": "Test quote", "author": "Test author"]
                     ],
+                    // Identical under every profile — the unanimous case.
+                    "2026-08-15": [
+                        "season": "Ordinary Time",
+                        "seasonLabel": "The Assumption of the Blessed Virgin Mary",
+                        "colorHex": "#ffffff",
+                        "celebration": "The Assumption",
+                        "readings": [["label": "Gospel", "cite": "Luke 1:39-56"]],
+                        "quote": ["text": "Test quote", "author": "Test author"]
+                    ],
                     "2026-12-12": [
                         "season": "Advent",
                         "seasonLabel": "Saturday of the Second Week of Advent",
@@ -510,7 +654,7 @@ final class WidgetContractsTests: XCTestCase {
             ]
         }
 
-        return try JSONSerialization.data(withJSONObject: [
+        var envelope: [String: Any] = [
             "schemaVersion": schemaVersion,
             "generatedAt": generatedAt,
             "expiresAt": expiresAt,
@@ -526,7 +670,11 @@ final class WidgetContractsTests: XCTestCase {
             ],
             "defaultProfileId": "roman.us.ascension-sunday",
             "profiles": profiles
-        ], options: [.sortedKeys])
+        ]
+        if let unanimity {
+            envelope["unanimity"] = unanimity
+        }
+        return try JSONSerialization.data(withJSONObject: envelope, options: [.sortedKeys])
     }
 
     private func localOverlayData(

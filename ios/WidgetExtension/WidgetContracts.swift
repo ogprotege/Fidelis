@@ -196,6 +196,11 @@ private let calendarProfileSelectionKey = CodingUserInfoKey(
 /// Decodes headers for every supported profile but materializes the large day
 /// table only for the selected profile. That preserves WidgetKit memory while
 /// still proving the entire supported-profile catalog and its fingerprints.
+private struct FidelisUnanimousDays: Decodable {
+    let mass: [String]
+    let quote: [String]
+}
+
 private struct CalendarWidgetSnapshot: Decodable {
     let generatedAt: String
     let expiresAt: String
@@ -203,6 +208,8 @@ private struct CalendarWidgetSnapshot: Decodable {
     let exactCatalogWindow: FidelisCalendarWindow
     let lectionaryPack: FidelisLectionaryPackHeader
     let selectedProfile: FidelisCalendarProfileSnapshot
+    let unanimousMassDays: Set<String>
+    let unanimousQuoteDays: Set<String>
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion
@@ -212,6 +219,7 @@ private struct CalendarWidgetSnapshot: Decodable {
         case exactCatalogWindow
         case lectionaryPack
         case defaultProfileId
+        case unanimity
         case profiles
     }
 
@@ -249,6 +257,18 @@ private struct CalendarWidgetSnapshot: Decodable {
             )
         }
         let defaultProfileId = try container.decode(String.self, forKey: .defaultProfileId)
+
+        // Deliberately optional. A snapshot without the table simply yields
+        // empty sets, which leaves the unknown-jurisdiction path exactly as
+        // fail-closed as it was before; requiring the key would let a stale
+        // bundled file blank widgets that were working, which is the very
+        // failure this table exists to prevent.
+        let unanimity = try container.decodeIfPresent(
+            FidelisUnanimousDays.self,
+            forKey: .unanimity
+        )
+        unanimousMassDays = Set(unanimity?.mass ?? [])
+        unanimousQuoteDays = Set(unanimity?.quote ?? [])
 
         let profiles = try container.nestedContainer(keyedBy: ProfileKey.self, forKey: .profiles)
         for (identifier, fingerprint) in FidelisWidgetContract.expectedProfileFingerprints {
@@ -311,6 +331,17 @@ private struct CalendarWidgetSnapshot: Decodable {
     }
 }
 
+/// The two calendar-derived surfaces, gated separately because they read
+/// different fields of a day. Keep in step with the `unanimity` table emitted by
+/// scripts/build-calendar-widget.ts.
+enum FidelisCalendarSurface {
+    /// Celebration, season label, reading citations, proper-formulary state —
+    /// the Mass widget and the "today's Gospel" App Intent.
+    case mass
+    /// The quotation and its author — the Quote widget.
+    case quote
+}
+
 struct FidelisLoadedCalendar {
     let generatedAt: Date
     let expiresAt: Date
@@ -319,6 +350,26 @@ struct FidelisLoadedCalendar {
     let lectionaryPackFingerprint: String
     let profile: FidelisCalendarProfileSnapshot
     let localDays: [String: CalendarDay]
+    /// False when nothing told us which jurisdiction the app is set to, so the
+    /// snapshot's own default profile stood in for the selection.
+    let jurisdictionIsKnown: Bool
+    let unanimousMassDays: Set<String>
+    let unanimousQuoteDays: Set<String>
+
+    /// Whether this day may be spoken for.
+    ///
+    /// With a known jurisdiction, always — the profile IS the app's selection.
+    /// Without one, only where every supported profile resolves the surface
+    /// identically, so the day rendered is the day the reader would have seen
+    /// under any of them. No jurisdiction is ever guessed; a day that genuinely
+    /// depends on the answer is withheld instead.
+    func speaksFor(_ dayKey: String, on surface: FidelisCalendarSurface) -> Bool {
+        if jurisdictionIsKnown { return true }
+        switch surface {
+        case .mass: return unanimousMassDays.contains(dayKey)
+        case .quote: return unanimousQuoteDays.contains(dayKey)
+        }
+    }
 }
 
 enum FidelisCalendarSnapshotValidator {
@@ -357,7 +408,10 @@ enum FidelisCalendarSnapshotValidator {
             exactCatalogWindow: snapshot.exactCatalogWindow,
             lectionaryPackFingerprint: snapshot.lectionaryPack.fingerprint,
             profile: snapshot.selectedProfile,
-            localDays: [:]
+            localDays: [:],
+            jurisdictionIsKnown: requestedProfile != nil,
+            unanimousMassDays: snapshot.unanimousMassDays,
+            unanimousQuoteDays: snapshot.unanimousQuoteDays
         )
     }
 
@@ -422,7 +476,11 @@ enum FidelisGospelResolver {
             calendar.window.from <= dayKey,
             dayKey <= calendar.window.through,
             dayKey >= calendar.exactCatalogWindow.from,
-            dayKey <= calendar.exactCatalogWindow.through
+            dayKey <= calendar.exactCatalogWindow.through,
+            // Siri answers out loud and cannot show a caveat, so it keeps the
+            // same rule as the widgets: never speak a day whose answer depends
+            // on a jurisdiction nothing has told us.
+            calendar.speaksFor(dayKey, on: .mass)
         else {
             return nil
         }

@@ -161,6 +161,29 @@ five upstream pins and the vatican.va CCC pages monthly (`scripts/check-sources.
 One line per release. The unabridged narrative is
 [docs/history/RELEASES.md](docs/history/RELEASES.md); the changelog is [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.24.2 — the lamps relit** — the blank-widget repair. **Today at Mass** and **Quote of
+  the Day** read "Open Fidelis to update" on every device and never recovered; **Verse of the
+  Day** alone kept working. v1.24.0 had made `loadCalendar()` refuse to draw without reading the
+  app's calendar jurisdiction through the App Group — sound reasoning on a false premise, because
+  **that entitlement had never once shipped**: the pipeline archives UNSIGNED, entitlements are
+  written by the *signing* step, and `-exportArchive` re-signs from what the archive declares, so
+  a group registered on both App IDs and granted by both profiles never reached a device.
+  `isAvailable` was permanently false in distribution. VOTD reads `votd.json` and never consults
+  the group, which is why it alone survived and why the failure read as bad data. Android was
+  never affected. Two repairs: the pipeline's new step **[2b/6]** ad-hoc signs the archived
+  `.appex` then `.app` with their committed entitlements before export (no profile needed, so the
+  unsigned archive stays), proved on a real export — both binaries now carry
+  `group.app.fidelis.bible`, a first for this project; and failing closed becomes per **day**,
+  not per widget — with no known jurisdiction the snapshot's default profile stands in but a day
+  is served **only where every supported profile resolves it identically** (new build-time
+  `unanimity` table: **2,447/2,556 Mass, 2,221 Quote**, gated separately). No jurisdiction is
+  guessed. Siri keeps the same rule (it carried its own copy of the gate, so "today's Gospel" had
+  been silent too). The release contract enforces the App Group again, and `FIDELIS_VERIFY_ONLY=1`
+  proves a signing change without spending a build number. Native tests 13→18, harness §36 +7 /
+  §39 +2 — the suite had **pinned the defect** (a §36 check asserted the very `guard` line), and
+  the new data guard recomputes the unanimity table and demands an exact match. No engine/golden/
+  sw change. Shells 1.24.2/12402.
+  → [detail](docs/history/RELEASES.md#the-lamps-relit-v1242)
 - **v1.24.1 — a spacious place** — the widget-entry freeze, fixed. Entering from a Verse/Quote/Mass
   widget landed correctly and then the app could not be navigated at all: every tab flashed the
   requested page and snapped back, force-quit the only escape; the icon launch was unaffected. The

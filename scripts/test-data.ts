@@ -4629,8 +4629,75 @@ console.log("");
   // FID-PERF-004: memoize the widgets' calendar.json decode.
   check("§36 PERF-004 (iOS): CalendarWidgets memoizes the calendar decode",
     calSwift.includes("calendarCache") &&
-      calSwift.includes("guard WidgetSharedSettings.isAvailable else { return nil }") &&
       !calSwift.includes("case invalid"));
+
+  // ── v1.24.2: a missing App Group must not blank the calendar widgets ────────
+  // v1.24.0 made loadCalendar() refuse outright without the App Group. The
+  // entitlement had never actually shipped (see §39), so that check was always
+  // false on device and the Mass and Quote widgets showed "Open Fidelis to
+  // update" forever, while Verse of the Day — which reads votd.json and never
+  // consults the group — kept working. The rule is now per DAY, not per widget:
+  // with no known jurisdiction the snapshot's default profile stands in, and a
+  // day is served only where every supported profile resolves it identically.
+  const gospelIntentSwift = read("ios/App/App/TodaysGospelIntent.swift");
+  check("§36 the calendar widgets no longer refuse outright without the App Group",
+    !calSwift.includes("guard WidgetSharedSettings.isAvailable else { return nil }") &&
+      !gospelIntentSwift.includes("WidgetSharedSettings.isAvailable,"));
+  check("§36 an unknown jurisdiction is carried, not guessed",
+    widgetContractsSwift.includes("jurisdictionIsKnown: requestedProfile != nil") &&
+      widgetContractsSwift.includes("func speaksFor(") &&
+      widgetContractsSwift.includes("if jurisdictionIsKnown { return true }"));
+  check("§36 both widget surfaces and Siri consult the unanimity gate",
+    calSwift.includes("calendar.speaksFor(key, on: surface)") &&
+      calSwift.includes("on: .mass") &&
+      calSwift.includes("on: .quote") &&
+      widgetContractsSwift.includes("calendar.speaksFor(dayKey, on: .mass)"));
+  check("§36 a snapshot with no unanimity table stays fail-closed, never blank-fails",
+    widgetContractsSwift.includes("decodeIfPresent(") &&
+      widgetContractsSwift.includes("unanimity?.mass ?? []"));
+
+  // The table is data, so prove the DATA, not just the source shape: recompute
+  // it from the emitted profiles and require an exact match. A hand-edited or
+  // stale table would otherwise let the widgets speak for a day whose answer
+  // genuinely depends on the jurisdiction.
+  const calSnapshot36 = JSON.parse(
+    readFileSync(join(ROOT, "ios/WidgetExtension/calendar.json"), "utf8")
+  ) as {
+    unanimity?: { mass: string[]; quote: string[] };
+    profiles: Record<string, { days: Record<string, Record<string, unknown>> }>;
+  };
+  const recomputeUnanimous36 = (
+    signature: (day: Record<string, unknown>) => string
+  ): string[] => {
+    const ids = Object.keys(calSnapshot36.profiles);
+    const [first, ...rest] = ids;
+    return Object.keys(calSnapshot36.profiles[first].days)
+      .sort()
+      .filter((key) => {
+        const expected = signature(calSnapshot36.profiles[first].days[key]);
+        return rest.every((id) => {
+          const day = calSnapshot36.profiles[id].days[key];
+          return day !== undefined && signature(day) === expected;
+        });
+      });
+  };
+  const massSig36 = (d: Record<string, unknown>) =>
+    JSON.stringify([d.celebration, d.seasonLabel, d.readings, d.formularyState ?? null]);
+  const quoteSig36 = (d: Record<string, unknown>) => JSON.stringify(d.quote ?? null);
+  check("§36 the emitted unanimity table matches a fresh recomputation",
+    Boolean(calSnapshot36.unanimity) &&
+      JSON.stringify(calSnapshot36.unanimity?.mass) ===
+        JSON.stringify(recomputeUnanimous36(massSig36)) &&
+      JSON.stringify(calSnapshot36.unanimity?.quote) ===
+        JSON.stringify(recomputeUnanimous36(quoteSig36)));
+  check("§36 the unanimity table covers most of the window on both surfaces",
+    (calSnapshot36.unanimity?.mass.length ?? 0) >=
+      Object.keys(calSnapshot36.profiles["roman.general"].days).length * 0.9 &&
+      (calSnapshot36.unanimity?.quote.length ?? 0) > 0);
+  const calBuilderSrc36 = read("scripts/build-calendar-widget.ts");
+  check("§36 the calendar builder emits the unanimity table it documents",
+    calBuilderSrc36.includes("unanimity: { mass: unanimousDays(massSignature)") &&
+      calBuilderSrc36.includes("entry.formularyState ?? null"));
   check("§36 PERF-004 (Android): CalendarData memoizes; both widgets delegate",
     calData.includes("SoftReference") &&
       calJava.includes("CalendarData.load(context)") &&
@@ -5167,23 +5234,48 @@ exit 99
       !testFlightScriptSrc39.includes("2>/dev/null || true") &&
       testFlightScriptSrc39.includes("could not restore the release-pinned") &&
       testFlightScriptSrc39.includes("platforms: [.iOS(.v15)]"));
-  // v1.24.1: the App Group is REPORTED, not enforced. The pipeline archives
-  // unsigned, so the archive declares no entitlements and export-time automatic
-  // signing gets a minimal profile — no build it has ever produced carried the
-  // group, build 293 included. Failing closed blocked every release while
-  // protecting nothing that had ever worked. The warning must still be precise
-  // (an exact match, both targets), and the identity assertions below stay hard.
-  check("§39 signed iOS contracts accept the exact shared App Group without warning",
+  // v1.24.2: the archive must DECLARE its entitlements, or export re-signs from
+  // nothing and the App Group is dropped — which is how every build up to 304
+  // shipped widgets that could not read the app's calendar selection. Nested
+  // code signs before its container, and both must come before the export.
+  check("§39 the archive declares its entitlements before export",
+    testFlightScriptSrc39.includes("codesign --force --sign - --generate-entitlement-der") &&
+      testFlightScriptSrc39.includes(
+        "--entitlements ios/WidgetExtension/WidgetExtension.entitlements"
+      ) &&
+      testFlightScriptSrc39.includes("--entitlements ios/App/App/App.entitlements") &&
+      testFlightScriptSrc39.indexOf("WidgetExtension.entitlements") <
+        testFlightScriptSrc39.indexOf("--entitlements ios/App/App/App.entitlements") &&
+      testFlightScriptSrc39.indexOf("--entitlements ios/App/App/App.entitlements") <
+        testFlightScriptSrc39.indexOf("xcodebuild -exportArchive"));
+  check("§39 the pipeline can verify a signing change without spending a build",
+    testFlightScriptSrc39.includes("FIDELIS_VERIFY_ONLY") &&
+      testFlightScriptSrc39.includes("ios-testflight-dispatch.sh --verify-only"));
+  // v1.24.2: the App Group is ENFORCED again, because it is finally
+  // enforceable. v1.24.1 downgraded it to a warning since the pipeline archived
+  // unsigned — the archive declared no entitlements, export re-signed from that,
+  // and no build ever carried the group (293 and 304 included), so failing
+  // closed blocked every release while protecting nothing that had ever worked.
+  // ios-testflight.sh step [2b/6] now ad-hoc signs the archive with each
+  // target's entitlements before export, proved against a real export. A build
+  // that loses the group is one whose widgets cannot read the app's calendar
+  // selection — exactly the v1.24.0 regression — so it must not ship.
+  check("§39 signed iOS contracts accept the exact shared App Group",
     validReleaseContractAccepted39 &&
       releaseContractWarnings39(validReleaseContract39).length === 0);
-  check("§39 a substring-only App Group warns instead of shipping silently",
-    releaseContractWarnings39(suffixOnlyContract39).length > 0);
-  check("§39 a missing widget App Group warns and names the widget",
-    releaseContractWarnings39(missingWidgetGroupContract39).some((w) =>
-      w.startsWith("widget entitlements do not contain")));
-  check("§39 a missing App Group no longer fails the release closed",
-    !releaseContractRejects39(suffixOnlyContract39) &&
-      !releaseContractRejects39(missingWidgetGroupContract39));
+  check("§39 a substring-only App Group fails the release closed",
+    releaseContractRejects39(suffixOnlyContract39));
+  check("§39 a missing widget App Group fails the release closed",
+    releaseContractRejects39(missingWidgetGroupContract39));
+  check("§39 the App Group failure names the target that lost it",
+    (() => {
+      try {
+        assertIosReleaseContract(missingWidgetGroupContract39);
+        return false;
+      } catch (error) {
+        return (error as Error).message.startsWith("widget entitlements do not contain");
+      }
+    })());
   check("§39 signed iOS contracts reject app/widget version drift",
     releaseContractRejects39(mismatchedVersionContract39));
   check("§39 signed iOS contracts reject app/widget build drift",
