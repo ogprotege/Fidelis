@@ -6,6 +6,97 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.24.2] — 2026-07-31 — the lamps relit
+
+*"No man lighteth a candle, and putteth it in a hidden place, nor under a bushel;
+but upon a candlestick, that they that come in may see the light." (Luke 11:33)*
+
+A bug-fix release for a reported home-screen regression: **Today at Mass** and
+**Quote of the Day** both read "Open Fidelis to update" and never stopped, no
+matter how many times the app was opened. **Verse of the Day**, alone, kept
+working.
+
+### Fixed
+
+- **The calendar widgets went blank on every device, and could not recover.**
+  v1.24.0's widget repair gave `loadCalendar()` a new first line —
+  `guard WidgetSharedSettings.isAvailable else { return nil }` — so the Mass and
+  Quote widgets refused to draw unless the Widget Extension could read the app's
+  selected calendar jurisdiction through the App Group. The reasoning was sound
+  (a widget must not present one jurisdiction's propers as another's), but the
+  premise was false: **that entitlement had never once shipped.**
+  `scripts/ios-testflight.sh` archives UNSIGNED — the way past a device-less
+  account being unable to mint a development profile at archive time — and
+  entitlements are written into a binary by the *signing* step. An unsigned
+  archive declares none, and `xcodebuild -exportArchive` re-signs from what the
+  archive declares, so `group.app.fidelis.bible` was registered on both App IDs
+  and granted by both provisioning profiles and still never reached a device.
+  `isAvailable` was therefore permanently false in distribution, and the two
+  calendar-derived widgets were permanently empty. Verse of the Day reads
+  `votd.json` and never consults the group, which is exactly why it alone
+  survived — and why the failure looked like bad data rather than a dead
+  entitlement. Opening the app could not help: there was no shared container to
+  write to. **Android was never affected** (`WidgetSharedSettings.calendarProfile`
+  falls back to `roman.us.ascension-sunday`, and in-package SharedPreferences are
+  always readable).
+- **The signing pipeline now makes the archive declare its entitlements.** A new
+  step [2b/6] ad-hoc signs the archived `.appex` and `.app` with their committed
+  entitlements files before export — nested code first — which needs no
+  provisioning profile, so the original reason the archive stays unsigned is
+  untouched. Export then re-signs with the real App Store distribution profile,
+  which grants the group. Verified against a real export before being relied on:
+  the IPA's app **and** widget both carry
+  `com.apple.security.application-groups: ["group.app.fidelis.bible"]`, the first
+  build in the project's history to do so. Manual signing was tried first and
+  rejected — an iOS device build refuses an empty
+  `PROVISIONING_PROFILE_SPECIFIER` under `CODE_SIGNING_REQUIRED` both YES and NO.
+- **A missing App Group can no longer blank a widget, ever again.** Failing
+  closed is now per **day**, not per widget. When nothing tells the extension
+  which jurisdiction the app is set to — no App Group, or a container that exists
+  but has never been written on an install whose app has not yet run — the
+  snapshot's own default profile stands in, but the day is served **only where
+  every supported profile resolves it identically**. No jurisdiction is guessed;
+  a day whose answer genuinely depends on the selection is withheld and still
+  says "Open Fidelis to update". `scripts/build-calendar-widget.ts` computes the
+  table at build time into a new `unanimity` key: **2,447 of 2,556 days (95.7%)
+  for the Mass surface** and **2,221 (86.9%) for the Quote surface**, gated
+  separately because they read different fields. The two diverge mostly in 2029,
+  where a single early-January sanctoral difference cascades through that year's
+  quote rotation — `quoteOfTheDay()` is a function of (date, profile) by design,
+  since feast-day authors speak first.
+- **Siri keeps the same rule.** `TodaysGospelIntent` carried its own copy of the
+  `isAvailable` gate, so "today's Gospel" had been silent on every build too. It
+  now answers whenever the day is unanimous and says nothing when it is not — a
+  spoken answer cannot carry a caveat.
+- **The App Group is enforced again at release time.** v1.24.1 downgraded
+  `scripts/ios-release-contract.ts` to a warning because failing closed blocked
+  shipping while protecting something that had never worked. Now that the
+  entitlement genuinely ships, it is a hard failure again: a build whose widgets
+  cannot read the app's calendar selection does not leave this machine.
+  `FIDELIS_VERIFY_ONLY=1` runs the whole archive → export → assert path and
+  stops before validation and upload, so a signing change can be proved without
+  spending a build number.
+
+### Tests
+
+- Native (`ios/App/AppTests/WidgetContractsTests.swift`), 13 → **18**: an unknown
+  jurisdiction speaks only for unanimous days and stands in with the default
+  profile rather than refusing; a known jurisdiction ignores the table entirely;
+  a snapshot carrying no `unanimity` table still decodes and stays fail-closed
+  (an older snapshot must never blank a working widget); Siri returns nil on a
+  divergent day and the agreed citation on a unanimous one; and the **committed**
+  `calendar.json` is required to serve **today** on both surfaces with nothing
+  shared at all. The Siri divergent-day assertion is genuinely red against the
+  old resolver, which fell back to the default profile and answered.
+- Harness §36 +7, §39 +2. The suite had **pinned the defect**: a §36 check
+  asserted the literal string `guard WidgetSharedSettings.isAvailable else
+  { return nil }`, so removing it turned `npm test` red until the guard was
+  rewritten. The new data guard **recomputes the unanimity table from the
+  emitted profiles and requires an exact match**, so a stale or hand-edited
+  table cannot let a widget speak for a jurisdiction-dependent day.
+- No engine, golden, or service-worker change. `calendar.json` regenerated for
+  both shells (byte-identical across iOS and Android). Shells 1.24.2/12402.
+
 ## [1.24.1] — 2026-07-31 — a spacious place
 
 *"Thou hast not shut me up in the hands of the enemy: thou hast set my feet in a
@@ -55,6 +146,28 @@ navigated at all.
   `appStateChange` listener, restarted its debounce, and rebuilt the entire
   multi-year local calendar overlay for changes that could not affect it. It now
   keys on the canonical content fingerprint the layer already publishes.
+
+### Changed (release tooling)
+
+- **The signed-IPA App Group check is a warning, not a hard failure.** v1.24.0
+  added a fail-closed assertion that the signed app and widget both carry
+  `group.app.fidelis.bible`. It blocked this release — and investigation showed
+  it was asserting an invariant the pipeline has never satisfied.
+  Apple's side is entirely correct — verified 2026-07-31 that both App IDs carry
+  the `APP_GROUPS` capability and that each Xcode-managed provisioning profile
+  grants `group.app.fidelis.bible`. The loss is ours:
+  `scripts/ios-testflight.sh` archives **unsigned** (the documented way past a
+  device-less account being unable to mint a development profile at archive
+  time), so the archived binary carries no entitlement blob;
+  `xcodebuild -exportArchive` re-signs from what the archive declares, and an
+  archive that declares nothing yields a binary that claims nothing. The App
+  Group the profile freely grants is never asked for. So no build this pipeline
+  has produced ever carried it, build 293 included, and
+  `WidgetSharedSettings` has been inert in distribution since v1.24.0 — the
+  widgets run from bundled `votd.json` / `calendar.json`. The check now reports
+  and continues. **Bundle-identifier, marketing-version, and build-number drift
+  between the app and its widget remain hard failures.** Repairing the signing
+  pipeline so the archive carries its entitlements is tracked separately.
 
 ### Security
 

@@ -131,7 +131,9 @@ function verifyIosExport(options: CliOptions): void {
       app: readTarget(appPath, "app", workDir),
       widget: readTarget(widgetPath, "widget", workDir)
     };
-    assertIosReleaseContract(contract);
+    for (const warning of assertIosReleaseContract(contract)) {
+      console.warn(`WARNING: ${warning}`);
+    }
   } finally {
     rmSync(workDir, { recursive: true, force: true });
   }

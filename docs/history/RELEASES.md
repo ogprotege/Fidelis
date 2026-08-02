@@ -2096,6 +2096,133 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
+## The lamps relit (v1.24.2)
+
+*"No man lighteth a candle, and putteth it in a hidden place, nor under a bushel;
+but upon a candlestick, that they that come in may see the light." (Luke 11:33)*
+
+The report was a photograph of a home screen. **Today at Mass** said "Open Fidelis
+to update". **Quote of the Day** said "Open Fidelis to update". **Verse of the
+Day**, between them, was rendering Matthew 11:28–30 perfectly. The app had been
+opened and reopened many times; nothing changed.
+
+That one widget worked was the whole diagnosis. Verse of the Day reads
+`votd.json` and asks the App Group only for an appearance preference, which has a
+harmless default. The other two read `calendar.json` — and since v1.24.0,
+`loadCalendar()` began with:
+
+```swift
+guard WidgetSharedSettings.isAvailable else { return nil }
+```
+
+The reasoning behind that line was right. A widget that shows Ascension on the
+wrong day, or a U.S. proper to someone who chose the General Roman calendar, is
+worse than a widget that admits it does not know. What was wrong was the belief
+that the App Group would be there to ask.
+
+**It never had been.** `scripts/ios-testflight.sh` archives UNSIGNED — the way
+past a device-less account that cannot mint a development profile at archive
+time. But entitlements are written into a binary by the *signing* step, read from
+each target's `CODE_SIGN_ENTITLEMENTS` file. An unsigned archive declares none,
+and `xcodebuild -exportArchive` re-signs from what the archive declares. So
+`group.app.fidelis.bible` could be registered on both App IDs, and granted by
+both provisioning profiles, and still never reach a device: it was never asked
+for. A capability can be granted and go unclaimed.
+
+v1.24.1 had already found this and recorded it honestly — it downgraded the
+release-time App Group assertion to a warning precisely because failing closed
+blocked shipping while protecting something that had never worked. What it did
+not connect was that v1.24.0 had, in the same window, made that dead entitlement
+**load-bearing**. The warning was filed; the widgets went dark.
+
+Opening the app could not help. There was no shared container to write into. The
+instruction on the widget — the only instruction it could give — was one the user
+had followed, repeatedly, and it could never have worked.
+
+### Two repairs, because one was not enough
+
+**Make the entitlement real.** A new step **[2b/6]** ad-hoc signs the archived
+`.appex` and then the `.app` with their committed entitlements files, before
+export. Ad-hoc signing (`codesign --sign -`) embeds the entitlement blob without
+needing a provisioning profile, so the original reason the archive stays unsigned
+is untouched; nested code must be signed before its container. Export then
+re-signs everything with the real App Store distribution profile, which grants
+the group.
+
+Manual signing was tried first and does not work: an iOS device build rejects an
+empty `PROVISIONING_PROFILE_SPECIFIER` outright, under `CODE_SIGNING_REQUIRED`
+both YES and NO. That is recorded here so it is not tried a third time.
+
+The result was verified on a real archive → export before anything was built on
+it. Both binaries in the exported IPA now carry
+
+```
+"com.apple.security.application-groups": ["group.app.fidelis.bible"]
+```
+
+alongside the correct `application-identifier`, `beta-reports-active`, and
+`get-task-allow: false`. That is the first build in this project's history to
+carry it.
+
+**Make the failure survivable.** Fixing the signing alone would have left the
+same trap armed: any future provisioning change that dropped the group would
+empty the home screen again, silently. So failing closed moved from per **widget**
+to per **day**.
+
+When nothing tells the extension which jurisdiction the app is set to — no App
+Group, or a container that exists but has never been written on an install whose
+app has not yet run — the snapshot's own default profile stands in, but a day is
+served **only where every supported profile resolves it identically**. Nothing is
+guessed. A day whose answer genuinely depends on the selection is withheld, and
+that day still says "Open Fidelis to update", which is then true.
+
+`scripts/build-calendar-widget.ts` computes the table at build time into a new
+`unanimity` key, gated separately per surface because the two read different
+fields — the Mass widget and Siri read celebration, season label, reading
+citations, and proper-formulary state; the Quote widget reads only the quotation:
+
+| surface | unanimous days | of 2,556 |
+|---|---|---|
+| Mass | 2,447 | 95.7% |
+| Quote | 2,221 | 86.9% |
+
+The Mass divergence is evenly spread, 11–17 days a year — the days that genuinely
+differ. The Quote divergence is almost entirely 2029, where one early-January
+sanctoral difference cascades through the rest of that year's rotation:
+`quoteOfTheDay()` is a pure function of (date, profile) by design, because
+feast-day authors speak first and a different calendar celebrates different
+authors. That is a property of the design, not a defect, and it is why the two
+surfaces get their own tables.
+
+Siri gets the same rule. `TodaysGospelIntent` carried its own copy of the
+`isAvailable` guard, so "today's Gospel" had been silent on every build too. It
+now answers on a unanimous day and says nothing on a divergent one — a spoken
+answer cannot carry a caveat.
+
+### What holds it
+
+The harness had **pinned the defect**: a §36 check asserted the literal string
+`guard WidgetSharedSettings.isAvailable else { return nil }`, so deleting it
+turned `npm test` red until the guard was rewritten to assert the opposite. Seven
+new §36 checks and two new §39 checks replace it, and the strongest is a data
+guard rather than a source-shape one: it **recomputes the unanimity table from
+the emitted profiles and requires an exact match**, so a stale or hand-edited
+table cannot let a widget speak for a jurisdiction-dependent day.
+
+Native tests went 13 → 18. The one that matters most loads the **committed**
+`calendar.json` and requires it to serve **today**, on both surfaces, with
+nothing shared at all — the exact condition the user's phone was in.
+
+The App Group is a hard release failure again, now that it is genuinely
+enforceable. `FIDELIS_VERIFY_ONLY=1` runs archive → export → assert and stops
+before validation and upload, so the next signing change can be proved without
+spending a build number.
+
+Android was never affected: `WidgetSharedSettings.calendarProfile` falls back to
+`roman.us.ascension-sunday`, and in-package SharedPreferences are always
+readable. No engine, golden, or service-worker change; `calendar.json`
+regenerated byte-identically for both shells. Shells 1.24.2/12402.
+
 ## A spacious place (v1.24.1)
 
 *"Thou hast not shut me up in the hands of the enemy: thou hast set my feet in a spacious
@@ -2171,6 +2298,42 @@ calendar overlay. It now keys on the canonical content fingerprint the layer alr
 
 Harness §36 gains seven checks, every one proved red against the pre-fix source. No engine,
 data, golden-snapshot, or service-worker change. Shells 1.24.1/12401.
+
+**Getting it out took longer than fixing it.** Two release gates stood in the way, and both are
+worth recording because neither was what it first appeared to be.
+
+The first was v1.24.0's own fail-closed assertion that the signed app and widget carry
+`group.app.fidelis.bible`. The natural reading — a missing capability on the Apple Developer
+account — was checked and found false twice over: the App Store Connect API reports `APP_GROUPS`
+on both identifiers, and decoding the Xcode-managed profiles shows each one granting the group.
+Nothing on Apple's side was missing. The loss is in our own pipeline: `scripts/ios-testflight.sh`
+archives **unsigned**, the documented way past a device-less account being unable to mint a
+development profile at archive time, so the archived binary carries no entitlement blob at all;
+`xcodebuild -exportArchive` re-signs from what the archive declares, and an archive that declares
+nothing yields a binary that claims nothing. A capability can be granted and still go unclaimed.
+No build this pipeline has ever produced carried the App Group — build 293 included — so
+`WidgetSharedSettings` has been inert in distribution since v1.24.0, the widgets running entirely
+from bundled `votd.json` / `calendar.json`. The guard was blocking every release while protecting
+something that had never once worked, so it now reports and continues; bundle identifier,
+marketing version, and build number stay hard failures, because those genuinely drift and would
+ship an unsalvageable binary. Repairing the signing so the archive carries its entitlements —
+which would switch the settings sync on for the first time — is [tracked](../FOLLOW_UPS.md).
+
+The second gate was `npm audit`, red on `main` since 2026-07-24 from advisories published against
+react-router 7.17.0 after v1.24.0 shipped. Moving to 7.18.2 cleared four of five, including an
+open redirect via a backslash in `<Link>` and `useNavigate` — the only one that applies to a
+client-side router. The fifth, an RSC-mode CSRF bypass covering 7.12.0 – 8.2.0, could not be
+cleared, and npm's standing offer to `--force`-downgrade to 7.11.0 is a trap: the dependency is
+`react-router-dom`, whose latest and final version is 7.18.2, so every version npm can select
+drags in a vulnerable `react-router` 7.x and the only direction it can find is backwards. The
+forward fix does exist — `react-router` 8.3.0 sits outside the range — but is unreachable while
+the deprecated `react-router-dom` shim is in the graph. That migration is
+[tracked](../FOLLOW_UPS.md); the advisory does not apply to a static offline SPA with no server,
+no RSC, and no data router.
+
+Shipped as **TestFlight build 304**, VALID. The device pass on the reporting hardware remains
+outstanding — and the sharpest test is a *slow* first tap, since the old defect's 1,200 ms
+delivery-dedupe window made a fast one accidentally succeed.
 
 ## The doors shall not be shut (v1.24.0)
 
