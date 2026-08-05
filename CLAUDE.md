@@ -182,7 +182,12 @@ One line per release. The unabridged narrative is
   proves a signing change without spending a build number. Native tests 13→18, harness §36 +7 /
   §39 +2 — the suite had **pinned the defect** (a §36 check asserted the very `guard` line), and
   the new data guard recomputes the unanimity table and demands an exact match. No engine/golden/
-  sw change. Shells 1.24.2/12402.
+  sw change. Shells 1.24.2/12402. Shipped as **TestFlight build 307**. 2026-08-05: Apple
+  returned the 1.24.0 (293) submission under **Guideline 2.1** — book content distributed in
+  China mainland needs an Internet Publishing License; answered by subtraction — **China
+  mainland removed from availability** (174 territories remain) — and the same submission
+  resubmitted re-versioned in place as 1.24.2 (307): WAITING_FOR_REVIEW, release type
+  AFTER_APPROVAL.
   → [detail](docs/history/RELEASES.md#the-lamps-relit-v1242)
 - **v1.24.1 — a spacious place** — the widget-entry freeze, fixed. Entering from a Verse/Quote/Mass
   widget landed correctly and then the app could not be navigated at all: every tab flashed the

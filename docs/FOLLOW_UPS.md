@@ -68,8 +68,18 @@ changes it, the explanatory comments in `src/App.tsx` and
 
 ## 2. v1.24.2 has not been confirmed on physical hardware
 
-**Status:** awaiting device testing.
-**Opened:** 2026-07-31. Build 304 (v1.24.1) is VALID in TestFlight; v1.24.2 is not yet built.
+**Status:** awaiting device testing — and the review clock is now running.
+**Opened:** 2026-07-31. **Updated:** 2026-08-05.
+
+v1.24.2 **is** now built and under review: build 307 (the first ever to carry
+the App Group) uploaded 2026-07-31, VALID in TestFlight. On 2026-08-05, after
+Apple returned the 1.24.0 (293) submission under Guideline 2.1 (China-mainland
+book-content permit), China mainland was removed from availability (174
+territories remain) and the same submission was resubmitted as 1.24.2 (307) —
+now WAITING_FOR_REVIEW. The version's release type is **AFTER_APPROVAL**, so
+approval publishes it to the App Store immediately: run this device pass now,
+from TestFlight build 307, during the review window — or switch the version to
+manual release in ASC if the pass cannot happen in time.
 
 **New in v1.24.2 — test this first.** The Mass and Quote home-screen widgets were
 blank on every device (the App Group entitlement had never shipped; see
