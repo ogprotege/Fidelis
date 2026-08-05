@@ -134,9 +134,23 @@ Not applicable — Fidelis is not a routing/navigation app. Leave empty.
 
 Not applicable. Leave empty.
 
+## Availability (Pricing and Availability)
+
+Free ($0.00) in **174 territories — every territory except China mainland** —
+with automatic availability in territories Apple adds later. China mainland was
+switched off on 2026-08-05: Apple's Guideline 2.1 requires an Internet
+Publishing License (网络出版服务许可证) to distribute book content there, a
+permit this project cannot hold. **Do not re-enable China mainland** without
+one.
+
 ## Notes for App Review (≤ 4,000 characters)
 
+The first paragraph answers the 2026-08-05 Guideline 2.1 rejection of
+1.24.0 (293); it can be dropped once 1.24.2 is approved.
+
 ```
+RESPONSE TO GUIDELINE 2.1 (review of 1.24.0 (293), submission f59a3d7e-9373-4131-b6e9-b9bb0ed16d95): This app is not intended for distribution in China mainland. We have removed China mainland from the app's territory availability in App Store Connect (Pricing and Availability now covers 174 territories, excluding China mainland), so no Internet Publishing License applies. This resubmission is version 1.24.2 (build 307), which also fixes a home-screen-widget defect present in the reviewed build.
+
 Fidelis is a Catholic Bible and liturgical-calendar app. Notes for review:
 
 • No account, no sign-in, no server. The app is fully functional offline from first launch; all content ships in the binary. There are no test credentials because there is nothing to log into.
@@ -207,5 +221,7 @@ repository's metadata guard after any edit:
 - Description: 2,505 / 4,000 ✓
 - Keywords: 91 / 100 ✓
 - Copyright: 21 / 200 ✓
-- Review notes: 2,414 / 4,000 ✓
+- Review notes: 2,916 / 4,000 ✓ (re-counted 2026-08-05 with the Guideline 2.1
+  response paragraph; drops to 2,414 when that paragraph is removed after
+  approval)
 - What's New (1.24.2): 560 / 4,000 ✓
