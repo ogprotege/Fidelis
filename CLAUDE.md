@@ -5,8 +5,9 @@
 > **Taking over mid-flight? Read [docs/FOLLOW_UPS.md](docs/FOLLOW_UPS.md) first.**
 > It is the one place that records what is *unfinished* — what was verified versus
 > assumed, and the exact steps closing each item takes. Item 1 is always the most
-> urgent. Right now it is v1.24.4: merged and green on `main`, but not tagged, not
-> built to TestFlight, and not on any device.
+> urgent. Right now it is v1.24.4: tagged and on TestFlight as **build 322**,
+> waiting on the 1.24.3 review verdict before its own store submission; no
+> device pass yet.
 
 Catholic Bible app (DRB, CPDV, Clementine Vulgate) with liturgical calendar and
 daily Mass readings. Companion documents:
@@ -200,14 +201,16 @@ One line per release. The unabridged narrative is
   `>=8.0.0 <8.3.0`) making 7.18.2 already patched, where CI printed the collapsed
   `7.12.0 - 8.2.0` spanning that gap; unsettleable from here, and precisely why the answer is
   a migration rather than a wait, since 8.3.0 is outside under either reading. All 31 e2e
-  tests pass on v8. No engine/data/golden/sw change. Shells 1.24.4/12404.
+  tests pass on v8. No engine/data/golden/sw change. Shells 1.24.4/12404. Shipped as
+  **TestFlight build 322**.
   → [detail](docs/history/RELEASES.md#the-fruitless-branch-v1244)
 - **v1.24.3 — called by name** — the store-listing release after v1.24.2's App Store debut:
   the product name becomes **Fidelis: Catholic Bible** (home-screen label stays *Fidelis*),
   keywords and description tightened, What's New filled in for the first time, and 10 iPhone
   + 8 iPad screenshots given brand caption bands so Apple's OCR can index the product page;
   `metadata/` + `scripts/caption-screenshots.py` mirror the caption pipeline in-repo. No
-  engine, corpus, or service-worker change. Shells 1.24.3/12403.
+  engine, corpus, or service-worker change. Shells 1.24.3/12403. Submitted 2026-08-07 as
+  **build 317** — WAITING_FOR_REVIEW, release type AFTER_APPROVAL.
 - **v1.24.2 — the lamps relit** — the blank-widget repair. **Today at Mass** and **Quote of
   the Day** read "Open Fidelis to update" on every device and never recovered; **Verse of the
   Day** alone kept working. v1.24.0 had made `loadCalendar()` refuse to draw without reading the
@@ -233,8 +236,8 @@ One line per release. The unabridged narrative is
   returned the 1.24.0 (293) submission under **Guideline 2.1** — book content distributed in
   China mainland needs an Internet Publishing License; answered by subtraction — **China
   mainland removed from availability** (174 territories remain) — and the same submission
-  resubmitted re-versioned in place as 1.24.2 (307): WAITING_FOR_REVIEW, release type
-  AFTER_APPROVAL.
+  resubmitted re-versioned in place as 1.24.2 (307). **Approved — READY_FOR_SALE**, live
+  on the App Store (verified 2026-08-07).
   → [detail](docs/history/RELEASES.md#the-lamps-relit-v1242)
 - **v1.24.1 — a spacious place** — the widget-entry freeze, fixed. Entering from a Verse/Quote/Mass
   widget landed correctly and then the app could not be navigated at all: every tab flashed the

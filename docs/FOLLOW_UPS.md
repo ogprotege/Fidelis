@@ -9,9 +9,10 @@ writing the outcome into [CHANGELOG.md](../CHANGELOG.md).
 
 ---
 
-## 1. v1.24.4 is merged but not shipped — the remaining release steps
+## 1. v1.24.4 awaits the 1.24.3 verdict — the remaining release steps
 
-**Status:** open. Code is on `main` and green; nothing has reached a device.
+**Status:** open — blocked on Apple's 1.24.3 verdict. Tagged, released, and on
+TestFlight (build 322); no device pass yet.
 **Opened:** 2026-08-07. **Picking this up cold? Start here, then read item 2.**
 
 v1.24.4 ("the fruitless branch") landed via **PR #91**. It restored CI — which
@@ -34,39 +35,33 @@ is only what is left to **do**.
   any native-project files that changed" needed only the two version strings —
   the synced web bundle is **not** committed (`cap sync` regenerates it, which is
   what the green `ios-build` / `android-build` jobs prove).
+- Tagged and released: `v1.24.3` → `4ec6d1e`, `v1.24.4` → `d163a4c` (both
+  pushed); GitHub releases published for both, v1.24.4 marked Latest.
+- Re-verified on the release Mac 2026-08-07: 1,048 harness checks, the build,
+  and all 31 Playwright e2e in real Chrome. **TestFlight build 322** uploaded
+  from `d163a4c` via `bash scripts/ios-testflight.sh`.
 
 **What is left, in order:**
 
-1. **Tag the release** — [Releasing §7](guides/RELEASING.md#7-tag--push). Tags
-   currently run `v1.0.0 … v1.24.2`; **`v1.24.3` was never tagged**, so tag both
-   or consciously skip the gap. The previous session did not tag, because the
-   maintainer asked for a merge and tagging was not requested.
-   ```sh
-   git checkout main && git pull origin main
-   git tag v1.24.3 <the v1.24.3 release commit>   # optional: closes the gap
-   git tag v1.24.4 && git push origin v1.24.4
-   ```
-2. **Build and upload to TestFlight** — [Releasing §8](guides/RELEASING.md#8-ship-the-ios-build-to-testflight).
-   Needs a Mac (`bash scripts/ios-testflight.sh`) **or**, with no Mac, the
-   *TestFlight release* workflow (GitHub → Actions → Run workflow, on the release
-   commit), which needs the four Actions secrets `TEAM_ID`, `ASC_KEY_ID`,
-   `ASC_ISSUER_ID`, `ASC_KEY_P8`. To check a signing change without spending a
-   build number: `FIDELIS_VERIFY_ONLY=1`.
-3. **Rename the App Store Connect version `1.24.3` → `1.24.4`.** The store version
-   string must equal the uploaded build's `MARKETING_VERSION`. 1.24.3 was prepared
-   in ASC but **never released**, so its What's New copy is still unseen and was
-   carried forward re-labelled rather than rewritten — v1.24.4 has no user-visible
-   change to announce. Rationale is recorded under "Why this text still describes
-   1.24.3" in [App Store](guides/APP_STORE.md).
-4. **Run device acceptance** — [Releasing §9](guides/RELEASING.md#9-run-device-acceptance-before-the-store-submission)
-   and item 2 below. **CI being green is not this gate.**
-
-**Two things to verify in ASC before acting, not to assume.** As recorded on
-2026-08-05, the **1.24.2 (build 307)** submission was `WAITING_FOR_REVIEW` with
-release type **AFTER_APPROVAL**, meaning approval publishes it immediately; and
-China mainland was removed from availability (174 territories) after a Guideline
-2.1 rejection. Both may have moved since. Check the live state first — a version
-already in review interacts with preparing another one.
+1. **Wait for the 1.24.3 verdict — and touch nothing in ASC while it waits.**
+   Verified live 2026-08-07 (asc CLI): **1.24.2 is READY_FOR_SALE** — approved,
+   selling, the Guideline 2.1 story closed (China mainland stays off; 174
+   territories) — and **1.24.3 (build 317)**, the *Fidelis: Catholic Bible*
+   listing rename with captioned screenshots, is **WAITING_FOR_REVIEW**
+   (submission `48c9563b…`, submitted 2026-08-07 14:55 UTC, release type
+   AFTER_APPROVAL — approval publishes it by itself). An earlier revision of
+   this item, written from the 08-05 facts, said to *rename ASC 1.24.3 →
+   1.24.4*; that **must not be done** — editing or renaming a version waiting
+   for review pulls it from the queue.
+2. **After the verdict, stage 1.24.4 in ASC.** Create the new version (the "+"
+   beside "iOS App" — ASC cannot hold a second in-flight version while 1.24.3
+   is in review), paste [App Store](guides/APP_STORE.md) — its What's New is
+   fresh copy for 1.24.4, since the rename news ships with 1.24.3 — attach
+   **build 322**, drop the Guideline 2.1 paragraph from the review notes (count
+   returns to 2,414), and submit.
+3. **Run device acceptance** — [Releasing §9](guides/RELEASING.md#9-run-device-acceptance-before-the-store-submission)
+   and item 2 below, from TestFlight build 322 (it carries the v1.24.2 widget
+   repair *and* the v1.24.4 router swap). **CI being green is not this gate.**
 
 **What a smoke test should touch first.** v1.24.4 swapped the router the whole app
 runs on. The routing-sensitive paths are already covered by the green e2e suite
@@ -92,18 +87,15 @@ red, read it as the security decision being undone, not as a flaky test.
 
 ## 2. v1.24.2 has not been confirmed on physical hardware
 
-**Status:** awaiting device testing — and the review clock is now running.
-**Opened:** 2026-07-31. **Updated:** 2026-08-05.
+**Status:** awaiting device testing — now against the **live** App Store app.
+**Opened:** 2026-07-31. **Updated:** 2026-08-07.
 
-v1.24.2 **is** now built and under review: build 307 (the first ever to carry
-the App Group) uploaded 2026-07-31, VALID in TestFlight. On 2026-08-05, after
-Apple returned the 1.24.0 (293) submission under Guideline 2.1 (China-mainland
-book-content permit), China mainland was removed from availability (174
-territories remain) and the same submission was resubmitted as 1.24.2 (307) —
-now WAITING_FOR_REVIEW. The version's release type is **AFTER_APPROVAL**, so
-approval publishes it to the App Store immediately: run this device pass now,
-from TestFlight build 307, during the review window — or switch the version to
-manual release in ASC if the pass cannot happen in time.
+v1.24.2 was approved and is **READY_FOR_SALE** (verified live 2026-08-07): the
+widget repair reached production without this pass ever running, so it is now
+unverified in the wild, not merely on TestFlight. Nothing needs pulling — the
+task is unchanged, only more real. Run it from **TestFlight build 322** (same
+widget code plus v1.24.4's router swap) or from the production App Store app;
+build 317, in review with the 1.24.3 listing, carries identical app code.
 
 **New in v1.24.2 — test this first.** The Mass and Quote home-screen widgets were
 blank on every device (the App Group entitlement had never shipped; see
