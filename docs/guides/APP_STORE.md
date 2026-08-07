@@ -26,28 +26,24 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-Fidelis now appears on the App Store as Fidelis: Catholic Bible — same faithful Catholic Bible and missal, clearer name for search.
-
-Store page
-• Product screenshots now carry short captions so each screen is clear at a glance
-• Keywords and description refined (Douay, Vulgate, lectionary, rosary, and more)
-
-Fidelis is the Catholic Bible, kept faithfully — the full 73-book canon, the daily Mass readings, and the liturgical year. Free forever: no accounts, no ads, no tracking.
+Maintenance: the navigation library Fidelis is built on moved up to its current major version. Nothing visible changes — reading, search, the daily Mass readings, and the home-screen widgets all work exactly as before.
 ```
 
 (ASC shows What's New only for updates after the first released version. The
 same text can seed the TestFlight "What to Test" notes. Use the full physical
 matrix in [Device acceptance](DEVICE_ACCEPTANCE.md), not this summary alone.)
 
-**Why this text still describes 1.24.3.** The live App Store version is
-**1.24.2**; the 1.24.3 listing was prepared in ASC but never released, so none of
-what it announces has reached a reader yet. v1.24.4 is a dependency-security
-release with no user-visible change (the router the app runs on moved off a
-package with an open advisory — see CHANGELOG 1.24.4), and inventing store copy
-for it would announce nothing. The copy therefore stays as written and is
-re-labelled: it still says truthfully what changed since the version readers
-have. **The ASC version prepared as 1.24.3 must be renamed 1.24.4** to match the
-uploaded build's `MARKETING_VERSION`.
+**Store state (verified live 2026-08-07, asc CLI).** The App Store sells
+**1.24.2** (READY_FOR_SALE). **1.24.3 — build 317**, the *Fidelis: Catholic
+Bible* listing rename with captioned screenshots and its own What's New — is
+submitted and **WAITING_FOR_REVIEW** with release type AFTER_APPROVAL, so
+approval publishes it by itself. **Do not rename, edit, or resubmit the 1.24.3
+version**: any change to a version waiting for review pulls it from the queue.
+(An earlier revision of this page said to rename ASC 1.24.3 → 1.24.4; it was
+written from stale facts, before the 1.24.3 submission was known.) When the
+verdict lands, create **1.24.4** fresh and paste this page — the What's New
+above is written for 1.24.4, because the rename news ships with 1.24.3 and is
+not repeated.
 
 ## Promotional Text (≤ 170 characters)
 
@@ -164,8 +160,11 @@ one.
 
 ## Notes for App Review (≤ 4,000 characters)
 
-The first paragraph answers the 2026-08-05 Guideline 2.1 rejection of
-1.24.0 (293); it can be dropped once 1.24.2 is approved.
+The first paragraph answered the 2026-08-05 Guideline 2.1 rejection of
+1.24.0 (293). 1.24.2 was approved and is live, but the paragraph still rides in
+the in-review 1.24.3 notes (2,916 code points, verified live 2026-08-07) — a
+version waiting for review cannot be edited without pulling it from the queue.
+Drop the paragraph when preparing the 1.24.4 version (count returns to 2,414).
 
 ```
 RESPONSE TO GUIDELINE 2.1 (review of 1.24.0 (293), submission f59a3d7e-9373-4131-b6e9-b9bb0ed16d95): This app is not intended for distribution in China mainland. We have removed China mainland from the app's territory availability in App Store Connect (Pricing and Availability now covers 174 territories, excluding China mainland), so no Internet Publishing License applies. This resubmission is version 1.24.2 (build 307), which also fixes a home-screen-widget defect present in the reviewed build.
@@ -243,5 +242,5 @@ repository's metadata guard after any edit:
 - Review notes: 2,916 / 4,000 ✓ (re-counted 2026-08-05 with the Guideline 2.1
   response paragraph; drops to 2,414 when that paragraph is removed after
   approval)
-- What's New (1.24.4): 480 / 4,000 ✓ (text unchanged from the 1.24.3 draft — see
-  the note under What's New; the character count is therefore still current)
+- What's New (1.24.4): 218 / 4,000 ✓ (fresh copy for the maintenance release —
+  the 1.24.3 rename copy shipped with the 1.24.3 submission and is not repeated)
