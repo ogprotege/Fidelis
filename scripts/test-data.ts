@@ -5428,7 +5428,9 @@ console.log("");
   // (e) The gate that caught this stays standing. The cheapest way to turn a red
   // audit green is to delete the step or swallow its exit code; neither is a fix,
   // and both would have hidden this advisory instead of closing it.
-  const auditSteps40 = [...ci40.matchAll(/run:\s*npm audit(?<args>[^\n]*)/g)]
+  // `run: |` block scalars are already used elsewhere in this workflow, so the
+  // step may legitimately be written either way; only the arguments matter.
+  const auditSteps40 = [...ci40.matchAll(/run:\s*(?:[|>][-+]?\s*)?npm audit(?<args>[^\n]*)/g)]
     .map((m) => m.groups?.args?.trim() ?? "");
   check("§40 CI still audits the production dependency graph",
     auditSteps40.includes("--omit=dev"));
