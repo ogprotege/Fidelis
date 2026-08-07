@@ -48,7 +48,7 @@ Harnesses assert everything (review §B.1 — no print-only expectations remain)
 snapshots (§B.2) in `scripts/golden/{2024..2031}.json` pin the full computed calendar, day
 codes, and reading resolution per day for every supported profile; `test-data.ts` diffs them, so any
 engine change that silently moves a feast is a red `npm test`. §B.3 (CI) is closed:
-`.github/workflows/ci.yml` runs `npm ci`, `npm test`, and `npm run build` on Node 22 for
+`.github/workflows/ci.yml` runs `npm ci`, both `npm audit` gates, `npm test`, and `npm run build` on Node 22 for
 every pull request and every push to main, so a red harness or a type error fails the build.
 
 ## Architecture
@@ -156,7 +156,8 @@ build must still prove that both signed profiles grant it.
 the pure helpers, a both-region gospel sweep, and the manifest re-walk). Golden-year snapshots in
 `scripts/golden/{2024..2031}.json` pin the full computed calendar + readings per day for every profile,
 so any engine change that silently moves a feast is a red `npm test` — re-bless deliberately with
-`npm run golden` and review the diff. `.github/workflows/ci.yml` runs lint → `npm test` → `npm run
+`npm run golden` and review the diff. `.github/workflows/ci.yml` runs `npm audit --omit=dev` →
+`npm audit` → lint → `npm test` → `npm run
 build` → `npm run check-docs` on every PR and push to main (so a dead doc link fails the build too;
 the lint covers `src` and the `scripts/` pipeline); `.github/workflows/ios.yml` builds the iOS App +
 widget target on macOS and `.github/workflows/android.yml` the unsigned debug APK — both trigger on
@@ -183,14 +184,14 @@ One line per release. The unabridged narrative is
   every v8 breaking change read against this app — all of them land on data-router / RSC /
   framework surface a `HashRouter` SPA with no loaders or actions does not have; floors met
   (Node ≥22.22.0 vs CI's 22.23.2, React ≥19.2.7 vs `^19.2.7`); 8.3.0's path-encoding change
-  checked, not assumed (79 book ids, 772 saint/history ids, 366 day keys — all lowercase
+  checked, not assumed (78 book ids, 772 saint/history ids, 366 day keys — all lowercase
   slugs). **`useNavigate` still memoises on `location.pathname`**, so v1.24.1's widget-entry
   comments stand. Behind it, a second gate that had **never once executed** (`--omit=dev`
   exits first) was red too: postcss 8.5.15→**8.5.26**, js-yaml 4.3.0→**4.3.1**,
   brace-expansion 1.1.16→**1.1.18** and 5.0.8→**5.0.9** — all lockfile-only, no `overrides`;
   the lockfile's own root version had drifted to 1.24.1 under a `package.json` reading
   1.24.3. Bundle net flat (555,257→553,779 B; main chunk 461.5→439.9 kB, v8 splitting a
-  20.0 kB `hooks` chunk). Harness **§40**, 9 checks all red-first, pins the temptation
+  20.0 kB `hooks` chunk). Harness **§40**, 10 checks all red-first, pins the temptation
   rather than the fix: **both** audit steps must stay in `ci.yml` with no `|| true`,
   `--audit-level`, or allowlist; the shim may not return to `src/`, `package.json`, or the
   lockfile; a declared **and** locked 8.3.0 floor, the comparison itself tested against
@@ -202,7 +203,9 @@ One line per release. The unabridged narrative is
   `7.12.0 - 8.2.0` spanning that gap; unsettleable from here, and precisely why the answer is
   a migration rather than a wait, since 8.3.0 is outside under either reading. All 31 e2e
   tests pass on v8. No engine/data/golden/sw change. Shells 1.24.4/12404. Shipped as
-  **TestFlight build 322**.
+  **TestFlight build 322**. A same-day post-review hardening grew §40 to 16 checks
+  (parsed-workflow audit-gate guards, a lockfile-wide floor, README-badge and
+  metadata-mirror parity).
   → [detail](docs/history/RELEASES.md#the-fruitless-branch-v1244)
 - **v1.24.3 — called by name** — the store-listing release after v1.24.2's App Store debut:
   the product name becomes **Fidelis: Catholic Bible** (home-screen label stays *Fidelis*),
@@ -211,6 +214,7 @@ One line per release. The unabridged narrative is
   `metadata/` + `scripts/caption-screenshots.py` mirror the caption pipeline in-repo. No
   engine, corpus, or service-worker change. Shells 1.24.3/12403. Submitted 2026-08-07 as
   **build 317** — WAITING_FOR_REVIEW, release type AFTER_APPROVAL.
+  → [detail](docs/history/RELEASES.md#called-by-name-v1243)
 - **v1.24.2 — the lamps relit** — the blank-widget repair. **Today at Mass** and **Quote of
   the Day** read "Open Fidelis to update" on every device and never recovered; **Verse of the
   Day** alone kept working. v1.24.0 had made `loadCalendar()` refuse to draw without reading the
@@ -265,7 +269,8 @@ One line per release. The unabridged narrative is
   export-time re-signing claims none — no build has ever carried it, 293 included, leaving
   `WidgetSharedSettings` inert in distribution; identity drift stays hard), and react-router went
   7.17.0 → 7.18.2, clearing four of five advisories. Shipped as **TestFlight build 304**.
-  Outstanding: the device pass, the `npm audit` gate (see below), and the signing repair — all in
+  Outstanding then: the device pass (still open), the `npm audit` gate (closed in **v1.24.4**),
+  and the signing repair (closed in **v1.24.2**, step [2b/6]) — the living list is
   [docs/FOLLOW_UPS.md](docs/FOLLOW_UPS.md).
   → [detail](docs/history/RELEASES.md#a-spacious-place-v1241)
 - **v1.24.0 — the doors shall not be shut** — the widget/UI/calendar repair:

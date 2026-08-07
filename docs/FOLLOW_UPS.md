@@ -24,7 +24,7 @@ is only what is left to **do**.
 
 **What is already done** — do not redo any of it:
 
-- All eight checks green on the merged head: `build` (lint → both audits →
+- All eight checks green on the merged head: `build` (both audits → lint →
   1,048 harness checks → type-check → build → check-docs), `e2e` (31 Playwright
   tests), `ios-build`, `android-build`, and Android instrumentation on API 24,
   26, 31, 36.
@@ -67,7 +67,11 @@ is only what is left to **do**.
 runs on. The routing-sensitive paths are already covered by the green e2e suite
 (ScrollManager restoring on browser Back, cross-page anchors, the widget
 deep-link anchors, Back-with-a-sheet-open releasing the scroll lock), so on
-hardware just confirm tab navigation, Back, and a widget cold-launch behave — then
+hardware just confirm tab navigation, Back, and a widget cold-launch behave. One
+seam no CI gate covers: `src/lib/widgetLinks.ts` reads React Router's
+undocumented `history.state` shape (`idx`/`usr`) on native-only paths — 8.3.0
+still writes it (verified against the installed package), but no test pins it,
+so exercise iOS edge-swipe Back and a warm widget re-entry specifically. Then
 spend the real effort on item 2, which is still the unverified one.
 
 **One open question, deliberately left visible.** The react-router advisory
@@ -78,10 +82,15 @@ environment: its npm advisory feed served two ranges (`>=7.12.0 <7.18.2`,
 conclude the migration was unnecessary: 8.3.0 sits outside the advisory under
 either reading, which is the point — a gate that goes green because someone else
 edited an advisory record can go red the same way. **Harness §40 now pins this**
-(9 checks): both audit steps must stay in `ci.yml` with no `|| true`,
-`--audit-level`, or allowlist; the shim may not return to `src/`, `package.json`,
-or the lockfile; and a declared **and** locked 8.3.0 floor must hold. If §40 turns
-red, read it as the security decision being undone, not as a flaky test.
+(16 checks after the 2026-08-07 post-review hardening): both audits must remain
+dedicated `ci.yml` steps — run text exactly `npm audit` / `npm audit --omit=dev`,
+no `continue-on-error`, `if:` gate, env audit-level, or committed `.npmrc`,
+asserted on the parsed workflow rather than a regex; the shim may not return to
+`src/`, `package.json`, or anywhere in the lockfile tree (every nested copy held
+to the same 8.3.0 floor, prereleases rejected); every runtime symbol `src/`
+imports is checked against the installed package; and the README badge and
+`metadata/version/` mirror must match `package.json`. If §40 turns red, read it
+as the security decision being undone, not as a flaky test.
 
 ---
 

@@ -30,7 +30,8 @@ It ships as:
 - **React 19 + TypeScript (strict) + Vite 8**, ESM (`"type": "module"`),
   `react-router` v8 with **HashRouter** (the `react-router-dom` shim was retired
   in v1.24.4 — import router symbols from `react-router`, never from the shim).
-- **Node 22 required** for all tooling (CI pins it).
+- **Node ≥ 22.22.0 required** — react-router 8's runtime floor, declared in
+  `package.json` `engines` (CI's Node 22 line satisfies it).
 - No state library — `src/SettingsContext.tsx` + localStorage. No CSS framework —
   one `src/styles.css` with design tokens.
 - Capacitor plugins: `@capacitor/app`, `@capacitor/status-bar` (plus platform
