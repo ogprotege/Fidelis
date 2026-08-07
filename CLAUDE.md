@@ -2,6 +2,12 @@
 
 [← Docs index](docs/INDEX.md)
 
+> **Taking over mid-flight? Read [docs/FOLLOW_UPS.md](docs/FOLLOW_UPS.md) first.**
+> It is the one place that records what is *unfinished* — what was verified versus
+> assumed, and the exact steps closing each item takes. Item 1 is always the most
+> urgent. Right now it is v1.24.4: merged and green on `main`, but not tagged, not
+> built to TestFlight, and not on any device.
+
 Catholic Bible app (DRB, CPDV, Clementine Vulgate) with liturgical calendar and
 daily Mass readings. Companion documents:
 `docs/review/Fidelis_Code_Review_V1_2026-06-11.md` (the repair manual — every
