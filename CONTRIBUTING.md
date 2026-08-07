@@ -4,7 +4,8 @@
 
 ## Setup
 
-Node 22 is required. After cloning:
+Node ≥ 22.22.0 is required (react-router 8's runtime floor, declared in
+`package.json` `engines`). After cloning:
 
 ```sh
 npm install

@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.24.4",
   "type": "module",
+  "engines": {
+    "node": ">=22.22.0"
+  },
   "description": "Fidelis — a Catholic Bible app with unaltered public-domain texts: Douay-Rheims, Catholic Public Domain Version, and the Clementine Latin Vulgate.",
   "repository": {
     "type": "git",

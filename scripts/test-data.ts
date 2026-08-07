@@ -5347,8 +5347,9 @@ console.log("");
   // The advisory's 8.x branch is patched at 8.3.0; anything below is inside it.
   const ROUTER_ADVISORY_FLOOR = [8, 3, 0] as const;
   const pkg40 = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
+    version: string;
     dependencies: Record<string, string>;
-    devDependencies: Record<string, string>;
+    devDependencies?: Record<string, string>;
   };
   const lock40 = JSON.parse(readFileSync(join(ROOT, "package-lock.json"), "utf8")) as {
     packages: Record<string, { version?: string }>;
@@ -5374,7 +5375,7 @@ console.log("");
   check("§40 package.json depends on react-router, not the shim",
     typeof declaredRouter40 === "string" &&
       !(RETIRED_ROUTER_SHIM in pkg40.dependencies) &&
-      !(RETIRED_ROUTER_SHIM in pkg40.devDependencies));
+      !(RETIRED_ROUTER_SHIM in (pkg40.devDependencies ?? {})));
   check("§40 the lockfile resolves no react-router-dom anywhere in the tree",
     shimInLock40.length === 0, shimInLock40.join(", "));
 
@@ -5382,23 +5383,33 @@ console.log("");
   // — which is exactly what `npm audit fix --force` still offers — turns this red
   // BEFORE the audit gate has to catch it in CI.
   const outsideAdvisory40 = (raw: string | undefined): boolean => {
-    const m = /^\^?~?(\d+)\.(\d+)\.(\d+)/.exec(raw ?? "");
+    const m = /^\^?~?(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?/.exec(raw ?? "");
     if (!m) return false;
     const v = [Number(m[1]), Number(m[2]), Number(m[3])];
     for (let i = 0; i < 3; i++) {
       if (v[i] !== ROUTER_ADVISORY_FLOOR[i]) return v[i] > ROUTER_ADVISORY_FLOOR[i];
     }
-    return true;
+    // Exactly 8.3.0 is the patch; any 8.3.0 prerelease semver-orders BELOW it.
+    return m[4] === undefined;
   };
   check("§40 the declared react-router clears GHSA-qwww-vcr4-c8h2's 8.3.0 floor",
     outsideAdvisory40(declaredRouter40), `declared ${declaredRouter40}`);
   const lockedRouter40 = lock40.packages["node_modules/react-router"]?.version;
   check("§40 the locked react-router clears the same floor",
     outsideAdvisory40(lockedRouter40), `locked ${lockedRouter40}`);
+  // npm nests a second react-router under any dependency that pins its own, so
+  // the top-level key alone is not the tree — hold every copy to the floor.
+  const routerCopies40 = Object.entries(lock40.packages)
+    .filter(([p]) => p.endsWith("node_modules/react-router"));
+  check("§40 every react-router copy in the lockfile tree clears the floor",
+    routerCopies40.length > 0 &&
+      routerCopies40.every(([, meta]) => outsideAdvisory40(meta.version)),
+    routerCopies40.map(([p, meta]) => `${p}@${meta.version}`).join(", "));
   // The guard above is a floor, not a range check — it would pass a downgrade to
-  // 7.x if the major were read alone, so prove it rejects one.
+  // 7.x if the major were read alone, so prove it rejects one (and a prerelease).
   check("§40 the floor rejects a walk back into the advisory range",
     !outsideAdvisory40("7.18.2") && !outsideAdvisory40("8.2.0") &&
+      !outsideAdvisory40("8.3.0-rc.1") &&
       outsideAdvisory40("8.3.0") && outsideAdvisory40("^9.0.0"));
 
   // (d) Every symbol src/ imports from react-router is really exported by the
@@ -5413,31 +5424,78 @@ console.log("");
     .map(String)
     .filter((f) => f.endsWith(".ts") || f.endsWith(".tsx"))) {
     const src = readFileSync(join(ROOT, "src", f), "utf8");
-    for (const m of src.matchAll(/import\s*\{([^}]*)\}\s*from\s*"react-router"/g)) {
+    // Both quote styles. Inline `type X` specifiers are erased at compile time
+    // and may name types with no runtime export, so they are skipped — as are
+    // whole `import type {...}` statements, which this regex never matches.
+    for (const m of src.matchAll(/import\s*\{([^}]*)\}\s*from\s*["']react-router["']/g)) {
       for (const s of m[1].split(",")) {
-        const name = s.trim().split(/\s+as\s+/)[0].trim();
-        if (name) importedSymbols40.add(name);
+        const spec = s.trim();
+        if (!spec || /^type\s/.test(spec)) continue;
+        importedSymbols40.add(spec.split(/\s+as\s+/)[0].trim());
       }
     }
   }
   const unexported40 = [...importedSymbols40].filter((s) => routerModule40[s] === undefined);
+  // Two separate verdicts: a blind scanner and a phantom export are different
+  // failures and must not share one label. HashRouter is structurally required
+  // (src/main.tsx cannot route without it), so its absence means the scanner
+  // broke, not that the app stopped routing.
+  check("§40 the import scanner still sees the router surface",
+    importedSymbols40.has("HashRouter"), `${importedSymbols40.size} runtime symbols`);
   check("§40 every symbol src/ imports from react-router is exported by it",
-    importedSymbols40.size >= 10 && unexported40.length === 0,
+    unexported40.length === 0,
     unexported40.length ? `missing: ${unexported40.join(", ")}` : `${importedSymbols40.size} symbols`);
 
-  // (e) The gate that caught this stays standing. The cheapest way to turn a red
-  // audit green is to delete the step or swallow its exit code; neither is a fix,
-  // and both would have hidden this advisory instead of closing it.
-  // `run: |` block scalars are already used elsewhere in this workflow, so the
-  // step may legitimately be written either way; only the arguments matter.
-  const auditSteps40 = [...ci40.matchAll(/run:\s*(?:[|>][-+]?\s*)?npm audit(?<args>[^\n]*)/g)]
-    .map((m) => m.groups?.args?.trim() ?? "");
-  check("§40 CI still audits the production dependency graph",
-    auditSteps40.includes("--omit=dev"));
-  check("§40 CI still audits the complete dependency graph",
-    auditSteps40.includes(""));
-  check("§40 no audit step swallows its exit code or allowlists an advisory",
-    !/npm audit[^\n]*(\|\|\s*true|--audit-level|;\s*exit 0)/.test(ci40));
+  // (e) The gate that caught this stays standing — asserted on the PARSED
+  // workflow, not on run-line text. A regex over the raw YAML missed the
+  // standard Actions ways to neuter a step (`continue-on-error`, an `if:`
+  // gate, an env audit-level override, a committed .npmrc) and false-redded
+  // legitimate restyles; parsing sees through both. The policy pinned here:
+  // each audit runs as a DEDICATED step whose run text is exactly `npm audit`
+  // or `npm audit --omit=dev` — any `|| true`, `--audit-level`, or chained
+  // softening breaks that equality and turns red.
+  const yaml40 = (await import("js-yaml")) as {
+    load?: (s: string) => unknown;
+    default?: { load: (s: string) => unknown };
+  };
+  const ciDoc40 = (yaml40.load ?? yaml40.default!.load)(ci40) as {
+    env?: Record<string, unknown>;
+    jobs?: Record<string, {
+      env?: Record<string, unknown>;
+      steps?: Array<Record<string, unknown> & { run?: unknown }>;
+    }>;
+  };
+  const buildSteps40 = ciDoc40.jobs?.build?.steps ?? [];
+  const runTexts40 = buildSteps40.map((s) =>
+    typeof s.run === "string" ? s.run.replace(/\s+/g, " ").trim() : "");
+  check("§40 CI still audits the production dependency graph (a dedicated step)",
+    runTexts40.includes("npm audit --omit=dev"));
+  check("§40 CI still audits the complete dependency graph (a dedicated step)",
+    runTexts40.includes("npm audit"));
+  const neutered40 = buildSteps40.filter((s, i) =>
+    /(^|\s)npm audit(\s|$)/.test(runTexts40[i]) &&
+      ("continue-on-error" in s || "if" in s || "env" in s));
+  check("§40 no audit step is if-gated, continued-on-error, or env-overridden",
+    neutered40.length === 0,
+    neutered40.map((s) => String(s.name ?? "unnamed step")).join(", "));
+  const envBlobs40 = JSON.stringify([
+    ciDoc40.env ?? {},
+    ...Object.values(ciDoc40.jobs ?? {}).map((j) => j.env ?? {}),
+  ]);
+  check("§40 no workflow env smuggles an npm audit-level override",
+    !/audit[-_]?level|npm_config_audit/i.test(envBlobs40));
+  check("§40 no committed .npmrc can soften the audit",
+    !existsSync(join(ROOT, ".npmrc")));
+
+  // (f) The hand-edited version surfaces. v1.18.5 corrected the README badge
+  // once and v1.24.4 shipped with it stale again — couple it to package.json
+  // so the third drift is the last, and keep the ASC metadata mirror carrying
+  // an entry for the version being staged.
+  const readme40 = readFileSync(join(ROOT, "README.md"), "utf8");
+  check("§40 the README version badge names the package version",
+    readme40.includes(`/badge/version-${pkg40.version}%20`), `package ${pkg40.version}`);
+  check("§40 the ASC metadata mirror carries this version's listing",
+    existsSync(join(ROOT, "metadata/version", pkg40.version, "en-US.json")));
 }
 
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);

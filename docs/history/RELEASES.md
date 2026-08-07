@@ -2096,6 +2096,27 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
+## Called by name (v1.24.3)
+
+*"I have called thee by thy name: thou art mine." (Isaiah 43:1)*
+
+The store-listing release, after v1.24.2's App Store debut. No engine, corpus, or
+service-worker change — the release is the product page. The App Store name
+becomes **Fidelis: Catholic Bible** (the home-screen label stays *Fidelis*),
+because "Fidelis-Bible" told search almost nothing; the keywords drop
+`catholic,bible` (already indexed through the name and subtitle) for
+`saint,prayer,holy`; the description's Mass-readings bullet finally names the
+**lectionary** — the one keyword the copy never echoed; What's New is written for
+the first time; and all 18 screenshots (10 iPhone, 8 iPad) gain brand caption
+bands — purple-strong canvas, EB Garamond, a gold hairline — so Apple's OCR can
+index what each screen shows. The caption pipeline is committed (`metadata/` +
+`scripts/caption-screenshots.py`) rather than left in a scratchpad. Shells
+1.24.3/12403.
+
+Submitted 2026-08-07 as **build 317** — WAITING_FOR_REVIEW, release type
+AFTER_APPROVAL, so approval publishes the rename by itself; the live store keeps
+selling 1.24.2 under the old name until then.
+
 ## The fruitless branch (v1.24.4)
 
 *"Every branch in me that beareth not fruit, he will take away." (John 15:2)*
@@ -2144,7 +2165,7 @@ concerns, and this app renders declarative `<Routes>`/`<Route>` with no loaders
 and no actions. The floors are met (Node ≥ 22.22.0 against a CI pinned to 22,
 currently 22.23.2; React ≥ 19.2.7 against a declared `^19.2.7`), and 8.3.0's one
 behavioral change — no longer percent-encoding `$ & + , ; = : @` in path
-segments — was checked rather than assumed: all 79 book ids, all 772 saint and
+segments — was checked rather than assumed: all 78 book ids, all 772 saint and
 history ids, and all 366 day keys are lowercase slugs containing none of those
 characters.
 
@@ -2187,7 +2208,7 @@ records the failed reproduction rather than quietly claiming a clean one.
 
 What the harness now guards is not the fix but the temptation. The cheapest way
 to make a red audit green is to delete the step, and that would have hidden this
-advisory rather than closing it — so **§40** (nine checks, each proven red-first
+advisory rather than closing it — so **§40** (ten checks, each proven red-first
 by mutation) pins both audit steps in `ci.yml` and forbids `|| true`,
 `--audit-level`, and allowlists; forbids the shim in `src/`, in `package.json`,
 and anywhere in the lockfile tree; requires a declared **and** locked 8.3.0
@@ -2442,7 +2463,8 @@ from bundled `votd.json` / `calendar.json`. The guard was blocking every release
 something that had never once worked, so it now reports and continues; bundle identifier,
 marketing version, and build number stay hard failures, because those genuinely drift and would
 ship an unsalvageable binary. Repairing the signing so the archive carries its entitlements —
-which would switch the settings sync on for the first time — is [tracked](../FOLLOW_UPS.md).
+which would switch the settings sync on for the first time — was [tracked](../FOLLOW_UPS.md)
+and closed in **v1.24.2** (step [2b/6] ad-hoc signs the archive's entitlements).
 
 The second gate was `npm audit`, red on `main` since 2026-07-24 from advisories published against
 react-router 7.17.0 after v1.24.0 shipped. Moving to 7.18.2 cleared four of five, including an
@@ -2452,8 +2474,8 @@ cleared, and npm's standing offer to `--force`-downgrade to 7.11.0 is a trap: th
 `react-router-dom`, whose latest and final version is 7.18.2, so every version npm can select
 drags in a vulnerable `react-router` 7.x and the only direction it can find is backwards. The
 forward fix does exist — `react-router` 8.3.0 sits outside the range — but is unreachable while
-the deprecated `react-router-dom` shim is in the graph. That migration is
-[tracked](../FOLLOW_UPS.md); the advisory does not apply to a static offline SPA with no server,
+the deprecated `react-router-dom` shim is in the graph. That migration was
+[tracked](../FOLLOW_UPS.md) and shipped in **v1.24.4**; the advisory does not apply to a static offline SPA with no server,
 no RSC, and no data router.
 
 Shipped as **TestFlight build 304**, VALID. The device pass on the reporting hardware remains

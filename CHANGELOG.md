@@ -60,7 +60,7 @@ service-worker change.** Shells 1.24.4 / 12404.
   no loaders, no actions, no server. 8.3.0 also stopped percent-encoding
   `$ & + , ; = : @` in path segments — every route parameter this app generates
   (`:translation`, `:book`, `:chapter`, `:day`, `:id`) is a lowercase slug, and
-  all 79 book ids, 772 saint/history ids, and 366 day keys were checked to contain
+  all 78 book ids, 772 saint/history ids, and 366 day keys were checked to contain
   none of those characters.
 - **`useNavigate`'s identity still memoises on `location.pathname`** in v8
   (`useNavigateUnstable` is unchanged), so the explanatory comments left by
@@ -91,7 +91,7 @@ service-worker change.** Shells 1.24.4 / 12404.
 
 ### Added
 
-- **Harness §40 (9 checks, all proven red-first)** pins the decision from both
+- **Harness §40 (10 checks, all proven red-first)** pins the decision from both
   ends. The shim cannot creep back (no `src/` file may import it; neither
   `package.json` nor any node in the lockfile may name it); the version cannot
   walk back into the advisory (a declared **and** locked 8.3.0 floor, with the
