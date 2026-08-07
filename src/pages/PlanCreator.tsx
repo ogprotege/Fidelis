@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { BOOKS, OT_GROUPS, NT_GROUPS, bookDisplayName, BookGroup } from "../lib/canon";
 import { PRESETS, chaptersForBooks, targetDateToPerDay } from "../lib/plans";
 import { addPlan } from "../lib/storage";

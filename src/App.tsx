@@ -8,7 +8,7 @@ import {
   useState,
   useSyncExternalStore
 } from "react";
-import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Link, Route, Routes, useLocation, useNavigate } from "react-router";
 import Header from "./components/Header";
 import ScrollManager from "./components/ScrollManager";
 import Home from "./pages/Home";

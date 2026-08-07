@@ -2,6 +2,12 @@
 
 [← Docs index](docs/INDEX.md)
 
+> **Taking over mid-flight? Read [docs/FOLLOW_UPS.md](docs/FOLLOW_UPS.md) first.**
+> It is the one place that records what is *unfinished* — what was verified versus
+> assumed, and the exact steps closing each item takes. Item 1 is always the most
+> urgent. Right now it is v1.24.4: merged and green on `main`, but not tagged, not
+> built to TestFlight, and not on any device.
+
 Catholic Bible app (DRB, CPDV, Clementine Vulgate) with liturgical calendar and
 daily Mass readings. Companion documents:
 `docs/review/Fidelis_Code_Review_V1_2026-06-11.md` (the repair manual — every
@@ -161,6 +167,47 @@ five upstream pins and the vatican.va CCC pages monthly (`scripts/check-sources.
 One line per release. The unabridged narrative is
 [docs/history/RELEASES.md](docs/history/RELEASES.md); the changelog is [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.24.4 — the fruitless branch** — CI is green again. `npm audit --omit=dev` is the
+  **first** step of the `build` job, so since 2026-07-24 lint, both harnesses, the
+  type-check, the build, and the doc-link gate had **never run** — twelve straight
+  `build fail 20s`. One advisory held it: **GHSA-qwww-vcr4-c8h2** (RSC-mode CSRF bypass,
+  high) over react-router **7.12.0–7.18.1** and **8.0.0–8.2.x**. npm could only walk
+  *backwards* (`--force` → 7.11.0) and the reason was structural, not a missing publish:
+  the dependency was **`react-router-dom`**, whose latest version is also its **final**
+  one, 7.18.2 — since v7 a deprecated shim of one `export * from "react-router"` plus two
+  `react-router/dom` re-exports — so every version npm could select dragged in a 7.x
+  `react-router`, while the advisory's own patched **8.3.0** sat published and unreachable
+  behind it. The shim came out: **21 import sites** moved to `react-router`, all **10**
+  symbols in use confirmed exported by importing the installed package (not its docs), and
+  every v8 breaking change read against this app — all of them land on data-router / RSC /
+  framework surface a `HashRouter` SPA with no loaders or actions does not have; floors met
+  (Node ≥22.22.0 vs CI's 22.23.2, React ≥19.2.7 vs `^19.2.7`); 8.3.0's path-encoding change
+  checked, not assumed (79 book ids, 772 saint/history ids, 366 day keys — all lowercase
+  slugs). **`useNavigate` still memoises on `location.pathname`**, so v1.24.1's widget-entry
+  comments stand. Behind it, a second gate that had **never once executed** (`--omit=dev`
+  exits first) was red too: postcss 8.5.15→**8.5.26**, js-yaml 4.3.0→**4.3.1**,
+  brace-expansion 1.1.16→**1.1.18** and 5.0.8→**5.0.9** — all lockfile-only, no `overrides`;
+  the lockfile's own root version had drifted to 1.24.1 under a `package.json` reading
+  1.24.3. Bundle net flat (555,257→553,779 B; main chunk 461.5→439.9 kB, v8 splitting a
+  20.0 kB `hooks` chunk). Harness **§40**, 9 checks all red-first, pins the temptation
+  rather than the fix: **both** audit steps must stay in `ci.yml` with no `|| true`,
+  `--audit-level`, or allowlist; the shim may not return to `src/`, `package.json`, or the
+  lockfile; a declared **and** locked 8.3.0 floor, the comparison itself tested against
+  7.18.2 and 8.2.0; and every symbol `src/` imports checked against the installed package,
+  the list read off the source. Recorded honestly: re-run against the **pre-fix** tree with
+  CI's own `npm@11.17.0`, the complete-graph failure reproduced exactly, the `--omit=dev`
+  one **did not** — the advisory feed reachable here serves two ranges (`>=7.12.0 <7.18.2`,
+  `>=8.0.0 <8.3.0`) making 7.18.2 already patched, where CI printed the collapsed
+  `7.12.0 - 8.2.0` spanning that gap; unsettleable from here, and precisely why the answer is
+  a migration rather than a wait, since 8.3.0 is outside under either reading. All 31 e2e
+  tests pass on v8. No engine/data/golden/sw change. Shells 1.24.4/12404.
+  → [detail](docs/history/RELEASES.md#the-fruitless-branch-v1244)
+- **v1.24.3 — called by name** — the store-listing release after v1.24.2's App Store debut:
+  the product name becomes **Fidelis: Catholic Bible** (home-screen label stays *Fidelis*),
+  keywords and description tightened, What's New filled in for the first time, and 10 iPhone
+  + 8 iPad screenshots given brand caption bands so Apple's OCR can index the product page;
+  `metadata/` + `scripts/caption-screenshots.py` mirror the caption pipeline in-repo. No
+  engine, corpus, or service-worker change. Shells 1.24.3/12403.
 - **v1.24.2 — the lamps relit** — the blank-widget repair. **Today at Mass** and **Quote of
   the Day** read "Open Fidelis to update" on every device and never recovered; **Verse of the
   Day** alone kept working. v1.24.0 had made `loadCalendar()` refuse to draw without reading the

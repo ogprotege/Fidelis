@@ -6,6 +6,102 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.24.4] — 2026-08-07 — the fruitless branch
+
+*"Every branch in me that beareth not fruit, he will take away." (John 15:2)*
+
+The release that turns CI green again. Every pull request and every push to `main`
+had read `build fail 20s` since 2026-07-24: the audit gate is the **first** step
+of the `build` job, so lint, the harnesses, the build, and the doc-link check
+never ran at all. **No user-visible change, no engine, corpus, golden, or
+service-worker change.** Shells 1.24.4 / 12404.
+
+### Fixed
+
+- **The production audit gate: `react-router-dom` retired for `react-router` 8.3.0.**
+  [GHSA-qwww-vcr4-c8h2](https://github.com/advisories/GHSA-qwww-vcr4-c8h2) (RSC-mode
+  CSRF bypass, high) covers react-router **7.12.0 – 7.18.1** and **8.0.0 – 8.2.x**.
+  npm could not route out of it, and the reason was structural rather than a
+  missing publish: the dependency was `react-router-dom`, whose latest version —
+  and **final** version — is 7.18.2, because since v7 that package is a deprecated
+  three-line shim (`export * from "react-router"` plus two `react-router/dom`
+  re-exports). Every version npm could select therefore drags in a 7.x
+  `react-router`, so the only direction the resolver could find was *backwards*,
+  which is why `npm audit fix --force` kept offering to downgrade to 7.11.0. The
+  fix is to delete the shim and depend on `react-router` **8.3.0** directly — the
+  advisory's own patched 8.x release. **`npm audit fix --force` was not taken.**
+- **The complete-graph audit gate**, which had never once run: `npm audit --omit=dev`
+  exits first, so the step behind it was invisible. It was red too — `postcss`
+  8.5.15 → **8.5.26**, `js-yaml` 4.3.0 → **4.3.1**, `brace-expansion` 1.1.16 →
+  **1.1.18** and 5.0.8 → **5.0.9** (plus `nanoid` 3.3.12 → 3.3.18 carried along by
+  postcss). All lockfile-only, no breaking change, no `overrides` needed.
+- **The lockfile's own version had drifted** to 1.24.1 while `package.json` read
+  1.24.3 (two releases bumped one and not the other); both now read 1.24.4.
+
+### Changed
+
+- **21 import sites** in `src/` moved from `react-router-dom` to `react-router`.
+  Ten symbols are in use — `HashRouter`, `Link`, `NavLink`, `Route`, `Routes`,
+  `useLocation`, `useNavigate`, `useNavigationType`, `useParams`,
+  `useSearchParams` — and all ten are exported by `react-router` 8.3.0, verified
+  by importing the installed package rather than by reading its documentation.
+- `AGENTS.md`'s stack section names `react-router` v8 and the retired shim.
+
+### Notes
+
+- **Why the v8 majors do not reach this app.** The v8 breaking changes are
+  `react-router-dom`'s removal (this release's subject), a Node ≥ 22.22.0 floor
+  (CI pins 22, currently 22.23.2) and React ≥ 19.2.7 (we declare `^19.2.7`), and
+  then a list confined to the data-router / RSC / framework surface Fidelis does
+  not use: `hasErrorBoundary` inference, `future.v8_*` flags becoming mandatory,
+  always-on middleware, `RouterContextProvider` in loader context, `data` →
+  `loaderData` on meta types, and ESM-only publishing. Fidelis is a static,
+  offline, client-only SPA on `HashRouter` with declarative `<Routes>`/`<Route>`:
+  no loaders, no actions, no server. 8.3.0 also stopped percent-encoding
+  `$ & + , ; = : @` in path segments — every route parameter this app generates
+  (`:translation`, `:book`, `:chapter`, `:day`, `:id`) is a lowercase slug, and
+  all 79 book ids, 772 saint/history ids, and 366 day keys were checked to contain
+  none of those characters.
+- **`useNavigate`'s identity still memoises on `location.pathname`** in v8
+  (`useNavigateUnstable` is unchanged), so the explanatory comments left by
+  v1.24.1's widget-entry fix in `src/App.tsx`, `src/lib/widgetLinks.ts`, and the
+  §36 harness commentary remain accurate and were left standing. That fix does not
+  depend on the memoisation either way — it mounts once and gates the launch URL.
+- **The bundle is net flat**: total `dist/assets` JavaScript 555,257 → 553,779
+  bytes. The main chunk falls 461.5 → 439.9 kB and v8 splits a 20.0 kB `hooks`
+  chunk out of it.
+- **The advisory never applied to this app.** It concerns React Server Components
+  mode with server actions; the vulnerable code path does not exist in a
+  client-only `HashRouter` SPA. That is why shipping continued while the gate was
+  red — and it is not a reason to leave a gate broken, which is why this release
+  closes it rather than allowlisting it.
+- **What was reproduced, and what was not.** Both gates were re-run against the
+  **pre-fix** tree using CI's own pinned client (`npm@11.17.0`), not just the
+  local one. The complete-graph failure reproduces exactly — the same three high
+  advisories — so that half of the red is certain and current. The `--omit=dev`
+  failure did **not** reproduce: the advisory feed reachable from this environment
+  serves GHSA-qwww-vcr4-c8h2 as **two** ranges, `>=7.12.0 <7.18.2` and
+  `>=8.0.0 <8.3.0`, under which 7.18.2 is already the patched 7.x release, while
+  CI at 14:59 UTC on 2026-08-07 printed the collapsed `7.12.0 - 8.2.0` that spans
+  the 7.18.2 gap. Whether that is upstream metadata being corrected after the run
+  or a difference between advisory feeds could not be settled from here — and it
+  is exactly why the fix is a migration rather than a wait. **8.3.0 sits outside
+  the advisory under either reading**, collapsed or split, so the gate closes
+  without depending on someone else's data staying corrected.
+
+### Added
+
+- **Harness §40 (9 checks, all proven red-first)** pins the decision from both
+  ends. The shim cannot creep back (no `src/` file may import it; neither
+  `package.json` nor any node in the lockfile may name it); the version cannot
+  walk back into the advisory (a declared **and** locked 8.3.0 floor, with the
+  floor comparison itself tested against 7.18.2 and 8.2.0 so it cannot pass a
+  downgrade); every symbol `src/` imports from `react-router` must really be
+  exported by the installed package, with the symbol list read off the source
+  rather than hardcoded; and — because the cheapest way to turn a red audit green
+  is to delete the step — **both** audit steps must remain in `ci.yml`, with
+  neither `|| true`, `--audit-level`, nor an allowlist swallowing the result.
+
 ## [1.24.3] — 2026-08-07 — called by name
 
 *"I have called thee by thy name: thou art mine." (Isaiah 43:1)*

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import Antiphon from "../components/Antiphon";
 import Icon from "../components/Icon";
 import VerseQuote from "../components/VerseQuote";

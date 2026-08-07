@@ -9,60 +9,84 @@ writing the outcome into [CHANGELOG.md](../CHANGELOG.md).
 
 ---
 
-## 1. `main`'s CI audit gate is red — react-router is pinned in a dead end
+## 1. v1.24.4 is merged but not shipped — the remaining release steps
 
-**Status:** open. Blocks nothing shipping, fails every PR's `build` job.
-**Opened:** 2026-07-31 (red on `main` since 2026-07-24).
+**Status:** open. Code is on `main` and green; nothing has reached a device.
+**Opened:** 2026-08-07. **Picking this up cold? Start here, then read item 2.**
 
-`.github/workflows/ci.yml` runs `npm audit --omit=dev` and `npm audit` as the
-**first** steps of the `build` job, with no allowlist. They exit non-zero on any
-advisory, so lint / test / build never run — every PR reads `build fail 20s`.
+v1.24.4 ("the fruitless branch") landed via **PR #91**. It restored CI — which
+had been red since 2026-07-24 on the `npm audit` gate — by retiring the dead
+`react-router-dom` shim for `react-router` 8.3.0 and clearing three dev-graph
+advisories. See [CHANGELOG 1.24.4](../CHANGELOG.md) and the
+[narrative](history/RELEASES.md#the-fruitless-branch-v1244) for *why*; this item
+is only what is left to **do**.
 
-One advisory survives: [GHSA-qwww-vcr4-c8h2](https://github.com/advisories/GHSA-qwww-vcr4-c8h2)
-(RSC-mode CSRF bypass), covering `react-router` **7.12.0 – 8.2.0**. We are on
-7.18.2, inside it.
+**What is already done** — do not redo any of it:
 
-**Why npm cannot fix it.** The dependency is `react-router-dom`, whose latest —
-and final — version is **7.18.2**. There is no 8.x of that package and there will
-not be: since v7 it is a deprecated shim whose entire body is
+- All eight checks green on the merged head: `build` (lint → both audits →
+  1,048 harness checks → type-check → build → check-docs), `e2e` (31 Playwright
+  tests), `ios-build`, `android-build`, and Android instrumentation on API 24,
+  26, 31, 36.
+- `package.json` **1.24.4**, lockfile root **1.24.4** (it had drifted to 1.24.1),
+  iOS `MARKETING_VERSION` ×4 **1.24.4**, Android `versionName` **1.24.4** /
+  `versionCode` **12404**, `docs/guides/APP_STORE.md` version block **1.24.4**.
+- [Releasing](guides/RELEASING.md) steps **1–6** are satisfied. Step 5's "commit
+  any native-project files that changed" needed only the two version strings —
+  the synced web bundle is **not** committed (`cap sync` regenerates it, which is
+  what the green `ios-build` / `android-build` jobs prove).
 
-```js
-import { HydratedRouter, RouterProvider } from "react-router/dom";
-export * from "react-router";
-```
+**What is left, in order:**
 
-So every `react-router-dom` npm can select drags in a vulnerable `react-router`
-7.x, and the only direction it can find is backwards — hence its standing offer to
-`--force`-downgrade to 7.11.0.
+1. **Tag the release** — [Releasing §7](guides/RELEASING.md#7-tag--push). Tags
+   currently run `v1.0.0 … v1.24.2`; **`v1.24.3` was never tagged**, so tag both
+   or consciously skip the gap. The previous session did not tag, because the
+   maintainer asked for a merge and tagging was not requested.
+   ```sh
+   git checkout main && git pull origin main
+   git tag v1.24.3 <the v1.24.3 release commit>   # optional: closes the gap
+   git tag v1.24.4 && git push origin v1.24.4
+   ```
+2. **Build and upload to TestFlight** — [Releasing §8](guides/RELEASING.md#8-ship-the-ios-build-to-testflight).
+   Needs a Mac (`bash scripts/ios-testflight.sh`) **or**, with no Mac, the
+   *TestFlight release* workflow (GitHub → Actions → Run workflow, on the release
+   commit), which needs the four Actions secrets `TEAM_ID`, `ASC_KEY_ID`,
+   `ASC_ISSUER_ID`, `ASC_KEY_P8`. To check a signing change without spending a
+   build number: `FIDELIS_VERIFY_ONLY=1`.
+3. **Rename the App Store Connect version `1.24.3` → `1.24.4`.** The store version
+   string must equal the uploaded build's `MARKETING_VERSION`. 1.24.3 was prepared
+   in ASC but **never released**, so its What's New copy is still unseen and was
+   carried forward re-labelled rather than rewritten — v1.24.4 has no user-visible
+   change to announce. Rationale is recorded under "Why this text still describes
+   1.24.3" in [App Store](guides/APP_STORE.md).
+4. **Run device acceptance** — [Releasing §9](guides/RELEASING.md#9-run-device-acceptance-before-the-store-submission)
+   and item 2 below. **CI being green is not this gate.**
 
-**Why it is nonetheless fixable.** `react-router` **8.3.0** is published and sits
-*outside* the advisory range. npm cannot route there while `react-router-dom` is
-in the graph.
+**Two things to verify in ASC before acting, not to assume.** As recorded on
+2026-08-05, the **1.24.2 (build 307)** submission was `WAITING_FOR_REVIEW` with
+release type **AFTER_APPROVAL**, meaning approval publishes it immediately; and
+China mainland was removed from availability (174 territories) after a Guideline
+2.1 rejection. Both may have moved since. Check the live state first — a version
+already in review interacts with preparing another one.
 
-**Does the advisory apply to us?** No. It concerns React Server Components mode
-with server actions. Fidelis is a static, offline, client-only SPA on
-`HashRouter` — no server, no RSC, no server actions, no data router. The
-vulnerable code path does not exist in this app. This is why shipping continued;
-it is not a reason to leave the gate broken.
+**What a smoke test should touch first.** v1.24.4 swapped the router the whole app
+runs on. The routing-sensitive paths are already covered by the green e2e suite
+(ScrollManager restoring on browser Back, cross-page anchors, the widget
+deep-link anchors, Back-with-a-sheet-open releasing the scroll lock), so on
+hardware just confirm tab navigation, Back, and a widget cold-launch behave — then
+spend the real effort on item 2, which is still the unverified one.
 
-**Closing it — migrate `react-router-dom` → `react-router@8.3.0`:**
-
-- 21 import sites in `src/`.
-- 10 symbols in use, all verified exported by `react-router`: `HashRouter`,
-  `Link`, `NavLink`, `Route`, `Routes`, `useLocation`, `useNavigate`,
-  `useNavigationType`, `useParams`, `useSearchParams`.
-- The mechanical part is a find-and-replace. The real work is reading the v7 → v8
-  breaking changes and proving them against this app.
-- **Do not** take `npm audit fix --force`; it downgrades to 7.11.0.
-
-**Safety net:** 1,029 harness checks and 31 Playwright tests, including the
-widget-entry and scroll-lock regressions added in v1.24.1.
-
-**Watch out for one thing.** `useNavigate()`'s identity is memoised on
-`location.pathname` in v7 (`useNavigateUnstable`). v1.24.1's widget fix does not
-depend on that staying true — it mounts once and gates the launch URL — but if v8
-changes it, the explanatory comments in `src/App.tsx` and
-`src/lib/widgetLinks.ts` must be corrected rather than left to rot.
+**One open question, deliberately left visible.** The react-router advisory
+(GHSA-qwww-vcr4-c8h2) could **not** be reproduced from the previous session's
+environment: its npm advisory feed served two ranges (`>=7.12.0 <7.18.2`,
+`>=8.0.0 <8.3.0`), making 7.18.2 already patched, where CI printed the collapsed
+`7.12.0 - 8.2.0` spanning that gap. The dev-graph half reproduced exactly. Do not
+conclude the migration was unnecessary: 8.3.0 sits outside the advisory under
+either reading, which is the point — a gate that goes green because someone else
+edited an advisory record can go red the same way. **Harness §40 now pins this**
+(9 checks): both audit steps must stay in `ci.yml` with no `|| true`,
+`--audit-level`, or allowlist; the shim may not return to `src/`, `package.json`,
+or the lockfile; and a declared **and** locked 8.3.0 floor must hold. If §40 turns
+red, read it as the security decision being undone, not as a flaky test.
 
 ---
 

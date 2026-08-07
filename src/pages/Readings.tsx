@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router";
 import ReadingText from "../components/ReadingText";
 import SectionNav from "../components/SectionNav";
 import Skeleton from "../components/Skeleton";

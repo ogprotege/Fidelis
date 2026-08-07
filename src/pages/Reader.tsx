@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { BOOKS, bookDisplayName, bookIndex, getBook } from "../lib/canon";
 import { BookData, CCCData, CommentaryBook, loadBook, loadCCC, loadCommentary } from "../lib/data";
 import { GOSPELS } from "../lib/commentary";

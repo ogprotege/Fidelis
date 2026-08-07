@@ -28,7 +28,8 @@ It ships as:
 ## Technology stack
 
 - **React 19 + TypeScript (strict) + Vite 8**, ESM (`"type": "module"`),
-  `react-router-dom` v7 with **HashRouter**.
+  `react-router` v8 with **HashRouter** (the `react-router-dom` shim was retired
+  in v1.24.4 — import router symbols from `react-router`, never from the shim).
 - **Node 22 required** for all tooling (CI pins it).
 - No state library — `src/SettingsContext.tsx` + localStorage. No CSS framework —
   one `src/styles.css` with design tokens.
