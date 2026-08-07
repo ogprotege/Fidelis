@@ -5,9 +5,9 @@
 > **Taking over mid-flight? Read [docs/FOLLOW_UPS.md](docs/FOLLOW_UPS.md) first.**
 > It is the one place that records what is *unfinished* — what was verified versus
 > assumed, and the exact steps closing each item takes. Item 1 is always the most
-> urgent. Right now it is v1.24.4: tagged and on TestFlight as **build 322**,
-> waiting on the 1.24.3 review verdict before its own store submission; no
-> device pass yet.
+> urgent. Right now it is the device pass: **1.24.4 (build 322)** is
+> WAITING_FOR_REVIEW and auto-publishes on approval, and the live 1.24.3 carries
+> the unverified widget repair — no release has ever passed the physical gate.
 
 Catholic Bible app (DRB, CPDV, Clementine Vulgate) with liturgical calendar and
 daily Mass readings. Companion documents:
@@ -205,7 +205,9 @@ One line per release. The unabridged narrative is
   tests pass on v8. No engine/data/golden/sw change. Shells 1.24.4/12404. Shipped as
   **TestFlight build 322**. A same-day post-review hardening grew §40 to 16 checks
   (parsed-workflow audit-gate guards, a lockfile-wide floor, README-badge and
-  metadata-mirror parity).
+  metadata-mirror parity). Submitted for review 2026-08-07 (build 322, fresh What's New,
+  the Guideline 2.1 notes paragraph dropped): WAITING_FOR_REVIEW, release type
+  AFTER_APPROVAL.
   → [detail](docs/history/RELEASES.md#the-fruitless-branch-v1244)
 - **v1.24.3 — called by name** — the store-listing release after v1.24.2's App Store debut:
   the product name becomes **Fidelis: Catholic Bible** (home-screen label stays *Fidelis*),
@@ -213,7 +215,7 @@ One line per release. The unabridged narrative is
   + 8 iPad screenshots given brand caption bands so Apple's OCR can index the product page;
   `metadata/` + `scripts/caption-screenshots.py` mirror the caption pipeline in-repo. No
   engine, corpus, or service-worker change. Shells 1.24.3/12403. Submitted 2026-08-07 as
-  **build 317** — WAITING_FOR_REVIEW, release type AFTER_APPROVAL.
+  **build 317** — and **approved + READY_FOR_SALE the same day**; the rename is live.
   → [detail](docs/history/RELEASES.md#called-by-name-v1243)
 - **v1.24.2 — the lamps relit** — the blank-widget repair. **Today at Mass** and **Quote of
   the Day** read "Open Fidelis to update" on every device and never recovered; **Verse of the
