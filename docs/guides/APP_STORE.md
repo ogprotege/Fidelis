@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.24.2
+1.24.3
 ```
 
 The store version string always equals the uploaded build's
@@ -20,10 +20,19 @@ new version in ASC (the "+" beside "iOS App") with exactly this string. (The
 first submission, 1.15.1, needed the auto-created "1.0" edited to match — an
 update starts from the right place.)
 
+**App name (en-US):** `Fidelis: Catholic Bible`  
+**Subtitle:** `The Catholic Bible & Missal`
+
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-The Today at Mass and Quote of the Day home-screen widgets show their content again. They had been stuck on "Open Fidelis to update" no matter how often the app was opened, because the widgets could not read the app's calendar setting. They can now, so they also follow the calendar you have chosen, and "Hey Siri, what's today's Gospel?" answers again. On the few days of the year when the answer genuinely depends on which calendar you follow, a widget that cannot tell will still ask you to open Fidelis rather than show you another jurisdiction's readings.
+Fidelis now appears on the App Store as Fidelis: Catholic Bible — same faithful Catholic Bible and missal, clearer name for search.
+
+Store page
+• Product screenshots now carry short captions so each screen is clear at a glance
+• Keywords and description refined (Douay, Vulgate, lectionary, rosary, and more)
+
+Fidelis is the Catholic Bible, kept faithfully — the full 73-book canon, the daily Mass readings, and the liturgical year. Free forever: no accounts, no ads, no tracking.
 ```
 
 (ASC shows What's New only for updates after the first released version. The
@@ -219,9 +228,9 @@ repository's metadata guard after any edit:
 
 - Promotional text: 163 / 170 ✓
 - Description: 2,505 / 4,000 ✓
-- Keywords: 91 / 100 ✓
+- Keywords: 94 / 100 ✓
 - Copyright: 21 / 200 ✓
 - Review notes: 2,916 / 4,000 ✓ (re-counted 2026-08-05 with the Guideline 2.1
   response paragraph; drops to 2,414 when that paragraph is removed after
   approval)
-- What's New (1.24.2): 560 / 4,000 ✓
+- What's New (1.24.3): 480 / 4,000 ✓

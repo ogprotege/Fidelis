@@ -6,6 +6,36 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.24.3] — 2026-08-07 — called by name
+
+*"I have called thee by thy name: thou art mine." (Isaiah 43:1)*
+
+A store-listing release after the App Store debut of v1.24.2: clearer product
+name, keyword and description hygiene, What's New filled in, and captioned
+screenshots so Apple's OCR can index the product page. **No liturgical engine,
+corpus, or service-worker change.** Shells 1.24.3 / 12403.
+
+### Changed
+
+- **App Store name:** `Fidelis-Bible` → **`Fidelis: Catholic Bible`** (home-screen
+  label remains **Fidelis**). Subtitle unchanged: *The Catholic Bible & Missal*.
+- **Keywords** (en-US): drop `catholic,bible` (already indexed via name/subtitle);
+  add `saint,prayer,holy` for cross-field combos — 94/100 characters.
+- **Description:** the Mass-readings bullet now names the **lectionary** (was the
+  only keyword not echoed in the copy).
+- **What's New:** filled for this update (was empty on the first public version).
+- **Screenshots:** 10 iPhone + 8 iPad frames with brand caption bands (purple-strong
+  canvas, EB Garamond, gold hairline) — OCR-indexed by App Store search.
+- **Repo mirror:** `metadata/` + `scripts/caption-screenshots.py` for the caption
+  pipeline; large assets stay under gitignored `appstore/`.
+
+### Notes
+
+- Live **1.24.2** keeps the old store name until this version is approved and
+  released. ASC version 1.24.3 is prepared with the new listing.
+- Exact-name search lag on launch day is expected (new app, zero ratings); re-check
+  after a few days with the store link, not only free-text search.
+
 ## [1.24.2] — 2026-07-31 — the lamps relit
 
 *"No man lighteth a candle, and putteth it in a hidden place, nor under a bushel;
