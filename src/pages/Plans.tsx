@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { getPlans, deletePlan } from "../lib/storage";
 import { planDay, planTotalDays, isComplete, todayPortion, formatPortion } from "../lib/plans";
 import { useSettings } from "../SettingsContext";

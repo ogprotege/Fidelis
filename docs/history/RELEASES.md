@@ -2096,6 +2096,107 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
+## The fruitless branch (v1.24.4)
+
+*"Every branch in me that beareth not fruit, he will take away." (John 15:2)*
+
+The symptom was two lines of a GitHub Actions log, repeated on every pull request
+and every push to `main` since 2026-07-24:
+
+```
+react-router  7.12.0 - 8.2.0
+Severity: high
+```
+
+`npm audit --omit=dev` is the **first** step of the `build` job. It exits
+non-zero, and so lint, both harnesses, the type-check, the build, and the
+doc-link gate never ran at all — twelve consecutive runs of `build fail 20s`. The
+project kept shipping through it (v1.24.1, v1.24.2, and the store work of
+v1.24.3 all went out red), because the advisory genuinely does not describe this
+app: [GHSA-qwww-vcr4-c8h2](https://github.com/advisories/GHSA-qwww-vcr4-c8h2) is
+a CSRF bypass in React Server Components mode with server actions, and Fidelis is
+a static, offline, client-only SPA on `HashRouter` — no server, no RSC, no server
+actions, no data router. The vulnerable code path does not exist here. That is a
+reason to keep shipping. It is not a reason to leave a gate broken, because a
+gate that is always red reports nothing about the next advisory.
+
+**Why npm could not fix it.** The offer npm kept making was to downgrade —
+`npm audit fix --force` proposing `react-router-dom@7.11.0`, "which is a breaking
+change" — and the reason it could only walk backwards was structural. The
+dependency was `react-router-dom`, whose latest version is also its **final**
+version, 7.18.2: since v7 the package is a deprecated shim whose entire body is
+one `export * from "react-router"` and two `react-router/dom` re-exports. Every
+version of it that npm can select therefore drags in a 7.x `react-router`, and
+the advisory covers 7.12.0 upward. There was no forward move inside the graph as
+it stood. Meanwhile `react-router` **8.3.0** — the advisory's own patched 8.x
+release — sat published and unreachable, because the shim stood between the app
+and it.
+
+So the shim came out. Twenty-one import sites in `src/` moved from
+`react-router-dom` to `react-router`; ten symbols are in use, and all ten were
+confirmed exported by 8.3.0 by importing the installed package, not by reading
+its documentation. The v8 breaking changes were read against this app one at a
+time, and every one that is not the shim's removal lands on surface Fidelis does
+not have: `hasErrorBoundary` inference, the `future.v8_*` flags becoming
+mandatory, always-on middleware, `RouterContextProvider` in loader context, and
+`data` → `loaderData` on meta types are all data-router / RSC / framework
+concerns, and this app renders declarative `<Routes>`/`<Route>` with no loaders
+and no actions. The floors are met (Node ≥ 22.22.0 against a CI pinned to 22,
+currently 22.23.2; React ≥ 19.2.7 against a declared `^19.2.7`), and 8.3.0's one
+behavioral change — no longer percent-encoding `$ & + , ; = : @` in path
+segments — was checked rather than assumed: all 79 book ids, all 772 saint and
+history ids, and all 366 day keys are lowercase slugs containing none of those
+characters.
+
+One inherited worry was retired rather than left to rot. v1.24.1's widget-entry
+fix turned on the fact that `useNavigate()`'s identity is memoised on
+`location.pathname`, and [FOLLOW_UPS](../FOLLOW_UPS.md) had flagged that v8 might
+change it and silently falsify the explanatory comments in `src/App.tsx` and
+`src/lib/widgetLinks.ts`. It does not: `useNavigateUnstable` in 8.3.0 still
+closes over `locationPathname` in its `useCallback` deps. The comments stand as
+written.
+
+**And behind the first gate, a second one that had never run.** Because
+`--omit=dev` exits first, `npm audit` over the complete graph had never once
+executed — and it was red too, on three advisories nobody had seen: `postcss`
+8.5.15, `js-yaml` 4.3.0, and `brace-expansion` at both 1.1.16 and 5.0.8. All
+three took a plain `npm audit fix` — lockfile-only, no breaking change, no
+`overrides` — to 8.5.26, 4.3.1, 1.1.18 and 5.0.9. Regenerating the lockfile also
+surfaced that its own root version had drifted to 1.24.1 while `package.json` read
+1.24.3; two releases had bumped one and not the other.
+
+The bundle came out net flat — 555,257 → 553,779 bytes of `dist/assets`
+JavaScript, with the main chunk falling 461.5 → 439.9 kB as v8 splits a 20.0 kB
+`hooks` chunk out of it.
+
+**One thing could not be reproduced, and saying so is the point.** Both gates were
+re-run against the pre-fix tree with CI's own pinned client, `npm@11.17.0`, rather
+than trusting the local one. The complete-graph failure came back exactly — the
+same three advisories — so that half of the red is certain. The `--omit=dev`
+failure did not: the advisory feed reachable from this environment serves
+GHSA-qwww-vcr4-c8h2 as **two** ranges, `>=7.12.0 <7.18.2` and `>=8.0.0 <8.3.0`,
+under which 7.18.2 is already the patched 7.x release — while the CI log from
+14:59 UTC that day printed the collapsed `7.12.0 - 8.2.0`, a single span that
+swallows the 7.18.2 gap between them. Upstream metadata being corrected after the
+run, or two feeds disagreeing, are both consistent with what can be seen from
+here, and neither could be settled from here. That ambiguity is not a reason to
+wait it out; it is the argument for migrating. A gate that goes green because
+somebody else's advisory record was edited can go red again the same way, whereas
+**8.3.0 is outside the advisory under either reading** — and the release note
+records the failed reproduction rather than quietly claiming a clean one.
+
+What the harness now guards is not the fix but the temptation. The cheapest way
+to make a red audit green is to delete the step, and that would have hidden this
+advisory rather than closing it — so **§40** (nine checks, each proven red-first
+by mutation) pins both audit steps in `ci.yml` and forbids `|| true`,
+`--audit-level`, and allowlists; forbids the shim in `src/`, in `package.json`,
+and anywhere in the lockfile tree; requires a declared **and** locked 8.3.0
+floor, with the floor comparison itself tested against 7.18.2 and 8.2.0 so it
+cannot pass the downgrade npm keeps offering; and checks every symbol `src/`
+imports from `react-router` against the installed package, reading the symbol
+list off the source instead of hardcoding it. No engine, corpus, golden, or
+service-worker change. Shells 1.24.4 (`versionCode` 12404).
+
 ## The lamps relit (v1.24.2)
 
 *"No man lighteth a candle, and putteth it in a hidden place, nor under a bushel;

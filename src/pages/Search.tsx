@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { BOOKS, bookDisplayName, getBook } from "../lib/canon";
 import { loadBook } from "../lib/data";
 import { parseReference } from "../lib/refparse";

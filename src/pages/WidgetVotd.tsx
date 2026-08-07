@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import Icon from "../components/Icon";
 import VerseQuote from "../components/VerseQuote";
 import { bookDisplayName, getBook } from "../lib/canon";

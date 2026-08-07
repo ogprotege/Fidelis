@@ -5331,5 +5331,112 @@ exit 99
       : JSON.stringify(releaseDispatchRuns39.sameFileKeySuccess));
 }
 
+// ── 40. v1.24.4 — the router migration, and the audit gate that forced it.
+// GHSA-qwww-vcr4-c8h2 (RSC-mode CSRF bypass) covers react-router 7.12.0–7.18.1
+// and 8.0.0–8.2.x. npm could not route past it while `react-router-dom` sat in
+// the graph: since v7 that package is a deprecated three-line shim, its last and
+// FINAL version is 7.18.2, and every version npm could select drags in a 7.x
+// react-router — so `npm audit fix` had only one direction to offer, backwards,
+// to 7.11.0. The fix was to delete the shim and depend on react-router 8.3.0,
+// which sits outside the advisory under either reading of its range. This
+// section pins that decision from both ends: the shim cannot creep back, and the
+// audit gate that caught it cannot be quietly deleted to turn CI green.
+console.log("");
+{
+  const RETIRED_ROUTER_SHIM = "react-router-dom";
+  // The advisory's 8.x branch is patched at 8.3.0; anything below is inside it.
+  const ROUTER_ADVISORY_FLOOR = [8, 3, 0] as const;
+  const pkg40 = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
+    dependencies: Record<string, string>;
+    devDependencies: Record<string, string>;
+  };
+  const lock40 = JSON.parse(readFileSync(join(ROOT, "package-lock.json"), "utf8")) as {
+    packages: Record<string, { version?: string }>;
+  };
+  const ci40 = readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf8");
+
+  // (a) The shim is gone from the source. Every surface that used to import it
+  // now imports react-router directly; a new file must not reintroduce it.
+  const shimImporters40 = readdirSync(join(ROOT, "src"), { recursive: true })
+    .map(String)
+    .filter((f) => f.endsWith(".ts") || f.endsWith(".tsx"))
+    .filter((f) =>
+      readFileSync(join(ROOT, "src", f), "utf8").includes(`from "${RETIRED_ROUTER_SHIM}"`));
+  check("§40 no source file imports the retired react-router-dom shim",
+    shimImporters40.length === 0,
+    shimImporters40.map((f) => `src/${f}`).join(", "));
+
+  // (b) The manifest and the lockfile agree that the shim is gone. npm resolves
+  // the shim transitively too, so the lockfile is the honest place to ask.
+  const declaredRouter40 = pkg40.dependencies["react-router"];
+  const shimInLock40 = Object.keys(lock40.packages)
+    .filter((p) => p.endsWith(`node_modules/${RETIRED_ROUTER_SHIM}`));
+  check("§40 package.json depends on react-router, not the shim",
+    typeof declaredRouter40 === "string" &&
+      !(RETIRED_ROUTER_SHIM in pkg40.dependencies) &&
+      !(RETIRED_ROUTER_SHIM in pkg40.devDependencies));
+  check("§40 the lockfile resolves no react-router-dom anywhere in the tree",
+    shimInLock40.length === 0, shimInLock40.join(", "));
+
+  // (c) The version is outside the advisory. A downgrade back into 7.x/8.0–8.2
+  // — which is exactly what `npm audit fix --force` still offers — turns this red
+  // BEFORE the audit gate has to catch it in CI.
+  const outsideAdvisory40 = (raw: string | undefined): boolean => {
+    const m = /^\^?~?(\d+)\.(\d+)\.(\d+)/.exec(raw ?? "");
+    if (!m) return false;
+    const v = [Number(m[1]), Number(m[2]), Number(m[3])];
+    for (let i = 0; i < 3; i++) {
+      if (v[i] !== ROUTER_ADVISORY_FLOOR[i]) return v[i] > ROUTER_ADVISORY_FLOOR[i];
+    }
+    return true;
+  };
+  check("§40 the declared react-router clears GHSA-qwww-vcr4-c8h2's 8.3.0 floor",
+    outsideAdvisory40(declaredRouter40), `declared ${declaredRouter40}`);
+  const lockedRouter40 = lock40.packages["node_modules/react-router"]?.version;
+  check("§40 the locked react-router clears the same floor",
+    outsideAdvisory40(lockedRouter40), `locked ${lockedRouter40}`);
+  // The guard above is a floor, not a range check — it would pass a downgrade to
+  // 7.x if the major were read alone, so prove it rejects one.
+  check("§40 the floor rejects a walk back into the advisory range",
+    !outsideAdvisory40("7.18.2") && !outsideAdvisory40("8.2.0") &&
+      outsideAdvisory40("8.3.0") && outsideAdvisory40("^9.0.0"));
+
+  // (d) Every symbol src/ imports from react-router is really exported by the
+  // installed package. This is the check a find-and-replace migration needs: it
+  // reads the symbol list off the source instead of hardcoding it, so a future
+  // import of something react-router does not export fails here, not in a lazy
+  // route at runtime. `Link`/`NavLink` are forwardRef objects, not functions —
+  // the contract is "defined", not "callable".
+  const routerModule40 = (await import("react-router")) as Record<string, unknown>;
+  const importedSymbols40 = new Set<string>();
+  for (const f of readdirSync(join(ROOT, "src"), { recursive: true })
+    .map(String)
+    .filter((f) => f.endsWith(".ts") || f.endsWith(".tsx"))) {
+    const src = readFileSync(join(ROOT, "src", f), "utf8");
+    for (const m of src.matchAll(/import\s*\{([^}]*)\}\s*from\s*"react-router"/g)) {
+      for (const s of m[1].split(",")) {
+        const name = s.trim().split(/\s+as\s+/)[0].trim();
+        if (name) importedSymbols40.add(name);
+      }
+    }
+  }
+  const unexported40 = [...importedSymbols40].filter((s) => routerModule40[s] === undefined);
+  check("§40 every symbol src/ imports from react-router is exported by it",
+    importedSymbols40.size >= 10 && unexported40.length === 0,
+    unexported40.length ? `missing: ${unexported40.join(", ")}` : `${importedSymbols40.size} symbols`);
+
+  // (e) The gate that caught this stays standing. The cheapest way to turn a red
+  // audit green is to delete the step or swallow its exit code; neither is a fix,
+  // and both would have hidden this advisory instead of closing it.
+  const auditSteps40 = [...ci40.matchAll(/run:\s*npm audit(?<args>[^\n]*)/g)]
+    .map((m) => m.groups?.args?.trim() ?? "");
+  check("§40 CI still audits the production dependency graph",
+    auditSteps40.includes("--omit=dev"));
+  check("§40 CI still audits the complete dependency graph",
+    auditSteps40.includes(""));
+  check("§40 no audit step swallows its exit code or allowlists an advisory",
+    !/npm audit[^\n]*(\|\|\s*true|--audit-level|;\s*exit 0)/.test(ci40));
+}
+
 console.log(`\n${failures ? `${failures} CHECK(S) FAILED` : "all checks passed"}`);
 process.exitCode = failures ? 1 : 0;

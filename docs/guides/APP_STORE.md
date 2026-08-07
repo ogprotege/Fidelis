@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.24.3
+1.24.4
 ```
 
 The store version string always equals the uploaded build's
@@ -38,6 +38,16 @@ Fidelis is the Catholic Bible, kept faithfully — the full 73-book canon, the d
 (ASC shows What's New only for updates after the first released version. The
 same text can seed the TestFlight "What to Test" notes. Use the full physical
 matrix in [Device acceptance](DEVICE_ACCEPTANCE.md), not this summary alone.)
+
+**Why this text still describes 1.24.3.** The live App Store version is
+**1.24.2**; the 1.24.3 listing was prepared in ASC but never released, so none of
+what it announces has reached a reader yet. v1.24.4 is a dependency-security
+release with no user-visible change (the router the app runs on moved off a
+package with an open advisory — see CHANGELOG 1.24.4), and inventing store copy
+for it would announce nothing. The copy therefore stays as written and is
+re-labelled: it still says truthfully what changed since the version readers
+have. **The ASC version prepared as 1.24.3 must be renamed 1.24.4** to match the
+uploaded build's `MARKETING_VERSION`.
 
 ## Promotional Text (≤ 170 characters)
 
@@ -233,4 +243,5 @@ repository's metadata guard after any edit:
 - Review notes: 2,916 / 4,000 ✓ (re-counted 2026-08-05 with the Guideline 2.1
   response paragraph; drops to 2,414 when that paragraph is removed after
   approval)
-- What's New (1.24.3): 480 / 4,000 ✓
+- What's New (1.24.4): 480 / 4,000 ✓ (text unchanged from the 1.24.3 draft — see
+  the note under What's New; the character count is therefore still current)

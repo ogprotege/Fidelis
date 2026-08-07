@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import SectionNav from "../components/SectionNav";
 import { BOOKS, GROUPS, OT_GROUPS, NT_GROUPS, bookDisplayName } from "../lib/canon";
 import { useSettings } from "../SettingsContext";

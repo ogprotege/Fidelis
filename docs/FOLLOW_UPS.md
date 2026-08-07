@@ -9,64 +9,7 @@ writing the outcome into [CHANGELOG.md](../CHANGELOG.md).
 
 ---
 
-## 1. `main`'s CI audit gate is red — react-router is pinned in a dead end
-
-**Status:** open. Blocks nothing shipping, fails every PR's `build` job.
-**Opened:** 2026-07-31 (red on `main` since 2026-07-24).
-
-`.github/workflows/ci.yml` runs `npm audit --omit=dev` and `npm audit` as the
-**first** steps of the `build` job, with no allowlist. They exit non-zero on any
-advisory, so lint / test / build never run — every PR reads `build fail 20s`.
-
-One advisory survives: [GHSA-qwww-vcr4-c8h2](https://github.com/advisories/GHSA-qwww-vcr4-c8h2)
-(RSC-mode CSRF bypass), covering `react-router` **7.12.0 – 8.2.0**. We are on
-7.18.2, inside it.
-
-**Why npm cannot fix it.** The dependency is `react-router-dom`, whose latest —
-and final — version is **7.18.2**. There is no 8.x of that package and there will
-not be: since v7 it is a deprecated shim whose entire body is
-
-```js
-import { HydratedRouter, RouterProvider } from "react-router/dom";
-export * from "react-router";
-```
-
-So every `react-router-dom` npm can select drags in a vulnerable `react-router`
-7.x, and the only direction it can find is backwards — hence its standing offer to
-`--force`-downgrade to 7.11.0.
-
-**Why it is nonetheless fixable.** `react-router` **8.3.0** is published and sits
-*outside* the advisory range. npm cannot route there while `react-router-dom` is
-in the graph.
-
-**Does the advisory apply to us?** No. It concerns React Server Components mode
-with server actions. Fidelis is a static, offline, client-only SPA on
-`HashRouter` — no server, no RSC, no server actions, no data router. The
-vulnerable code path does not exist in this app. This is why shipping continued;
-it is not a reason to leave the gate broken.
-
-**Closing it — migrate `react-router-dom` → `react-router@8.3.0`:**
-
-- 21 import sites in `src/`.
-- 10 symbols in use, all verified exported by `react-router`: `HashRouter`,
-  `Link`, `NavLink`, `Route`, `Routes`, `useLocation`, `useNavigate`,
-  `useNavigationType`, `useParams`, `useSearchParams`.
-- The mechanical part is a find-and-replace. The real work is reading the v7 → v8
-  breaking changes and proving them against this app.
-- **Do not** take `npm audit fix --force`; it downgrades to 7.11.0.
-
-**Safety net:** 1,029 harness checks and 31 Playwright tests, including the
-widget-entry and scroll-lock regressions added in v1.24.1.
-
-**Watch out for one thing.** `useNavigate()`'s identity is memoised on
-`location.pathname` in v7 (`useNavigateUnstable`). v1.24.1's widget fix does not
-depend on that staying true — it mounts once and gates the launch URL — but if v8
-changes it, the explanatory comments in `src/App.tsx` and
-`src/lib/widgetLinks.ts` must be corrected rather than left to rot.
-
----
-
-## 2. v1.24.2 has not been confirmed on physical hardware
+## 1. v1.24.2 has not been confirmed on physical hardware
 
 **Status:** awaiting device testing — and the review clock is now running.
 **Opened:** 2026-07-31. **Updated:** 2026-08-05.
@@ -110,7 +53,7 @@ hardware. See [Device acceptance](guides/DEVICE_ACCEPTANCE.md).
 
 ---
 
-## 3. Two false readings taken from unvalidated shell output
+## 2. Two false readings taken from unvalidated shell output
 
 **Status:** corrected in-repo; recorded as a method note.
 **Opened:** 2026-07-31.

@@ -425,7 +425,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.24.3;
+				MARKETING_VERSION = 1.24.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.fidelis.bible.FidelisWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -584,7 +584,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.24.3;
+				MARKETING_VERSION = 1.24.4;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = app.fidelis.bible;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -610,7 +610,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.24.3;
+				MARKETING_VERSION = 1.24.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.fidelis.bible;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
@@ -635,7 +635,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.24.3;
+				MARKETING_VERSION = 1.24.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.fidelis.bible.FidelisWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

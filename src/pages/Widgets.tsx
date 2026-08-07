@@ -1,7 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import Icon from "../components/Icon";
 import {
   WidgetKind,

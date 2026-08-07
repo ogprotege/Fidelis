@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Capacitor } from "@capacitor/core";
 import Icon from "../components/Icon";
 import SectionNav from "../components/SectionNav";

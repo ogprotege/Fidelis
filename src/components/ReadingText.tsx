@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import Skeleton from "./Skeleton";
 import { getBook } from "../lib/canon";
 import { BookData, loadBook } from "../lib/data";
