@@ -56,21 +56,42 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 <div align="center">
 
-### The Today page — the whole of it, day and night
+### On the App Store — *Fidelis: Catholic Bible*
+
+<sub>
+The same captioned frames shipping with v1.24.3 (brand band + gold hairline). Full set under
+<a href="docs/screenshots/app-store/">docs/screenshots/app-store/</a>.
+</sub>
+
+<br />
+
+<img src="docs/screenshots/app-store/01-today.jpg" alt="Today — Mass readings, the saint, a verse" width="28%" />
+&nbsp;
+<img src="docs/screenshots/app-store/04-mass.jpg" alt="Daily Mass readings for any day" width="28%" />
+&nbsp;
+<img src="docs/screenshots/app-store/09-reader.jpg" alt="Reader at night" width="28%" />
+
+<br /><br />
+
+<img src="docs/screenshots/app-store/03-search.jpg" alt="Search the Scriptures" width="28%" />
+&nbsp;
+<img src="docs/screenshots/app-store/06-saint.jpg" alt="Saint of the Day" width="28%" />
+&nbsp;
+<img src="docs/screenshots/app-store/10-canon.jpg" alt="Full 73-book Catholic canon" width="28%" />
+
+<br /><br />
+
+### The Today page — whole, day and night
 
 <img src="docs/screenshots/home-day.png" alt="The complete Today page in the Day theme — the day's Mass, the Saint of the Day and Church history, the Verse and Quote of the Day, the Holy Rosary, and Continue Reading" width="42%" />
 &nbsp;&nbsp;
 <img src="docs/screenshots/home-night.png" alt="The same complete Today page in the Night theme" width="42%" />
 
 <sub>
-One morning — <b>Tuesday, 21 July 2026</b> — captured whole on iOS Simulator (iPhone 17 Pro) from the
-v1.23.1 build. Six cards, top to bottom: <b>Today at Mass</b> · <b>Today in the Church</b> (the Saint
-of the Day, then the day in Church history) · <b>Verse of the Day</b> · <b>Quote of the Day</b> ·
-<b>the Holy Rosary</b> · <b>Continue Reading</b>.
-<br /><br />
-The accent is <b>green because the day is green</b> — Ordinary Time. The interface wears the
-liturgical color of the day; only the purple moves, and gold stays gold. Every other screen, in both
-themes, is in <b><a href="docs/screenshots/">docs/screenshots</a></b>.
+Full-page day/night pair (simulator). Six cards: <b>Today at Mass</b> · <b>Today in the Church</b> ·
+<b>Verse of the Day</b> · <b>Quote of the Day</b> · <b>the Holy Rosary</b> · <b>Continue Reading</b>.
+The accent follows the liturgical color of the day. More frames in
+<b><a href="docs/screenshots/">docs/screenshots</a></b>.
 </sub>
 
 </div>

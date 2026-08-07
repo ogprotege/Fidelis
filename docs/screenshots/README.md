@@ -2,17 +2,36 @@
 
 [← Docs index](../INDEX.md)
 
-Captured from the **v1.23.1 build running on an iOS Simulator** (iPhone 17 Pro,
-1206×2622 native) — the real app in the real shell, not a browser mock, so the
-iOS status bar, safe-area insets, and native text rendering are what you see.
+## App Store set (v1.24.3) — captioned
+
+`app-store/` holds the brand-captioned iPhone frames that ship on the App Store
+listing for **Fidelis: Catholic Bible** (purple-strong band, EB Garamond, gold
+hairline). Six of them front the root [README](../../README.md). Sources live
+locally under gitignored `appstore/screenshots-captioned/`; regenerate with
+`scripts/caption-screenshots.py`.
+
+| File | Screen |
+|---|---|
+| [`app-store/01-today.jpg`](app-store/01-today.jpg) | Today |
+| [`app-store/03-search.jpg`](app-store/03-search.jpg) | Search |
+| [`app-store/04-mass.jpg`](app-store/04-mass.jpg) | Mass readings |
+| [`app-store/06-saint.jpg`](app-store/06-saint.jpg) | Saint of the Day |
+| [`app-store/09-reader.jpg`](app-store/09-reader.jpg) | Reader (night) |
+| [`app-store/10-canon.jpg`](app-store/10-canon.jpg) | 73-book canon |
+
+## Simulator set — full destinations
+
+Captured from an **iOS Simulator** build — the real app in the real shell, not a
+browser mock, so the iOS status bar, safe-area insets, and native text rendering
+are what you see.
 
 ## The Today page, end to end
 
 `home-day.png` and `home-night.png` are the **whole** Today page in one image —
 stitched from overlapping viewport captures, so all six cards (Today at Mass,
 Today in the Church, Verse of the Day, Quote of the Day, the Holy Rosary,
-Continue Reading) and the closing motto appear without scrolling. These are the
-two frames the root [README](../../README.md) shows.
+Continue Reading) and the closing motto appear without scrolling. The README
+still shows these under the App Store strip.
 
 ## Every destination, in both themes
 
