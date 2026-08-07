@@ -2,7 +2,7 @@
 
 # ✠ &nbsp;F I D E L I S
 
-### *The Catholic Bible, kept faithfully.*
+### *Fidelis: Catholic Bible — kept faithfully.*
 
 A Catholic Bible app built on one conviction — **the text is not ours to edit.**
 The full 73-book canon, three unaltered translations, the daily Mass, the liturgical
@@ -11,9 +11,16 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 <br />
 
+**[Download on the App Store](https://apps.apple.com/us/app/fidelis-bible/id6784831633)**  
+<sub>App Store listing · **Fidelis: Catholic Bible**</sub>
+
+<br />
+
 [![CI](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml/badge.svg)](https://github.com/ogprotege/Fidelis/actions/workflows/ci.yml)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.24.2%20·%20the%20lamps%20relit-5B3A8E)
+[![App Store](https://img.shields.io/badge/App%20Store-Fidelis%3A%20Catholic%20Bible-0D96F6?logo=apple&logoColor=white)](https://apps.apple.com/us/app/fidelis-bible/id6784831633)
+&nbsp;
+![version](https://img.shields.io/badge/version-1.24.3%20·%20called%20by%20name-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;
@@ -312,6 +319,9 @@ piety, never gamification.
 
 ## Platforms
 
+- **App Store (iOS)** — **[Fidelis: Catholic Bible](https://apps.apple.com/us/app/fidelis-bible/id6784831633)**  
+  (`app.fidelis.bible`). Free. Direct link for search and sharing:
+  `https://apps.apple.com/us/app/fidelis-bible/id6784831633`
 - **PWA** — installable; the app shell is precached on install (and stale assets purged on
   deploys), so the app opens offline, with offline reading of any book you have opened.
 - **iOS** — via Capacitor, with native **WidgetKit home-screen widgets**: **Verse of the Day**,
