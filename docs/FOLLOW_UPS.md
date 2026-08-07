@@ -9,102 +9,21 @@ writing the outcome into [CHANGELOG.md](../CHANGELOG.md).
 
 ---
 
-## 1. v1.24.4 awaits the 1.24.3 verdict — the remaining release steps
+## 1. No release has ever passed the physical-device gate — run it now, in the 1.24.4 review window
 
-**Status:** open — blocked on Apple's 1.24.3 verdict. Tagged, released, and on
-TestFlight (build 322); no device pass yet.
-**Opened:** 2026-08-07. **Picking this up cold? Start here, then read item 2.**
-
-v1.24.4 ("the fruitless branch") landed via **PR #91**. It restored CI — which
-had been red since 2026-07-24 on the `npm audit` gate — by retiring the dead
-`react-router-dom` shim for `react-router` 8.3.0 and clearing three dev-graph
-advisories. See [CHANGELOG 1.24.4](../CHANGELOG.md) and the
-[narrative](history/RELEASES.md#the-fruitless-branch-v1244) for *why*; this item
-is only what is left to **do**.
-
-**What is already done** — do not redo any of it:
-
-- All eight checks green on the merged head: `build` (both audits → lint →
-  1,048 harness checks → type-check → build → check-docs), `e2e` (31 Playwright
-  tests), `ios-build`, `android-build`, and Android instrumentation on API 24,
-  26, 31, 36.
-- `package.json` **1.24.4**, lockfile root **1.24.4** (it had drifted to 1.24.1),
-  iOS `MARKETING_VERSION` ×4 **1.24.4**, Android `versionName` **1.24.4** /
-  `versionCode` **12404**, `docs/guides/APP_STORE.md` version block **1.24.4**.
-- [Releasing](guides/RELEASING.md) steps **1–6** are satisfied. Step 5's "commit
-  any native-project files that changed" needed only the two version strings —
-  the synced web bundle is **not** committed (`cap sync` regenerates it, which is
-  what the green `ios-build` / `android-build` jobs prove).
-- Tagged and released: `v1.24.3` → `4ec6d1e`, `v1.24.4` → `d163a4c` (both
-  pushed); GitHub releases published for both, v1.24.4 marked Latest.
-- Re-verified on the release Mac 2026-08-07: 1,048 harness checks, the build,
-  and all 31 Playwright e2e in real Chrome. **TestFlight build 322** uploaded
-  from `d163a4c` via `bash scripts/ios-testflight.sh`.
-
-**What is left, in order:**
-
-1. **Wait for the 1.24.3 verdict — and touch nothing in ASC while it waits.**
-   Verified live 2026-08-07 (asc CLI): **1.24.2 is READY_FOR_SALE** — approved,
-   selling, the Guideline 2.1 story closed (China mainland stays off; 174
-   territories) — and **1.24.3 (build 317)**, the *Fidelis: Catholic Bible*
-   listing rename with captioned screenshots, is **WAITING_FOR_REVIEW**
-   (submission `48c9563b…`, submitted 2026-08-07 14:55 UTC, release type
-   AFTER_APPROVAL — approval publishes it by itself). An earlier revision of
-   this item, written from the 08-05 facts, said to *rename ASC 1.24.3 →
-   1.24.4*; that **must not be done** — editing or renaming a version waiting
-   for review pulls it from the queue.
-2. **After the verdict, stage 1.24.4 in ASC.** Create the new version (the "+"
-   beside "iOS App" — ASC cannot hold a second in-flight version while 1.24.3
-   is in review), paste [App Store](guides/APP_STORE.md) — its What's New is
-   fresh copy for 1.24.4, since the rename news ships with 1.24.3 — attach
-   **build 322**, drop the Guideline 2.1 paragraph from the review notes (count
-   returns to 2,414), and submit.
-3. **Run device acceptance** — [Releasing §9](guides/RELEASING.md#9-run-device-acceptance-before-the-store-submission)
-   and item 2 below, from TestFlight build 322 (it carries the v1.24.2 widget
-   repair *and* the v1.24.4 router swap). **CI being green is not this gate.**
-
-**What a smoke test should touch first.** v1.24.4 swapped the router the whole app
-runs on. The routing-sensitive paths are already covered by the green e2e suite
-(ScrollManager restoring on browser Back, cross-page anchors, the widget
-deep-link anchors, Back-with-a-sheet-open releasing the scroll lock), so on
-hardware just confirm tab navigation, Back, and a widget cold-launch behave. One
-seam no CI gate covers: `src/lib/widgetLinks.ts` reads React Router's
-undocumented `history.state` shape (`idx`/`usr`) on native-only paths — 8.3.0
-still writes it (verified against the installed package), but no test pins it,
-so exercise iOS edge-swipe Back and a warm widget re-entry specifically. Then
-spend the real effort on item 2, which is still the unverified one.
-
-**One open question, deliberately left visible.** The react-router advisory
-(GHSA-qwww-vcr4-c8h2) could **not** be reproduced from the previous session's
-environment: its npm advisory feed served two ranges (`>=7.12.0 <7.18.2`,
-`>=8.0.0 <8.3.0`), making 7.18.2 already patched, where CI printed the collapsed
-`7.12.0 - 8.2.0` spanning that gap. The dev-graph half reproduced exactly. Do not
-conclude the migration was unnecessary: 8.3.0 sits outside the advisory under
-either reading, which is the point — a gate that goes green because someone else
-edited an advisory record can go red the same way. **Harness §40 now pins this**
-(16 checks after the 2026-08-07 post-review hardening): both audits must remain
-dedicated `ci.yml` steps — run text exactly `npm audit` / `npm audit --omit=dev`,
-no `continue-on-error`, `if:` gate, env audit-level, or committed `.npmrc`,
-asserted on the parsed workflow rather than a regex; the shim may not return to
-`src/`, `package.json`, or anywhere in the lockfile tree (every nested copy held
-to the same 8.3.0 floor, prereleases rejected); every runtime symbol `src/`
-imports is checked against the installed package; and the README badge and
-`metadata/version/` mirror must match `package.json`. If §40 turns red, read it
-as the security decision being undone, not as a flaky test.
-
----
-
-## 2. v1.24.2 has not been confirmed on physical hardware
-
-**Status:** awaiting device testing — now against the **live** App Store app.
+**Status:** awaiting device testing — the review clock is running again.
 **Opened:** 2026-07-31. **Updated:** 2026-08-07.
 
-v1.24.2 was approved and is **READY_FOR_SALE** (verified live 2026-08-07): the
-widget repair reached production without this pass ever running, so it is now
-unverified in the wild, not merely on TestFlight. Nothing needs pulling — the
-task is unchanged, only more real. Run it from **TestFlight build 322** (same
-widget code plus v1.24.4's router swap) or from the production App Store app;
-build 317, in review with the 1.24.3 listing, carries identical app code.
+The store now sells **1.24.3** (approved 2026-08-07; its app code is identical
+to 1.24.2, so the v1.24.2 widget repair sits in production unverified), and
+**1.24.4 (build 322)** — the router swap — is **WAITING_FOR_REVIEW** with
+release type AFTER_APPROVAL: approval publishes it by itself. Every release so
+far has shipped without this pass. Run it from **TestFlight build 322** now,
+during the review window, so the router swap is hardware-verified before — or
+as soon as — it goes live. **CI being green is not this gate.** The v1.24.4
+release-runbook item that used to sit above this one is closed: tags, GitHub
+releases, TestFlight build 322, and the ASC staging + submission are all done
+(see CHANGELOG 1.24.4 for the record).
 
 **New in v1.24.2 — test this first.** The Mass and Quote home-screen widgets were
 blank on every device (the App Group entitlement had never shipped; see
@@ -133,9 +52,19 @@ Android carries the same defect and the same fix (`Bridge.intentUri` is captured
 once in the Bridge constructor and never refreshed) and is likewise unverified on
 hardware. See [Device acceptance](guides/DEVICE_ACCEPTANCE.md).
 
+**The v1.24.4 router swap — what its smoke test should touch.** The
+routing-sensitive paths are covered by the green e2e suite (ScrollManager
+restoring on browser Back, cross-page anchors, the widget deep-link anchors,
+Back-with-a-sheet-open releasing the scroll lock), so on hardware confirm tab
+navigation, Back, and a widget cold-launch behave. One seam no CI gate covers:
+`src/lib/widgetLinks.ts` reads React Router's undocumented `history.state`
+shape (`idx`/`usr`) on native-only paths — 8.3.0 still writes it (verified
+against the installed package), but no test pins it, so exercise iOS edge-swipe
+Back and a warm widget re-entry specifically.
+
 ---
 
-## 3. Two false readings taken from unvalidated shell output
+## 2. Two false readings taken from unvalidated shell output
 
 **Status:** corrected in-repo; recorded as a method note.
 **Opened:** 2026-07-31.

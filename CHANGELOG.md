@@ -88,6 +88,11 @@ service-worker change.** Shells 1.24.4 / 12404.
   is exactly why the fix is a migration rather than a wait. **8.3.0 sits outside
   the advisory under either reading**, collapsed or split, so the gate closes
   without depending on someone else's data staying corrected.
+- **Store.** v1.24.3 (the listing rename) was approved and released 2026-08-07;
+  1.24.4 was staged in ASC the same evening — metadata copied forward, fresh
+  What's New, the Guideline 2.1 notes paragraph dropped (2,916 → 2,414 code
+  points), build 322 attached — and **submitted: WAITING_FOR_REVIEW**, release
+  type AFTER_APPROVAL.
 
 ### Added
 

@@ -33,17 +33,14 @@ Maintenance: the navigation library Fidelis is built on moved up to its current 
 same text can seed the TestFlight "What to Test" notes. Use the full physical
 matrix in [Device acceptance](DEVICE_ACCEPTANCE.md), not this summary alone.)
 
-**Store state (verified live 2026-08-07, asc CLI).** The App Store sells
-**1.24.2** (READY_FOR_SALE). **1.24.3 — build 317**, the *Fidelis: Catholic
-Bible* listing rename with captioned screenshots and its own What's New — is
-submitted and **WAITING_FOR_REVIEW** with release type AFTER_APPROVAL, so
-approval publishes it by itself. **Do not rename, edit, or resubmit the 1.24.3
-version**: any change to a version waiting for review pulls it from the queue.
-(An earlier revision of this page said to rename ASC 1.24.3 → 1.24.4; it was
-written from stale facts, before the 1.24.3 submission was known.) When the
-verdict lands, create **1.24.4** fresh and paste this page — the What's New
-above is written for 1.24.4, because the rename news ships with 1.24.3 and is
-not repeated.
+**Store state (verified live 2026-08-07 23:50 UTC, asc CLI).** The App Store
+sells **1.24.3** — approved the same day it was submitted; the *Fidelis:
+Catholic Bible* rename is live. **1.24.4 — build 322**, the router-maintenance
+release, is staged (metadata copied from 1.24.3, the fresh What's New above,
+all three screenshot sets carried) and **WAITING_FOR_REVIEW** (submission
+`2a04b983…`, release type AFTER_APPROVAL — approval publishes it by itself).
+**Do not rename, edit, or resubmit a version waiting for review** — any change
+pulls it from the queue.
 
 ## Promotional Text (≤ 170 characters)
 
@@ -160,15 +157,12 @@ one.
 
 ## Notes for App Review (≤ 4,000 characters)
 
-The first paragraph answered the 2026-08-05 Guideline 2.1 rejection of
-1.24.0 (293). 1.24.2 was approved and is live, but the paragraph still rides in
-the in-review 1.24.3 notes (2,916 code points, verified live 2026-08-07) — a
-version waiting for review cannot be edited without pulling it from the queue.
-Drop the paragraph when preparing the 1.24.4 version (count returns to 2,414).
+The Guideline 2.1 response paragraph (2026-08-05) served its purpose — 1.24.2
+was approved — and was **dropped when 1.24.4 was staged on 2026-08-07**; the
+block below is the live 2,414-code-point notes. Do not re-add it, and do not
+re-enable China mainland (see Availability).
 
 ```
-RESPONSE TO GUIDELINE 2.1 (review of 1.24.0 (293), submission f59a3d7e-9373-4131-b6e9-b9bb0ed16d95): This app is not intended for distribution in China mainland. We have removed China mainland from the app's territory availability in App Store Connect (Pricing and Availability now covers 174 territories, excluding China mainland), so no Internet Publishing License applies. This resubmission is version 1.24.2 (build 307), which also fixes a home-screen-widget defect present in the reviewed build.
-
 Fidelis is a Catholic Bible and liturgical-calendar app. Notes for review:
 
 • No account, no sign-in, no server. The app is fully functional offline from first launch; all content ships in the binary. There are no test credentials because there is nothing to log into.
@@ -236,11 +230,11 @@ Counted as Unicode code points (how ASC counts), 2026-07-23. Re-run the
 repository's metadata guard after any edit:
 
 - Promotional text: 163 / 170 ✓
-- Description: 2,505 / 4,000 ✓
+- Description: 2,525 / 4,000 ✓ (re-counted 2026-08-07 — the lectionary bullet,
+  live since 1.24.3, is now mirrored here)
 - Keywords: 94 / 100 ✓
 - Copyright: 21 / 200 ✓
-- Review notes: 2,916 / 4,000 ✓ (re-counted 2026-08-05 with the Guideline 2.1
-  response paragraph; drops to 2,414 when that paragraph is removed after
-  approval)
+- Review notes: 2,414 / 4,000 ✓ (the Guideline 2.1 paragraph dropped at the
+  1.24.4 staging, 2026-08-07; verified against the live detail)
 - What's New (1.24.4): 218 / 4,000 ✓ (fresh copy for the maintenance release —
   the 1.24.3 rename copy shipped with the 1.24.3 submission and is not repeated)
