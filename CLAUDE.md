@@ -5,9 +5,9 @@
 > **Taking over mid-flight? Read [docs/FOLLOW_UPS.md](docs/FOLLOW_UPS.md) first.**
 > It is the one place that records what is *unfinished* — what was verified versus
 > assumed, and the exact steps closing each item takes. Item 1 is always the most
-> urgent. Right now it is the device pass: **1.24.4 (build 322)** is
-> WAITING_FOR_REVIEW and auto-publishes on approval, and the live 1.24.3 carries
-> the unverified widget repair — no release has ever passed the physical gate.
+> urgent. Right now it is the device pass: the public store is **1.24.4**, and
+> **1.24.5 (build 328)** — captioned screenshots + mission-led listing — is
+> WAITING_FOR_REVIEW (AFTER_APPROVAL). No release has ever passed the physical gate.
 
 Catholic Bible app (DRB, CPDV, Clementine Vulgate) with liturgical calendar and
 daily Mass readings. Companion documents:
@@ -169,6 +169,16 @@ five upstream pins and the vatican.va CCC pages monthly (`scripts/check-sources.
 One line per release. The unabridged narrative is
 [docs/history/RELEASES.md](docs/history/RELEASES.md); the changelog is [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.24.5 — kept faithfully (store page)** — product-page only. Public iTunes was
+  still serving **uncaptioned** `APP_IPHONE_67` frames (the slot modern phones prefer)
+  after v1.24.3 put captioned assets only on 6.5″ + iPad; ASC 1.24.4 was locked post-
+  approval so a new version was required. **1.24.5** replaces all three screenshot
+  sets with captioned JPGs, rewrites description/promo to open with the README mission
+  (*Fidelis: Catholic Bible — kept faithfully* / *the text is not ours to edit* /
+  *Just the text, kept.*), attaches **build 328**, submits WAITING_FOR_REVIEW
+  (AFTER_APPROVAL). Repo mirror PR #95. No engine/data/golden/sw change. Shells
+  1.24.5/12405. Public store remains 1.24.4 until approval.
+  → [detail](docs/history/RELEASES.md#kept-faithfully-store-page-v1245)
 - **v1.24.4 — the fruitless branch** — CI is green again. `npm audit --omit=dev` is the
   **first** step of the `build` job, so since 2026-07-24 lint, both harnesses, the
   type-check, the build, and the doc-link gate had **never run** — twelve straight
