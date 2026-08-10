@@ -178,7 +178,7 @@ One line per release. The unabridged narrative is
   *Just the text, kept.*), attaches **build 328**, submits WAITING_FOR_REVIEW
   (AFTER_APPROVAL). Repo mirror PR #95. No engine/data/golden/sw change. Shells
   1.24.5/12405. Public store remains 1.24.4 until approval.
-  → [detail](docs/history/RELEASES.md#kept-faithfully-store-page-v1245)
+  → [detail](docs/history/RELEASES.md#kept-faithfully--store-page-v1245)
 - **v1.24.4 — the fruitless branch** — CI is green again. `npm audit --omit=dev` is the
   **first** step of the `build` job, so since 2026-07-24 lint, both harnesses, the
   type-check, the build, and the doc-link gate had **never run** — twelve straight

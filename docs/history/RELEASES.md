@@ -2096,7 +2096,7 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
-## Kept faithfully — store page (v1.24.5) {#kept-faithfully-store-page-v1245}
+## Kept faithfully — store page (v1.24.5)
 
 *"Thy word is truth." (John 17:17)*
 

@@ -11,7 +11,7 @@ Submission"). Character limits verified by script; re-verify after any edit
 ## Version
 
 ```
-1.24.4
+1.24.5
 ```
 
 The store version string always equals the uploaded build's
@@ -26,62 +26,68 @@ update starts from the right place.)
 ## What's New in This Version (≤ 4,000 characters — updates only)
 
 ```
-Maintenance: the navigation library Fidelis is built on moved up to its current major version. Nothing visible changes — reading, search, the daily Mass readings, and the home-screen widgets all work exactly as before.
+Product page refresh: every iPhone and iPad screenshot now carries a short caption band so each screen is clear at a glance.
+
+The listing leads with the conviction Fidelis is built on — the text is not ours to edit — and a fuller description of the canon, the daily Mass, the liturgical year, the Fathers' commentary, and the free-forever pledge.
+
+Nothing about reading, search, Mass readings, or the home-screen widgets changes in this update.
 ```
 
 (ASC shows What's New only for updates after the first released version. The
 same text can seed the TestFlight "What to Test" notes. Use the full physical
 matrix in [Device acceptance](DEVICE_ACCEPTANCE.md), not this summary alone.)
 
-**Store state (verified live 2026-08-07 23:50 UTC, asc CLI).** The App Store
-sells **1.24.3** — approved the same day it was submitted; the *Fidelis:
-Catholic Bible* rename is live. **1.24.4 — build 322**, the router-maintenance
-release, is staged (metadata copied from 1.24.3, the fresh What's New above,
-all three screenshot sets carried) and **WAITING_FOR_REVIEW** (submission
-`2a04b983…`, release type AFTER_APPROVAL — approval publishes it by itself).
-**Do not rename, edit, or resubmit a version waiting for review** — any change
-pulls it from the queue.
+**Store state (verified live 2026-08-10, asc CLI).** The App Store sells
+**1.24.4** — `READY_FOR_SALE`, the react-router-8 maintenance release.
+**1.24.5 — build 328**, the store-page mirror (captioned screenshots on all
+three sets, description/promo rewritten to open with the README mission), is
+staged and **WAITING_FOR_REVIEW** (release type AFTER_APPROVAL — approval
+publishes it by itself). **Do not rename, edit, or resubmit a version waiting
+for review** — any change pulls it from the queue.
 
 ## Promotional Text (≤ 170 characters)
 
 ```
-The full 73-book Catholic canon, daily Mass readings, and the liturgical year — unaltered, offline, free forever. No accounts, no ads, no tracking, no AI rewrites.
+Fidelis: Catholic Bible — kept faithfully. The text is not ours to edit. 73-book canon, unaltered translations, daily Mass. Free forever — no accounts, ads, or tracking.
 ```
 
 ## Description (≤ 4,000 characters)
 
 ```
-Fidelis is the Catholic Bible, kept faithfully — the full 73-book canon, the daily Mass readings, and the liturgical year, built on one conviction: the text is not ours to edit.
+Fidelis: Catholic Bible — kept faithfully.
+
+A Catholic Bible app built on one conviction — the text is not ours to edit. The full 73-book canon, three unaltered translations, the daily Mass, the liturgical year in color, and a quiet devotional life around the Word. Free, forever — no accounts, no tracking, no ads, no algorithm. Just the text, kept.
 
 Every bundled translation is reproduced verbatim from its public-domain source. No paraphrasing, no softening of hard sayings, no silent updates. Where a source differs from a printed edition, the difference is disclosed, not patched.
 
 THE BIBLE
-• The Douay-Rheims (Challoner), the Catholic Public Domain Version, and the Clementine Vulgate in Latin — all 73 books, bundled, fully offline
-• Own a licensed copy of the NABRE, RSV-2CE, or the Biblia Platense (Spanish)? Import it and read it in Fidelis — your copy stays private; Fidelis never uploads it
+• The full 73-book Catholic canon in traditional Vulgate order — deuterocanon included — offline on your device
+• Douay-Rheims (Challoner), Catholic Public Domain Version, and the Clementine Latin Vulgate — all three bundled, unaltered, public domain
+• Own a licensed NABRE, RSV-2CE, or Biblia Platense (Spanish)? Import it privately on-device — Fidelis never uploads it
 • Typeset like a book: four Scripture faces, adjustable size, day and night themes
 
 THE LITURGY
-• The General Roman Calendar and verified U.S. profiles, including the provinces that keep Ascension Thursday — with precedence, transfers, and an explicit General Roman fallback where no local proper is verified
-• The Mass readings for any day of any year, laid out as they are read at Mass
-• Let the app's accent follow the liturgical year — green in Ordinary Time, violet in Advent and Lent, red on the feasts of martyrs
+• Daily Mass readings for any day of any year — the lectionary as it is read at Mass
+• General Roman Calendar and verified U.S. profiles (including provinces that keep Ascension Thursday), with honest fallback where no local proper is verified
+• Let the working accent follow the liturgical year — green in Ordinary Time, violet in Advent and Lent, red on the feasts of martyrs; gold stays for the sacred marks
 
 EVERY DAY
-• A Today page that never clutters: the day's celebration and Mass readings, the Saint of the Day with a full life to read, the day in Church history, a Verse of the Day, and a verified quote from the saints — never more than six cards
-• Home-screen widgets for the Verse of the Day, today's Mass, and the daily quote — in Day, Night, or System appearance, with an in-app setup guide
+• A Today page that never clutters — never more than six cards: Today at Mass, Today in the Church (Saint of the Day for all 366 dates plus Church history), Verse of the Day, Quote of the Day, the Holy Rosary, and Continue Reading
+• Home-screen widgets for the Verse of the Day, today's Mass, and the daily quote — Day, Night, or System
 • "What's today's Gospel?" — ask Siri
 
 STUDY
-• The Haydock Commentary across the whole canon and the Catena Aurea on the four Gospels — the Church Fathers on Scripture, verse by verse, earliest first
-• See where the Catechism cites a verse, with links to the official text — and read the Roman Catechism (Trent) offline
-• Fast search across the canon
+• Haydock Commentary across the whole canon and the Catena Aurea on the four Gospels — the Church Fathers, verse by verse, in their own words
+• See where the Catechism cites a verse, with links to the official text on vatican.va — and read the Roman Catechism (Trent) offline
+• Fast search across the canon; bookmarks, highlights, and notes that stay on your device
 
 DEVOTION
-• The Rosary, with the Scripture of each mystery
-• Reading plans through the Scriptures
-• No streaks, no badges, no progress theater — the only acknowledgment the app makes is the Church's
+• The Rosary, with the Scripture of each mystery and the traditional prayers in Latin and English
+• Reading plans through the Scriptures — citation arithmetic, no streaks or badges
+• No progress theater — the only acknowledgment the app makes is the Church's
 
 THE PLEDGE
-Free forever. No accounts. No ads. No tracking or analytics of any kind. No AI summaries or paraphrase. Every text's provenance is pinned to its exact source and sealed with a SHA-256 manifest the test suite re-verifies on every run.
+Free forever. No accounts. No ads. No tracking or analytics of any kind. No AI summaries or paraphrase. Provenance is pinned and sealed; the test suite re-verifies integrity on every build.
 
 The simplicity is not a development phase. It is the product.
 ```
@@ -89,11 +95,12 @@ The simplicity is not a development phase. It is the product.
 ## Keywords (≤ 100 characters)
 
 ```
-catholic,bible,douay,rheims,vulgate,latin,mass,readings,lectionary,catechism,rosary,liturgy
+douay,rheims,vulgate,latin,mass,readings,lectionary,catechism,rosary,liturgy,saint,prayer,holy,bible
 ```
 
-(Words already in the app name are wasted in keywords; "Fidelis" contributes
-itself. Comma-separated, no spaces.)
+(Words already in the app name are wasted in keywords; "Fidelis" and
+"Catholic" contribute themselves via the app name. Comma-separated, no
+spaces.)
 
 ## Support URL
 
@@ -226,15 +233,16 @@ localStorage before the pre-paint script, so the night frame has no Day-flash.
 
 ### Character-count verification record
 
-Counted as Unicode code points (how ASC counts), 2026-07-23. Re-run the
-repository's metadata guard after any edit:
+Counted as Unicode code points (how ASC counts), 2026-08-10 (re-counted against
+`metadata/version/1.24.5/en-US.json`, the staged submission):
 
-- Promotional text: 163 / 170 ✓
-- Description: 2,525 / 4,000 ✓ (re-counted 2026-08-07 — the lectionary bullet,
-  live since 1.24.3, is now mirrored here)
-- Keywords: 94 / 100 ✓
+- Promotional text: 169 / 170 ✓ (mission-led rewrite, opens "kept faithfully")
+- Description: 2,768 / 4,000 ✓ (mission-led rewrite, opens with the README's
+  "the text is not ours to edit")
+- Keywords: 100 / 100 ✓ (dropped "catholic"/"bible", already covered by the
+  app name; added "saint,prayer,holy")
 - Copyright: 21 / 200 ✓
-- Review notes: 2,414 / 4,000 ✓ (the Guideline 2.1 paragraph dropped at the
-  1.24.4 staging, 2026-08-07; verified against the live detail)
-- What's New (1.24.4): 218 / 4,000 ✓ (fresh copy for the maintenance release —
-  the 1.24.3 rename copy shipped with the 1.24.3 submission and is not repeated)
+- Review notes: 2,414 / 4,000 ✓ (unchanged since the 1.24.4 staging —
+  1.24.5 is a store-page-only release, no review-notes edit)
+- What's New (1.24.5): 444 / 4,000 ✓ (the screenshot-caption + mission-led
+  listing summary; the 1.24.4 router-maintenance copy is not repeated)

@@ -33,7 +33,7 @@ set and rewrites the listing so it leads with the README mission.
   2026-08-10 → **WAITING_FOR_REVIEW** (AFTER_APPROVAL). Submission id
   `2af85e8d-a97e-4e60-aea2-556d7ed5212d`. Public store still shows **1.24.4**
   media until approval. Repo mirror: PR #95. Full narrative:
-  [RELEASES.md](docs/history/RELEASES.md#kept-faithfully-store-page-v1245).
+  [RELEASES.md](docs/history/RELEASES.md#kept-faithfully--store-page-v1245).
 - **Method note (for next listing pass):** captioned frames must land on
   **APP_IPHONE_67** as well as 65 + iPad; the public iPhone gallery prefers 6.7″.
   Post-approval versions cannot replace screenshots — stage a new version.
