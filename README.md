@@ -20,7 +20,7 @@ accounts, no tracking, no ads, no algorithm. Just the text, kept.
 &nbsp;
 [![App Store](https://img.shields.io/badge/App%20Store-Fidelis%3A%20Catholic%20Bible-0D96F6?logo=apple&logoColor=white)](https://apps.apple.com/us/app/fidelis-bible/id6784831633)
 &nbsp;
-![version](https://img.shields.io/badge/version-1.24.4%20·%20the%20fruitless%20branch-5B3A8E)
+![version](https://img.shields.io/badge/version-1.24.5%20·%20kept%20faithfully-5B3A8E)
 &nbsp;
 ![canon](https://img.shields.io/badge/canon-73%20books-A8862C)
 &nbsp;

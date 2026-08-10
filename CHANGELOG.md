@@ -6,6 +6,32 @@ All notable changes to Fidelis. Format follows [Keep a Changelog](https://keepac
 versioning is semantic. The liturgical engines, the bundled texts, and the harnesses are the
 product — changes to any of them are release-worthy.
 
+## [1.24.5] — 2026-08-10 — kept faithfully (store page)
+
+*"Thy word is truth." (John 17:17)*
+
+A **product-page release** — no engine, corpus, golden, or service-worker change.
+The live App Store was still serving the pre-caption iPhone **6.7″** screenshot set
+(the slot modern phones prefer), even though captioned frames had been uploaded to
+6.5″ and iPad. This release replaces every screenshot slot with the captioned
+set and rewrites the listing so it leads with the README mission.
+
+### Changed
+
+- **Screenshots:** APP_IPHONE_67, APP_IPHONE_65, and APP_IPAD_PRO_3GEN_129 all carry
+  the purple brand band + gold hairline captions. The old uncaptioned 6.7″ PNGs
+  are gone from the submission version.
+- **Description** opens with: *Fidelis: Catholic Bible — kept faithfully.* and the
+  full mission paragraph (*the text is not ours to edit… Just the text, kept.*),
+  then the Bible / liturgy / every day / study / devotion / pledge sections.
+- **Promotional text** carries the same conviction (within Apple's 170-character
+  limit). **Keywords** keep the ASO set including `lectionary` and `bible`.
+
+### Notes
+
+- Shells 1.24.5 / 12405. App Store Connect version **1.24.5** (build **328**) is
+  **WAITING_FOR_REVIEW**; the public store still shows 1.24.4 media until approval.
+
 ## [1.24.4] — 2026-08-07 — the fruitless branch
 
 *"Every branch in me that beareth not fruit, he will take away." (John 15:2)*
