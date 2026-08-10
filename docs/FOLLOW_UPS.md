@@ -9,21 +9,29 @@ writing the outcome into [CHANGELOG.md](../CHANGELOG.md).
 
 ---
 
-## 1. No release has ever passed the physical-device gate — run it now, in the 1.24.4 review window
+## 1. No release has ever passed the physical-device gate — run it now, in the 1.24.5 review window
 
 **Status:** awaiting device testing — the review clock is running again.
-**Opened:** 2026-07-31. **Updated:** 2026-08-07.
+**Opened:** 2026-07-31. **Updated:** 2026-08-10.
 
-The store now sells **1.24.3** (approved 2026-08-07; its app code is identical
-to 1.24.2, so the v1.24.2 widget repair sits in production unverified), and
-**1.24.4 (build 322)** — the router swap — is **WAITING_FOR_REVIEW** with
-release type AFTER_APPROVAL: approval publishes it by itself. Every release so
-far has shipped without this pass. Run it from **TestFlight build 322** now,
-during the review window, so the router swap is hardware-verified before — or
-as soon as — it goes live. **CI being green is not this gate.** The v1.24.4
-release-runbook item that used to sit above this one is closed: tags, GitHub
-releases, TestFlight build 322, and the ASC staging + submission are all done
-(see CHANGELOG 1.24.4 for the record).
+The public store sells **1.24.4** (approved / live 2026-08-09; code from the
+router-swap release, build 322 lineage). **1.24.5 (build 328)** — the store-page
+fix for captioned screenshots + mission-led listing — is **WAITING_FOR_REVIEW**
+with release type AFTER_APPROVAL: approval publishes the product-page change by
+itself. App code in 1.24.5 is the same product as 1.24.4 (listing only). Every
+release so far has shipped without the physical-device pass. Run it from
+**TestFlight build 328** (or 322 if already installed) during this window so the
+widget repair, widget-entry fix, and router swap are hardware-verified against
+what customers will run. **CI being green is not this gate.**
+
+**Closed on 2026-08-10 (not this item — store media):** the public product page
+was still serving **uncaptioned** iPhone **6.7″** screenshots even after v1.24.3
+uploaded captioned frames to 6.5″ + iPad. Root cause verified against ASC + the
+public iTunes lookup: modern iPhones prefer `APP_IPHONE_67`. Fixed in **1.24.5**
+by replacing all three slots with captioned assets, rewriting description/promo
+to lead with the README mission (*kept faithfully / the text is not ours to
+edit*), uploading build **328**, and submitting. Repo mirror: PR #95 on `main`.
+Public store still shows 1.24.4 media until Apple approves 1.24.5.
 
 **New in v1.24.2 — test this first.** The Mass and Quote home-screen widgets were
 blank on every device (the App Group entitlement had never shipped; see

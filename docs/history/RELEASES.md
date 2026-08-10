@@ -2096,6 +2096,40 @@ the Settings native gate); e2e re-verified green against the built web app,
 where both behaviors are unchanged. No engine/data/golden/service-worker
 change. Shells 1.22.4 (`versionCode` 12204).
 
+## Kept faithfully — store page (v1.24.5) {#kept-faithfully-store-page-v1245}
+
+*"Thy word is truth." (John 17:17)*
+
+A product-page repair, not a feature release. No engine, corpus, golden, or
+service-worker change. Shells 1.24.5/12405; **TestFlight build 328**.
+
+**What customers saw.** After v1.24.3 (“called by name”), App Store Connect held
+captioned frames on **APP_IPHONE_65** and **APP_IPAD_PRO_3GEN_129**, but the
+public iPhone gallery still showed the older **uncaptioned** set. Verified 2026-08-10
+against ASC screenshot sets and the public iTunes lookup: modern phones prefer
+**APP_IPHONE_67** (1290×2796), and that slot still had the pre-caption PNGs
+(`01-today.png`, …). Text metadata (name *Fidelis: Catholic Bible*, description,
+keywords) *had* landed; screenshots and the mission lead had not fully.
+
+**Why 1.24.4 could not be patched in place.** Version **1.24.4** was already
+`READY_FOR_DISTRIBUTION` / live. ASC refused screenshot replace and localization
+updates: *Can't Delete Screenshot After Submit for review* / state of another
+resource. A new version was required.
+
+**What 1.24.5 does.** Creates version **1.24.5** (`PREPARE_FOR_SUBMISSION` →
+submitted). Pushes mission-led `en-US` copy opening with *Fidelis: Catholic Bible
+— kept faithfully* and the full README conviction paragraph (*the text is not
+ours to edit… Just the text, kept.*), then Bible / liturgy / every day / study /
+devotion / pledge. Replaces **all three** screenshot sets with captioned assets
+(IPHONE_67 resized from the 6.5″ captioned masters via `sips`; 65 and iPad
+re-sealed). Attaches **build 328** (listing-only binary; same app code as 1.24.4).
+Submits **WAITING_FOR_REVIEW**, release type AFTER_APPROVAL. Repo mirror on `main`
+via PR #95 (`metadata/version/1.24.5/`, version shells, CHANGELOG).
+
+**Still open after this release.** Public store stays on **1.24.4** media until
+Apple approves. The physical-device gate is still open (FOLLOW_UPS §1) — run it on
+build 328/322.
+
 ## Called by name (v1.24.3)
 
 *"I have called thee by thy name: thou art mine." (Isaiah 43:1)*
@@ -2107,15 +2141,15 @@ because "Fidelis-Bible" told search almost nothing; the keywords drop
 `catholic,bible` (already indexed through the name and subtitle) for
 `saint,prayer,holy`; the description's Mass-readings bullet finally names the
 **lectionary** — the one keyword the copy never echoed; What's New is written for
-the first time; and all 18 screenshots (10 iPhone, 8 iPad) gain brand caption
-bands — purple-strong canvas, EB Garamond, a gold hairline — so Apple's OCR can
-index what each screen shows. The caption pipeline is committed (`metadata/` +
+the first time; and captioned screenshot bands are generated for iPhone + iPad
+(purple-strong canvas, EB Garamond, a gold hairline). **Caveat recorded in
+v1.24.5:** the captioned upload landed on **6.5″ + iPad** but left **6.7″** on the
+older uncaptioned set — the public iPhone page preferred 6.7″ until the follow-up
+submission. The caption pipeline is committed (`metadata/` +
 `scripts/caption-screenshots.py`) rather than left in a scratchpad. Shells
 1.24.3/12403.
 
-Submitted 2026-08-07 as **build 317** — WAITING_FOR_REVIEW, release type
-AFTER_APPROVAL, so approval publishes the rename by itself; the live store keeps
-selling 1.24.2 under the old name until then.
+Submitted 2026-08-07 as **build 317** — approved the same day; rename live.
 
 ## The fruitless branch (v1.24.4)
 

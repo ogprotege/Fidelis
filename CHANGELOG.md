@@ -29,8 +29,14 @@ set and rewrites the listing so it leads with the README mission.
 
 ### Notes
 
-- Shells 1.24.5 / 12405. App Store Connect version **1.24.5** (build **328**) is
-  **WAITING_FOR_REVIEW**; the public store still shows 1.24.4 media until approval.
+- Shells 1.24.5 / 12405. **Build 328** uploaded, attached, and submitted
+  2026-08-10 → **WAITING_FOR_REVIEW** (AFTER_APPROVAL). Submission id
+  `2af85e8d-a97e-4e60-aea2-556d7ed5212d`. Public store still shows **1.24.4**
+  media until approval. Repo mirror: PR #95. Full narrative:
+  [RELEASES.md](docs/history/RELEASES.md#kept-faithfully-store-page-v1245).
+- **Method note (for next listing pass):** captioned frames must land on
+  **APP_IPHONE_67** as well as 65 + iPad; the public iPhone gallery prefers 6.7″.
+  Post-approval versions cannot replace screenshots — stage a new version.
 
 ## [1.24.4] — 2026-08-07 — the fruitless branch
 
