@@ -4,10 +4,12 @@
 
 > **Taking over mid-flight? Read [docs/FOLLOW_UPS.md](docs/FOLLOW_UPS.md) first.**
 > It is the one place that records what is *unfinished* — what was verified versus
-> assumed, and the exact steps closing each item takes. Item 1 is always the most
-> urgent. Right now it is the device pass: the public store is **1.24.4**, and
-> **1.24.5 (build 328)** — captioned screenshots + mission-led listing — is
-> WAITING_FOR_REVIEW (AFTER_APPROVAL). No release has ever passed the physical gate.
+> assumed, and the exact steps closing each item takes. The physical-device gate
+> **closed 2026-08-11** — the maintainer ran the full checklist (tabs, widgets,
+> Share/Save, VoiceOver, Siri) on TestFlight build 328/322 lineage, the first
+> release in this project's history to pass it. The public store is **1.24.4**,
+> and **1.24.5 (build 328)** — captioned screenshots + mission-led listing — is
+> WAITING_FOR_REVIEW (AFTER_APPROVAL). No open follow-up items remain.
 
 Catholic Bible app (DRB, CPDV, Clementine Vulgate) with liturgical calendar and
 daily Mass readings. Companion documents:

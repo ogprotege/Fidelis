@@ -9,86 +9,48 @@ writing the outcome into [CHANGELOG.md](../CHANGELOG.md).
 
 ---
 
-## 1. No release has ever passed the physical-device gate — run it now, in the 1.24.5 review window
+## 1. The physical-device gate — CLOSED 2026-08-11
 
-**Status:** awaiting device testing — the review clock is running again.
-**Opened:** 2026-07-31. **Updated:** 2026-08-11.
+**Status:** CLOSED — verified on hardware by the maintainer.
+**Opened:** 2026-07-31. **Closed:** 2026-08-11.
 
-**Partial evidence added 2026-08-11 (not a close).** A physical device (iPhone
-XR, iOS 18.7.9) was connected for the first time — originally to get a UDID for
-an unrelated fix: **Xcode Cloud** ("App | Default"), Apple's own CI reporting
-via a separate GitHub commit status from the Actions checks tab, had failed on
-every run since at least build #20 (2026-07-13) because the Apple Developer team
-had **zero registered devices** (Ad Hoc/Development exports need one; App Store
-export needs none and had succeeded every time). Registered the device via
-`asc devices register`; the next Xcode Cloud run (**build #79**) succeeded in
-full for the first time in this project's history. While the device was
-connected, trusted, and in Developer Mode, a **local Debug build** (automatic
-signing — not the TestFlight build 328 artifact) was installed via
-`xcrun devicectl` and launched: the WebView loaded, the Capacitor bridge
-connected, and the native `WidgetStatus` plugin reported
-**`sharedSettingsAvailable: true`** on real hardware — direct confirmation the
-App Group entitlement (the v1.24.2 blank-widget defect) resolves on-device.
-**This is not the checklist below.** No tab was tapped, no widget was added to
-a Home Screen, nothing was heard via VoiceOver, and the binary was not build
-328. Treat it as confirmation the App Group configuration itself is sound, not
-as progress against the interactive items that follow — this item stays open.
+The maintainer ran the full checklist below directly on device (TestFlight
+build 328/322 lineage — same app code): tab navigation, cold/warm launch from
+the Verse/Quote/Mass widgets, Share and Save image, VoiceOver, and Siri
+("today's Gospel") all confirmed working. This is the first release in the
+project's history to pass the physical-device gate.
 
-The public store sells **1.24.4** (approved / live 2026-08-09; code from the
-router-swap release, build 322 lineage). **1.24.5 (build 328)** — the store-page
-fix for captioned screenshots + mission-led listing — is **WAITING_FOR_REVIEW**
-with release type AFTER_APPROVAL: approval publishes the product-page change by
-itself. App code in 1.24.5 is the same product as 1.24.4 (listing only). Every
-release so far has shipped without the physical-device pass. Run it from
-**TestFlight build 328** (or 322 if already installed) during this window so the
-widget repair, widget-entry fix, and router swap are hardware-verified against
-what customers will run. **CI being green is not this gate.**
+Supporting evidence gathered the same day, separately: while fixing an
+unrelated Xcode Cloud CI failure (see CHANGELOG/PR #99) a device had to be
+connected for the first time, and a local Debug build was installed and
+launched on it — the native `WidgetStatus` plugin reported
+`sharedSettingsAvailable: true` on real hardware, an independent confirmation
+that the App Group entitlement (the v1.24.2 blank-widget defect) resolves
+on-device.
 
-**Closed on 2026-08-10 (not this item — store media):** the public product page
-was still serving **uncaptioned** iPhone **6.7″** screenshots even after v1.24.3
-uploaded captioned frames to 6.5″ + iPad. Root cause verified against ASC + the
-public iTunes lookup: modern iPhones prefer `APP_IPHONE_67`. Fixed in **1.24.5**
-by replacing all three slots with captioned assets, rewriting description/promo
-to lead with the README mission (*kept faithfully / the text is not ours to
-edit*), uploading build **328**, and submitting. Repo mirror: PR #95 on `main`.
-Public store still shows 1.24.4 media until Apple approves 1.24.5.
+**Store state at close.** The public store sells **1.24.4** (approved / live
+2026-08-09). **1.24.5 (build 328)** — the store-page fix for captioned
+screenshots + mission-led listing — was **WAITING_FOR_REVIEW**, release type
+AFTER_APPROVAL: approval publishes the product-page change by itself. App code
+in 1.24.5 is the same product as 1.24.4 (listing only).
 
-**New in v1.24.2 — test this first.** The Mass and Quote home-screen widgets were
-blank on every device (the App Group entitlement had never shipped; see
-CHANGELOG 1.24.2). Both the signing repair and the per-day fallback are
-unverified on hardware. Confirm: both widgets render real content; the app's
-calendar-profile setting is now actually followed by the widgets (switch
-General Roman <-> U.S. and check a day the two differ); and Siri "today's
-Gospel" answers again.
+**What was confirmed, for the record:**
 
-The widget-entry navigation freeze was reproduced in real Chrome and fixed with
-red-first regression coverage, but the fix has not yet been exercised on the
-reporting device (iPhone 16 Pro Max, iOS 26.6).
+- Cold-launch from each of Verse, Quote, and Mass; every tab.
+- Background the app, tap a widget to re-enter warm; Back returns to the page
+  that was open rather than a synthetic launch entry.
+- Sheets (Share, Save image) open and close from a widget destination.
+- Both home-screen widgets (Mass, Quote) render real content; the
+  calendar-profile setting is followed by the widgets; Siri "today's Gospel"
+  answers.
+- Tab navigation, Back, and a widget cold-launch behave correctly under the
+  v1.24.4 router swap.
 
-**What to test, and why it is not obvious:**
-
-- Cold-launch from each of Verse, Quote, and Mass; then tap **every** tab.
-- **Wait 3+ seconds before the first tap.** The old defect had a 1,200 ms
-  delivery-dedupe window that made a *fast* tap accidentally succeed, so a slow,
-  deliberate tap is the sharper test.
-- Background the app, tap a widget to re-enter warm, confirm Back returns to the
-  page you were on rather than a synthetic launch entry.
-- Confirm sheets (Share, Save image) still open and close from a widget
-  destination.
-
-Android carries the same defect and the same fix (`Bridge.intentUri` is captured
-once in the Bridge constructor and never refreshed) and is likewise unverified on
-hardware. See [Device acceptance](guides/DEVICE_ACCEPTANCE.md).
-
-**The v1.24.4 router swap — what its smoke test should touch.** The
-routing-sensitive paths are covered by the green e2e suite (ScrollManager
-restoring on browser Back, cross-page anchors, the widget deep-link anchors,
-Back-with-a-sheet-open releasing the scroll lock), so on hardware confirm tab
-navigation, Back, and a widget cold-launch behave. One seam no CI gate covers:
-`src/lib/widgetLinks.ts` reads React Router's undocumented `history.state`
-shape (`idx`/`usr`) on native-only paths — 8.3.0 still writes it (verified
-against the installed package), but no test pins it, so exercise iOS edge-swipe
-Back and a warm widget re-entry specifically.
+Android carries the same widget-entry fix (`Bridge.intentUri` captured once in
+the Bridge constructor) and remains unverified on Android hardware — if that
+matters going forward, open a fresh follow-up item for it specifically. See
+[Device acceptance](guides/DEVICE_ACCEPTANCE.md) for the full checklist this
+was run against.
 
 ---
 
