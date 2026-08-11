@@ -12,7 +12,27 @@ writing the outcome into [CHANGELOG.md](../CHANGELOG.md).
 ## 1. No release has ever passed the physical-device gate — run it now, in the 1.24.5 review window
 
 **Status:** awaiting device testing — the review clock is running again.
-**Opened:** 2026-07-31. **Updated:** 2026-08-10.
+**Opened:** 2026-07-31. **Updated:** 2026-08-11.
+
+**Partial evidence added 2026-08-11 (not a close).** A physical device (iPhone
+XR, iOS 18.7.9) was connected for the first time — originally to get a UDID for
+an unrelated fix: **Xcode Cloud** ("App | Default"), Apple's own CI reporting
+via a separate GitHub commit status from the Actions checks tab, had failed on
+every run since at least build #20 (2026-07-13) because the Apple Developer team
+had **zero registered devices** (Ad Hoc/Development exports need one; App Store
+export needs none and had succeeded every time). Registered the device via
+`asc devices register`; the next Xcode Cloud run (**build #79**) succeeded in
+full for the first time in this project's history. While the device was
+connected, trusted, and in Developer Mode, a **local Debug build** (automatic
+signing — not the TestFlight build 328 artifact) was installed via
+`xcrun devicectl` and launched: the WebView loaded, the Capacitor bridge
+connected, and the native `WidgetStatus` plugin reported
+**`sharedSettingsAvailable: true`** on real hardware — direct confirmation the
+App Group entitlement (the v1.24.2 blank-widget defect) resolves on-device.
+**This is not the checklist below.** No tab was tapped, no widget was added to
+a Home Screen, nothing was heard via VoiceOver, and the binary was not build
+328. Treat it as confirmation the App Group configuration itself is sound, not
+as progress against the interactive items that follow — this item stays open.
 
 The public store sells **1.24.4** (approved / live 2026-08-09; code from the
 router-swap release, build 322 lineage). **1.24.5 (build 328)** — the store-page
