@@ -256,3 +256,15 @@ These are binding; the harness enforces several of them:
   VM does not have: `npx cap sync`/`open` and device builds are not runnable
   there. iOS/Android compilation is still covered by the macOS/Linux CI
   workflows on every relevant change.
+- **Node version gotcha:** the ambient `node` on `PATH` (`/exec-daemon/node`) is
+  **v22.14.0** — below the `engines` floor of `>=22.22.0` — while the required
+  line, **v22.22.2**, is installed under nvm but not first on `PATH`. `npm` does
+  not enforce `engines` (no `engine-strict`), so `npm install`/`dev`/`test`/
+  `build`/`e2e` all run on the ambient node without complaint. If you need the
+  declared line, activate it for the session with
+  `export PATH="$(ls -d $HOME/.nvm/versions/node/v22.22.*/bin | tail -1):$PATH"; hash -r`.
+- `npm run e2e` in the headless cloud Chrome currently has one known-failing
+  test — `e2e/library.spec.ts` "a bookmark opens in its saved translation" — a
+  pre-existing click-interception layout quirk (the `Remove` button overlaps the
+  bookmark link at the default viewport), not an environment fault; the other 30
+  e2e tests and all of `npm test` pass.
