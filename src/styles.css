@@ -1295,7 +1295,9 @@ h1.page-title {
 .lib-item .when { font-family: var(--sans); font-size: 0.75rem; color: var(--text-muted); }
 .lib-item .actions { margin-top: 0.3rem; }
 .lib-item .actions button {
-  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   border: none;
   background: none;
   color: var(--purple);
@@ -1305,14 +1307,8 @@ h1.page-title {
   padding: 0;
   margin-right: 0.8rem;
 }
-/* v1.17.1 (FID-UX-002): Remove/Delete are destructive 16px text buttons — the
-   slop lifts them to 44px+ tall; sideways it stays inside the 0.8rem margins
-   so Open's and Remove's targets never overlap. */
-.lib-item .actions button::after {
-  content: "";
-  position: absolute;
-  inset: -0.9rem -0.2rem;
-}
+/* Remove/Delete reserve their full target in layout. The old pseudo-element
+   extended upward over the bookmark link and intercepted its pointer events. */
 .lib-note { background: var(--bg-2); border-radius: 0.5rem; padding: 0.5rem 0.7rem; margin-top: 0.4rem; }
 
 /* ---------- Translations page ---------- */

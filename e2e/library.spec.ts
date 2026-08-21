@@ -20,6 +20,26 @@ test("a bookmark opens in its saved translation, not the current default", async
   const link = row.locator("a").first();
   await expect(link).toHaveAttribute("href", /\/read\/drc\/john\/3/);
 
+  const targetGeometry = await row.evaluate((element) => {
+    const bookmark = element.querySelector("a");
+    const remove = element.querySelector<HTMLButtonElement>(".actions button");
+    if (!bookmark || !remove) return null;
+
+    const bookmarkRect = bookmark.getBoundingClientRect();
+    const topmostAtBookmarkCenter = document.elementFromPoint(
+      bookmarkRect.left + bookmarkRect.width / 2,
+      bookmarkRect.top + bookmarkRect.height / 2
+    );
+
+    return {
+      bookmarkIsTopmost: topmostAtBookmarkCenter?.closest("a") === bookmark,
+      removeHeight: remove.getBoundingClientRect().height
+    };
+  });
+  expect(targetGeometry).not.toBeNull();
+  expect(targetGeometry?.bookmarkIsTopmost).toBeTruthy();
+  expect(targetGeometry?.removeHeight).toBeGreaterThanOrEqual(44);
+
   await link.click();
   // The DRB rendering ("as to give"), not the CPDV's ("so as to give").
   await expect(page.locator(".verses")).toContainText("as to give his only begotten Son", {

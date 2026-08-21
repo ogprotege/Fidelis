@@ -263,8 +263,7 @@ These are binding; the harness enforces several of them:
   `build`/`e2e` all run on the ambient node without complaint. If you need the
   declared line, activate it for the session with
   `export PATH="$(ls -d $HOME/.nvm/versions/node/v22.22.*/bin | tail -1):$PATH"; hash -r`.
-- `npm run e2e` in the headless cloud Chrome currently has one known-failing
-  test — `e2e/library.spec.ts` "a bookmark opens in its saved translation" — a
-  pre-existing click-interception layout quirk (the `Remove` button overlaps the
-  bookmark link at the default viewport), not an environment fault; the other 30
-  e2e tests and all of `npm test` pass.
+- `npm run e2e` passes all 31 tests in headless cloud Chrome. The former Library
+  bookmark click-interception failure was an application layout defect, not an
+  environment quirk: the `Remove` button's pseudo-element overlapped the link.
+  Library actions now reserve their full 44px target in normal layout.
