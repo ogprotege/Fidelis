@@ -3829,8 +3829,9 @@ console.log("");
     /\.switch::before\s*\{[^}]*inset:\s*-0\.65rem -1px/.test(css));
   check("§32 hit slop: Today card Share (asymmetric, inside the card's own padding)",
     /\.card-share::after\s*\{[^}]*inset:\s*-0\.7rem 0 -1\.1rem/.test(css));
-  check("§32 hit slop: Library Remove/Delete (±0.9rem)",
-    /\.lib-item \.actions button::after\s*\{[^}]*inset:\s*-0\.9rem -0\.2rem/.test(css));
+  check("§32 hit height: Library Remove/Delete reserve a real 44px target",
+    /\.lib-item \.actions button\s*\{[^}]*min-height:\s*44px/.test(css) &&
+      !/\.lib-item \.actions button::after/.test(css));
   check("§32 hit slop: Commentary tabs (±0.4rem)",
     /\.cmt-tab::after\s*\{[^}]*inset:\s*-0\.4rem 0/.test(css));
   check("§32 hit height: rosary mystery rows grow to ≥44px via real padding",
