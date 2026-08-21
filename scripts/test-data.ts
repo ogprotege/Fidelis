@@ -4626,6 +4626,87 @@ console.log("");
   const votdJava = read("android/app/src/main/java/app/fidelis/bible/VotdWidget.java");
   const quoteJava = read("android/app/src/main/java/app/fidelis/bible/QuoteWidget.java");
   const manifest = read("android/app/src/main/AndroidManifest.xml");
+  const androidWorkflow = read(".github/workflows/android.yml");
+  const androidInstrumentationRunner = read("scripts/run-android-instrumentation.sh");
+
+  // The API-24 emulator can transiently stall ddmlib's APK write until UTP's
+  // install timeout. The workflow retries that exact infrastructure signature
+  // once, while preserving every product/test failure as an immediate red.
+  check("§36 Android instrumentation wrapper is executable and workflow-tracked",
+    (statSync(join(ROOT, "scripts/run-android-instrumentation.sh")).mode & 0o111) !== 0 &&
+      (androidWorkflow.match(/scripts\/run-android-instrumentation\.sh/g) ?? []).length === 3 &&
+      androidWorkflow.includes(
+        'script: cd android && ../scripts/run-android-instrumentation.sh "${{ matrix.api-level }}"'
+      ));
+  check("§36 Android instrumentation retry is gated to ddmlib install-write failures",
+    androidInstrumentationRunner.includes(
+      'grep -Fq "Failed to install-write all apks" "$log_file"'
+    ) &&
+      androidInstrumentationRunner.includes("retrying once"));
+
+  const androidRetryWork = mkdtempSync(join(tmpdir(), "fidelis-android-retry-"));
+  try {
+    const attemptsPath = join(androidRetryWork, "attempts");
+    const adbCallsPath = join(androidRetryWork, "adb-calls");
+    const fakeGradlew = join(androidRetryWork, "gradlew");
+    const fakeAdb = join(androidRetryWork, "adb");
+    writeFileSync(fakeGradlew, `#!/usr/bin/env bash
+set -eu
+count="$(<"$ATTEMPTS_FILE")"
+count=$((count + 1))
+printf '%s' "$count" > "$ATTEMPTS_FILE"
+if [[ "$FAKE_MODE" == "install-write" && "$count" -eq 1 ]]; then
+  echo "Failed to install-write all apks"
+  exit 1
+fi
+if [[ "$FAKE_MODE" == "test-failure" ]]; then
+  echo "There were failing tests"
+  exit 7
+fi
+`);
+    writeFileSync(fakeAdb, `#!/usr/bin/env bash
+set -eu
+printf '%s\\n' "$*" >> "$ADB_CALLS_FILE"
+`);
+    chmodSync(fakeGradlew, 0o755);
+    chmodSync(fakeAdb, 0o755);
+
+    const runAndroidRetryHarness = (mode: string) => {
+      writeFileSync(attemptsPath, "0");
+      writeFileSync(adbCallsPath, "");
+      return spawnSync(
+        "bash",
+        [join(ROOT, "scripts/run-android-instrumentation.sh"), "24"],
+        {
+          cwd: join(ROOT, "android"),
+          encoding: "utf8",
+          env: {
+            ...process.env,
+            ADB_BIN: fakeAdb,
+            ADB_CALLS_FILE: adbCallsPath,
+            ATTEMPTS_FILE: attemptsPath,
+            FAKE_MODE: mode,
+            GRADLEW_BIN: fakeGradlew
+          }
+        }
+      );
+    };
+
+    const recoveredInstall = runAndroidRetryHarness("install-write");
+    check("§36 Android instrumentation retries one transient install-write and recovers",
+      recoveredInstall.status === 0 &&
+        readFileSync(attemptsPath, "utf8") === "2" &&
+        readFileSync(adbCallsPath, "utf8").includes("wait-for-device") &&
+        recoveredInstall.stdout.includes("retrying once"));
+
+    const hardTestFailure = runAndroidRetryHarness("test-failure");
+    check("§36 Android instrumentation never retries or masks a test failure",
+      hardTestFailure.status === 7 &&
+        readFileSync(attemptsPath, "utf8") === "1" &&
+        readFileSync(adbCallsPath, "utf8") === "");
+  } finally {
+    rmSync(androidRetryWork, { recursive: true, force: true });
+  }
 
   // FID-PERF-004: memoize the widgets' calendar.json decode.
   check("§36 PERF-004 (iOS): CalendarWidgets memoizes the calendar decode",

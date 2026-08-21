@@ -26,6 +26,7 @@ on:
       # The widget data builders feed the committed res/raw JSON the widgets read.
       - "scripts/build-votd-widget.mjs"
       - "scripts/build-calendar-widget.ts"
+      - "scripts/run-android-instrumentation.sh"
   pull_request:
     paths:
       - "android/**"
@@ -37,6 +38,7 @@ on:
       - ".github/workflows/android.yml"
       - "scripts/build-votd-widget.mjs"
       - "scripts/build-calendar-widget.ts"
+      - "scripts/run-android-instrumentation.sh"
 
 concurrency:
   group: android-${{ github.ref }}
@@ -124,4 +126,6 @@ jobs:
           # Scope to the application module. The generated empty Cordova
           # library subproject has no instrumentation tests and carries an old
           # Kotlin test dependency that conflicts if Gradle assembles its APK.
-          script: cd android && ./gradlew :app:connectedDebugAndroidTest --no-daemon
+          # The wrapper retries only ddmlib's exact transient install-write
+          # failure; test assertions and all other Gradle failures stay red.
+          script: cd android && ../scripts/run-android-instrumentation.sh "${{ matrix.api-level }}"
